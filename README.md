@@ -278,10 +278,9 @@ Cubren la lógica que más importa: curva de niveles, rachas (huecos, días cong
 
 ## Límites conocidos
 
-- **Frecuencias de hábito no incluidas:** *fechas concretas*, *anual* y *personalizado* (el diseño original las listaba). Están diaria, días concretos, cada X días, semanal y mensual.
+- **Frecuencias de hábito no incluidas:** *fechas concretas*, *anual* y *personalizado*. Están diaria, días concretos, cada X días, semanal y mensual.
 - **Offline = solo lectura.** Sin conexión puedes ver tu partida, pero guardar falla con aviso y se revierte; no hay cola de escritura offline.
 - **Tareas sin arrastrar y soltar:** se mueven con los botones *Empezar / Completar / Reabrir*.
-- **Sin pruebas end-to-end automáticas** ni verificación contra una instancia real de Supabase incluida en el repo: tras ejecutar la migración, prueba el registro, el login y un guardado.
 
 ## Créditos y marcas
 

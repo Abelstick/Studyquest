@@ -40,6 +40,8 @@ export default defineConfig({
       },
     }),
   ],
+  // `npm start` (solo si se despliega como Web Service en Render): sirve /dist en el puerto que asigne la plataforma.
+  preview: { host: true, port: Number(process.env.PORT) || 4173, strictPort: true, allowedHosts: true },
   build: {
     rolldownOptions: {
       output: {

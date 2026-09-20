@@ -128,6 +128,8 @@ La app es una **SPA estática**: Render solo sirve archivos y el backend es Supa
 
 ### A mano (Static Site)
 
+> ⚠️ Elige **Static Site**, no *Web Service*. Un Web Service intenta ejecutar `npm run start` tras el build (y te da `Missing script: "start"`); esta app son solo archivos estáticos.
+
 | Campo | Valor |
 | --- | --- |
 | Build Command | `npm ci && npm run build` |
@@ -268,6 +270,7 @@ Cubren la lógica que más importa: curva de niveles, rachas (huecos, días cong
 | Error `42501` / `row-level security` | La migración se ejecutó a medias. Vuelve a lanzarla completa (es idempotente). |
 | `Invalid API key` | Copiaste la clave equivocada o quedó cortada. Usa la *anon public* de Project Settings → API. |
 | El enlace del correo lleva a `localhost` o a un sitio equivocado | Falta tu URL en Authentication → URL Configuration. |
+| En Render: `npm error Missing script: "start"` | Creaste un *Web Service*. Lo correcto es un **Static Site** (gratis, sin servidor) o usar el Blueprint. Si prefieres seguir con Web Service: Start Command `npm start` (el repo ya trae ese script; sirve `dist` en el `PORT` de Render). |
 | En Render, recargar `/tareas` da **404** | Falta la regla *Rewrite* `/* → /index.html` (ya está en `render.yaml`). |
 | Cambié las variables en Render y no pasa nada | Son variables de *build*: lanza un nuevo despliegue. |
 | La PWA no se actualiza | Cierra todas las pestañas o pulsa «Actualizar» en el aviso. Comprueba que `sw.js` no esté cacheado por un CDN. |

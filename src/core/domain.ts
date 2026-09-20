@@ -1,0 +1,229 @@
+/** Modelo de dominio de StudyQuest. Ninguna dependencia de React ni de la base de datos. */
+
+export type ID = string;
+/** Fecha local en formato YYYY-MM-DD. */
+export type ISODate = string;
+export type ISODateTime = string;
+
+export interface Equipped {
+  avatar: string | null;
+  frame: string | null;
+  world: string | null;
+}
+
+export interface UnlockedAchievement {
+  id: string;
+  at: ISODateTime;
+}
+
+export interface Profile {
+  id: ID;
+  displayName: string;
+  xp: number;
+  credits: number;
+  streakFreezes: number;
+  frozenDates: ISODate[];
+  weeklyGoalHours: number;
+  /** Lunes de la semana cuyo bono semanal ya se reclamó. */
+  weeklyBonusClaimed: ISODate | null;
+  inventory: string[];
+  equipped: Equipped;
+  achievements: UnlockedAchievement[];
+  onboarded: boolean;
+  joinedAt: ISODateTime;
+}
+
+/* ---------- Tareas ---------- */
+export type Priority = 'low' | 'mid' | 'high' | 'boss';
+export type TaskStatus = 'todo' | 'doing' | 'done';
+
+export interface Subtask {
+  id: ID;
+  title: string;
+  done: boolean;
+}
+
+export interface Task {
+  id: ID;
+  title: string;
+  courseId: ID | null;
+  priority: Priority;
+  status: TaskStatus;
+  dueDate: ISODate | null;
+  estimateMin: number;
+  xp: number;
+  subtasks: Subtask[];
+  tags: string[];
+  createdAt: ISODateTime;
+  /** Fecha local de finalización (no UTC), para agrupar por día sin desfases. */
+  completedAt: ISODate | null;
+}
+
+/* ---------- Hábitos ---------- */
+export type Frequency =
+  | { type: 'daily' }
+  | { type: 'days'; days: number[] } // 0 = lunes … 6 = domingo
+  | { type: 'every'; every: number }
+  | { type: 'weekly' }
+  | { type: 'monthly' };
+
+export type Measure = 'times' | 'minutes' | 'hours' | 'pages' | 'exercises' | 'tasks' | 'percent' | 'boolean';
+
+export interface HabitStep {
+  id: ID;
+  title: string;
+  minutes: number;
+}
+
+export interface Habit {
+  id: ID;
+  title: string;
+  frequency: Frequency;
+  measure: Measure;
+  target: number;
+  xp: number;
+  reminder: string | null;
+  steps: HabitStep[];
+  /** Día local desde el que cuenta el hábito (ancla de "cada X días"). */
+  startDate: ISODate;
+  createdAt: ISODateTime;
+}
+
+export interface HabitLog {
+  id: ID;
+  habitId: ID;
+  date: ISODate;
+  value: number;
+  stepsDone: ID[];
+}
+
+/* ---------- Cursos ---------- */
+export type TopicStatus = 'todo' | 'doing' | 'done';
+
+export interface Topic {
+  id: ID;
+  title: string;
+  status: TopicStatus;
+  /** Marcado como "necesito repasar". */
+  review: boolean;
+  markedAt: ISODate | null;
+}
+
+export interface Module {
+  id: ID;
+  title: string;
+  summary: string;
+  xp: number;
+  topics: Topic[];
+}
+
+export interface Mentor {
+  name: string;
+  skills: string;
+  feedback: string;
+  feedbackAt: ISODate | null;
+}
+
+export interface Course {
+  id: ID;
+  title: string;
+  professor: string;
+  field: string;
+  modules: Module[];
+  mentor: Mentor | null;
+  createdAt: ISODateTime;
+}
+
+/* ---------- Metas y proyectos ---------- */
+export interface Skill {
+  id: ID;
+  label: string;
+  done: boolean;
+}
+
+export interface Milestone {
+  id: ID;
+  title: string;
+  summary: string;
+  xp: number;
+  done: boolean;
+  skills: Skill[];
+}
+
+export interface Goal {
+  id: ID;
+  title: string;
+  rewardTitle: string;
+  rewardDescription: string;
+  milestones: Milestone[];
+  createdAt: ISODateTime;
+}
+
+export interface Checkpoint {
+  id: ID;
+  title: string;
+  summary: string;
+  xp: number;
+  done: boolean;
+}
+
+export interface Project {
+  id: ID;
+  title: string;
+  summary: string;
+  kind: 'main' | 'side';
+  checkpoints: Checkpoint[];
+  createdAt: ISODateTime;
+}
+
+export interface PersonalReward {
+  id: ID;
+  title: string;
+  condition: string;
+  current: number;
+  target: number;
+  claimed: boolean;
+}
+
+/* ---------- Registros de actividad ---------- */
+export interface StudySession {
+  id: ID;
+  date: ISODate;
+  minutes: number;
+  courseId: ID | null;
+  label: string;
+}
+
+export type XpSource = 'task' | 'habit' | 'topic' | 'session' | 'milestone' | 'checkpoint' | 'bonus' | 'legacy';
+
+export interface XpEvent {
+  id: ID;
+  date: ISODate;
+  amount: number;
+  source: XpSource;
+  label: string;
+}
+
+export interface AppNotification {
+  id: ID;
+  category: 'mentor' | 'mission' | 'streak' | 'achievement' | 'alert' | 'shop';
+  title: string;
+  body: string;
+  createdAt: ISODateTime;
+  read: boolean;
+}
+
+/** Foto completa de los datos del usuario. */
+export interface Snapshot {
+  profile: Profile;
+  tasks: Task[];
+  habits: Habit[];
+  habitLogs: HabitLog[];
+  courses: Course[];
+  goals: Goal[];
+  projects: Project[];
+  personalRewards: PersonalReward[];
+  sessions: StudySession[];
+  xpEvents: XpEvent[];
+  notifications: AppNotification[];
+}

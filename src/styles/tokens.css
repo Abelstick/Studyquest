@@ -1,0 +1,116 @@
+/* ===== Fuentes (solo el subconjunto latino: cubre ñ y tildes) ===== */
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../../node_modules/@fontsource/press-start-2p/files/press-start-2p-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Nunito Variable';
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url('../../node_modules/@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+/* ===== Tokens: Mundo 1-1 de día ===== */
+:root {
+  --font-pixel: 'Press Start 2P', ui-monospace, 'Courier New', monospace;
+  --font-body: 'Nunito Variable', 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --page: #5c94fc;
+  --panel: #fffdf3;
+  --panel-2: #f6efd6;
+  --panel-3: #ebe0b4;
+  --text: #1a1a2e;
+  --muted: #57536e;
+  --line: #1a1a2e;
+  --line-soft: #d9cfa6;
+  --shadow: #1a1a2e;
+
+  --red: #d3201c;
+  --red-text: #b31611;
+  --yellow: #ffd23f;
+  --xp-text: #8a5a00;
+  --green: #1c9b41;
+  --green-text: #0d6e2a;
+  --blue: #0f6fd6;
+  --violet: #7b3fc4;
+  --orange: #f08a1c;
+  --ink-soft: #7a7690;
+
+  --on-red: #ffffff;
+  --on-yellow: #1a1a2e;
+  --on-green: #ffffff;
+
+  --hud: #111122;
+  --hud-text: #ffffff;
+  --side: #b5401f;
+  --side-2: #8c2f14;
+  --side-text: #ffffff;
+  --bar-bg: #e7dcb2;
+  --field: #ffffff;
+  --focus: #0f6fd6;
+
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='340' shape-rendering='crispEdges'%3E%3Cg fill='%23fff' opacity='.6'%3E%3Crect x='48' y='64' width='96' height='16'/%3E%3Crect x='64' y='48' width='64' height='16'/%3E%3Crect x='32' y='80' width='128' height='16'/%3E%3Crect x='330' y='190' width='96' height='16'/%3E%3Crect x='346' y='174' width='64' height='16'/%3E%3Crect x='314' y='206' width='128' height='16'/%3E%3C/g%3E%3C/svg%3E");
+
+  --radius: 0;
+  --bw: 3px;
+  --sh: 4px 4px 0 var(--shadow);
+  --sh-sm: 2px 2px 0 var(--shadow);
+  --side-w: 248px;
+  --hud-h: 64px;
+}
+
+/* ===== Noche / castillo ===== */
+:root[data-theme='dark'] {
+  --page: #0d0d24;
+  --panel: #1b1b3a;
+  --panel-2: #24244f;
+  --panel-3: #2f2f66;
+  --text: #f4f1ff;
+  --muted: #b9b4dc;
+  --line: #05050f;
+  --line-soft: #3a3a6e;
+  --shadow: #000000;
+
+  --red: #e0352f;
+  --red-text: #ff8a80;
+  --yellow: #ffd23f;
+  --xp-text: #ffd23f;
+  --green: #2fb85a;
+  --green-text: #6ee08f;
+  --blue: #4aa3ff;
+  --violet: #b07cff;
+  --ink-soft: #8d88b5;
+
+  --hud: #05050f;
+  --side: #3b1a52;
+  --side-2: #2a1140;
+  --bar-bg: #0c0c24;
+  --field: #12122b;
+  --focus: #ffd23f;
+
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' shape-rendering='crispEdges'%3E%3Cg fill='%23fff'%3E%3Crect x='30' y='40' width='3' height='3' opacity='.8'/%3E%3Crect x='190' y='90' width='3' height='3' opacity='.5'/%3E%3Crect x='300' y='30' width='3' height='3' opacity='.7'/%3E%3Crect x='90' y='200' width='3' height='3' opacity='.6'/%3E%3Crect x='250' y='250' width='3' height='3' opacity='.8'/%3E%3Crect x='330' y='170' width='3' height='3' opacity='.5'/%3E%3Crect x='20' y='320' width='3' height='3' opacity='.6'/%3E%3Crect x='160' y='330' width='3' height='3' opacity='.4'/%3E%3C/g%3E%3Crect x='210' y='140' width='6' height='6' fill='%23ffd23f' opacity='.7'/%3E%3C/svg%3E");
+}
+
+/* ===== Mundos comprables (se combinan con día/noche) ===== */
+:root[data-world='underground'] {
+  --page: #050514;
+  --side: #0a3a8a;
+  --side-2: #062a66;
+  --page-art: none;
+}
+:root[data-theme='light'][data-world='underground'] {
+  --page: #1e40a8;
+}
+:root[data-world='castle'] {
+  --page: #2a1a1a;
+  --side: #6b6b78;
+  --side-2: #4a4a55;
+  --page-art: none;
+}
+:root[data-theme='light'][data-world='castle'] {
+  --page: #7a5c5c;
+}

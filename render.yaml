@@ -1,0 +1,45 @@
+# Blueprint de Render: https://render.com/docs/blueprint-spec
+# StudyQuest es una SPA estática (Vite): Render solo sirve archivos, el backend es Supabase.
+services:
+  - type: web
+    runtime: static
+    name: studyquest
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: VITE_DATA_PROVIDER
+        value: supabase
+      # Se piden al crear el servicio (no se guardan en el repositorio).
+      # Son variables de *build*: si las cambias, hay que volver a desplegar.
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+    routes:
+      # Rutas de la SPA (react-router): cualquier ruta devuelve index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # El service worker y el manifest nunca deben quedarse cacheados, o la PWA no se actualiza.
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache
+      - path: /manifest.webmanifest
+        name: Cache-Control
+        value: no-cache
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

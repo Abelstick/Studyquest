@@ -1,0 +1,355 @@
+/**
+ * Sprites pixel-art hechos a mano. Cada carácter es un píxel; "." es transparente.
+ * Los renderiza <Sprite/> como SVG con `shape-rendering: crispEdges`, así se ven nítidos a cualquier tamaño.
+ */
+
+export const PALETTE: Record<string, string> = {
+  K: '#1a1a2e', // contorno
+  W: '#ffffff',
+  R: '#e52521', // rojo Mario
+  Y: '#ffd23f', // moneda
+  O: '#f08a1c', // naranja
+  B: '#0f9be0', // azul
+  G: '#2ab54a', // verde tubería
+  g: '#8fe38f', // verde claro
+  H: '#137a35', // verde oscuro
+  S: '#fcd8a8', // piel
+  T: '#c8501e', // ladrillo
+  E: '#a9a9b8', // piedra
+  V: '#a349e0', // violeta
+  P: '#ff8fc2', // rosa
+};
+
+export const SPRITES = {
+  coin: [
+    '..KKKK..',
+    '.KYYYYK.',
+    'KYYWWYYK',
+    'KYWYYYYK',
+    'KYWYYOYK',
+    'KYWYYOYK',
+    'KYWYYOYK',
+    'KYWYYOYK',
+    'KYYYYOYK',
+    'KYYOOOYK',
+    '.KYYYYK.',
+    '..KKKK..',
+  ],
+  mushroom: [
+    '....KKKK....',
+    '..KKRRRRKK..',
+    '.KRWWRRWWRK.',
+    'KRRWWRRWWRRK',
+    'KRRRRWWRRRRK',
+    'KRRRRRRRRRRK',
+    'KKKKKKKKKKKK',
+    '.KSSSSSSSSK.',
+    '.KSSKSSKSSK.',
+    '.KSSKSSKSSK.',
+    '..KSSSSSSK..',
+    '...KKKKKK...',
+  ],
+  qblock: [
+    'KKKKKKKKKKKK',
+    'KYKYYYYYYKYK',
+    'KYYYKKKKYYYK',
+    'KYYKKYYKKYYK',
+    'KYYYYYYKKYYK',
+    'KYYYYYKKYYYK',
+    'KYYYYKKYYYYK',
+    'KYYYYYYYYYYK',
+    'KYYYYKKYYYYK',
+    'KYYYYKKYYYYK',
+    'KYKYYYYYYKYK',
+    'KKKKKKKKKKKK',
+  ],
+  brick: [
+    'KKKKKKKKKKKK',
+    'KTTTTTKTTTTK',
+    'KTTTTTKTTTTK',
+    'KTTTTTKTTTTK',
+    'KKKKKKKKKKKK',
+    'KTTTKTTTTTTK',
+    'KTTTKTTTTTTK',
+    'KTTTKTTTTTTK',
+    'KKKKKKKKKKKK',
+    'KTTTTTKTTTTK',
+    'KTTTTTKTTTTK',
+    'KKKKKKKKKKKK',
+  ],
+  star: [
+    '.....KK.....',
+    '....KYYK....',
+    '....KYYK....',
+    'KKKKKYYKKKKK',
+    'KYYYYYYYYYYK',
+    '.KYYKYYKYYK.',
+    '..KYYYYYYYK.',
+    '..KYYYYYYYK.',
+    '.KYYYYYYYYK.',
+    '.KYYYKKYYYK.',
+    'KYYYK..KYYYK',
+    'KKKK....KKKK',
+  ],
+  heart: [
+    '............',
+    '..KKK..KKK..',
+    '.KRRRKKRRRK.',
+    'KRWWRRRRRRRK',
+    'KRWRRRRRRRRK',
+    'KRRRRRRRRRRK',
+    '.KRRRRRRRRK.',
+    '..KRRRRRRK..',
+    '...KRRRRK...',
+    '....KRRK....',
+    '.....KK.....',
+    '............',
+  ],
+  flag: [
+    '..KK........',
+    '..KKKKKK....',
+    '..KRRRRRKK..',
+    '..KRRRRRRRK.',
+    '..KRRRRRKK..',
+    '..KRRKKK....',
+    '..KK........',
+    '..KK........',
+    '..KK........',
+    '..KK........',
+    '.KKKK.......',
+    'KKKKKK......',
+  ],
+  pipe: [
+    'KKKKKKKKKKKK',
+    'KGggGGGGGHHK',
+    'KGggGGGGGHHK',
+    'KKKKKKKKKKKK',
+    '.KGgGGGGGHK.',
+    '.KGgGGGGGHK.',
+    '.KGgGGGGGHK.',
+    '.KGgGGGGGHK.',
+    '.KGgGGGGGHK.',
+    '.KGgGGGGGHK.',
+    '.KGgGGGGGHK.',
+    '.KKKKKKKKKK.',
+  ],
+  castle: [
+    'KKK.KKKK.KKK',
+    'KEEKEEEEKEEK',
+    'KEEEEEEEEEEK',
+    'KEEEKKKKEEEK',
+    'KEEKBBBBKEEK',
+    'KEEKBBBBKEEK',
+    'KEEEKKKKEEEK',
+    'KEEEEEEEEEEK',
+    'KEEEKKKKEEEK',
+    'KEEEKTTKEEEK',
+    'KEEEKTTKEEEK',
+    'KKKKKKKKKKKK',
+  ],
+  flower: [
+    '...KKKKKK...',
+    '..KRRRRRRK..',
+    '.KRRYYYYRRK.',
+    '.KRYKYYKYRK.',
+    '.KRYYYYYYRK.',
+    '..KRRYYRRK..',
+    '...KKKKKK...',
+    '....KGGK....',
+    '..KGKGGKGK..',
+    '..KKKGGKKK..',
+    '....KGGK....',
+    '....KKKK....',
+  ],
+  chest: [
+    '..KKKKKKKK..',
+    '.KTTTTTTTTK.',
+    'KTTTTTTTTTTK',
+    'KTTTTTTTTTTK',
+    'KKKKKKKKKKKK',
+    'KTTTTKYKTTTK',
+    'KTTTTKYKTTTK',
+    'KTTTTTTTTTTK',
+    'KTTTTTTTTTTK',
+    'KTTTTTTTTTTK',
+    'KTTTTTTTTTTK',
+    'KKKKKKKKKKKK',
+  ],
+  cap: [
+    '...KKKKKK...',
+    '..KRRRRRRK..',
+    '.KRRRWWWRRK.',
+    '.KRRWKWKWRK.',
+    '.KRRWKKKWRK.',
+    '.KRRWKWKWRK.',
+    '.KRRRWWWRRK.',
+    'KKKKKKKKKKKK',
+    'KRRRRRRRRRRK',
+    '.KRRRRRRRRK.',
+    '..KKKKKKKK..',
+    '............',
+  ],
+  ghost: [
+    '...KKKKKK...',
+    '..KRRRRRRK..',
+    '.KRRRRRRRRK.',
+    '.KRWWRRWWRK.',
+    'KRWWBRRWWBRK',
+    'KRWWBRRWWBRK',
+    'KRRRRRRRRRRK',
+    'KRRRRRRRRRRK',
+    'KRRRRRRRRRRK',
+    'KRRRRRRRRRRK',
+    'KRKRRKKRRKRK',
+    '.K.KK..KK.K.',
+  ],
+  pacman: [
+    '...KKKKKK...',
+    '..KYYYYYYK..',
+    '.KYYYYYKYYK.',
+    'KYYYYYYYKK..',
+    'KYYYYYYKK...',
+    'KYYYYKK.....',
+    'KYYYYKK.....',
+    'KYYYYYYKK...',
+    'KYYYYYYYKK..',
+    '.KYYYYYYYYK.',
+    '..KYYYYYYK..',
+    '...KKKKKK...',
+  ],
+  creeper: [
+    'GGHGGGGGGHGG',
+    'GGGGGGGHGGGG',
+    'GHGKKGGKKGHG',
+    'GGGKKGGKKGGG',
+    'GGGGGKKGGGGG',
+    'GHGGKKKKGGHG',
+    'GGGGKKKKGGGG',
+    'GGGGKGGKGGGG',
+    'GGHGGGGGGHGG',
+    'GGGGHGGGGGGG',
+    'GHGGGGGGGGHG',
+    'GGGGGGHGGGGG',
+  ],
+  pokeball: [
+    '...KKKKKK...',
+    '..KRRRRRRK..',
+    '.KRRRRRRRRK.',
+    'KRRRRRRRRRRK',
+    'KRRRRRRRRRRK',
+    'KKKKKKKKKKKK',
+    'KWWWWKKWWWWK',
+    'KWWWWKKWWWWK',
+    'KWWWWWWWWWWK',
+    '.KWWWWWWWWK.',
+    '..KWWWWWWK..',
+    '...KKKKKK...',
+  ],
+  sword: [
+    '.....KK.....',
+    '....KWWK....',
+    '....KWWK....',
+    '....KWWK....',
+    '....KWWK....',
+    '....KWWK....',
+    '....KWWK....',
+    '..KKKKKKKK..',
+    '..KBBBBBBK..',
+    '....KTTK....',
+    '....KTTK....',
+    '....KKKK....',
+  ],
+  ring: [
+    '...KKKKKK...',
+    '..KYYYYYYK..',
+    '.KYYKKKKYYK.',
+    'KYYKK..KKYYK',
+    'KYK......KYK',
+    'KYK......KYK',
+    'KYK......KYK',
+    'KYYK....KYYK',
+    '.KYYKKKKYYK.',
+    '..KYYYYYYK..',
+    '...KKKKKK...',
+    '............',
+  ],
+  tetris: [
+    'KKKKKKKKKKKK',
+    'KVVKKVVKKVVK',
+    'KVVKKVVKKVVK',
+    'KKKKKKKKKKKK',
+    '....KKKK....',
+    '....KVVK....',
+    '....KVVK....',
+    '....KKKK....',
+  ],
+  trophy: [
+    '.KKKKKKKKKK.',
+    '.KYYWYYYYOK.',
+    '.KYYWYYYYOK.',
+    '.KYYWYYYYOK.',
+    '.KYYYYYYYOK.',
+    '..KYYYYYOK..',
+    '...KYYYOK...',
+    '....KYYK....',
+    '....KYOK....',
+    '...KKKKKK...',
+    '..KOOOOOOK..',
+    '..KKKKKKKK..',
+  ],
+  skull: [
+    '..KKKKKKKK..',
+    '.KWWWWWWWWK.',
+    'KWWWWWWWWWWK',
+    'KWKKKWWKKKWK',
+    'KWKKKWWKKKWK',
+    'KWWWWKKWWWWK',
+    '.KWWWWWWWWK.',
+    '..KWKWKWKWK.',
+    '..KWKWKWKWK.',
+    '..KKKKKKKKK.',
+  ],
+  fire: [
+    '.....K......',
+    '....KRK.K...',
+    '....KRRKRK..',
+    '...KRRORRK..',
+    '..KRROOORRK.',
+    '..KROOYOORK.',
+    '.KRROYYYORRK',
+    '.KROYYYYYORK',
+    '.KROYYWYYORK',
+    '.KRROYYYORK.',
+    '..KRROOORK..',
+    '...KKKKKK...',
+  ],
+} as const satisfies Record<string, readonly string[]>;
+
+export type SpriteName = keyof typeof SPRITES;
+export const SPRITE_NAMES = Object.keys(SPRITES) as SpriteName[];
+
+/** Une píxeles contiguos del mismo color en un solo rectángulo para no inflar el DOM. */
+export function spriteRects(name: SpriteName): { x: number; y: number; w: number; fill: string }[] {
+  const rows: readonly string[] = SPRITES[name];
+  const out: { x: number; y: number; w: number; fill: string }[] = [];
+  rows.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      const ch = row[x];
+      if (ch === '.') {
+        x++;
+        continue;
+      }
+      let w = 1;
+      while (row[x + w] === ch) w++;
+      out.push({ x, y, w, fill: PALETTE[ch] });
+      x += w;
+    }
+  });
+  return out;
+}
+
+export const spriteSize = (name: SpriteName) => {
+  const rows: readonly string[] = SPRITES[name];
+  return { w: rows[0].length, h: rows.length };
+};

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#5c94fc" />
+    <meta name="description" content="StudyQuest: estudia, crea hábitos y sube de nivel como en tus juegos favoritos." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <title>StudyQuest</title>
+    <script>
+      // Evita el parpadeo de tema: se aplica antes de pintar.
+      try {
+        var p = JSON.parse(localStorage.getItem('sq:prefs') || '{}');
+        var t = p.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = t;
+        if (p.world) document.documentElement.dataset.world = p.world;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

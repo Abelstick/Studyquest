@@ -361,6 +361,62 @@ describe('store de datos', () => {
     });
   });
 
+  describe('ciudad', () => {
+    const completeOn = (habitId: string, day: number) => {
+      vi.setSystemTime(new Date(2026, 8, day, 12)); // días laborables 14-18 (lunes a viernes)
+      store.getState().setHabitValue(habitId, 1);
+    };
+    const habit = () => {
+      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 10, reminder: null, steps: [] });
+      return store.getState().habits[0].id;
+    };
+    const cityNotes = () => store.getState().notifications.filter((n) => /^(Casa|Biblioteca|Academia|Laboratorio|Arena|Museo):/.test(n.title));
+
+    it('la primera vez solo anota el punto de partida: sin premios por lo que ya habías hecho', () => {
+      const id = habit();
+      completeOn(id, 14);
+      expect(store.getState().profile.city).toEqual({ casa: 0, biblioteca: 0, academia: 0, laboratorio: 0, arena: 0, museo: 0 });
+      expect(cityNotes()).toHaveLength(0);
+    });
+
+    it('al llegar a 5 hábitos cumplidos la Casa sube al nivel 1, con su premio, una sola vez', () => {
+      const id = habit();
+      [14, 15, 16, 17].forEach((d) => completeOn(id, d));
+      expect(store.getState().profile.city?.casa).toBe(0);
+      const before = store.getState().profile.credits;
+      completeOn(id, 18); // 5.º cumplimiento
+      const s = store.getState();
+      expect(s.profile.city?.casa).toBe(1);
+      expect(cityNotes().map((n) => n.title)).toEqual(['Casa: Tienda de campaña']);
+      // 50 monedas de la mejora (además de las del XP del hábito y de los logros que salten a la vez)
+      expect(s.profile.credits).toBeGreaterThanOrEqual(before + 50);
+      // sigue cumpliendo: no se repite el premio
+      completeOn(id, 21);
+      expect(cityNotes()).toHaveLength(1);
+      expect(store.getState().profile.city?.casa).toBe(1);
+    });
+
+    it('deshacer un hábito no baja el nivel ya conseguido', () => {
+      const id = habit();
+      [14, 15, 16, 17, 18].forEach((d) => completeOn(id, d));
+      expect(store.getState().profile.city?.casa).toBe(1);
+      store.getState().setHabitValue(id, 0);
+      expect(store.getState().profile.city?.casa).toBe(1);
+    });
+
+    it('un jugador con progreso previo (sin ciudad guardada) no recibe premios retroactivos', async () => {
+      const { buildDemo } = await import('@/core/seed');
+      await store.getState().replaceAll(buildDemo(store.getState().profile, today()));
+      const coins = store.getState().profile.credits;
+      expect(store.getState().profile.city).toBeUndefined();
+      store.getState().openChest(); // cualquier acción que compruebe logros
+      const s = store.getState();
+      expect(s.profile.city).toBeDefined();
+      expect(cityNotes()).toHaveLength(0);
+      expect(s.profile.credits - coins).toBeLessThan(200); // solo el cofre (y como mucho algún logro suelto), no niveles de edificios
+    });
+  });
+
   describe('cofre diario', () => {
     it('se abre una vez al día, da monedas y cuenta para el total', () => {
       store.getState().openChest();

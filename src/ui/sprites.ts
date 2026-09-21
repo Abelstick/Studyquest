@@ -542,6 +542,34 @@ export const SPRITES = {
     '..KBBKKBBK..',
     '..KKKKKKKK..',
   ],
+  house: [
+    '.....KK.....',
+    '....KRRK.KK.',
+    '...KRRRRKEK.',
+    '..KRRRRRRKK.',
+    '.KRRRRRRRRK.',
+    'KKKKKKKKKKKK',
+    '.KLLLLLLLLK.',
+    '.KLBBLLBBLK.',
+    '.KLBBLLBBLK.',
+    '.KLLLNNLLLK.',
+    '.KLLLNNLLLK.',
+    'KKKKKKKKKKKK',
+  ],
+  tree: [
+    '...KKKKKK...',
+    '..KGGGGGGK..',
+    '.KGGgGGGGGK.',
+    'KGGGGGgGGGGK',
+    'KGGGGGGGGgGK',
+    'KGgGGGGGGGGK',
+    '.KGGGGGGGGK.',
+    '..KKGGGGKK..',
+    '....KNNK....',
+    '....KNNK....',
+    '....KNNK....',
+    '...KKKKKK...',
+  ],
 } as const satisfies Record<string, readonly string[]>;
 
 export type SpriteName = keyof typeof SPRITES;
@@ -549,7 +577,11 @@ export const SPRITE_NAMES = Object.keys(SPRITES) as SpriteName[];
 
 /** Une píxeles contiguos del mismo color en un solo rectángulo para no inflar el DOM. */
 export function spriteRects(name: SpriteName): { x: number; y: number; w: number; fill: string }[] {
-  const rows: readonly string[] = SPRITES[name];
+  return rectsFromRows(SPRITES[name]);
+}
+
+/** Igual que `spriteRects`, pero para cualquier cuadrícula de caracteres (p. ej. los edificios de la ciudad, que se dibujan por código). */
+export function rectsFromRows(rows: readonly string[]): { x: number; y: number; w: number; fill: string }[] {
   const out: { x: number; y: number; w: number; fill: string }[] = [];
   rows.forEach((row, y) => {
     let x = 0;

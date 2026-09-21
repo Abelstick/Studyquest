@@ -29,6 +29,8 @@ function useRouteTitle(): string {
       return id ? (courses.find((c) => c.id === id)?.title ?? 'Curso') : `${courses.length} ${courses.length === 1 ? 'curso activo' : 'cursos activos'}`;
     case '/tareas':
       return `${tasks.filter((t) => t.status !== 'done').length} contratos abiertos`;
+    case '/ciudad':
+      return 'Construye tu ciudad';
     case '/planificador':
       return 'Tu ruta con fechas';
     case '/calendario':

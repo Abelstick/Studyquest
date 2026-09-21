@@ -37,6 +37,8 @@ export interface Profile {
   lastChest?: ISODate;
   /** Cofres diarios abiertos en total. */
   chests?: number;
+  /** Nivel de cada edificio de la ciudad ya celebrado (y premiado), para no repetir premios. */
+  city?: Partial<Record<string, number>>;
 }
 
 export interface DayBonus {

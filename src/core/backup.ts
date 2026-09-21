@@ -190,6 +190,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       ? { dayBonus: { date: str(p.dayBonus.date), weekend: asArray(p.dayBonus.weekend).map(ref).filter((x): x is string => !!x), combo: p.dayBonus.combo === true } }
       : {}),
     ...(DATE.test(str(p.lastChest)) ? { lastChest: str(p.lastChest) } : {}),
+    ...(isObj(p.city) ? { city: Object.fromEntries(Object.entries(p.city).filter(([k, v]) => ['casa', 'biblioteca', 'academia', 'laboratorio', 'arena', 'museo'].includes(k) && typeof v === 'number').map(([k, v]) => [k, Math.max(0, Math.min(5, Math.floor(v as number)))])) } : {}),
     ...(typeof p.chests === 'number' && p.chests > 0 ? { chests: Math.floor(p.chests) } : {}),
   };
 

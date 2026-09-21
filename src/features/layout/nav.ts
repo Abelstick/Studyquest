@@ -21,6 +21,7 @@ export const NAV: NavItem[] = [
   { to: '/metas', label: 'Metas', sprite: 'flag', kicker: 'Banderas' },
   { to: '/proyectos', label: 'Proyectos', sprite: 'chest', kicker: 'Mazmorras' },
   { to: '/progreso', label: 'Progreso', sprite: 'star', kicker: 'Hoja de personaje', mobile: true },
+  { to: '/ciudad', label: 'Ciudad', sprite: 'house', kicker: 'Tu ciudad' },
   { to: '/arsenal', label: 'Arsenal', sprite: 'mushroom', kicker: 'Tienda de Toad' },
   { to: '/perfil', label: 'Perfil', sprite: 'cap', kicker: 'Personaje', mobile: true },
 ];

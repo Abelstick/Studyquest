@@ -12,6 +12,10 @@ import type { Snapshot } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Empty, Panel, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { PixelArt } from '@/ui/PixelArt';
+import { buildingRows } from '@/ui/city-art';
+import { CITY_MAX } from '@/core/city';
+import { useCity } from '@/features/ciudad/useCity';
 
 function MissionRow({ m }: { m: Mission }) {
   const setTaskStatus = useData((s) => s.setTaskStatus);
@@ -97,6 +101,30 @@ function Events({ events }: { events: GameEvent[] }) {
         </div>
       ))}
     </div>
+  );
+}
+
+/** Resumen de tu ciudad: los seis edificios y cuál está más cerca de mejorar. */
+function CityMini() {
+  const city = useCity();
+  return (
+    <Panel kicker="// Tu ciudad" title={city.title.name} right={<span className="kicker">{city.total} / {CITY_MAX}</span>}>
+      <Link to="/ciudad" className="citymini" aria-label="Ver mi ciudad">
+        {city.states.map((s) => (
+          <span key={s.building.id} className="citymini__b" title={`${s.building.name}: nivel ${s.level}`}>
+            <PixelArt rows={buildingRows(s.building.id, s.level)} size={64} />
+            <span className="citymini__lv">{s.level === 0 ? '—' : `Nv ${s.level}`}</span>
+          </span>
+        ))}
+      </Link>
+      {city.closest ? (
+        <p className="muted small">
+          Tu <b>{city.closest.building.name.toLowerCase()}</b> está al <b>{city.closest.pct}%</b> de mejorar: te {city.closest.left === 1 ? 'falta' : 'faltan'} {city.closest.left} {city.closest.building.unit}.
+        </p>
+      ) : (
+        <p className="muted small">¡Todos tus edificios están al máximo!</p>
+      )}
+    </Panel>
   );
 }
 
@@ -325,6 +353,7 @@ export default function Inicio() {
 
           <div className="stack">
             <DailyChest streak={streak} />
+            <CityMini />
             <StreakCalendar />
             <WeeklyReport snap={snap} />
             <Panel kicker="// Inteligencia táctica" title="Consejos del Toad">

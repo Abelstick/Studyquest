@@ -33,6 +33,7 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 - [Copias de seguridad](#copias-de-seguridad)
 - [Recordatorios push](#recordatorios-con-repetición-y-sonido)
 - [Planificador inteligente](#planificador-inteligente)
+- [Tu ciudad](#tu-ciudad)
 - [Repaso espaciado, calendario, jefes y Pomodoro](#repaso-espaciado-calendario-jefes-y-pomodoro)
 - [Reglas del juego](#reglas-del-juego)
 - [Arquitectura](#arquitectura)
@@ -62,6 +63,7 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 | **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Marca temas como «necesito repasar». |
 | **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha límite, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
 | **Planificador** | Le dices «quiero aprender análisis de datos en 3 meses» y genera la ruta (Excel → SQL → Python → Pandas → Power BI → proyecto final) y **un plan con fechas** según tu disponibilidad, tus tareas y tus hábitos. Con **IA (Gemini, gratis)** o con plantillas. |
+| **Ciudad** | Seis edificios que **crecen con tu progreso real** (casa, biblioteca, academia, laboratorio, arena y museo), de 0 a 5 niveles, con recompensas en monedas al mejorar. También aparece resumida en Inicio. |
 | **Calendario** | Vista mensual con tus tareas por fecha límite, las repeticiones futuras y los repasos de flashcards. Arrastra una tarea a otro día para reprogramarla. |
 | **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
 | **Pomodoro** | Temporizador de enfoque/descanso con **música 8-bit** y un personaje que **corre mientras estudias**. Sigue vivo al cambiar de pantalla. |
@@ -347,6 +349,25 @@ interaction.output_text; // el JSON, que la app valida antes de usarlo
 
 Los límites de la capa gratuita (peticiones por minuto y por día) y los nombres de modelo cambian con el tiempo. Si `gemini-3.8-flash` deja de estar disponible en tu cuenta, o quieres más cuota, cambia el modelo en *Avanzado: modelo* (`gemini-3.5-flash-lite` o `gemini-3.1-flash-lite`). Las instalaciones que usaban `gemini-2.5-flash` pasan solas al modelo actual.
 
+## Tu ciudad
+
+Pantalla **Ciudad** (y un resumen en Inicio). Cada área de la app es un edificio que sube de nivel (0 = solar en obras, hasta 5) con lo que ya haces: **no hay que registrar nada más**, todo se calcula a partir de tus datos.
+
+| Edificio | Área | Puntos | Niveles (umbral de puntos) |
+| --- | --- | --- | --- |
+| 🏠 **Casa** | Hábitos | 1 por hábito cumplido | Tienda de campaña (5) · Cabaña (25) · Casita (75) · Casa familiar (200) · Mansión (500) |
+| 📚 **Biblioteca** | Conocimiento | 1 por tema completado · 1 por repaso superado · 3 por tema dominado | Estante (5) · Librería (20) · Biblioteca (60) · Gran biblioteca (150) · Archivo legendario (350) |
+| 🏫 **Academia** | Cursos | 3 por módulo completado · 10 por curso terminado · 1 por hora de estudio | Aula (6) · Escuelita (25) · Academia (70) · Instituto (160) · Universidad (350) |
+| 💻 **Laboratorio** | Proyectos | 2 por checkpoint · 10 por proyecto terminado · 2 por hito de una meta | Taller (4) · Laboratorio (16) · Centro de pruebas (45) · Instituto de I+D (110) · Fábrica de ideas (250) |
+| 🏟️ **Arena** | Retos | 3 por jefe derrotado · 5 por reto semanal · 2 por combo ×2 · 1 por Pomodoro | Pista (5) · Gimnasio (20) · Arena (55) · Estadio (130) · Coliseo (300) |
+| 🏆 **Museo** | Logros | 1 por logro desbloqueado | Vitrina (3) · Sala de honor (8) · Museo (16) · Gran museo (28) · Palacio de los récords (40) |
+
+- **Mejorar un edificio da monedas**: +50, +100, +200, +400 y +800 por alcanzar los niveles 1 a 5, con aviso y mensaje en el buzón. Si saltas varios niveles a la vez, cobras todos. Deshacer o borrar datos **no baja** lo ya conseguido ni repite premios.
+- **Sin premios retroactivos**: la primera vez que se comprueba la ciudad solo se anota tu punto de partida (no se regalan monedas por progreso anterior a la ciudad).
+- El **rango de la ciudad** sube con la suma de niveles (0-30): Terreno en obras → Aldea (3) → Pueblo (8) → Ciudad (14) → Metrópolis (21) → Capital legendaria (28). Al crecer aparecen árboles, una fuente, farolas y banderas, y suma **habitantes** (tu XP y cada mejora).
+- Al pulsar un edificio ves sus 5 niveles con su recompensa, **cómo se ganan los puntos**, cuánto falta y un botón a la pantalla donde mejorarlo. La ciudad te señala cuál está **más cerca de subir**.
+- Los edificios se **dibujan por código** (cada uno tiene 5 niveles que crecen y ganan detalles), y hay **5 logros nuevos** (Primera piedra, Sin solares vacíos, Alcalde, Urbanista y Obra maestra). El nivel de cada edificio ya celebrado se guarda en tu perfil (también en las copias de seguridad).
+
 ## Repaso espaciado, calendario, jefes y Pomodoro
 
 **Repaso espaciado (Repaso).** Marca un tema como *«Necesito repasar»* dentro de un curso: reaparece **al día siguiente** y, cada vez que lo recuerdas, a los **3, 7 y 14 días**. Fallar reinicia la escalera; superar los cuatro escalones deja el tema **dominado** (+40 XP). Cada repaso superado da +10 XP. Las tarjetas son tuyas: botón **♪ Tarjetas** en cada tema, una por línea con el formato `pregunta :: respuesta` (si no hay ninguna, se te pregunta si recuerdas el tema). Atajos: `espacio` gira la tarjeta, `1` `2` `3` califican. La agenda se ve también en el calendario y en el menú (insignia con lo que toca hoy).
@@ -498,6 +519,7 @@ Cubren la lógica que más importa:
 - **Planificador:** validación de lo que devuelve la IA (basura, textos enormes, módulos vacíos), lectura de la respuesta de Gemini, reparto en el tiempo (orden, sin pasarse de tu disponibilidad diaria, recorte si no cabe, días bloqueados, agenda ocupada, cada tema una sola vez), plantillas y creación del plan.
 - **Cancelar y tiempo máximo de la IA:** la petición se aborta con «Cancelar» (y no se llega a enviar si ya estaba cancelada), se corta a los 60 s y no deja temporizadores pendientes.
 - **Guía de conceptos:** cada concepto con 5 ejemplos distintos, sus «esto NO es» apuntando a otro concepto, ejemplos completos y el mini test con respuestas repartidas.
+- **Ciudad:** niveles exactos de cada edificio (umbrales), puntos de cada área, rangos, adornos y habitantes; premios al mejorar (una sola vez, saltos de varios niveles, sin retroactivos, sin bajar al borrar datos); el arte de los 6 edificios × 6 niveles (cuadrícula regular, solo colores de la paleta, cada nivel distinto, sin recortes) y el flujo real: 5 hábitos suben la Casa.
 - **Novedades:** intervalos 1-3-7-14 y dominio del tema, repeticiones de tareas (meses cortos, completar tarde, reabrir), vida de los jefes y victoria, bonus de fin de semana y combo (una sola vez, reinicio diario), cofre, cuadrícula del calendario, fases del Pomodoro y validez de las partituras.
 - Validez de todos los sprites, del catálogo y de los logros, y del decodificador de la clave VAPID (con la clave normalizada y validada).
 

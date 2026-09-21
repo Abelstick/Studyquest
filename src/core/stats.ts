@@ -24,6 +24,11 @@ export interface Stats {
   worlds: number;
   avatars: number;
   chests: number;
+  topicsDone: number;
+  modulesDone: number;
+  checkpointsDone: number;
+  weeklyChallenges: number;
+  achievementsCount: number;
 }
 
 export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
@@ -51,6 +56,11 @@ export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
     worlds: s.profile.inventory.filter((i) => i.startsWith('world-')).length,
     avatars: s.profile.inventory.filter((i) => i.startsWith('avatar-')).length,
     chests: s.profile.chests ?? 0,
+    topicsDone: s.courses.reduce((a, c) => a + c.modules.reduce((b, m) => b + m.topics.filter((t) => t.status === 'done').length, 0), 0),
+    modulesDone: s.courses.reduce((a, c) => a + c.modules.filter((m) => m.topics.length > 0 && m.topics.every((t) => t.status === 'done')).length, 0),
+    checkpointsDone: s.projects.reduce((a, p) => a + p.checkpoints.filter((c) => c.done).length, 0),
+    weeklyChallenges: s.xpEvents.filter((e) => e.source === 'bonus' && e.amount > 0 && e.label === 'Reto semanal completado').length,
+    achievementsCount: s.profile.achievements.length,
   };
 }
 

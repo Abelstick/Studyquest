@@ -10,6 +10,7 @@ import { canOpenChest, chestReward, dayBonusOf, habitBonus, habitsDoneOn } from 
 import { gradeReview, startReview, type Rating } from '@/core/review';
 import { isBoss, spawnNext, taskReward } from '@/core/tasks';
 import type { PlanEntities } from '@/core/planner';
+import { buildingById, cityUpgrades } from '@/core/city';
 import { ACHIEVEMENTS } from '@/core/achievements';
 import { shopItem } from '@/core/catalog';
 import { buildDemo } from '@/core/seed';
@@ -123,7 +124,24 @@ export function createDataStore(repo: Repository) {
       run((s) => ({ notifications: [item, ...s.notifications] }), () => repo.notifications.create(item));
     };
 
-    const checkAchievements = () => {
+    /** Sube de nivel los edificios de la ciudad que lo merezcan (con premio en monedas). La primera vez solo anota el punto de partida. */
+    const checkCity = () => {
+      const s = get();
+      const { levels, ups, firstTime } = cityUpgrades(s.profile.city, computeStats(pickData(s)));
+      if (firstTime) return patchProfile({ city: levels });
+      if (!ups.length) return;
+      const coins = ups.reduce((a, u) => a + u.coins, 0);
+      patchProfile({ city: levels, credits: s.profile.credits + coins });
+      for (const u of ups) {
+        const b = buildingById(u.id);
+        if (!b) continue;
+        useUi.getState().toast({ kind: 'unlock', title: `¡Tu ${b.name.toLowerCase()} ${u.to === 1 ? 'ya está en construcción' : 'ha mejorado'}!`, body: `${b.levelNames[u.to - 1]} · nivel ${u.to} de 5`, coins: u.coins, to: '/ciudad' });
+        notify({ category: 'achievement', title: `${b.name}: ${b.levelNames[u.to - 1]}`, body: `Nivel ${u.to} de 5 en tu ciudad. +${u.coins} monedas.` });
+      }
+      sfx.levelUp();
+    };
+
+    const unlockAchievements = () => {
       const s = get();
       const stats = computeStats(pickData(s));
       const have = new Set(s.profile.achievements.map((a) => a.id));
@@ -139,6 +157,12 @@ export function createDataStore(repo: Repository) {
         notify({ category: 'achievement', title: `Desbloqueaste "${a.title}"`, body: `+${a.reward} monedas acreditadas.` });
       }
       sfx.unlock();
+    };
+
+    /** Logros y, a continuación, la ciudad (el museo cuenta logros, así que va después). */
+    const checkAchievements = () => {
+      unlockAchievements();
+      checkCity();
     };
 
     /** Suma (o resta, si es negativo) XP y monedas; detecta subidas de nivel y logros. */

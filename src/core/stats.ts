@@ -1,6 +1,6 @@
 import type { Course, ISODate, Snapshot } from './domain';
 import { addDays, today, weekStart } from './dates';
-import { computeStreak, hoursInWeek, isCourseComplete, levelFromXp } from './game';
+import { POMODORO_LABEL, computeStreak, hoursInWeek, isCourseComplete, levelFromXp } from './game';
 
 export interface Stats {
   xp: number;
@@ -14,6 +14,16 @@ export interface Stats {
   milestonesDone: number;
   purchases: number;
   hoursTotal: number;
+  reviews: number;
+  mastered: number;
+  bosses: number;
+  pomodoros: number;
+  combos: number;
+  weekendBonuses: number;
+  recurringDone: number;
+  worlds: number;
+  avatars: number;
+  chests: number;
 }
 
 export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
@@ -31,6 +41,16 @@ export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
     milestonesDone: s.goals.reduce((a, g) => a + g.milestones.filter((m) => m.done).length, 0),
     purchases: s.profile.inventory.length,
     hoursTotal: s.sessions.reduce((a, x) => a + x.minutes, 0) / 60,
+    reviews: s.xpEvents.filter((e) => e.source === 'review' && e.amount > 0).length,
+    mastered: s.xpEvents.filter((e) => e.source === 'review' && e.amount > 0 && e.label.startsWith('Dominado')).length,
+    bosses: s.tasks.filter((t) => t.priority === 'boss' && t.status === 'done').length,
+    pomodoros: s.sessions.filter((x) => x.label === POMODORO_LABEL).length,
+    combos: s.xpEvents.filter((e) => e.source === 'combo' && e.amount > 0 && e.label.startsWith('Combo')).length,
+    weekendBonuses: s.xpEvents.filter((e) => e.source === 'combo' && e.amount > 0 && e.label.startsWith('Bonus de fin')).length,
+    recurringDone: s.tasks.filter((t) => t.status === 'done' && t.recurrence).length,
+    worlds: s.profile.inventory.filter((i) => i.startsWith('world-')).length,
+    avatars: s.profile.inventory.filter((i) => i.startsWith('avatar-')).length,
+    chests: s.profile.chests ?? 0,
   };
 }
 

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { dataLayer, useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { today, longDate, weekStart } from '@/core/dates';
@@ -11,6 +11,10 @@ import { NAV, navFor } from './nav';
 import { Overlays } from './Overlays';
 import { useOnline, useSyncPending } from '@/pwa/hooks';
 import { useHabitReminders } from '@/pwa/useHabitReminders';
+import { usePomodoro } from '@/state/pomodoro';
+import { usePomodoroEngine } from '@/features/pomodoro/usePomodoroEngine';
+import { dueReviews } from '@/core/review';
+import { PHASE_LABEL, formatClock } from '@/core/pomodoro';
 
 function useRouteTitle(): string {
   const { pathname } = useLocation();
@@ -23,6 +27,12 @@ function useRouteTitle(): string {
       return id ? (courses.find((c) => c.id === id)?.title ?? 'Curso') : `${courses.length} ${courses.length === 1 ? 'curso activo' : 'cursos activos'}`;
     case '/tareas':
       return `${tasks.filter((t) => t.status !== 'done').length} contratos abiertos`;
+    case '/calendario':
+      return 'Fechas límite y repasos';
+    case '/repaso':
+      return 'Repaso espaciado';
+    case '/pomodoro':
+      return 'Enfócate y corre';
     case '/habitos':
       return id ? (habits.find((h) => h.id === id)?.title ?? 'Hábito') : `${habits.length} hábitos equipados`;
     case '/metas':
@@ -45,6 +55,8 @@ function Sidebar() {
   const navOpen = useUi((s) => s.navOpen);
   const setNavOpen = useUi((s) => s.setNavOpen);
   const level = levelFromXp(profile.xp);
+  const courses = useData((s) => s.courses);
+  const dueCount = useMemo(() => dueReviews({ courses }).length, [courses]);
 
   const from = weekStart(today());
   const hours = hoursInWeek(sessions, from);
@@ -82,6 +94,7 @@ function Sidebar() {
             <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => cx('nav__link', isActive && 'is-active')} onClick={() => setNavOpen(false)}>
               <Sprite name={n.sprite} size={20} />
               <span>{n.label}</span>
+              {n.to === '/repaso' && dueCount > 0 && <span className="badge badge--nav">{dueCount}</span>}
             </NavLink>
           ))}
         </nav>
@@ -156,6 +169,28 @@ function SearchBox() {
   );
 }
 
+/** Mini reloj del Pomodoro en la barra superior, visible desde cualquier pantalla. */
+function PomodoroChip() {
+  const status = usePomodoro((s) => s.status);
+  const phase = usePomodoro((s) => s.phase);
+  const endsAt = usePomodoro((s) => s.endsAt);
+  const remaining = usePomodoro((s) => s.remainingMs);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (status !== 'running') return;
+    const t = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(t);
+  }, [status]);
+  if (status === 'idle') return null;
+  const left = status === 'running' && endsAt ? Math.max(0, endsAt - now) : remaining;
+  return (
+    <Link to="/pomodoro" className="tag tag--xp pomo-chip" title={`${PHASE_LABEL[phase]}${status === 'paused' ? ' (en pausa)' : ''}`}>
+      <Sprite name="tomato" size={14} /> {formatClock(left)}
+      {status === 'paused' && ' ⏸'}
+    </Link>
+  );
+}
+
 function Hud() {
   const { pathname } = useLocation();
   const item = navFor(pathname);
@@ -201,6 +236,7 @@ function Hud() {
           <span className="stat__v">{streak}</span>
         </span>
       </div>
+      <PomodoroChip />
       {!online && <span className="tag tag--red" title="Sin conexión: tus cambios se guardan en el dispositivo y se enviarán al volver la red">OFFLINE</span>}
       {pending > 0 && (
         <button type="button" className="tag tag--xp tag--btn" onClick={() => void dataLayer.sync?.flush()} title="Cambios guardados en el dispositivo que aún no están en la nube. Pulsa para reintentar.">
@@ -245,6 +281,7 @@ function MobileNav() {
 
 export function AppShell() {
   useHabitReminders();
+  usePomodoroEngine();
   return (
     <div className="shell">
       <Sidebar />

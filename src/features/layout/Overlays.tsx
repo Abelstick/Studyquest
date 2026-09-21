@@ -12,6 +12,7 @@ import { HabitModal } from '../modals/HabitModal';
 import { CourseModal, GoalModal, ProjectModal, RewardModal } from '../modals/EntityModals';
 import { SessionModal } from '../modals/SessionModal';
 import { QuickSheet, WelcomeModal } from '../modals/QuickAndWelcome';
+import { CardsModal } from '../modals/CardsModal';
 
 const CATEGORY: Record<AppNotification['category'], { sprite: SpriteName; label: string }> = {
   mentor: { sprite: 'cap', label: 'Mentor' },
@@ -27,7 +28,9 @@ function ModalHost() {
   if (!modal) return null;
   switch (modal.type) {
     case 'task':
-      return <TaskModal key={modal.id ?? 'new'} id={modal.id} />;
+      return <TaskModal key={`${modal.id ?? 'new'}${modal.dueDate ?? ''}`} id={modal.id} dueDate={modal.dueDate} />;
+    case 'cards':
+      return <CardsModal key={modal.topicId} courseId={modal.courseId} topicId={modal.topicId} />;
     case 'habit':
       return <HabitModal key={modal.id ?? 'new'} id={modal.id} />;
     case 'course':
@@ -97,7 +100,10 @@ function CoinRain() {
 }
 
 function LevelUp() {
-  const info = useUi((s) => s.levelUp);
+  const levelUp = useUi((s) => s.levelUp);
+  // Si a la vez se derrota a un jefe, primero la victoria y después la subida de nivel.
+  const waiting = useUi((s) => s.victory !== null);
+  const info = waiting ? null : levelUp;
   const show = useUi((s) => s.showLevelUp);
   const btn = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -139,6 +145,71 @@ function LevelUp() {
               <span>Presúmelo en tu perfil</span>
             </div>
           </li>
+        </ul>
+        <button ref={btn} type="button" className="btn btn--ink" onClick={() => show(null)}>
+          Reclamar y seguir
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Victory() {
+  const info = useUi((s) => s.victory);
+  const show = useUi((s) => s.showVictory);
+  const btn = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!info) return;
+    btn.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && show(null);
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [info, show]);
+  if (!info) return null;
+  return (
+    <div className="levelup victory" role="alertdialog" aria-modal="true" aria-labelledby="vic-title">
+      <CoinRain />
+      <div className="levelup__card victory__card">
+        <p className="levelup__blink">★ ¡Victoria! ★</p>
+        <div className="victory__stage" aria-hidden="true">
+          <span className="victory__boss">
+            <Sprite name="boss" size={84} />
+          </span>
+          <span className="victory__hero">
+            <Sprite name="runnerB" size={84} />
+          </span>
+          <span className="victory__flag">
+            <Sprite name="flag" size={60} />
+          </span>
+        </div>
+        <h2 id="vic-title" className="levelup__level victory__title">
+          ¡Jefe derrotado!
+        </h2>
+        <p className="levelup__rank">{info.title}</p>
+        <ul className="levelup__list">
+          <li>
+            <Sprite name="star" size={26} />
+            <div>
+              <b>+{info.xp.toLocaleString('en-US')} XP</b>
+              <span>Incluye el botín de jefe</span>
+            </div>
+          </li>
+          <li>
+            <Sprite name="coin" size={26} />
+            <div>
+              <b>+{info.coins.toLocaleString('en-US')} monedas</b>
+              <span>Gástalas en el Arsenal</span>
+            </div>
+          </li>
+          {info.hits > 0 && (
+            <li>
+              <Sprite name="sword" size={26} />
+              <div>
+                <b>{info.hits} {info.hits === 1 ? 'golpe' : 'golpes'} certeros</b>
+                <span>Una subtarea por golpe</span>
+              </div>
+            </li>
+          )}
         </ul>
         <button ref={btn} type="button" className="btn btn--ink" onClick={() => show(null)}>
           Reclamar y seguir
@@ -211,6 +282,7 @@ export function Overlays() {
       <NotificationsDrawer />
       <Toasts />
       <LevelUp />
+      <Victory />
     </>
   );
 }

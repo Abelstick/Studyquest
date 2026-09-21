@@ -3,7 +3,8 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { XP_BY_PRIORITY } from '@/core/game';
 import { newId } from '@/core/dates';
-import type { Priority, TaskStatus } from '@/core/domain';
+import type { Priority, Recurrence, TaskStatus } from '@/core/domain';
+import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
 import { Button, Field, Modal, Segmented, linesToList } from '@/ui/kit';
 
 const PRIORITIES: { value: Priority; label: string }[] = [
@@ -18,7 +19,7 @@ const STATUSES: { value: TaskStatus; label: string }[] = [
   { value: 'done', label: 'Superada' },
 ];
 
-export function TaskModal({ id }: { id?: string }) {
+export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
   const { tasks, courses, createTask, updateTask, deleteTask } = useData();
@@ -26,7 +27,8 @@ export function TaskModal({ id }: { id?: string }) {
 
   const [title, setTitle] = useState(editing?.title ?? '');
   const [courseId, setCourseId] = useState(editing?.courseId ?? '');
-  const [due, setDue] = useState(editing?.dueDate ?? '');
+  const [due, setDue] = useState(editing?.dueDate ?? dueDate ?? '');
+  const [repeat, setRepeat] = useState<Recurrence | null>(editing?.recurrence ?? null);
   const [priority, setPriority] = useState<Priority>(editing?.priority ?? 'mid');
   const [estimate, setEstimate] = useState(editing?.estimateMin ?? 30);
   const [xp, setXp] = useState(editing?.xp ?? XP_BY_PRIORITY.mid);
@@ -54,6 +56,7 @@ export function TaskModal({ id }: { id?: string }) {
       xp: Math.max(0, xp),
       subtasks,
       tags: tags.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean),
+      recurrence: repeat ? { unit: repeat.unit, interval: Math.max(1, Math.min(365, Math.floor(repeat.interval) || 1)) } : undefined,
     };
     if (editing) updateTask(editing.id, { ...data, status });
     else createTask({ ...data, status });
@@ -80,6 +83,11 @@ export function TaskModal({ id }: { id?: string }) {
           <Field label="Fecha límite">{(fid) => <input id={fid} className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} />}</Field>
         </div>
         <Field label="Prioridad">{() => <Segmented label="Prioridad" value={priority} options={PRIORITIES} onChange={pickPriority} />}</Field>
+        {priority === 'boss' && (
+          <p className="form__info">
+            ☠ Un jefe final tiene una vida por subtarea: cada una que completes le quita una. Al caer el último golpe ganas su XP y un botín extra de <b>+{BOSS_BONUS_XP} XP</b>. Añade subtareas abajo para darle vida.
+          </p>
+        )}
         <div className="form__row">
           <Field label="Tiempo estimado (min)">{(fid) => <input id={fid} className="input" type="number" min={0} step={5} value={estimate} onChange={(e) => setEstimate(Number(e.target.value))} />}</Field>
           <Field label="Recompensa (XP)">
@@ -99,6 +107,25 @@ export function TaskModal({ id }: { id?: string }) {
             )}
           </Field>
         </div>
+        <Field label="Repetir" hint={repeat ? 'Al completarla se crea la siguiente con su nueva fecha.' : 'Al completarla se crea sola la siguiente.'}>
+          {() => (
+            <div className="repeat">
+              <Segmented
+                label="Repetición"
+                value={repeat ? repeat.unit : 'none'}
+                options={[{ value: 'none', label: 'No' }, ...RECURRENCE_UNITS]}
+                onChange={(v) => setRepeat(v === 'none' ? null : { unit: v, interval: repeat?.interval ?? 1 })}
+              />
+              {repeat && (
+                <label className="repeat__every">
+                  Cada
+                  <input className="input input--inline" type="number" min={1} max={365} value={repeat.interval} onChange={(e) => setRepeat({ ...repeat, interval: Number(e.target.value) })} aria-label="Cada cuántos" />
+                  {repeat.unit === 'day' ? 'días' : repeat.unit === 'week' ? 'semanas' : 'meses'}
+                </label>
+              )}
+            </div>
+          )}
+        </Field>
         {editing && <Field label="Estado">{() => <Segmented label="Estado" value={status} options={STATUSES} onChange={setStatus} />}</Field>}
         <Field label="Subtareas" hint="Una por línea.">{(fid) => <textarea id={fid} className="input" rows={3} value={subs} onChange={(e) => setSubs(e.target.value)} placeholder={'Repasar INNER vs LEFT\nResolver los 8 ejercicios'} />}</Field>
         <Field label="Etiquetas" hint="Separadas por comas.">{(fid) => <input id={fid} className="input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="sql, práctica" />}</Field>

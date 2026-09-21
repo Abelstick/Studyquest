@@ -9,7 +9,7 @@ export const setSoundEnabled = (on: boolean) => {
   enabled = on;
 };
 
-function audio(): AudioContext | null {
+export function audio(): AudioContext | null {
   if (!enabled || typeof window === 'undefined') return null;
   try {
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -62,6 +62,28 @@ export const sfx = {
     const melody = [659, 784, 1319, 1047, 1175, 1568];
     melody.forEach((f, i) => note(f, i * 0.1, 0.13, 'square', 0.06));
     melody.forEach((f, i) => note(f, 0.9 + i * 0.1, 0.13, 'square', 0.06));
+  },
+  /** Golpe al jefe. */
+  hit() {
+    note(220, 0, 0.09, 'square', 0.06, 90);
+    note(140, 0.05, 0.12, 'sawtooth', 0.05, 60);
+  },
+  /** Fanfarria de victoria. */
+  victory() {
+    [523, 523, 523, 659, 523, 659, 784, 1047].forEach((f, i) => note(f, i * 0.12 + (i > 3 ? 0.1 : 0), i === 7 ? 0.5 : 0.14, 'square', 0.055));
+    [262, 330, 392, 523].forEach((f, i) => note(f, 0.9 + i * 0.05, 0.5, 'triangle', 0.05));
+  },
+  combo() {
+    [784, 988, 1175, 1568, 1976].forEach((f, i) => note(f, i * 0.06, 0.1, 'square', 0.05));
+  },
+  chest() {
+    note(330, 0, 0.1, 'triangle', 0.06);
+    note(494, 0.08, 0.1, 'triangle', 0.06);
+    [1047, 1319, 1568, 2093].forEach((f, i) => note(f, 0.2 + i * 0.07, 0.15, 'square', 0.045));
+  },
+  /** Girar una tarjeta. */
+  flip() {
+    note(500, 0, 0.04, 'square', 0.03, 900);
   },
   error() {
     note(180, 0, 0.16, 'sawtooth', 0.04, 90);

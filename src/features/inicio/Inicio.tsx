@@ -4,7 +4,9 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
 import { computeStreak, isDueOn, levelProgress, rankFor, worldFor } from '@/core/game';
-import { dailyMissions, reviewQueue, tips, type Mission } from '@/core/missions';
+import { dailyMissions, tips, type Mission } from '@/core/missions';
+import { dueReviews } from '@/core/review';
+import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
 import { weeklyReport } from '@/core/stats';
 import type { Snapshot } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
@@ -79,6 +81,56 @@ function StreakCalendar() {
   );
 }
 
+/** Eventos de racha de hoy: bonus de fin de semana y progreso del combo ×2. */
+function Events({ events }: { events: GameEvent[] }) {
+  if (!events.length) return null;
+  return (
+    <div className="events">
+      {events.map((e) => (
+        <div key={e.id} className={cx('event', `event--${e.id}`, e.active && 'is-active')}>
+          <Sprite name={e.id === 'weekend' ? 'star' : 'flower'} size={30} className={cx(e.active && 'event__pulse')} />
+          <div className="event__text">
+            <p className="event__title">{e.title}</p>
+            <p className="event__body">{e.body}</p>
+            {e.pct !== undefined && <Bar pct={e.pct} tone={e.active ? 'green' : 'yellow'} label={e.title} />}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Cofre diario: un botín distinto cada día, mejor cuanto más larga es la racha. */
+function DailyChest({ streak }: { streak: number }) {
+  const profile = useData((s) => s.profile);
+  const openChest = useData((s) => s.openChest);
+  const open = canOpenChest(profile);
+  const preview = chestReward(today(), streak);
+  return (
+    <Panel kicker="// Botín del día" title="Cofre diario">
+      <div className={cx('chestbox', !open && 'is-open')}>
+        <Sprite name="chest" size={64} className={cx(open && 'chestbox__sprite')} />
+        <div>
+          {open ? (
+            <>
+              <p className="muted small">Hay un cofre esperándote. Tu racha de {streak} {streak === 1 ? 'día' : 'días'} mejora el botín (+{Math.min(30, streak) * 2} monedas).</p>
+              <Button variant="coin" onClick={openChest}>
+                Abrir cofre
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="list__title">¡Cofre abierto hoy!</p>
+              <p className="muted small">Vuelve mañana por otro. Llevas {profile.chests ?? 0} {(profile.chests ?? 0) === 1 ? 'cofre' : 'cofres'} en total.</p>
+            </>
+          )}
+        </div>
+      </div>
+      {open && <p className="kicker">Botín de hoy: desde {preview.coins} monedas</p>}
+    </Panel>
+  );
+}
+
 function WeeklyReport({ snap }: { snap: Snapshot }) {
   const r = useMemo(() => weeklyReport(snap), [snap]);
   const habitsDue = useMemo(() => {
@@ -129,7 +181,8 @@ export default function Inicio() {
     [profile, tasks, habits, habitLogs, courses, goals, projects, personalRewards, sessions, xpEvents, notifications],
   );
   const missions = useMemo(() => dailyMissions(snap), [snap]);
-  const review = useMemo(() => reviewQueue(snap), [snap]);
+  const review = useMemo(() => dueReviews(snap), [snap]);
+  const events = useMemo(() => activeEvents(habits, habitLogs, profile), [habits, habitLogs, profile]);
   const advice = useMemo(() => tips(snap), [snap]);
   const streak = useMemo(() => computeStreak(xpEvents, profile.frozenDates).current, [xpEvents, profile.frozenDates]);
 
@@ -205,6 +258,7 @@ export default function Inicio() {
       ) : (
         <div className="cols">
           <div className="stack">
+            <Events events={events} />
             <Panel kicker="// Quest diaria" title="Tu misión de hoy" right={<span className="kicker">{done} / {missions.length} · {inPlay} XP en juego</span>}>
               {missions.length === 0 ? (
                 <Empty sprite="star" title="¡Nivel despejado!">
@@ -222,12 +276,25 @@ export default function Inicio() {
                   Ver todas las tareas
                 </Link>
                 <Button onClick={() => openModal({ type: 'session' })}>▶ Iniciar sesión de estudio</Button>
+                <Link className="btn btn--ghost" to="/pomodoro">
+                  <Sprite name="tomato" size={16} /> Pomodoro
+                </Link>
               </div>
             </Panel>
 
-            <Panel kicker="// Repasos pendientes" title="El jefe te espera">
+            <Panel
+              kicker="// Repaso espaciado"
+              title="Flashcards de hoy"
+              right={
+                review.length > 0 ? (
+                  <Link className="btn btn--primary btn--sm" to="/repaso">
+                    Repasar ahora ({review.length})
+                  </Link>
+                ) : undefined
+              }
+            >
               {review.length === 0 ? (
-                <p className="muted">Nada que repasar. Marca un tema con «Necesito repasar» dentro de un curso.</p>
+                <p className="muted">Nada que repasar hoy. Marca un tema con «Necesito repasar» dentro de un curso y volverá a los 1, 3, 7 y 14 días.</p>
               ) : (
                 <ul className="list">
                   {review.slice(0, 4).map((r) => (
@@ -235,11 +302,11 @@ export default function Inicio() {
                       <div>
                         <p className="list__title">{r.title}</p>
                         <p className="muted small">
-                          {r.daysAgo > 0 ? `Marcado hace ${r.daysAgo} ${r.daysAgo === 1 ? 'día' : 'días'}` : 'Marcado hoy'} · {r.course}
+                          {r.late > 0 ? `Atrasado ${r.late} ${r.late === 1 ? 'día' : 'días'}` : 'Toca hoy'} · {r.course}
                         </p>
                       </div>
                       <Link className="btn btn--ghost btn--sm" to={`/cursos/${r.courseId}`}>
-                        Repasar
+                        Ver curso
                       </Link>
                     </li>
                   ))}
@@ -257,6 +324,7 @@ export default function Inicio() {
           </div>
 
           <div className="stack">
+            <DailyChest streak={streak} />
             <StreakCalendar />
             <WeeklyReport snap={snap} />
             <Panel kicker="// Inteligencia táctica" title="Consejos del Toad">

@@ -47,6 +47,7 @@ const auth = (uid: string | null): AuthPort => ({
   signInWithPassword: async () => {},
   signUp: async () => ({ needsConfirmation: false }),
   signInWithMagicLink: async () => {},
+  signInWithGoogle: async () => {},
   signOut: async () => {},
 });
 

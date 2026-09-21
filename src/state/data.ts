@@ -1,11 +1,14 @@
 import { create } from 'zustand';
 import type {
-  AppNotification, Course, Equipped, Goal, Habit, HabitLog, ID, Module, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
+  AppNotification, Course, Flashcard, Equipped, Goal, Habit, HabitLog, ID, Module, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
-  LEVEL_UP_BONUS, SESSION_XP_PER_MIN, WEEKLY_BONUS_XP, coinsForXp, defaultProfile, hoursInWeek, levelFromXp, logFor, rankFor, topicXp, worldFor,
+  LEVEL_UP_BONUS, SESSION_XP_PER_MIN, WEEKLY_BONUS_XP, coinsForXp, computeStreak, defaultProfile, hoursInWeek, levelFromXp, logFor, rankFor, topicXp, worldFor,
 } from '@/core/game';
+import { canOpenChest, chestReward, dayBonusOf, habitBonus, habitsDoneOn } from '@/core/events';
+import { gradeReview, startReview, type Rating } from '@/core/review';
+import { isBoss, spawnNext, taskReward } from '@/core/tasks';
 import { ACHIEVEMENTS } from '@/core/achievements';
 import { shopItem } from '@/core/catalog';
 import { buildDemo } from '@/core/seed';
@@ -49,6 +52,9 @@ export interface DataState extends Data {
   removeTopic: (courseId: ID, topicId: ID) => void;
   setTopicStatus: (courseId: ID, topicId: ID, status: TopicStatus) => void;
   toggleTopicReview: (courseId: ID, topicId: ID) => void;
+  setTopicCards: (courseId: ID, topicId: ID, cards: Flashcard[]) => void;
+  /** Aplica el resultado de un repaso: sube o reinicia la agenda de 1-3-7-14 días y da XP. */
+  reviewTopic: (courseId: ID, topicId: ID, rating: Rating) => void;
 
   createGoal: (draft: Omit<Goal, 'id' | 'createdAt'>) => void;
   deleteGoal: (id: ID) => void;
@@ -70,6 +76,8 @@ export interface DataState extends Data {
   logSession: (input: { minutes: number; courseId: ID | null; label?: string }) => void;
   freezeToday: () => void;
   claimWeeklyBonus: () => void;
+  /** Abre el cofre del día (una vez al día). */
+  openChest: () => void;
 
   markAllRead: () => void;
   notify: (n: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => void;
@@ -131,7 +139,7 @@ export function createDataStore(repo: Repository) {
     };
 
     /** Suma (o resta, si es negativo) XP y monedas; detecta subidas de nivel y logros. */
-    const award = (amount: number, source: XpSource, label: string) => {
+    const award = (amount: number, source: XpSource, label: string, title = '¡Misión completada!') => {
       const p = get().profile;
       const before = levelFromXp(p.xp);
       const xp = Math.max(0, p.xp + amount);
@@ -149,7 +157,7 @@ export function createDataStore(repo: Repository) {
       );
       const ui = useUi.getState();
       if (amount > 0) {
-        ui.toast({ kind: 'xp', title: '¡Misión completada!', body: label, xp: amount, coins: coinsForXp(amount) });
+        ui.toast({ kind: 'xp', title, body: label, xp: amount, coins: coinsForXp(amount) });
         sfx.coin();
       }
       if (gained) {
@@ -158,6 +166,20 @@ export function createDataStore(repo: Repository) {
         sfx.levelUp();
       }
       checkAchievements();
+    };
+
+    /** Bonus de fin de semana y combo ×2: se cobran una sola vez (quedan anotados en el perfil). */
+    const claimHabitBonuses = (h: Habit, date: string) => {
+      const s = get();
+      const done = habitsDoneOn(s.habits, s.habitLogs, date);
+      const b = habitBonus(h, done, dayBonusOf(s.profile, date), date);
+      if (b.xp <= 0) return;
+      patchProfile({ dayBonus: b.next });
+      if (b.weekend) award(b.weekend, 'combo', `Bonus de fin de semana · ${h.title}`, '¡Bonus de fin de semana!');
+      if (b.combo) {
+        award(b.combo, 'combo', `Combo ×2 · ${done.length} hábitos hoy`, '¡COMBO ×2!');
+        sfx.combo();
+      }
     };
 
     const mutateCourse = (courseId: ID, fn: (c: Course) => Course) => {
@@ -283,22 +305,50 @@ export function createDataStore(repo: Repository) {
         const t = get().tasks.find((x) => x.id === id);
         if (!t || t.status === status) return;
         const becameDone = status === 'done';
+        const reopened = t.status === 'done';
         const patch: Partial<Task> = {
           status,
           completedAt: becameDone ? today() : null,
-          subtasks: becameDone ? t.subtasks.map((s) => ({ ...s, done: true })) : t.subtasks,
+          // Al reabrir un jefe, recupera toda su vida.
+          subtasks: becameDone ? t.subtasks.map((s) => ({ ...s, done: true })) : reopened && isBoss(t) ? t.subtasks.map((s) => ({ ...s, done: false })) : t.subtasks,
         };
-        run((s) => ({ tasks: s.tasks.map((x) => (x.id === id ? { ...x, ...patch } : x)) }), () => repo.tasks.update(id, patch));
-        if (becameDone) award(t.xp, 'task', t.title);
-        else if (t.status === 'done') award(-t.xp, 'task', `Deshacer: ${t.title}`);
+        // Tarea recurrente: al completarla nace la siguiente; al reabrirla, esa siguiente se retira si nadie la tocó.
+        const spawned = becameDone && t.recurrence ? spawnNext(t, newId) : undefined;
+        if (spawned) patch.spawnedId = spawned.id;
+        const stale = reopened && t.spawnedId ? get().tasks.find((x) => x.id === t.spawnedId && x.status === 'todo') : undefined;
+        if (reopened && t.spawnedId) patch.spawnedId = undefined;
+        run(
+          (s) => ({ tasks: [...s.tasks.filter((x) => x.id !== stale?.id).map((x) => (x.id === id ? { ...x, ...patch } : x)), ...(spawned ? [spawned] : [])] }),
+          async () => {
+            await repo.tasks.update(id, patch);
+            if (spawned) await repo.tasks.create(spawned);
+            if (stale) await repo.tasks.remove(stale.id);
+          },
+        );
+        if (becameDone) {
+          const reward = taskReward(t);
+          award(reward, 'task', t.title, isBoss(t) ? '¡Jefe derrotado!' : undefined);
+          if (isBoss(t)) {
+            sfx.victory();
+            useUi.getState().showVictory({ title: t.title, xp: reward, coins: coinsForXp(reward), hits: t.subtasks.length });
+          }
+          if (spawned?.dueDate) useUi.getState().toast({ kind: 'info', title: 'Tarea repetida', body: `La próxima vence el ${spawned.dueDate.split('-').reverse().join('/')}.` });
+        } else if (reopened) award(-taskReward(t), 'task', `Deshacer: ${t.title}`);
         else sfx.click();
       },
       toggleSubtask(taskId, subId) {
         const t = get().tasks.find((x) => x.id === taskId);
-        if (!t) return;
+        const sub = t?.subtasks.find((x) => x.id === subId);
+        if (!t || !sub) return;
         const subtasks = t.subtasks.map((s) => (s.id === subId ? { ...s, done: !s.done } : s));
-        run((s) => ({ tasks: s.tasks.map((x) => (x.id === taskId ? { ...x, subtasks } : x)) }), () => repo.tasks.update(taskId, { subtasks }));
-        sfx.click();
+        const boss = isBoss(t) && t.status !== 'done';
+        const status = boss && t.status === 'todo' && !sub.done ? 'doing' : t.status;
+        run((s) => ({ tasks: s.tasks.map((x) => (x.id === taskId ? { ...x, subtasks, status } : x)) }), () => repo.tasks.update(taskId, { subtasks, status }));
+        if (!boss) return void sfx.click();
+        const left = subtasks.filter((s) => !s.done).length;
+        if (!sub.done && left === 0) return get().setTaskStatus(taskId, 'done'); // el último golpe: victoria
+        sfx[sub.done ? 'click' : 'hit']();
+        if (!sub.done) useUi.getState().toast({ kind: 'info', title: '¡Golpe al jefe!', body: `${t.title}: le ${left === 1 ? 'queda 1 vida' : `quedan ${left} vidas`}.` });
       },
 
       /* ---------- Hábitos ---------- */
@@ -323,8 +373,10 @@ export function createDataStore(repo: Repository) {
         run((s) => ({ habitLogs: upsertBy(s.habitLogs, log) }), () => repo.habitLogs.upsert(log));
         const was = (prev?.value ?? 0) >= h.target;
         const now = value >= h.target;
-        if (now && !was) award(h.xp, 'habit', h.title);
-        else if (was && !now) award(-h.xp, 'habit', `Deshacer: ${h.title}`);
+        if (now && !was) {
+          award(h.xp, 'habit', h.title);
+          claimHabitBonuses(h, date);
+        } else if (was && !now) award(-h.xp, 'habit', `Deshacer: ${h.title}`);
         else sfx.click();
       },
       toggleHabitStep(habitId, stepId) {
@@ -373,8 +425,24 @@ export function createDataStore(repo: Repository) {
         else sfx.click();
       },
       toggleTopicReview(courseId, topicId) {
-        mutateCourse(courseId, (c) => mapTopic(c, topicId, (t) => ({ ...t, review: !t.review, markedAt: t.review ? null : today() })));
+        mutateCourse(courseId, (c) =>
+          mapTopic(c, topicId, (t) => (t.review ? { ...t, review: false, markedAt: null, reviewStage: undefined, nextReview: undefined } : { ...t, ...startReview() })),
+        );
         sfx.click();
+      },
+      setTopicCards(courseId, topicId, cards) {
+        mutateCourse(courseId, (c) => mapTopic(c, topicId, (t) => ({ ...t, cards })));
+      },
+      reviewTopic(courseId, topicId, rating) {
+        const course = get().courses.find((c) => c.id === courseId);
+        const found = course && findTopic(course, topicId);
+        if (!course || !found?.topic.review) return;
+        const res = gradeReview(found.topic, rating);
+        mutateCourse(courseId, (c) => mapTopic(c, topicId, (t) => ({ ...t, ...res.patch })));
+        if (res.xp > 0) {
+          award(res.xp, 'review', res.mastered ? `Dominado: ${found.topic.title}` : `Repaso: ${found.topic.title}`, res.mastered ? '¡Tema dominado!' : '¡Repaso superado!');
+          if (res.mastered) sfx.unlock();
+        } else sfx.click();
       },
 
       /* ---------- Metas ---------- */
@@ -497,6 +565,18 @@ export function createDataStore(repo: Repository) {
         if (hoursInWeek(s.sessions, from) < s.profile.weeklyGoalHours) return;
         patchProfile({ weeklyBonusClaimed: from });
         award(WEEKLY_BONUS_XP, 'bonus', 'Reto semanal completado');
+      },
+
+      openChest() {
+        const p = get().profile;
+        const now = today();
+        if (!canOpenChest(p, now)) return;
+        const reward = chestReward(now, computeStreak(get().xpEvents, p.frozenDates, now).current);
+        patchProfile({ lastChest: now, chests: (p.chests ?? 0) + 1, credits: p.credits + reward.coins });
+        useUi.getState().toast({ kind: 'unlock', title: '¡Cofre diario abierto!', body: reward.xp ? `+${reward.xp} XP de regalo` : 'Vuelve mañana por otro', coins: reward.coins });
+        sfx.chest();
+        if (reward.xp) award(reward.xp, 'bonus', 'Cofre diario', '¡Sorpresa en el cofre!');
+        else checkAchievements();
       },
 
       markAllRead() {

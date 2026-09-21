@@ -69,6 +69,8 @@ export interface AuthPort {
   signInWithPassword(email: string, password: string): Promise<void>;
   signUp(email: string, password: string): Promise<{ needsConfirmation: boolean }>;
   signInWithMagicLink(email: string): Promise<void>;
+  /** Acceso con una cuenta de Google. Redirige al proveedor y vuelve a la app ya con sesión. */
+  signInWithGoogle(): Promise<void>;
   signOut(): Promise<void>;
 }
 

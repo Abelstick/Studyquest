@@ -97,7 +97,12 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       id: fixId(o.id), title: str(o.title), professor: str(o.professor), field: str(o.field), mentor, createdAt: str(o.createdAt, new Date().toISOString()),
       modules: subs(o.modules, (m) => ({
         id: fixId(m.id), title: str(m.title, 'Módulo'), summary: str(m.summary), xp: num(m.xp, 100),
-        topics: subs(m.topics, (t) => ({ id: fixId(t.id), title: str(t.title, 'Tema'), status: ['todo', 'doing', 'done'].includes(str(t.status)) ? str(t.status) : 'todo', review: t.review === true, markedAt: DATE.test(str(t.markedAt)) ? str(t.markedAt) : null })),
+        topics: subs(m.topics, (t) => ({
+          id: fixId(t.id), title: str(t.title, 'Tema'), status: ['todo', 'doing', 'done'].includes(str(t.status)) ? str(t.status) : 'todo', review: t.review === true, markedAt: DATE.test(str(t.markedAt)) ? str(t.markedAt) : null,
+          ...(typeof t.reviewStage === 'number' && t.reviewStage >= 0 && t.reviewStage <= 3 ? { reviewStage: Math.floor(t.reviewStage) } : {}),
+          ...(DATE.test(str(t.nextReview)) ? { nextReview: str(t.nextReview) } : {}),
+          ...(asArray(t.cards).length ? { cards: subs(t.cards, (c) => (str(c.q) ? { id: fixId(c.id), q: str(c.q).slice(0, 300), a: str(c.a).slice(0, 600) } : null)) } : {}),
+        })),
       })),
     };
   });
@@ -125,8 +130,12 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       subtasks: subs(o.subtasks, (s) => ({ id: fixId(s.id), title: str(s.title, 'Subtarea'), done: s.done === true })),
       tags: asArray(o.tags).filter((t): t is string => typeof t === 'string'), createdAt: str(o.createdAt, new Date().toISOString()),
       completedAt: DATE.test(str(o.completedAt)) ? str(o.completedAt) : null,
+      ...(isObj(o.recurrence) && ['day', 'week', 'month'].includes(str(o.recurrence.unit)) ? { recurrence: { unit: str(o.recurrence.unit), interval: Math.min(365, Math.max(1, Math.floor(num(o.recurrence.interval, 1)))) } } : {}),
+      spawnedRaw: str(o.spawnedId),
     };
-  });
+  }).map(({ spawnedRaw, ...t }) => ({ ...t, ...(ref(spawnedRaw) ? { spawnedId: ref(spawnedRaw) as string } : {}) }));
+  const taskIds = new Set(tasks.map((t) => (t as Obj).id as string));
+  for (const t of tasks as Obj[]) if (t.spawnedId && !taskIds.has(t.spawnedId as string)) delete t.spawnedId;
   const habitLogs = list('habitLogs', 'registros de hábitos', (o) => {
     const habitId = ref(o.habitId);
     if (!habitId || !habitIds.has(habitId) || !DATE.test(str(o.date))) return null;
@@ -177,6 +186,11 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     equipped: { avatar: isObj(p.equipped) ? (str(p.equipped.avatar) || null) : null, frame: isObj(p.equipped) ? (str(p.equipped.frame) || null) : null, world: isObj(p.equipped) ? (str(p.equipped.world) || null) : null },
     achievements: subs(p.achievements, (a) => (str(a.id) ? { id: str(a.id), at: str(a.at, new Date().toISOString()) } : null)),
     onboarded: true, joinedAt: str(p.joinedAt, base.joinedAt),
+    ...(isObj(p.dayBonus) && DATE.test(str(p.dayBonus.date))
+      ? { dayBonus: { date: str(p.dayBonus.date), weekend: asArray(p.dayBonus.weekend).map(ref).filter((x): x is string => !!x), combo: p.dayBonus.combo === true } }
+      : {}),
+    ...(DATE.test(str(p.lastChest)) ? { lastChest: str(p.lastChest) } : {}),
+    ...(typeof p.chests === 'number' && p.chests > 0 ? { chests: Math.floor(p.chests) } : {}),
   };
 
   for (const [what, n] of Object.entries(dropped)) warnings.push(`${n} ${what} descartados por datos inválidos.`);

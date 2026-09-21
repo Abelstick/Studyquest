@@ -9,7 +9,7 @@ import { Avatar } from '@/ui/Avatar';
 import { Button, Field, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { useInstallPrompt } from '@/pwa/hooks';
-import { disablePush, enablePush, getPushState, showTestNotification, type PushState } from '@/pwa/push';
+import { describeInvalidVapidKey, disablePush, enablePush, getPushState, showTestNotification, type PushState } from '@/pwa/push';
 import { backupFileName, buildBackup, parseBackup, summarize } from '@/core/backup';
 import type { Snapshot } from '@/core/domain';
 
@@ -18,6 +18,7 @@ const PUSH_HELP: Record<Exclude<PushState, 'off' | 'on'>, string> = {
   unsupported: 'Este navegador no admite notificaciones push. Prueba con Chrome, Edge o Firefox en una ventana normal (no privada ni el navegador integrado de un editor).',
   'needs-install': 'En iPhone/iPad hay que instalar la app: Compartir → «Añadir a pantalla de inicio», ábrela desde ese icono y vuelve aquí.',
   unconfigured: 'Falta la clave pública VAPID (VITE_VAPID_PUBLIC_KEY) en esta instalación.',
+  'invalid-key': 'La clave VITE_VAPID_PUBLIC_KEY de esta instalación no es válida. Copia la clave PÚBLICA exacta (87 caracteres, sin comillas ni espacios), guárdala en Render y vuelve a desplegar.',
   'update-pending': 'Hay una versión nueva de la app esperando. Pulsa «Actualizar» en el aviso superior (o cierra todas las pestañas de la app y ábrela de nuevo): hasta entonces los avisos pueden no mostrarse.',
   'no-worker':'El service worker no está activo. En desarrollo prueba con `npm run build && npm run preview`.',
   denied: 'Bloqueaste las notificaciones de este sitio. Actívalas desde los ajustes del navegador y recarga.',
@@ -58,7 +59,7 @@ function PushPanel() {
         {withReminder > 0 ? <>Tienes <b>{withReminder}</b> {withReminder === 1 ? 'hábito' : 'hábitos'} con hora de recordatorio.</> : 'Ponle una hora a un hábito (al crearlo o editarlo) y recibirás un aviso ese día si aún no lo has hecho.'}
       </p>
       {state === 'loading' && <p className="muted small">Comprobando…</p>}
-      {state !== 'loading' && state !== 'off' && state !== 'on' && <p className="form__info">{PUSH_HELP[state]}</p>}
+      {state !== 'loading' && state !== 'off' && state !== 'on' && <p className="form__info">{PUSH_HELP[state]}{state === 'invalid-key' && ` ${describeInvalidVapidKey()}`}</p>}
       <div className="row">
         {state === 'off' && (
           <Button small variant="primary" disabled={busy} onClick={() => void run(() => enablePush(push.save), 'Recordatorios activados en este dispositivo')}>

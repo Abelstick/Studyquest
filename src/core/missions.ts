@@ -2,6 +2,7 @@ import type { Habit, ISODate, Snapshot, Task } from './domain';
 import { diffDays, today } from './dates';
 import { computeStreak, frequencyLabel, goalLabel, isDueOn, isHabitDone, logFor } from './game';
 import { lastActivityByCourse, weeklyReport } from './stats';
+import { dueReviews } from './review';
 
 export type Mission =
   | { kind: 'task'; id: string; title: string; subtitle: string; xp: number; done: boolean; task: Task }
@@ -67,8 +68,8 @@ export function tips(s: Snapshot, now: ISODate = today()): Tip[] {
     .sort((a, b) => b.days! - a.days!)[0];
   if (stale) out.push({ title: `Llevas ${stale.days} días sin tocar ${stale.c.title}.`, body: '15 minutos bastan para mantener ese mundo con vida.' });
 
-  const review = s.courses.flatMap((c) => c.modules.flatMap((m) => m.topics.filter((t) => t.review).map((t) => ({ t, c }))));
-  if (review.length) out.push({ title: `Repasa "${review[0].t.title}" antes de seguir.`, body: `${review.length} ${review.length === 1 ? 'tema espera' : 'temas esperan'} su jefe de repaso.` });
+  const review = dueReviews(s, now);
+  if (review.length) out.push({ title: `Hoy te toca repasar "${review[0].title}".`, body: `${review.length} ${review.length === 1 ? 'tema espera' : 'temas esperan'} sus flashcards en Repaso.` });
 
   const overdue = s.tasks.filter((t) => t.status !== 'done' && t.dueDate && t.dueDate < now);
   if (overdue.length) out.push({ title: `${overdue.length} ${overdue.length === 1 ? 'tarea vencida' : 'tareas vencidas'}.`, body: `Empieza por "${overdue[0].title}": es la que más pesa.` });
@@ -78,22 +79,4 @@ export function tips(s: Snapshot, now: ISODate = today()): Tip[] {
 
   if (!out.length) out.push({ title: 'Todo en orden, jugador.', body: 'Crea una tarea nueva o inicia una sesión de estudio.' });
   return out.slice(0, 4);
-}
-
-export interface ReviewItem {
-  courseId: string;
-  topicId: string;
-  title: string;
-  course: string;
-  daysAgo: number;
-}
-
-export function reviewQueue(s: Snapshot, now: ISODate = today()): ReviewItem[] {
-  return s.courses
-    .flatMap((c) =>
-      c.modules.flatMap((m) =>
-        m.topics.filter((t) => t.review).map((t) => ({ courseId: c.id, topicId: t.id, title: t.title, course: c.title, daysAgo: t.markedAt ? diffDays(now, t.markedAt) : 0 })),
-      ),
-    )
-    .sort((a, b) => b.daysAgo - a.daysAgo);
 }

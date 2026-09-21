@@ -31,6 +31,19 @@ export interface Profile {
   achievements: UnlockedAchievement[];
   onboarded: boolean;
   joinedAt: ISODateTime;
+  /** Bonos de racha ya cobrados hoy (fin de semana por hábito, combo): evita cobrarlos dos veces al deshacer y rehacer. */
+  dayBonus?: DayBonus;
+  /** Último día en que se abrió el cofre diario. */
+  lastChest?: ISODate;
+  /** Cofres diarios abiertos en total. */
+  chests?: number;
+}
+
+export interface DayBonus {
+  date: ISODate;
+  /** Hábitos que ya cobraron el bonus de fin de semana hoy. */
+  weekend: ID[];
+  combo: boolean;
 }
 
 /* ---------- Tareas ---------- */
@@ -41,6 +54,12 @@ export interface Subtask {
   id: ID;
   title: string;
   done: boolean;
+}
+
+/** Repetición de una tarea: al completarla nace la siguiente. */
+export interface Recurrence {
+  unit: 'day' | 'week' | 'month';
+  interval: number;
 }
 
 export interface Task {
@@ -57,6 +76,9 @@ export interface Task {
   createdAt: ISODateTime;
   /** Fecha local de finalización (no UTC), para agrupar por día sin desfases. */
   completedAt: ISODate | null;
+  recurrence?: Recurrence;
+  /** Tarea que nació al completar esta (si se reabre y sigue sin tocar, se elimina). */
+  spawnedId?: ID;
 }
 
 /* ---------- Hábitos ---------- */
@@ -108,6 +130,13 @@ export interface HabitLog {
 /* ---------- Cursos ---------- */
 export type TopicStatus = 'todo' | 'doing' | 'done';
 
+/** Tarjeta de estudio: pregunta por delante, respuesta por detrás. */
+export interface Flashcard {
+  id: ID;
+  q: string;
+  a: string;
+}
+
 export interface Topic {
   id: ID;
   title: string;
@@ -115,6 +144,11 @@ export interface Topic {
   /** Marcado como "necesito repasar". */
   review: boolean;
   markedAt: ISODate | null;
+  /** Repasos superados desde que se marcó (0-3); a los 4 el tema queda dominado. */
+  reviewStage?: number;
+  /** Día en que toca el próximo repaso. */
+  nextReview?: ISODate;
+  cards?: Flashcard[];
 }
 
 export interface Module {
@@ -202,7 +236,7 @@ export interface StudySession {
   label: string;
 }
 
-export type XpSource = 'task' | 'habit' | 'topic' | 'session' | 'milestone' | 'checkpoint' | 'bonus' | 'legacy';
+export type XpSource = 'task' | 'habit' | 'topic' | 'session' | 'milestone' | 'checkpoint' | 'bonus' | 'review' | 'combo' | 'legacy';
 
 export interface XpEvent {
   id: ID;

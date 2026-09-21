@@ -4,7 +4,7 @@ import { setSoundEnabled, sfx } from '@/audio/sfx';
 
 export type ModalState =
   | null
-  | { type: 'task'; id?: string }
+  | { type: 'task'; id?: string; dueDate?: string }
   | { type: 'habit'; id?: string }
   | { type: 'course'; id?: string }
   | { type: 'goal' }
@@ -13,6 +13,7 @@ export type ModalState =
   | { type: 'session'; courseId?: string; minutes?: number }
   | { type: 'quick' }
   | { type: 'welcome' }
+  | { type: 'cards'; courseId: string; topicId: string }
   | { type: 'settings' }
   | { type: 'confirm'; title: string; body: string; confirmLabel: string; onConfirm: () => void };
 
@@ -34,9 +35,18 @@ export interface LevelUpInfo {
   bonus: number;
 }
 
+export interface VictoryInfo {
+  title: string;
+  xp: number;
+  coins: number;
+  /** Golpes (subtareas) que hicieron falta. */
+  hits: number;
+}
+
 interface Prefs {
   theme: 'light' | 'dark';
   sound: boolean;
+  music: boolean;
   world: string | null;
 }
 
@@ -46,6 +56,7 @@ function readPrefs(): Prefs {
   const fallback: Prefs = {
     theme: typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
     sound: true,
+    music: true,
     world: null,
   };
   try {
@@ -66,12 +77,15 @@ function writePrefs(p: Prefs) {
 interface UiState extends Prefs {
   toasts: Toast[];
   levelUp: LevelUpInfo | null;
+  victory: VictoryInfo | null;
   modal: ModalState;
   notifOpen: boolean;
   navOpen: boolean;
   toast: (t: Omit<Toast, 'id'>) => void;
   dismissToast: (id: string) => void;
   showLevelUp: (info: LevelUpInfo | null) => void;
+  showVictory: (info: VictoryInfo | null) => void;
+  toggleMusic: () => void;
   openModal: (m: Exclude<ModalState, null>) => void;
   closeModal: () => void;
   setNotifOpen: (open: boolean) => void;
@@ -97,6 +111,7 @@ export const useUi = create<UiState>((set, get) => ({
   ...initial,
   toasts: [],
   levelUp: null,
+  victory: null,
   modal: null,
   notifOpen: false,
   navOpen: false,
@@ -107,6 +122,12 @@ export const useUi = create<UiState>((set, get) => ({
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   showLevelUp: (levelUp) => set({ levelUp }),
+  showVictory: (victory) => set({ victory }),
+  toggleMusic: () => {
+    const music = !get().music;
+    set({ music });
+    writePrefs({ theme: get().theme, sound: get().sound, music, world: get().world });
+  },
   openModal: (modal) => set({ modal, notifOpen: false, navOpen: false }),
   closeModal: () => set({ modal: null }),
   setNotifOpen: (notifOpen) => set({ notifOpen }),
@@ -115,20 +136,20 @@ export const useUi = create<UiState>((set, get) => ({
     const theme = get().theme === 'dark' ? 'light' : 'dark';
     set({ theme });
     applyTheme(theme, get().world);
-    writePrefs({ theme, sound: get().sound, world: get().world });
+    writePrefs({ theme, sound: get().sound, music: get().music, world: get().world });
     sfx.click();
   },
   toggleSound: () => {
     const sound = !get().sound;
     set({ sound });
     setSoundEnabled(sound);
-    writePrefs({ theme: get().theme, sound, world: get().world });
+    writePrefs({ theme: get().theme, sound, music: get().music, world: get().world });
     if (sound) sfx.coin();
   },
   setWorld: (world) => {
     set({ world });
     applyTheme(get().theme, world);
-    writePrefs({ theme: get().theme, sound: get().sound, world });
+    writePrefs({ theme: get().theme, sound: get().sound, music: get().music, world });
   },
 }));
 

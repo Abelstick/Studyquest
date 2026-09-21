@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStorage, createLocalRepository } from '@/data/local';
 import type { Repository } from '@/data/ports';
 import { createDataStore } from './data';
@@ -16,7 +16,14 @@ const draft = (over = {}) => ({
   title: 'Tarea', courseId: null, priority: 'mid' as const, status: 'todo' as const, dueDate: null, estimateMin: 30, xp: 40, subtasks: [], tags: [], ...over,
 });
 
+/** Miércoles 16-sep-2026: los tests no dependen del día en que se ejecutan (el fin de semana da bonus). */
+const WEDNESDAY = new Date(2026, 8, 16, 12, 0, 0);
+
+afterEach(() => vi.useRealTimers());
+
 beforeEach(async () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(WEDNESDAY);
   repo = createLocalRepository(new MemoryStorage());
   store = createDataStore(repo);
   useUi.setState({ toasts: [], levelUp: null, modal: null });
@@ -149,5 +156,201 @@ describe('store de datos', () => {
     expect(store.getState().tasks).toHaveLength(0);
     expect(store.getState().profile.xp).toBe(0);
     expect(await repo.tasks.list()).toHaveLength(0);
+  });
+
+  describe('tareas recurrentes', () => {
+    const recurring = (over = {}) => draft({ title: 'Regar plantas', dueDate: '2026-09-16', recurrence: { unit: 'week', interval: 1 }, ...over });
+
+    it('al completarla nace la siguiente, con nueva fecha y sin avance', async () => {
+      store.getState().createTask(recurring({ subtasks: [{ id: 's1', title: 'a', done: false }] }));
+      const first = store.getState().tasks[0];
+      store.getState().setTaskStatus(first.id, 'done');
+      const [done, next] = store.getState().tasks;
+      expect(done.status).toBe('done');
+      expect(done.spawnedId).toBe(next.id);
+      expect(next.status).toBe('todo');
+      expect(next.dueDate).toBe('2026-09-23');
+      expect(next.subtasks.every((x) => !x.done)).toBe(true);
+      expect(next.recurrence).toEqual({ unit: 'week', interval: 1 });
+      await flush();
+      expect(await repo.tasks.list()).toHaveLength(2);
+    });
+
+    it('reabrirla retira la siguiente si nadie la tocó (y devuelve el XP)', () => {
+      store.getState().createTask(recurring());
+      const id = store.getState().tasks[0].id;
+      store.getState().setTaskStatus(id, 'done');
+      expect(store.getState().tasks).toHaveLength(2);
+      store.getState().setTaskStatus(id, 'todo');
+      expect(store.getState().tasks).toHaveLength(1);
+      expect(store.getState().tasks[0].spawnedId).toBeUndefined();
+      expect(store.getState().profile.xp).toBe(0);
+    });
+
+    it('si la siguiente ya se empezó, se conserva al reabrir', () => {
+      store.getState().createTask(recurring());
+      const id = store.getState().tasks[0].id;
+      store.getState().setTaskStatus(id, 'done');
+      store.getState().setTaskStatus(store.getState().tasks[1].id, 'doing');
+      store.getState().setTaskStatus(id, 'todo');
+      expect(store.getState().tasks).toHaveLength(2);
+    });
+
+    it('una tarea normal no genera copias', () => {
+      store.getState().createTask(draft());
+      store.getState().setTaskStatus(store.getState().tasks[0].id, 'done');
+      expect(store.getState().tasks).toHaveLength(1);
+    });
+  });
+
+  describe('jefes finales', () => {
+    const boss = () => draft({ title: 'Jefe', priority: 'boss', xp: 120, subtasks: ['a', 'b', 'c'].map((t) => ({ id: t, title: t, done: false })) });
+
+    it('cada subtarea es un golpe; el último derrota al jefe, da botín y muestra la victoria', () => {
+      store.getState().createTask(boss());
+      const id = store.getState().tasks[0].id;
+      store.getState().toggleSubtask(id, 'a');
+      expect(store.getState().tasks[0].status).toBe('doing');
+      expect(useUi.getState().victory).toBeNull();
+      store.getState().toggleSubtask(id, 'b');
+      store.getState().toggleSubtask(id, 'c');
+      const t = store.getState().tasks[0];
+      expect(t.status).toBe('done');
+      expect(t.completedAt).toBe(today());
+      expect(store.getState().profile.xp).toBe(120 + 50);
+      expect(useUi.getState().victory).toMatchObject({ title: 'Jefe', xp: 170, hits: 3 });
+    });
+
+    it('reabrir un jefe le devuelve la vida y quita el XP', () => {
+      store.getState().createTask(boss());
+      const id = store.getState().tasks[0].id;
+      ['a', 'b', 'c'].forEach((s) => store.getState().toggleSubtask(id, s));
+      store.getState().setTaskStatus(id, 'todo');
+      expect(store.getState().tasks[0].subtasks.every((x) => !x.done)).toBe(true);
+      expect(store.getState().profile.xp).toBe(0);
+    });
+
+    it('deshacer un golpe cura al jefe sin dar victoria', () => {
+      store.getState().createTask(boss());
+      const id = store.getState().tasks[0].id;
+      store.getState().toggleSubtask(id, 'a');
+      store.getState().toggleSubtask(id, 'a');
+      expect(store.getState().tasks[0].subtasks.filter((x) => x.done)).toHaveLength(0);
+    });
+
+    it('una subtarea de una tarea normal no la completa sola', () => {
+      store.getState().createTask(draft({ subtasks: [{ id: 'x', title: 'x', done: false }] }));
+      store.getState().toggleSubtask(store.getState().tasks[0].id, 'x');
+      expect(store.getState().tasks[0].status).toBe('todo');
+    });
+  });
+
+  describe('eventos de racha', () => {
+    const makeHabits = (n: number) => {
+      for (let i = 0; i < n; i++) store.getState().createHabit({ title: `H${i}`, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+      return store.getState().habits.map((h) => h.id);
+    };
+    const xpOf = (source: string) => store.getState().xpEvents.filter((e) => e.source === source).reduce((a, e) => a + e.amount, 0);
+
+    it('entre semana no hay bonus de finde; con 3 hábitos hoy se cobra el combo ×2 una sola vez', () => {
+      const ids = makeHabits(4);
+      ids.slice(0, 2).forEach((id) => store.getState().setHabitValue(id, 1));
+      expect(xpOf('combo')).toBe(0);
+      store.getState().setHabitValue(ids[2], 1);
+      expect(xpOf('combo')).toBe(60); // duplica los 3 hábitos (3 × 20)
+      store.getState().setHabitValue(ids[3], 1);
+      expect(xpOf('combo')).toBe(60);
+      // Deshacer y rehacer no lo cobra otra vez
+      store.getState().setHabitValue(ids[2], 0);
+      store.getState().setHabitValue(ids[2], 1);
+      expect(xpOf('combo')).toBe(60);
+      expect(store.getState().profile.dayBonus).toMatchObject({ combo: true });
+    });
+
+    it('en fin de semana cada hábito da +50% una vez al día', () => {
+      vi.setSystemTime(new Date(2026, 8, 19, 12)); // sábado
+      const [id] = makeHabits(1);
+      store.getState().setHabitValue(id, 1);
+      expect(xpOf('combo')).toBe(10);
+      store.getState().setHabitValue(id, 0);
+      store.getState().setHabitValue(id, 1);
+      expect(xpOf('combo')).toBe(10);
+      expect(store.getState().xpEvents.some((e) => e.label.startsWith('Bonus de fin de semana'))).toBe(true);
+    });
+
+    it('los bonos se reinician al día siguiente', () => {
+      const ids = makeHabits(3);
+      ids.forEach((id) => store.getState().setHabitValue(id, 1));
+      expect(xpOf('combo')).toBe(60);
+      vi.setSystemTime(new Date(2026, 8, 17, 12));
+      ids.forEach((id) => store.getState().setHabitValue(id, 1));
+      expect(xpOf('combo')).toBe(120);
+    });
+  });
+
+  describe('repaso espaciado', () => {
+    const setup = () => {
+      store.getState().createCourse({ title: 'C', professor: '', field: '', mentor: null, modules: [{ id: 'm1', title: 'M', summary: '', xp: 100, topics: [{ id: 't1', title: 'Tema', status: 'done', review: false, markedAt: null }] }] });
+      const courseId = store.getState().courses[0].id;
+      const topic = () => store.getState().courses[0].modules[0].topics[0];
+      return { courseId, topic };
+    };
+
+    it('marcar un tema agenda el primer repaso para mañana; desmarcar limpia la agenda', () => {
+      const { courseId, topic } = setup();
+      store.getState().toggleTopicReview(courseId, 't1');
+      expect(topic()).toMatchObject({ review: true, reviewStage: 0, nextReview: '2026-09-17', markedAt: '2026-09-16' });
+      store.getState().toggleTopicReview(courseId, 't1');
+      expect(topic().review).toBe(false);
+      expect(topic().nextReview).toBeUndefined();
+    });
+
+    it('superar repasos sube 1 → 3 → 7 → 14 días y al cuarto queda dominado con bonus', () => {
+      const { courseId, topic } = setup();
+      store.getState().toggleTopicReview(courseId, 't1');
+      const days = [] as (string | undefined)[];
+      for (let i = 0; i < 3; i++) {
+        store.getState().reviewTopic(courseId, 't1', 'good');
+        days.push(topic().nextReview);
+      }
+      expect(days).toEqual(['2026-09-19', '2026-09-23', '2026-09-30']);
+      expect(store.getState().profile.xp).toBe(30);
+      store.getState().reviewTopic(courseId, 't1', 'good');
+      expect(topic().review).toBe(false);
+      expect(store.getState().profile.xp).toBe(30 + 10 + 40);
+      expect(store.getState().xpEvents.some((e) => e.label === 'Dominado: Tema')).toBe(true);
+    });
+
+    it('fallar vuelve al principio y no da XP', () => {
+      const { courseId, topic } = setup();
+      store.getState().toggleTopicReview(courseId, 't1');
+      store.getState().reviewTopic(courseId, 't1', 'good');
+      store.getState().reviewTopic(courseId, 't1', 'again');
+      expect(topic()).toMatchObject({ reviewStage: 0, nextReview: '2026-09-17' });
+      expect(store.getState().profile.xp).toBe(10);
+    });
+
+    it('guarda las tarjetas del tema', async () => {
+      const { courseId, topic } = setup();
+      store.getState().setTopicCards(courseId, 't1', [{ id: 'c1', q: '¿?', a: '!' }]);
+      expect(topic().cards).toEqual([{ id: 'c1', q: '¿?', a: '!' }]);
+      await flush();
+      expect((await repo.courses.list())[0].modules[0].topics[0].cards).toHaveLength(1);
+    });
+  });
+
+  describe('cofre diario', () => {
+    it('se abre una vez al día, da monedas y cuenta para el total', () => {
+      store.getState().openChest();
+      const first = store.getState().profile;
+      expect(first.credits).toBeGreaterThanOrEqual(20);
+      expect(first.lastChest).toBe(today());
+      expect(first.chests).toBe(1);
+      store.getState().openChest();
+      expect(store.getState().profile.credits).toBe(first.credits);
+      vi.setSystemTime(new Date(2026, 8, 17, 12));
+      store.getState().openChest();
+      expect(store.getState().profile.chests).toBe(2);
+    });
   });
 });

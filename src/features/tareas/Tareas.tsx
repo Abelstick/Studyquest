@@ -4,7 +4,8 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { dueLabel, today } from '@/core/dates';
 import type { Priority, Task, TaskStatus } from '@/core/domain';
-import { Button, Empty, PageHead, cx } from '@/ui/kit';
+import { bossHp, isBoss, recurrenceLabel } from '@/core/tasks';
+import { Bar, Button, Empty, PageHead, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
 const COLUMNS: { status: TaskStatus; title: string; sprite: 'qblock' | 'flower' | 'star' }[] = [
@@ -25,12 +26,15 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
   const openModal = useUi((s) => s.openModal);
   const overdue = task.status !== 'done' && !!task.dueDate && task.dueDate < today();
   const doneSubs = task.subtasks.filter((s) => s.done).length;
-  const [open, setOpen] = useState(false);
+  const boss = isBoss(task) && task.subtasks.length > 0;
+  // Los jefes muestran sus subtareas (sus «puntos débiles») desde el principio.
+  const [open, setOpen] = useState(boss && task.status !== 'done');
   const next = NEXT[task.status];
+  const hp = bossHp(task);
 
   return (
     <article
-      className={cx('task', `task--${task.priority}`, task.status === 'done' && 'is-done')}
+      className={cx('task', `task--${task.priority}`, task.status === 'done' && 'is-done', boss && hp.hp === 0 && 'is-defeated')}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData('text/plain', task.id);
@@ -42,15 +46,32 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
         <span className="xp-text">+{task.xp}</span>
       </div>
       <h3 className="task__title">
-        {task.priority === 'boss' && <Sprite name="skull" size={16} />} {task.title}
+        {task.priority === 'boss' && <Sprite name={boss ? 'boss' : 'skull'} size={boss ? 22 : 16} />} {task.title}
       </h3>
+      {boss && (
+        <div className="bossbar">
+          <div className="bossbar__hearts" role="img" aria-label={`Vida del jefe: ${hp.hp} de ${hp.max}`}>
+            {hp.max <= 10 ? (
+              Array.from({ length: hp.max }, (_, i) => (
+                <span key={i} className={cx(i >= hp.hp && 'is-empty')}>
+                  <Sprite name="heart" size={15} />
+                </span>
+              ))
+            ) : (
+              <Bar pct={hp.pct} tone="red" label="Vida del jefe" />
+            )}
+          </div>
+          <span className="kicker">{hp.hp === 0 ? '¡DERROTADO!' : `HP ${hp.hp}/${hp.max}`}</span>
+        </div>
+      )}
       <div className="tags">
         <span className={cx('tag', overdue ? 'tag--red' : 'tag--plain')}>{dueLabel(task.dueDate)}</span>
         {task.estimateMin > 0 && <span className="tag tag--plain">{task.estimateMin >= 60 ? `${+(task.estimateMin / 60).toFixed(1)} h` : `${task.estimateMin} min`}</span>}
         <span className="tag tag--plain">{PRIORITY_LABEL[task.priority]}</span>
+        {task.recurrence && <span className="tag tag--blue" title="Al completarla se crea la siguiente">↻ {recurrenceLabel(task.recurrence)}</span>}
         {task.subtasks.length > 0 && (
           <button type="button" className="tag tag--plain tag--btn" onClick={() => setOpen(!open)} aria-expanded={open}>
-            {doneSubs}/{task.subtasks.length} subtareas {open ? '−' : '+'}
+            {doneSubs}/{task.subtasks.length} {boss ? 'golpes' : 'subtareas'} {open ? '−' : '+'}
           </button>
         )}
       </div>

@@ -4,12 +4,20 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { courseProgress, courseRank, moduleStates, topicXp, type ModuleState } from '@/core/game';
 import { courseHours, courseStreak } from '@/core/stats';
-import { agoDays } from '@/core/dates';
+import { agoDays, diffDays, today } from '@/core/dates';
+import { reviewDueDate } from '@/core/review';
 import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Panel, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { nextTopic } from './Cursos';
+
+/** «hoy», «mañana», «en 3 d» para el próximo repaso de un tema. */
+const when = (due: string | null) => {
+  if (!due) return '';
+  const n = diffDays(due, today());
+  return n <= 0 ? 'hoy' : n === 1 ? 'mañana' : `en ${n} d`;
+};
 
 const STATE_LABEL: Record<ModuleState, string> = { done: 'Completado', active: 'En curso', locked: 'Bloqueado' };
 const TOPIC_NEXT: Record<TopicStatus, TopicStatus> = { todo: 'doing', doing: 'done', done: 'todo' };
@@ -130,8 +138,11 @@ export default function CursoDetalle() {
                     </button>
                     <p className="topic__title">{t.title}</p>
                     <span className="topic__state">+{topicXp(mod)} XP</span>
-                    <button type="button" className={cx('chip chip--sm', t.review && 'is-on')} aria-pressed={t.review} onClick={() => toggleTopicReview(course.id, t.id)}>
-                      {t.review ? '⚑ A repasar' : 'Necesito repasar'}
+                    <button type="button" className={cx('chip chip--sm', t.review && 'is-on')} aria-pressed={t.review} onClick={() => toggleTopicReview(course.id, t.id)} title={t.review ? 'Repasos a 1, 3, 7 y 14 días' : 'Agenda repasos a 1, 3, 7 y 14 días'}>
+                      {t.review ? `⚑ Repaso ${when(reviewDueDate(t))}` : 'Necesito repasar'}
+                    </button>
+                    <button type="button" className="chip chip--sm" onClick={() => openModal({ type: 'cards', courseId: course.id, topicId: t.id })} aria-label={`Tarjetas de ${t.title}`}>
+                      ♪ Tarjetas{t.cards?.length ? ` (${t.cards.length})` : ''}
                     </button>
                     <button type="button" className="icon-btn icon-btn--sm" aria-label={`Quitar ${t.title}`} onClick={() => removeTopic(course.id, t.id)}>
                       ✕

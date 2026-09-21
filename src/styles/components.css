@@ -956,17 +956,25 @@ textarea.input {
   white-space: nowrap;
 }
 .login {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 20px 20px 70px;
+  overflow: hidden;
 }
 .login__card {
+  position: relative;
+  z-index: 1;
   width: 420px;
   max-width: 100%;
-  padding: 26px 24px;
-  gap: 16px;
+  padding: 0;
+}
+.login__body {
+  display: grid;
+  gap: 14px;
+  padding: 22px 24px 26px;
 }
 .login__sprites {
   display: flex;

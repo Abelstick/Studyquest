@@ -52,6 +52,8 @@ export const coinsForXp = (amount: number): number => Math.trunc(amount / 4);
 export const LEVEL_UP_BONUS = 500;
 export const SESSION_XP_PER_MIN = 2;
 export const WEEKLY_BONUS_XP = 200;
+/** Las sesiones del Pomodoro se distinguen por su etiqueta (no hace falta una columna nueva en la base de datos). */
+export const POMODORO_LABEL = '🍅 Pomodoro';
 
 /* ---------- Racha ---------- */
 

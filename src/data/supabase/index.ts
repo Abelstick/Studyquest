@@ -239,6 +239,10 @@ class SupabaseAuth implements AuthPort {
     const { error } = await this.db.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } });
     fail(error);
   }
+  async signInWithGoogle() {
+    const { error } = await this.db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin, queryParams: { prompt: 'select_account' } } });
+    fail(error);
+  }
   async signOut() {
     remember(null);
     const { error } = await this.db.auth.signOut();

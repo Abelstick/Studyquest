@@ -31,7 +31,8 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 - [Usarla como app (PWA)](#usarla-como-app-pwa)
 - [Trabajar sin conexión](#trabajar-sin-conexión)
 - [Copias de seguridad](#copias-de-seguridad)
-- [Recordatorios push](#recordatorios-push-opcional)
+- [Recordatorios push](#recordatorios-con-repetición-y-sonido)
+- [Repaso espaciado, calendario, jefes y Pomodoro](#repaso-espaciado-calendario-jefes-y-pomodoro)
 - [Reglas del juego](#reglas-del-juego)
 - [Arquitectura](#arquitectura)
 - [Cambiar de base de datos](#cambiar-de-base-de-datos)
@@ -47,12 +48,15 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 | --- | --- |
 | **Inicio** | Misión del día (hábitos que tocan + tareas más urgentes), nivel y XP, calendario de racha, informe semanal, consejos y repasos pendientes. |
 | **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Marca temas como «necesito repasar». |
-| **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad (el «jefe final» da 120 XP), fecha límite, subtareas y etiquetas. |
+| **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha límite, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
+| **Calendario** | Vista mensual con tus tareas por fecha límite, las repeticiones futuras y los repasos de flashcards. Arrastra una tarea a otro día para reprogramarla. |
+| **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
+| **Pomodoro** | Temporizador de enfoque/descanso con **música 8-bit** y un personaje que **corre mientras estudias**. Sigue vivo al cambiar de pantalla. |
 | **Hábitos** | Frecuencia (diaria, días concretos, cada X días, semanal, mensual, **fechas concretas, anual y personalizada** «N veces por semana/mes»), recordatorio con **aviso repetido y sonido**, medición (minutos, páginas, veces, hecho/no hecho…), pasos de sesión, mapa de 12 semanas y aviso del día en que más fallas. |
 | **Metas** | Árbol de hitos con habilidades y recompensa final. |
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
 | **Progreso** | Horas por semana, distribución del tiempo por curso, mapa de actividad de 20 semanas. Filtro 90 días / 6 meses / todo. |
-| **Arsenal** | Tienda de Toad (avatares, marcos, mundos visuales, poderes), 13 logros y recompensas personales de la vida real. |
+| **Arsenal** | Tienda de Toad (11 avatares, marcos, **6 mundos visuales**, insignias, poderes), **42 logros** y recompensas personales de la vida real. |
 | **Perfil** | Camino de aprendizaje, insignias, ajustes, instalar la app, **recordatorios**, **exportar/importar tu partida**, cerrar sesión y reiniciar partida. |
 
 Además: sesiones de estudio con temporizador, búsqueda global, notificaciones, modo día/noche, efectos de sonido 8-bit (sintetizados, sin archivos), pantalla de *level up* con lluvia de monedas, y diseño responsive con barra inferior y botón `?` flotante en móvil.
@@ -116,6 +120,17 @@ El `.env.example` viene con `VITE_DATA_PROVIDER=local`, así que la app funciona
 
 4. En **Authentication → URL Configuration** añade tus URL permitidas: la de producción (`https://tu-app.onrender.com`) y `http://localhost:5173`. Sin esto, los enlaces de confirmación y el enlace mágico redirigen a un sitio equivocado.
 5. *(Opcional)* En **Authentication → Providers → Email**, desactiva *Confirm email* mientras pruebas para poder entrar sin confirmar el correo.
+
+### Iniciar sesión con Google
+
+La pantalla de acceso ofrece **«Continuar con Google»** como opción principal (el correo y la contraseña quedan debajo, plegados). La pantalla es un pequeño nivel: sprites flotando, un corredor perseguido por un jefe sobre el suelo de ladrillos, marcador de jugador y barra de carga. En el campo de contraseña, el botón **VER / OCULTAR** muestra u oculta lo que escribes, avisa si tienes **Bloq Mayús** activado y, al crear cuenta, un medidor de **Poder** (Débil → Épica) orienta sobre la fuerza. Para activarlo, una sola vez:
+
+1. En [Google Cloud Console](https://console.cloud.google.com/) crea (o elige) un proyecto → **APIs y servicios → Pantalla de consentimiento de OAuth** (tipo *Externo*; basta con nombre de la app y tu correo).
+2. **Credenciales → Crear credenciales → ID de cliente de OAuth → Aplicación web**. En **URI de redireccionamiento autorizados** pon exactamente la URL de callback de Supabase: `https://<tu-ref>.supabase.co/auth/v1/callback` (la ves en Supabase → Authentication → Providers → Google).
+3. Copia el **ID de cliente** y el **Secreto**. En Supabase → **Authentication → Providers → Google**, actívalo y pégalos.
+4. En **Authentication → URL Configuration** deben estar tu URL de Render y `http://localhost:5173` (paso 4 de arriba): a ellas vuelve el usuario tras elegir su cuenta.
+
+No hace falta ninguna variable nueva ni migración: la sesión de Google entra por el mismo camino que la de correo, y los datos siguen protegidos por RLS. Si aún no has configurado Google, el botón mostrará el error del proveedor; puedes ocultarlo con `VITE_GOOGLE_LOGIN=false`.
 
 > 🔐 **Seguridad.** La clave `anon` es pública por diseño: lo que protege tus datos son las políticas RLS del SQL. **Nunca** uses la clave `service_role` en el frontend. El archivo `.env` está en `.gitignore`; no lo subas al repositorio.
 
@@ -245,16 +260,41 @@ Pon la hora del recordatorio en los últimos 10 minutos (el primer aviso acepta 
 
 **Privacidad:** se guarda por dispositivo el *endpoint* de push, sus claves públicas y tu zona horaria (tabla `push_subscriptions`, con RLS). Al **cerrar sesión** el dispositivo se da de baja de los recordatorios de esa cuenta.
 
+## Repaso espaciado, calendario, jefes y Pomodoro
+
+**Repaso espaciado (Repaso).** Marca un tema como *«Necesito repasar»* dentro de un curso: reaparece **al día siguiente** y, cada vez que lo recuerdas, a los **3, 7 y 14 días**. Fallar reinicia la escalera; superar los cuatro escalones deja el tema **dominado** (+40 XP). Cada repaso superado da +10 XP. Las tarjetas son tuyas: botón **♪ Tarjetas** en cada tema, una por línea con el formato `pregunta :: respuesta` (si no hay ninguna, se te pregunta si recuerdas el tema). Atajos: `espacio` gira la tarjeta, `1` `2` `3` califican. La agenda se ve también en el calendario y en el menú (insignia con lo que toca hoy).
+
+**Calendario.** Tareas por fecha límite (color por prioridad, ↻ las repetidas, tachadas las hechas), repeticiones futuras proyectadas y repasos. Pulsa un día para ver su detalle y crear una tarea con esa fecha; arrastra una tarea a otro día para moverla.
+
+**Tareas recurrentes.** En el formulario, *Repetir*: cada N días, semanas o meses. Al completarla **nace la siguiente**, con su nueva fecha y sin avance. La fecha sigue el calendario original pero nunca cae en el pasado (completar tarde no crea una cola de atrasadas; 31 ene + 1 mes = 28/29 feb). Si la reabres y nadie tocó la siguiente, esta se retira.
+
+**Jefes finales.** Una tarea con prioridad *Jefe final* y subtareas es una batalla: **cada subtarea es un golpe** y le quita un corazón. Al caer el último, el jefe se derrota solo: pantalla de **victoria**, su XP y un **botín extra de +50 XP**. Reabrir el jefe le devuelve toda la vida.
+
+**Pomodoro.** 25 min de enfoque + 5 de descanso (configurable), y descanso largo cada 4. Cada enfoque terminado se registra como sesión de estudio (2 XP/min). Suena una melodía 8-bit animada para estudiar y otra tranquila para descansar (**original y sintetizada**, sin archivos); se controla con el botón «Música 8-bit». El reloj aparece en la barra superior desde cualquier pantalla y en el título de la pestaña, y sobrevive a recargar la página.
+
+**Eventos de racha.**
+
+| Evento | Cuándo | Qué da |
+| --- | --- | --- |
+| **Bonus de fin de semana** | Sábado y domingo, por cada hábito completado | **+50%** de su XP |
+| **Combo ×2** | Al completar **3 hábitos** en el mismo día | Duplica el XP de esos hábitos (tope 200) |
+| **Cofre diario** | Una vez al día en Inicio | 20–60 monedas + 2 por cada día de racha (máx. +60) y, a veces, +25 XP |
+
+Los bonos se cobran **una sola vez** (se anotan en el perfil): deshacer y rehacer un hábito no los repite.
+
+**Mundos y logros.** Seis mundos visuales (subterráneo, castillo, **submarino, montaña nevada, desierto, casa encantada**), siete avatares nuevos (slime, invasor 8-bit, dino, gato, robot, caballero, mini jefe), marcos de fuego/hielo/real, insignias y **42 logros** (repaso, jefes, Pomodoro, combos, rachas largas, coleccionismo…).
+
 ## Reglas del juego
 
 | Concepto | Regla |
 | --- | --- |
 | **Nivel** | El nivel *L* cuesta `250 × L` XP (nivel 12 → 3 000 XP). Cada nivel tiene un mundo (`3-4`) y un rango. |
 | **Monedas** | 1 moneda por cada 4 XP. Subir de nivel da +500. Cada logro da su premio. |
-| **Tarea** | Da su XP al pasar a *Superada*. Reabrirla lo devuelve. Prioridad: baja 20 · media 35 · alta 50 · jefe final 120 (valor por defecto, editable). |
+| **Tarea** | Da su XP al pasar a *Superada*. Reabrirla lo devuelve. Prioridad: baja 20 · media 35 · alta 50 · jefe final 120 (+50 de botín al derrotarlo). |
 | **Hábito** | Da su XP al alcanzar el objetivo del día, **una sola vez**. Bajar del objetivo lo devuelve. |
 | **Tema de curso** | XP del módulo repartido entre sus temas. |
-| **Sesión de estudio** | 2 XP por minuto. |
+| **Sesión de estudio** | 2 XP por minuto (también cada Pomodoro de enfoque). |
+| **Repaso** | +10 XP por repaso superado; +40 más al dominar el tema. |
 | **Reto semanal** | Alcanzar tus horas objetivo (15 h por defecto) desbloquea +200 XP. |
 | **Racha** | Días consecutivos con XP neto positivo. Si hoy aún no hay actividad, la racha de ayer sigue viva hasta que acabe el día. |
 | **Congelar racha** | Poder de la tienda (×3): marca un día como activo sin ganar XP. |
@@ -319,7 +359,7 @@ export function createPocketBaseDataLayer(url: string): DataLayer {
     repo: { /* profile, tasks, habits, habitLogs, courses, goals, projects,
                personalRewards, sessions, xpEvents, notifications, wipe */ },
     auth: { /* required, getUser, onChange, signInWithPassword, signUp,
-                signInWithMagicLink, signOut */ },
+                signInWithMagicLink, signInWithGoogle, signOut */ },
   };
 }
 ```
@@ -363,7 +403,8 @@ Cubren la lógica que más importa:
 - **Copia de seguridad:** ida y vuelta sin pérdidas, archivos inválidos, ids regenerados y referencias huérfanas.
 - **Servidor de recordatorios:** paridad de «¿toca hoy?» con la app en más de 15 000 casos aleatorios, y la hora local por zona horaria.
 - **Planificador de avisos** (compartido por servidor y web): primer aviso, repeticiones, tope de 6, «no repetir», hábito hecho, zonas horarias y medianoche; y el reparto entre banner, notificación del sistema y silencio según la pestaña.
-- Validez de todos los sprites y del decodificador de la clave VAPID.
+- **Novedades:** intervalos 1-3-7-14 y dominio del tema, repeticiones de tareas (meses cortos, completar tarde, reabrir), vida de los jefes y victoria, bonus de fin de semana y combo (una sola vez, reinicio diario), cofre, cuadrícula del calendario, fases del Pomodoro y validez de las partituras.
+- Validez de todos los sprites, del catálogo y de los logros, y del decodificador de la clave VAPID (con la clave normalizada y validada).
 
 ## Problemas frecuentes
 
@@ -386,6 +427,10 @@ Cubren la lógica que más importa:
 | En Perfil → Recordatorios sale «El service worker no está activo» | Estás en `npm run dev`. Usa `npm run build && npm run preview`. |
 | Muestra `⏳ N pendientes` y no baja | Sigues sin conexión o la sesión caducó. Con red, púlsalo para reintentar; si la sesión caducó, vuelve a iniciar sesión (los cambios pendientes se conservan). |
 | Al importar dice «No parece una copia de StudyQuest» | Solo se admiten archivos exportados desde Perfil → Exportar copia. |
+| «Continuar con Google» da error `provider is not enabled` o `redirect_uri_mismatch` | Falta activar Google en Supabase → Authentication → Providers, o el *URI de redireccionamiento* de Google Cloud no es exactamente `https://<ref>.supabase.co/auth/v1/callback`. Ver [Iniciar sesión con Google](#iniciar-sesión-con-google). |
+| Tras elegir la cuenta de Google vuelvo a la pantalla de acceso o a otra URL | Tu URL no está en Supabase → Authentication → URL Configuration (Site URL y Redirect URLs). |
+| Perfil → Recordatorios dice «La clave VITE_VAPID_PUBLIC_KEY no es válida» (o el navegador da `applicationServerKey is not valid`) | La variable de Render está mal: debe ser la clave **pública** (87 caracteres, sin comillas ni espacios; la privada tiene 43). Corrígela, y en Render usa *Manual Deploy → Clear build cache & deploy*. El mensaje indica cuántos caracteres detecta. |
+| No suena la música del Pomodoro | Pulsa **Empezar** (el navegador exige un clic antes de reproducir audio) y revisa «Música 8-bit» y el botón `♪` de la barra superior. |
 | Supabase limita los correos | El plan gratuito envía pocos correos por hora. Para pruebas, desactiva *Confirm email* o usa contraseña en vez de enlace mágico. |
 
 ## Límites conocidos

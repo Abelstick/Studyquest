@@ -19,6 +19,9 @@ const Proyectos = lazy(() => import('@/features/proyectos/Proyectos'));
 const Progreso = lazy(() => import('@/features/progreso/Progreso'));
 const Arsenal = lazy(() => import('@/features/arsenal/Arsenal'));
 const Perfil = lazy(() => import('@/features/perfil/Perfil'));
+const Repaso = lazy(() => import('@/features/repaso/Repaso'));
+const Calendario = lazy(() => import('@/features/calendario/Calendario'));
+const Pomodoro = lazy(() => import('@/features/pomodoro/Pomodoro'));
 
 function Splash({ text = 'Cargando…' }: { text?: string }) {
   return (
@@ -93,6 +96,9 @@ function AuthGate() {
           <Route path="cursos" element={<Cursos />} />
           <Route path="cursos/:id" element={<CursoDetalle />} />
           <Route path="tareas" element={<Tareas />} />
+          <Route path="calendario" element={<Calendario />} />
+          <Route path="repaso" element={<Repaso />} />
+          <Route path="pomodoro" element={<Pomodoro />} />
           <Route path="habitos" element={<Habitos />} />
           <Route path="habitos/:id" element={<HabitoDetalle />} />
           <Route path="metas" element={<Metas />} />

@@ -149,6 +149,7 @@ class LocalAuth implements AuthPort {
     return { needsConfirmation: false };
   }
   async signInWithMagicLink() {}
+  async signInWithGoogle() {}
   async signOut() {}
 }
 

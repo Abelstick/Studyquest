@@ -13,11 +13,21 @@ export const addDays = (s: ISODate, n: number): ISODate => {
   d.setDate(d.getDate() + n);
   return toISODate(d);
 };
+/** Suma meses conservando el día; si el mes destino es más corto, cae en su último día (31 ene + 1 mes = 28/29 feb). */
+export const addMonths = (s: ISODate, n: number): ISODate => {
+  const d = fromISODate(s);
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+  return toISODate(d);
+};
 export const diffDays = (a: ISODate, b: ISODate): number =>
   Math.round((fromISODate(a).getTime() - fromISODate(b).getTime()) / 86_400_000);
 
 /** 0 = lunes … 6 = domingo. */
 export const weekdayIndex = (s: ISODate): number => (fromISODate(s).getDay() + 6) % 7;
+export const isWeekend = (s: ISODate): boolean => weekdayIndex(s) >= 5;
 export const weekStart = (s: ISODate): ISODate => addDays(s, -weekdayIndex(s));
 export const monthKey = (s: ISODate): string => s.slice(0, 7);
 export const isoNow = (): string => new Date().toISOString();

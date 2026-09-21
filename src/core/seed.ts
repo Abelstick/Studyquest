@@ -57,6 +57,25 @@ export function buildDemo(profile: Profile, now: ISODate): Snapshot {
   };
   const courses = [datos, python, ingles];
 
+  /* Repaso espaciado de ejemplo: unos temas tocan hoy (con tarjetas propias), otro queda agendado. */
+  const withTopic = (course: Course, title: string, patch: Partial<Topic>) => {
+    for (const m of course.modules) for (const t of m.topics) if (t.title === title) Object.assign(t, patch);
+  };
+  const card = (q: string, a: string) => ({ id: newId(), q, a });
+  withTopic(datos, 'JOINs múltiples', {
+    reviewStage: 1, nextReview: addDays(now, -1),
+    cards: [
+      card('¿Qué devuelve un INNER JOIN?', 'Solo las filas que tienen pareja en ambas tablas.'),
+      card('¿Y un LEFT JOIN?', 'Todas las filas de la tabla izquierda; si no hay pareja, las columnas de la derecha salen NULL.'),
+      card('¿Cómo encadenas tres tablas?', 'Un JOIN detrás de otro: FROM a JOIN b ON … JOIN c ON …'),
+    ],
+  });
+  withTopic(datos, 'Limpieza de nulos', {
+    reviewStage: 0, nextReview: now,
+    cards: [card('¿Cómo cuentas los nulos por columna en pandas?', 'df.isna().sum()'), card('Rellenar nulos con la mediana', "df['col'].fillna(df['col'].median())")],
+  });
+  withTopic(ingles, 'Unidad 6', { reviewStage: 2, nextReview: addDays(now, 4) });
+
   const task = (title: string, course: Course | null, priority: Task['priority'], status: Task['status'], due: number, estimateMin: number, xp: number, subs: string[], tags: string[]): Task => ({
     id: newId(), title, courseId: course?.id ?? null, priority, status, dueDate: addDays(now, due), estimateMin, xp,
     subtasks: subs.map((s) => ({ id: newId(), title: s, done: status === 'done' })), tags, createdAt: created,
@@ -68,9 +87,14 @@ export function buildDemo(profile: Profile, now: ISODate): Snapshot {
     task('Quiz de present perfect', ingles, 'low', 'todo', 2, 20, 20, [], ['inglés']),
     task('Refactorizar script de scraping', python, 'mid', 'todo', 4, 90, 35, ['Separar funciones', 'Añadir manejo de errores', 'Escribir pruebas', 'Documentar'], ['python']),
     task('Resumen del capítulo 3', datos, 'mid', 'doing', 0, 25, 35, ['Leer', 'Escribir resumen'], ['lectura']),
+    task('Repaso semanal de apuntes', datos, 'mid', 'todo', 2, 30, 35, [], ['rutina']),
     task('Setup del entorno de Pandas', python, 'low', 'done', -3, 30, 20, [], ['pandas']),
     task('Vocabulario unidad 7', ingles, 'low', 'done', -4, 15, 20, [], ['inglés']),
   ];
+
+  // El jefe del dashboard ya está herido (1 de 3 golpes) y el repaso semanal se repite solo.
+  tasks[0].subtasks[0].done = true;
+  tasks[5].recurrence = { unit: 'week', interval: 1 };
 
   const step = (title: string, minutes: number) => ({ id: newId(), title, minutes });
   const habit = (title: string, frequency: Habit['frequency'], measure: Habit['measure'], target: number, xp: number, steps: Habit['steps'] = []): Habit => ({

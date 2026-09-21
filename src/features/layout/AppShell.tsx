@@ -12,6 +12,7 @@ import { Overlays } from './Overlays';
 import { useOnline, useSyncPending } from '@/pwa/hooks';
 import { useHabitReminders } from '@/pwa/useHabitReminders';
 import { usePomodoro } from '@/state/pomodoro';
+import { useAiAccountSync } from '@/ai/useAiAccountSync';
 import { usePomodoroEngine } from '@/features/pomodoro/usePomodoroEngine';
 import { dueReviews } from '@/core/review';
 import { PHASE_LABEL, formatClock } from '@/core/pomodoro';
@@ -27,6 +28,8 @@ function useRouteTitle(): string {
       return id ? (courses.find((c) => c.id === id)?.title ?? 'Curso') : `${courses.length} ${courses.length === 1 ? 'curso activo' : 'cursos activos'}`;
     case '/tareas':
       return `${tasks.filter((t) => t.status !== 'done').length} contratos abiertos`;
+    case '/planificador':
+      return 'Tu ruta con fechas';
     case '/calendario':
       return 'Fechas límite y repasos';
     case '/repaso':
@@ -282,6 +285,7 @@ function MobileNav() {
 export function AppShell() {
   useHabitReminders();
   usePomodoroEngine();
+  useAiAccountSync();
   return (
     <div className="shell">
       <Sidebar />

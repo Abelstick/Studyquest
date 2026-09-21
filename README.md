@@ -32,6 +32,7 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 - [Trabajar sin conexión](#trabajar-sin-conexión)
 - [Copias de seguridad](#copias-de-seguridad)
 - [Recordatorios push](#recordatorios-con-repetición-y-sonido)
+- [Planificador inteligente](#planificador-inteligente)
 - [Repaso espaciado, calendario, jefes y Pomodoro](#repaso-espaciado-calendario-jefes-y-pomodoro)
 - [Reglas del juego](#reglas-del-juego)
 - [Arquitectura](#arquitectura)
@@ -49,6 +50,7 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 | **Inicio** | Misión del día (hábitos que tocan + tareas más urgentes), nivel y XP, calendario de racha, informe semanal, consejos y repasos pendientes. |
 | **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Marca temas como «necesito repasar». |
 | **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha límite, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
+| **Planificador** | Le dices «quiero aprender análisis de datos en 3 meses» y genera la ruta (Excel → SQL → Python → Pandas → Power BI → proyecto final) y **un plan con fechas** según tu disponibilidad, tus tareas y tus hábitos. Con **IA (Gemini, gratis)** o con plantillas. |
 | **Calendario** | Vista mensual con tus tareas por fecha límite, las repeticiones futuras y los repasos de flashcards. Arrastra una tarea a otro día para reprogramarla. |
 | **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
 | **Pomodoro** | Temporizador de enfoque/descanso con **música 8-bit** y un personaje que **corre mientras estudias**. Sigue vivo al cambiar de pantalla. |
@@ -260,6 +262,80 @@ Pon la hora del recordatorio en los últimos 10 minutos (el primer aviso acepta 
 
 **Privacidad:** se guarda por dispositivo el *endpoint* de push, sus claves públicas y tu zona horaria (tabla `push_subscriptions`, con RLS). Al **cerrar sesión** el dispositivo se da de baja de los recordatorios de esa cuenta.
 
+## Planificador inteligente
+
+Pantalla **Planificador** (o el botón «Planificar con el asistente» en Metas). Tres pasos:
+
+1. **Objetivo**: «Quiero aprender análisis de datos», el plazo (1, 2, 3, 6 meses o una fecha) y tu nivel.
+2. **Tiempo**: cuánto puedes estudiar cada día de la semana (pasos de 15 min), con atajos («1 h al día», «solo fines de semana»…) y los días que no puedes (viajes, exámenes). La app **descuenta lo que ya tienes**: tareas con fecha y hábitos medidos en minutos u horas.
+3. **Plan**: eliges de dónde sale la ruta (**tu propia ruta desde cero**, una **plantilla** o la **IA**) y la **editas por completo**: nombre de la meta, módulos (nombre, horas, orden, añadir/quitar), temas y los pasos del proyecto final. Verás una línea de tiempo con las fechas de cada tramo, y avisos como *«con tu disponibilidad caben 73 h de las 135 h que pide la ruta (54%). Necesitarías ~11 h por semana o ampliar el plazo a ~23 semanas»*. Si no cabe, recorta las horas de cada módulo por igual; si sobra tiempo, te avisa del margen.
+
+Al pulsar **Crear mi plan** se crean, de una vez: un **curso** con módulos y temas, una **meta** con un hito por módulo (y sus habilidades), **una tarea por módulo y semana** con fecha (aparecen en el calendario), el proyecto final como **jefe** con sus pasos como golpes, y un **hábito** «Estudiar …» en tus días libres.
+
+**De dónde sale el temario.** El *reparto en el tiempo* lo calcula siempre código propio (probado con tests, sin IA). El *temario* puede venir de:
+
+| Origen | Cuándo | Coste |
+| --- | --- | --- |
+| **Tu propia ruta** | Empiezas en blanco y pones tú los módulos, temas y horas. No necesita IA ni plantilla. | Gratis |
+| **Plantillas** | Editables después de elegirlas. Siempre disponibles, incluso sin conexión y en modo local: análisis de datos, desarrollo web, inglés, diseño UX/UI y marketing digital. Sugiere la que encaja con lo que escribiste. | Gratis |
+| **IA (Gemini)** | Cualquier objetivo («preparar el examen de admisión», «aprender guitarra»…). Funciona en cualquier modo (local o Supabase). Cada persona usa **su propia clave**. | Gratis dentro de la cuota gratuita de Google AI Studio |
+
+### Funciones inteligentes: cada usuario pone su propia clave
+
+Las funciones con IA **están apagadas hasta que la persona las activa con su clave gratuita de Gemini**. La app se lo pide donde hace falta:
+
+- en el **Planificador** (botón «🔑 Activar funciones inteligentes»),
+- al editar las **tarjetas** de un tema («🔑 Activar IA para generar tarjetas»),
+- y en **Perfil → Funciones inteligentes**, donde también se comprueba o se quita.
+
+Cómo se activa (2 minutos, sin tarjeta):
+
+1. Entra en [Google AI Studio → API keys](https://aistudio.google.com/apikey) con tu cuenta de Google.
+2. Pulsa **Create API key** y copia la clave.
+3. Pégala en la ventana de StudyQuest y pulsa **Probar y activar** (la comprueba con Google sin gastar cuota).
+
+Con la IA activa aparece **«✨ Generar con IA»** en el Planificador y **«✨ Generar 5 con IA»** en el editor de tarjetas de cada tema.
+
+**¿La misma clave en varios dispositivos?** Sí: una clave de Google no está atada a ningún dispositivo. Al activarla eliges dónde guardarla:
+
+| Opción | Cómo funciona | Cuándo elegirla |
+| --- | --- | --- |
+| **Solo en este dispositivo** *(por defecto)* | `localStorage`. No sale del navegador salvo hacia Google. En otro dispositivo se pega de nuevo. | La más privada. Funciona también en modo local. |
+| **En mi cuenta, cifrada con una frase** | Se cifra en el navegador (AES-GCM de 256 bits, clave derivada de tu frase con PBKDF2-SHA256 y 250 000 iteraciones) y en Supabase solo hay texto ilegible. En otro dispositivo escribes la frase y se descifra. | Recomendada si usas varios dispositivos. Si olvidas la frase, «Olvidé mi frase» borra la copia cifrada y pegas la clave otra vez. |
+| **En mi cuenta, sin cifrar** | Se guarda tal cual en tu cuenta y se activa sola al iniciar sesión en cualquier dispositivo. | La más cómoda, pero quien administre la base de datos de la app podría leerla. |
+
+Las dos opciones de cuenta solo aparecen con Supabase y necesitan ejecutar [`0004_user_secrets.sql`](supabase/migrations/0004_user_secrets.sql) una vez (crea la tabla `user_secrets`, con RLS: cada usuario solo ve la suya). Desde Perfil → Funciones inteligentes puedes **guardarla en la cuenta más tarde**, **quitarla de este dispositivo** o **borrarla de tu cuenta**.
+
+**Dónde vive la clave y qué se envía**
+
+- La clave **nunca** entra en las copias de seguridad ni en la caché del perfil: la cuenta la guarda en su propia tabla (`user_secrets`), aparte de tus datos de juego.
+- Viaja únicamente en la cabecera `x-goog-api-key` de las peticiones a Google, nunca por un servidor de la app. Por eso no hay nada que configurar en Render ni en Edge Functions.
+- **Cerrar sesión borra la clave de ese dispositivo** (la copia de tu cuenta se conserva), para no dejarla en un ordenador compartido.
+- A Google solo se envía lo que pides: el objetivo, el plazo, el nivel y las horas por semana (planificador), o el título del tema y del curso (tarjetas). **Nunca** tus tareas, hábitos ni datos personales.
+- En el nivel gratuito, Google puede usar esos textos para mejorar sus productos. Si eso te importa, usa una clave de un proyecto de pago (con facturación) o las plantillas.
+- **Sobre el aviso de Google.** Su documentación dice «no expongas claves en el cliente: quien abra tu web podría extraerlas». Eso se refiere a **poner tu propia clave dentro de la app**, cosa que aquí no ocurre: cada persona usa **su** clave en **su** navegador. Aun así, como vive en el navegador, cualquier código malicioso que se ejecutara en la página podría leerla. Usa una clave **solo para esto**, restríngela en Google Cloud si puedes y bórrala en AI Studio si dejas de usarla.
+- **Formato de la clave.** Desde el 28 de mayo de 2026 AI Studio crea las claves nuevas como «auth keys», con otro aspecto que las antiguas (`AIza…`). La app no exige ningún formato: solo descarta lo evidentemente mal pegado (vacío, espacios o saltos de línea) y deja que Google decida al pulsar «Probar y activar».
+
+**Cómo se llama a Gemini.** La app usa el SDK oficial [`@google/genai`](https://www.npmjs.com/package/@google/genai) (v2.3 o superior) con su **Interactions API**, con el modelo **`gemini-3.8-flash`** por defecto:
+
+```ts
+const ai = new GoogleGenAI({ apiKey });
+const interaction = await ai.interactions.create({
+  model: 'gemini-3.8-flash',
+  input: '…lo que pide el usuario…',
+  system_instruction: '…reglas del asistente…',
+  store: false, // Google no guarda la conversación
+  response_format: { type: 'text', mime_type: 'application/json', schema }, // JSON con forma garantizada
+});
+interaction.output_text; // el JSON, que la app valida antes de usarlo
+```
+
+- El SDK pesa unos 365 kB y **solo se descarga cuando se usa la IA** (no forma parte de la carga inicial ni de la caché sin conexión).
+- Se envía `store: false`, así que Google no retiene la petición en su almacén de interacciones (por defecto lo haría durante 1 día en el nivel gratuito). Sin reintentos automáticos, para no gastar cuota de más.
+- Todo lo que devuelve el modelo pasa por una validación estricta (textos recortados, horas acotadas, módulos vacíos descartados) antes de tocar tus datos.
+
+Los límites de la capa gratuita (peticiones por minuto y por día) y los nombres de modelo cambian con el tiempo. Si `gemini-3.8-flash` deja de estar disponible en tu cuenta, o quieres más cuota, cambia el modelo en *Avanzado: modelo* (`gemini-3.5-flash-lite` o `gemini-3.1-flash-lite`). Las instalaciones que usaban `gemini-2.5-flash` pasan solas al modelo actual.
+
 ## Repaso espaciado, calendario, jefes y Pomodoro
 
 **Repaso espaciado (Repaso).** Marca un tema como *«Necesito repasar»* dentro de un curso: reaparece **al día siguiente** y, cada vez que lo recuerdas, a los **3, 7 y 14 días**. Fallar reinicia la escalera; superar los cuatro escalones deja el tema **dominado** (+40 XP). Cada repaso superado da +10 XP. Las tarjetas son tuyas: botón **♪ Tarjetas** en cada tema, una por línea con el formato `pregunta :: respuesta` (si no hay ninguna, se te pregunta si recuerdas el tema). Atajos: `espacio` gira la tarjeta, `1` `2` `3` califican. La agenda se ve también en el calendario y en el menú (insignia con lo que toca hoy).
@@ -403,6 +479,8 @@ Cubren la lógica que más importa:
 - **Copia de seguridad:** ida y vuelta sin pérdidas, archivos inválidos, ids regenerados y referencias huérfanas.
 - **Servidor de recordatorios:** paridad de «¿toca hoy?» con la app en más de 15 000 casos aleatorios, y la hora local por zona horaria.
 - **Planificador de avisos** (compartido por servidor y web): primer aviso, repeticiones, tope de 6, «no repetir», hábito hecho, zonas horarias y medianoche; y el reparto entre banner, notificación del sistema y silencio según la pestaña.
+- **IA con la clave del usuario:** el cliente de Gemini con el SDK simulado (la petición exacta: modelo, `store:false`, JSON con esquema, sin reintentos; errores con la forma real del SDK: clave inválida, 401/403/404/429, tiempo agotado, sin red; respuestas vacías o ilegibles; la clave nunca aparece en mensajes), el almacén de la clave (formato, corrupción, modo privado, que no entre en copias de seguridad), el cifrado (ida y vuelta, frase incorrecta, datos manipulados, la clave no aparece en el texto cifrado), la sincronización con la cuenta entre dispositivos y la limpieza de tarjetas generadas.
+- **Planificador:** validación de lo que devuelve la IA (basura, textos enormes, módulos vacíos), lectura de la respuesta de Gemini, reparto en el tiempo (orden, sin pasarse de tu disponibilidad diaria, recorte si no cabe, días bloqueados, agenda ocupada, cada tema una sola vez), plantillas y creación del plan.
 - **Novedades:** intervalos 1-3-7-14 y dominio del tema, repeticiones de tareas (meses cortos, completar tarde, reabrir), vida de los jefes y victoria, bonus de fin de semana y combo (una sola vez, reinicio diario), cofre, cuadrícula del calendario, fases del Pomodoro y validez de las partituras.
 - Validez de todos los sprites, del catálogo y de los logros, y del decodificador de la clave VAPID (con la clave normalizada y validada).
 
@@ -419,6 +497,13 @@ Cubren la lógica que más importa:
 | En Render, recargar `/tareas` da **404** | Falta la regla *Rewrite* `/* → /index.html` (ya está en `render.yaml`). |
 | Cambié las variables en Render y no pasa nada | Son variables de *build*: lanza un nuevo despliegue. |
 | La PWA no se actualiza | Cierra todas las pestañas o pulsa «Actualizar» en el aviso. Comprueba que `sw.js` no esté cacheado por un CDN. |
+| El planificador no muestra «Generar con IA» | Falta activar las funciones inteligentes: pulsa «🔑 Activar funciones inteligentes» (o ve a Perfil) y pega tu clave de Google AI Studio. |
+| «Eso no parece una clave: no puede estar vacía ni llevar espacios» | Se copió con espacios o saltos de línea en medio, o solo un trozo. Vuelve a copiarla entera desde Google AI Studio (el botón de copiar, sin seleccionar a mano). |
+| Al guardar la clave en mi cuenta sale un error | Falta ejecutar `0004_user_secrets.sql` en el SQL Editor de Supabase. La clave sí funciona en el dispositivo mientras tanto. |
+| «Frase incorrecta» al desbloquear | La frase es la que elegiste al guardarla (distingue mayúsculas). Si la perdiste, pulsa «Olvidé mi frase», que borra la copia cifrada de tu cuenta, y pega la clave otra vez (la sigues viendo en Google AI Studio). |
+| «Google no aceptó tu clave» | La clave está mal copiada, borrada o restringida. Crea otra en [Google AI Studio](https://aistudio.google.com/apikey) y pégala de nuevo (Perfil → Funciones inteligentes). |
+| «Se agotó la cuota gratuita de tu clave» | Superaste las peticiones por minuto o por día de la capa gratuita. Espera un poco, cambia a `gemini-3.5-flash-lite` (Avanzado: modelo) o usa una plantilla. |
+| «El modelo … no está disponible para tu clave» | Google retira o renombra modelos. Cambia el modelo en Perfil → Funciones inteligentes → Avanzado. |
 | Los recordatorios no llegan | Comprueba en orden: (1) Perfil → Recordatorios dice «Activados»; (2) el hábito tiene hora, **hoy le toca** y no está hecho; (3) migración 0002 ejecutada; (4) función desplegada con `--no-verify-jwt` y los 4 secretos; (5) el cron corre (`cron.job_run_details`); (6) en iPhone, la app está instalada y es iOS 16.4+. Prueba la función con el `curl` de la sección de recordatorios. |
 | Suena o avisa demasiado / no quiero repeticiones | Edita el hábito y elige **No repetir** en «Si no lo hago, avisar de nuevo». El máximo es 6 avisos al día por hábito. |
 | Los avisos repetidos no llegan (solo el primero) | Falta ejecutar `0003_reminder_repeats.sql` o **volver a desplegar la función** (`npx supabase functions deploy send-reminders …`). |

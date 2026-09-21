@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { Bar, Button, Empty, PageHead, Panel, Tag, cx } from '@/ui/kit';
@@ -18,9 +19,12 @@ export default function Metas() {
         <div className="panel">
           <Empty sprite="flag" title="Ninguna bandera a la vista">
             <p>Una meta se divide en hitos: cada uno da XP y acerca la recompensa final.</p>
-            <Button variant="primary" onClick={() => openModal({ type: 'goal' })}>
-              Crear primera meta
-            </Button>
+            <div className="row">
+              <Link className="btn btn--primary" to="/planificador">
+                ✨ Planificar con el asistente
+              </Link>
+              <Button onClick={() => openModal({ type: 'goal' })}>Crear a mano</Button>
+            </div>
           </Empty>
         </div>
       </div>

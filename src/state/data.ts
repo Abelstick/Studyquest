@@ -9,6 +9,7 @@ import {
 import { canOpenChest, chestReward, dayBonusOf, habitBonus, habitsDoneOn } from '@/core/events';
 import { gradeReview, startReview, type Rating } from '@/core/review';
 import { isBoss, spawnNext, taskReward } from '@/core/tasks';
+import type { PlanEntities } from '@/core/planner';
 import { ACHIEVEMENTS } from '@/core/achievements';
 import { shopItem } from '@/core/catalog';
 import { buildDemo } from '@/core/seed';
@@ -78,6 +79,8 @@ export interface DataState extends Data {
   claimWeeklyBonus: () => void;
   /** Abre el cofre del día (una vez al día). */
   openChest: () => void;
+  /** Crea de una vez lo que genera el planificador: curso, meta, hábito de estudio y tareas con fechas. */
+  addPlan: (plan: PlanEntities) => void;
 
   markAllRead: () => void;
   notify: (n: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => void;
@@ -567,6 +570,21 @@ export function createDataStore(repo: Repository) {
         award(WEEKLY_BONUS_XP, 'bonus', 'Reto semanal completado');
       },
 
+      addPlan(plan) {
+        run(
+          (s) => ({ courses: [...s.courses, plan.course], goals: [...s.goals, plan.goal], habits: [...s.habits, plan.habit], tasks: [...s.tasks, ...plan.tasks] }),
+          async () => {
+            // Primero lo que otras cosas referencian (el curso), después el resto.
+            await repo.courses.create(plan.course);
+            await repo.goals.create(plan.goal);
+            await repo.habits.create(plan.habit);
+            await repo.tasks.createMany(plan.tasks);
+          },
+        );
+        notify({ category: 'mission', title: `Plan creado: ${plan.goal.title}`, body: `${plan.tasks.length} tareas con fecha, una meta con ${plan.goal.milestones.length} hitos y un hábito de estudio.` });
+        useUi.getState().toast({ kind: 'unlock', title: '¡Plan creado!', body: `${plan.tasks.length} tareas ya están en tu calendario.` });
+        sfx.levelUp();
+      },
       openChest() {
         const p = get().profile;
         const now = today();

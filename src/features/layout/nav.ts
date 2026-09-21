@@ -12,6 +12,7 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { to: '/', label: 'Inicio', sprite: 'castle', kicker: 'Cuartel general', mobile: true },
   { to: '/cursos', label: 'Cursos', sprite: 'pipe', kicker: 'Mundos' },
+  { to: '/planificador', label: 'Planificador', sprite: 'sword', kicker: 'Estratega' },
   { to: '/tareas', label: 'Tareas', sprite: 'qblock', kicker: 'Bloques ?', mobile: true },
   { to: '/calendario', label: 'Calendario', sprite: 'flag', kicker: 'Mapa del mundo' },
   { to: '/repaso', label: 'Repaso', sprite: 'note', kicker: 'Flashcards' },

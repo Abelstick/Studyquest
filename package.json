@@ -1,8 +1,12 @@
 {
   "name": "studyquest",
   "private": true,
-  "version": "0.5.0",
+  "version": "2.0.0",
   "type": "module",
+  "author": {
+    "name": "Abel Leonardo Panta Chira",
+    "email": "abelpantachira_99@hotmail.com"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -16,6 +20,7 @@
   "dependencies": {
     "@fontsource-variable/nunito": "^5.3.0",
     "@fontsource/press-start-2p": "^5.3.0",
+    "@google/genai": "^2.23.0",
     "@supabase/supabase-js": "^2.116.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

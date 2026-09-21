@@ -920,3 +920,352 @@
 .power--4 .is-on {
   background: var(--green);
 }
+
+/* ---------- Planificador ---------- */
+.wizard {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.wizard li button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--panel-2);
+  border: var(--bw) solid var(--line-soft);
+  cursor: pointer;
+}
+.wizard li button:disabled {
+  cursor: default;
+}
+.wizard li.is-now button {
+  color: var(--on-yellow);
+  background: var(--yellow);
+  border-color: var(--line);
+  box-shadow: var(--sh-sm);
+}
+.wizard li.is-done button {
+  color: var(--on-green);
+  background: var(--green);
+  border-color: var(--line);
+}
+.wizard b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--panel);
+  color: var(--text);
+  border: 2px solid var(--line);
+}
+.planner__date {
+  gap: 6px;
+}
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+.plweek {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.plweek li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+}
+.plweek__day {
+  font-weight: 900;
+}
+.plweek__day.is-weekend {
+  color: var(--red-text);
+}
+.tstep {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tstep__btn {
+  width: 30px;
+  height: 30px;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  color: var(--text);
+  background: var(--panel);
+  border: 2px solid var(--line);
+  box-shadow: var(--sh-sm);
+  cursor: pointer;
+}
+.tstep__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.tstep__btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+.tstep__val {
+  min-width: 58px;
+  text-align: center;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+}
+.tstep__val.is-off {
+  color: var(--muted);
+  font-size: 9px;
+}
+.planner__total {
+  margin-bottom: 14px;
+}
+.templates {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+.template {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 10px 12px;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  box-shadow: var(--sh-sm);
+  cursor: pointer;
+}
+.template span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.template.is-suggested {
+  background: color-mix(in srgb, var(--yellow) 28%, var(--panel));
+}
+.template:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+}
+.template:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.route {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.route__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border-left: 6px solid var(--green);
+}
+.route__item.is-boss {
+  border-left-color: var(--red);
+  background: color-mix(in srgb, var(--red) 8%, var(--panel-2));
+}
+.route__main {
+  flex: 1;
+  min-width: 0;
+}
+.route__hours {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.route__hours .input {
+  width: 72px;
+}
+.gantt {
+  display: grid;
+  gap: 10px;
+}
+.gantt__row {
+  display: grid;
+  grid-template-columns: minmax(80px, 150px) 1fr;
+  gap: 4px 10px;
+  align-items: center;
+}
+.gantt__label {
+  font-weight: 800;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gantt__track {
+  position: relative;
+  height: 16px;
+  background: var(--bar-bg);
+  border: 2px solid var(--line);
+}
+.gantt__bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--green);
+}
+.gantt__bar.is-boss {
+  background: var(--red);
+}
+.gantt__dates {
+  grid-column: 2;
+}
+.planner__warn {
+  margin: 10px 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  background: color-mix(in srgb, var(--blue) 12%, var(--panel));
+  border-left: 5px solid var(--blue);
+}
+.planner__warn.is-bad {
+  background: color-mix(in srgb, var(--orange) 16%, var(--panel));
+  border-left-color: var(--orange);
+}
+
+/* ---------- Funciones inteligentes (IA con la clave del usuario) ---------- */
+.ai {
+  display: grid;
+  gap: 12px;
+}
+.ai__on {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai__steps {
+  display: grid;
+  gap: 4px;
+  padding-left: 20px;
+  list-style: decimal;
+  font-size: 14px;
+}
+.ai__steps a {
+  color: var(--blue);
+  font-weight: 800;
+}
+.ai__advanced summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+.ai__notes {
+  display: grid;
+  gap: 4px;
+  padding-left: 18px;
+  list-style: disc;
+}
+.ai code {
+  padding: 1px 5px;
+  background: var(--panel-3);
+  border: 1px solid var(--line-soft);
+  font-size: 12px;
+}
+.ai__cta {
+  display: grid;
+  gap: 8px;
+}
+
+/* ---------- Dónde guardar la clave de IA ---------- */
+.pick {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.pick__opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+  cursor: pointer;
+}
+.pick__opt.is-on {
+  background: color-mix(in srgb, var(--yellow) 24%, var(--panel));
+  border-color: var(--line);
+}
+.pick__opt input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+.pick__opt > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* ---------- Editor de la ruta ---------- */
+.redit {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+.route__item--edit {
+  display: grid;
+  gap: 8px;
+  align-items: stretch;
+}
+.redit__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.redit__title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 800;
+}
+.redit__actions {
+  display: flex;
+  gap: 4px;
+}
+.redit__sub {
+  margin: 2px 0 0;
+}
+.redit__items {
+  display: grid;
+  gap: 6px;
+}
+.redit__items li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.redit__items li .input {
+  flex: 1;
+  min-width: 0;
+}
+.template--own {
+  background: color-mix(in srgb, var(--green) 14%, var(--panel));
+}
+.planner__problems {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  background: color-mix(in srgb, var(--orange) 16%, var(--panel));
+  border-left: 5px solid var(--orange);
+}

@@ -46,6 +46,15 @@ export interface Repository {
     save(sub: PushSubscriptionRecord): Promise<void>;
     remove(endpoint: string): Promise<void>;
   };
+  /** Secretos del usuario en la nube. Opcional: solo los backends con cuenta lo implementan. */
+  secrets?: AccountSecretsPort;
+}
+
+/** Un documento JSON privado por usuario (p. ej. la clave de IA, cifrada o no). El backend no interpreta su contenido. */
+export interface AccountSecretsPort {
+  get(): Promise<unknown | null>;
+  save(value: unknown): Promise<void>;
+  remove(): Promise<void>;
 }
 
 export interface PushSubscriptionRecord {

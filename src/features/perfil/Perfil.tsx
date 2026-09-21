@@ -9,6 +9,8 @@ import { Avatar } from '@/ui/Avatar';
 import { Button, Field, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { useInstallPrompt } from '@/pwa/hooks';
+import { AiSetup } from '@/features/ai/AiSetup';
+import { useAi } from '@/ai/store';
 import { describeInvalidVapidKey, disablePush, enablePush, getPushState, showTestNotification, type PushState } from '@/pwa/push';
 import { backupFileName, buildBackup, parseBackup, summarize } from '@/core/backup';
 import type { Snapshot } from '@/core/domain';
@@ -286,6 +288,10 @@ export default function Perfil() {
             </div>
           </Panel>
 
+          <Panel kicker="// Funciones inteligentes" title="IA con tu clave de Gemini">
+            <AiSetup />
+          </Panel>
+
           <Panel kicker="// Recordatorios">
             <PushPanel />
           </Panel>
@@ -301,6 +307,7 @@ export default function Perfil() {
                   small
                   onClick={async () => {
                     clearCache();
+                    useAi.getState().forget(); // la clave de IA es personal: no se queda en un dispositivo compartido
                     // Este dispositivo deja de recibir los recordatorios de esta cuenta.
                     if (dataLayer.repo.push) await disablePush(dataLayer.repo.push.remove).catch(() => {});
                     await dataLayer.auth.signOut();

@@ -34,6 +34,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,woff}'],
+        // El SDK de Gemini solo se descarga cuando se usa la IA (que necesita conexión): no se precachea.
+        globIgnores: ['**/genai-*.js'],
         navigateFallback: '/index.html',
         // Manejo de notificaciones push (public/push-sw.js) dentro del mismo service worker.
         importScripts: ['push-sw.js'],
@@ -50,6 +52,7 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             { name: 'supabase', test: /node_modules[\/]@supabase/ },
+            { name: 'genai', test: /node_modules[\/]@google[\/]genai/ },
             { name: 'react', test: /node_modules[\/](react|react-dom|react-router|react-router-dom|scheduler)[\/]/ },
           ],
         },

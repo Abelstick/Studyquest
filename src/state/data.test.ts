@@ -339,6 +339,28 @@ describe('store de datos', () => {
     });
   });
 
+  describe('planificador', () => {
+    it('addPlan crea curso, meta, hábito y tareas de una vez y lo persiste', async () => {
+      const { TEMPLATES, buildPlanEntities, schedulePlan, templateRoadmap } = await import('@/core/planner');
+      const roadmap = templateRoadmap(TEMPLATES[0], 'Análisis de datos');
+      const week = [90, 90, 90, 90, 90, 150, 150];
+      const schedule = schedulePlan({ roadmap, start: '2026-09-16', end: '2026-12-08', weekly: week });
+      const plan = buildPlanEntities(roadmap, schedule, week, '2026-09-16');
+      store.getState().addPlan(plan);
+      const s = store.getState();
+      expect(s.courses).toHaveLength(1);
+      expect(s.goals[0].milestones).toHaveLength(6);
+      expect(s.habits).toHaveLength(1);
+      expect(s.tasks).toHaveLength(plan.tasks.length);
+      expect(s.tasks.every((t) => t.courseId === s.courses[0].id)).toBe(true);
+      expect(s.notifications.some((n) => n.title.startsWith('Plan creado'))).toBe(true);
+      await flush();
+      expect(await repo.courses.list()).toHaveLength(1);
+      expect(await repo.tasks.list()).toHaveLength(plan.tasks.length);
+      expect(await repo.habits.list()).toHaveLength(1);
+    });
+  });
+
   describe('cofre diario', () => {
     it('se abre una vez al día, da monedas y cuenta para el total', () => {
       store.getState().openChest();

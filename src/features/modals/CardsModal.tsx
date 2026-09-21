@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { AiError, generateCards } from '@/ai/gemini';
+import { useAi } from '@/ai/store';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { cardsToText, parseCards } from '@/core/review';
@@ -8,10 +10,31 @@ import { Button, Field, Modal } from '@/ui/kit';
 export function CardsModal({ courseId, topicId }: { courseId: string; topicId: string }) {
   const close = useUi((s) => s.closeModal);
   const setTopicCards = useData((s) => s.setTopicCards);
+  const openModal = useUi((s) => s.openModal);
+  const apiKey = useAi((s) => s.apiKey);
+  const model = useAi((s) => s.model);
+  const remote = useAi((s) => s.remote);
+  const courseTitle = useData((s) => s.courses.find((c) => c.id === courseId)?.title ?? '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const topic = useData((s) => s.courses.find((c) => c.id === courseId)?.modules.flatMap((m) => m.topics).find((t) => t.id === topicId));
   const [text, setText] = useState(() => cardsToText(topic?.cards));
   if (!topic) return null;
   const parsed = parseCards(text, topic.cards);
+
+  const generate = async () => {
+    if (!apiKey) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const cards = await generateCards({ apiKey, model }, { topic: topic.title, course: courseTitle, count: 5, existing: parsed.map((c) => c.q) });
+      setText((t) => `${t.trim()}${t.trim() ? '\n' : ''}${cards.map((c) => `${c.q} :: ${c.a}`).join('\n')}`);
+    } catch (e) {
+      setError(e instanceof AiError ? e.message : 'No se pudieron generar las tarjetas.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <Modal title={`Tarjetas · ${topic.title}`} kicker="// Flashcards" onClose={close}>
@@ -35,9 +58,25 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
             />
           )}
         </Field>
-        <p className="muted small">
-          {parsed.length} {parsed.length === 1 ? 'tarjeta' : 'tarjetas'}
-        </p>
+        <div className="row">
+          {apiKey ? (
+            <Button small disabled={busy} onClick={() => void generate()}>
+              {busy ? '✨ Creando tarjetas…' : '✨ Generar 5 con IA'}
+            </Button>
+          ) : (
+            <Button small onClick={() => openModal({ type: 'ai' })}>
+              {remote === 'encrypted' ? '🔓 Desbloquear IA para generar tarjetas' : '🔑 Activar IA para generar tarjetas'}
+            </Button>
+          )}
+          <span className="muted small">
+            {parsed.length} {parsed.length === 1 ? 'tarjeta' : 'tarjetas'}
+          </span>
+        </div>
+        {error && (
+          <p className="form__error" role="alert">
+            {error}
+          </p>
+        )}
         <div className="modal__actions">
           <Button variant="primary" type="submit">
             Guardar tarjetas

@@ -13,6 +13,7 @@ import { CourseModal, GoalModal, ProjectModal, RewardModal } from '../modals/Ent
 import { SessionModal } from '../modals/SessionModal';
 import { QuickSheet, WelcomeModal } from '../modals/QuickAndWelcome';
 import { CardsModal } from '../modals/CardsModal';
+import { AiKeyModal } from '../modals/AiKeyModal';
 
 const CATEGORY: Record<AppNotification['category'], { sprite: SpriteName; label: string }> = {
   mentor: { sprite: 'cap', label: 'Mentor' },
@@ -29,6 +30,8 @@ function ModalHost() {
   switch (modal.type) {
     case 'task':
       return <TaskModal key={`${modal.id ?? 'new'}${modal.dueDate ?? ''}`} id={modal.id} dueDate={modal.dueDate} />;
+    case 'ai':
+      return <AiKeyModal />;
     case 'cards':
       return <CardsModal key={modal.topicId} courseId={modal.courseId} topicId={modal.topicId} />;
     case 'habit':

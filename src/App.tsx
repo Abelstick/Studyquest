@@ -22,6 +22,7 @@ const Perfil = lazy(() => import('@/features/perfil/Perfil'));
 const Repaso = lazy(() => import('@/features/repaso/Repaso'));
 const Calendario = lazy(() => import('@/features/calendario/Calendario'));
 const Pomodoro = lazy(() => import('@/features/pomodoro/Pomodoro'));
+const Planificador = lazy(() => import('@/features/planificador/Planificador'));
 
 function Splash({ text = 'Cargando…' }: { text?: string }) {
   return (
@@ -99,6 +100,7 @@ function AuthGate() {
           <Route path="calendario" element={<Calendario />} />
           <Route path="repaso" element={<Repaso />} />
           <Route path="pomodoro" element={<Pomodoro />} />
+          <Route path="planificador" element={<Planificador />} />
           <Route path="habitos" element={<Habitos />} />
           <Route path="habitos/:id" element={<HabitoDetalle />} />
           <Route path="metas" element={<Metas />} />

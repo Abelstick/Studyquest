@@ -195,6 +195,21 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
         fail(error);
       },
     },
+    secrets: {
+      async get() {
+        const { data, error } = await db.from('user_secrets').select('data').maybeSingle();
+        fail(error);
+        return data?.data ?? null;
+      },
+      async save(value) {
+        const { error } = await db.from('user_secrets').upsert({ user_id: await uid(), data: value, updated_at: new Date().toISOString() });
+        fail(error);
+      },
+      async remove() {
+        const { error } = await db.from('user_secrets').delete().eq('user_id', await uid());
+        fail(error);
+      },
+    },
     async wipe() {
       // Orden: primero lo que referencia a otras tablas.
       for (const t of ['habit_logs', 'study_sessions', 'xp_events', 'notifications', 'tasks', 'habits', 'courses', 'goals', 'projects', 'personal_rewards', 'profiles']) {

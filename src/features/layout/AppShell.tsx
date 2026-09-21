@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { dataLayer, useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { today, longDate, weekStart } from '@/core/dates';
 import { WEEKLY_BONUS_XP, computeStreak, hoursInWeek, rankFor, levelFromXp, worldFor } from '@/core/game';
 import { Avatar } from '@/ui/Avatar';
+import { Loader } from '@/ui/Loader';
 import { Bar, Button, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { NAV, navFor } from './nav';
@@ -292,7 +293,15 @@ export function AppShell() {
       <div className="shell__main">
         <Hud />
         <main className="page" id="contenido">
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="page-loader">
+                <Loader title="Cargando la pantalla" steps={['Preparando el nivel']} />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </main>
         <footer className="ground" aria-hidden="true" />
       </div>

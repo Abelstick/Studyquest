@@ -2,6 +2,8 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import type { Project } from '@/core/domain';
 import { Bar, Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
+import { CONCEPTS } from '@/core/concepts';
+import { GuideButton } from '@/features/help/ConceptGuide';
 
 const progress = (p: Project) => {
   const total = p.checkpoints.reduce((a, c) => a + c.xp, 0);
@@ -49,16 +51,21 @@ export default function Proyectos() {
         kicker="// Operaciones personales"
         title="Proyectos"
         sprite="chest"
+        hint={CONCEPTS.proyecto.hint}
         right={
-          <Button variant="primary" onClick={() => openModal({ type: 'project' })}>
-            ＋ Nuevo proyecto
-          </Button>
+          <>
+            <GuideButton />
+            <Button variant="primary" onClick={() => openModal({ type: 'project' })}>
+              ＋ Nuevo proyecto
+            </Button>
+          </>
         }
       />
       {projects.length === 0 && (
         <div className="panel">
           <Empty sprite="chest" title="Cofre vacío">
-            <p>Un proyecto se divide en checkpoints con XP. Ideal para portafolios, tesis o apps.</p>
+            <p>Un proyecto es algo que construyes y entregas: un portafolio, una tesis, una app. Se divide en partes (checkpoints) y cada una da XP.</p>
+            <p className="muted small">¿Es algo que quieres aprender o lograr? Eso es una meta. ¿Dudas? Pulsa «¿Cuál uso?».</p>
             <Button variant="primary" onClick={() => openModal({ type: 'project' })}>
               Crear primer proyecto
             </Button>

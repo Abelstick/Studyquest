@@ -4,6 +4,8 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { Bar, Button, Empty, PageHead, Panel, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { CONCEPTS } from '@/core/concepts';
+import { GuideButton } from '@/features/help/ConceptGuide';
 
 export default function Metas() {
   const goals = useData((s) => s.goals);
@@ -15,10 +17,11 @@ export default function Metas() {
   if (!goal) {
     return (
       <div className="stack">
-        <PageHead kicker="// Árbol de habilidades" title="Metas" sprite="flag" />
+        <PageHead kicker="// Árbol de habilidades" title="Metas" sprite="flag" hint={CONCEPTS.meta.hint} right={<GuideButton />} />
         <div className="panel">
           <Empty sprite="flag" title="Ninguna bandera a la vista">
-            <p>Una meta se divide en hitos: cada uno da XP y acerca la recompensa final.</p>
+            <p>Una meta es lo que quieres lograr a largo plazo, por ejemplo «aprender análisis de datos». Se divide en hitos (Excel, SQL, Python…): cada uno da XP y te acerca a la recompensa final.</p>
+            <p className="muted small">Las metas se cumplen avanzando con tareas y hábitos. ¿Dudas? Pulsa «¿Cuál uso?».</p>
             <div className="row">
               <Link className="btn btn--primary" to="/planificador">
                 ✨ Planificar con el asistente
@@ -43,8 +46,10 @@ export default function Metas() {
         kicker="// Árbol de habilidades"
         title={goal.title}
         sprite="flag"
+        hint="Tu meta: lo que quieres lograr a largo plazo. Avanzas cumpliendo sus hitos."
         right={
           <>
+            <GuideButton />
             <div className="big-stat">
               <span className="big-num">
                 {done} / {goal.milestones.length}

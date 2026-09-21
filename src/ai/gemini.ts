@@ -13,7 +13,7 @@ export const MODEL_PRESETS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemi
 export const LEGACY_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
 const TIMEOUT_MS = 60_000;
 
-export type AiErrorCode = 'no_key' | 'invalid_key' | 'rate_limited' | 'model' | 'network' | 'timeout' | 'bad_output' | 'upstream';
+export type AiErrorCode = 'cancelled' | 'no_key' | 'invalid_key' | 'rate_limited' | 'model' | 'network' | 'timeout' | 'bad_output' | 'upstream';
 
 export class AiError extends Error {
   constructor(
@@ -33,6 +33,8 @@ export interface AiConfig {
   model: string;
   /** Inyectable para pruebas; por defecto se crea el cliente real de `@google/genai`. */
   client?: GenAiClient;
+  /** Permite cancelar la petición en curso (botón «Cancelar»). */
+  signal?: AbortSignal;
 }
 
 /** Quita las comillas, espacios y saltos de línea que suelen colarse al principio o al final al pegar. */
@@ -102,15 +104,30 @@ export function toAiError(e: unknown, cfg: Pick<AiConfig, 'apiKey' | 'model'>): 
 
 /** Una petición a la Interactions API que devuelve JSON con el esquema dado. `store: false`: Google no guarda la conversación. */
 async function generateJson(cfg: AiConfig, system: string, user: string, schema: Record<string, unknown>): Promise<string | undefined> {
+  // Una sola señal para las dos cosas que pueden cortar la espera: el botón «Cancelar» y el tiempo máximo.
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, TIMEOUT_MS);
+  const onCancel = () => controller.abort();
+  cfg.signal?.addEventListener('abort', onCancel);
   try {
+    if (cfg.signal?.aborted) throw new AiError('Cancelado.', 'cancelled');
     const client = await clientFor(cfg);
     const interaction = await client.interactions.create(
       { model: cfg.model, input: user, system_instruction: system, store: false, response_format: { type: 'text', mime_type: 'application/json', schema } },
-      { timeout: TIMEOUT_MS, maxRetries: 0 }, // sin reintentos automáticos: no gastar cuota de más
+      { maxRetries: 0, fetchOptions: { signal: controller.signal } }, // sin reintentos automáticos: no gastar cuota de más
     );
     return interaction.output_text;
   } catch (e) {
+    if (cfg.signal?.aborted) throw new AiError('Cancelado.', 'cancelled');
+    if (timedOut) throw new AiError('Gemini tardó demasiado en responder. Inténtalo otra vez.', 'timeout');
     throw toAiError(e, cfg);
+  } finally {
+    clearTimeout(timer);
+    cfg.signal?.removeEventListener('abort', onCancel);
   }
 }
 

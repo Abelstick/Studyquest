@@ -6,6 +6,7 @@ import { newId } from '@/core/dates';
 import type { Priority, Recurrence, TaskStatus } from '@/core/domain';
 import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
 import { Button, Field, Modal, Segmented, linesToList } from '@/ui/kit';
+import { ConceptHint } from '../help/ConceptGuide';
 
 const PRIORITIES: { value: Priority; label: string }[] = [
   { value: 'low', label: 'Baja' },
@@ -66,6 +67,7 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
   return (
     <Modal title={editing ? 'Editar tarea' : 'Crear tarea'} kicker={editing ? '// Contrato' : '// Nuevo contrato'} onClose={close}>
       <form onSubmit={submit} className="form">
+        {!editing && <ConceptHint id="tarea" />}
         <Field label="Título">{(fid) => <input id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Terminar ejercicios de JOIN" required maxLength={120} />}</Field>
         <div className="form__row">
           <Field label="Curso">

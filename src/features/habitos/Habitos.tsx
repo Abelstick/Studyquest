@@ -6,6 +6,8 @@ import { today, WEEKDAYS_SHORT } from '@/core/dates';
 import { MEASURE_LABEL, frequencyLabel, goalLabel, isDueOn, isHabitDone, logFor, monthlyCompliance, weekStrip } from '@/core/game';
 import type { Habit, HabitLog } from '@/core/domain';
 import { Bar, Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
+import { CONCEPTS } from '@/core/concepts';
+import { GuideButton } from '@/features/help/ConceptGuide';
 
 /** Medidas que se registran con contador (páginas, ejercicios…) en lugar de un solo botón. */
 export const isCounter = (h: Habit) => h.measure !== 'boolean' && h.measure !== 'minutes' && h.measure !== 'hours' && h.target > 1;
@@ -63,8 +65,10 @@ export default function Habitos() {
         kicker="// Habilidades pasivas equipadas"
         title="Hábitos"
         sprite="flower"
+        hint={CONCEPTS.habito.hint}
         right={
           <>
+            <GuideButton />
             <span className="kicker">
               {doneToday} de {cards.length} registrados hoy
             </span>
@@ -77,7 +81,8 @@ export default function Habitos() {
       {cards.length === 0 ? (
         <div className="panel">
           <Empty sprite="flower" title="Sin power-ups equipados">
-            <p>Un hábito es una rutina que se equipa una vez y rinde XP cada día.</p>
+            <p>Un hábito es algo que repites con regularidad, como leer 20 minutos al día. Cuenta tus días y tu racha, y rinde XP cada vez que lo cumples.</p>
+            <p className="muted small">¿Algo que haces una sola vez? Eso es una tarea. ¿Dudas? Pulsa «¿Cuál uso?».</p>
             <Button variant="primary" onClick={() => openModal({ type: 'habit' })}>
               Crear primer hábito
             </Button>

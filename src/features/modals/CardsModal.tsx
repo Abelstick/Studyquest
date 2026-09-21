@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AiError, generateCards } from '@/ai/gemini';
 import { useAi } from '@/ai/store';
+import { Loader } from '@/ui/Loader';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { cardsToText, parseCards } from '@/core/review';
@@ -16,6 +17,8 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
   const remote = useAi((s) => s.remote);
   const courseTitle = useData((s) => s.courses.find((c) => c.id === courseId)?.title ?? '');
   const [busy, setBusy] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []);
   const [error, setError] = useState<string | null>(null);
   const topic = useData((s) => s.courses.find((c) => c.id === courseId)?.modules.flatMap((m) => m.topics).find((t) => t.id === topicId));
   const [text, setText] = useState(() => cardsToText(topic?.cards));
@@ -24,14 +27,17 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
 
   const generate = async () => {
     if (!apiKey) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
     setBusy(true);
     setError(null);
     try {
-      const cards = await generateCards({ apiKey, model }, { topic: topic.title, course: courseTitle, count: 5, existing: parsed.map((c) => c.q) });
+      const cards = await generateCards({ apiKey, model, signal: controller.signal }, { topic: topic.title, course: courseTitle, count: 5, existing: parsed.map((c) => c.q) });
       setText((t) => `${t.trim()}${t.trim() ? '\n' : ''}${cards.map((c) => `${c.q} :: ${c.a}`).join('\n')}`);
     } catch (e) {
-      setError(e instanceof AiError ? e.message : 'No se pudieron generar las tarjetas.');
+      if (!(e instanceof AiError && e.code === 'cancelled')) setError(e instanceof AiError ? e.message : 'No se pudieron generar las tarjetas.');
     } finally {
+      abortRef.current = null;
       setBusy(false);
     }
   };
@@ -60,8 +66,8 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
         </Field>
         <div className="row">
           {apiKey ? (
-            <Button small disabled={busy} onClick={() => void generate()}>
-              {busy ? '✨ Creando tarjetas…' : '✨ Generar 5 con IA'}
+            <Button small loading={busy} onClick={() => void generate()}>
+              {busy ? 'Creando tarjetas' : '✨ Generar 5 con IA'}
             </Button>
           ) : (
             <Button small onClick={() => openModal({ type: 'ai' })}>
@@ -72,6 +78,7 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
             {parsed.length} {parsed.length === 1 ? 'tarjeta' : 'tarjetas'}
           </span>
         </div>
+        {busy && <Loader compact title="Creando tarjetas con IA" steps={['Pensando preguntas', 'Escribiendo respuestas', 'Revisando que no se repitan']} expect="unos 5 a 15 segundos" onCancel={() => abortRef.current?.abort()} />}
         {error && (
           <p className="form__error" role="alert">
             {error}

@@ -4,6 +4,7 @@ import { useUi } from '@/state/ui';
 import { newId, today } from '@/core/dates';
 import type { Mentor } from '@/core/domain';
 import { Button, ChipGroup, Field, Modal, linesToList } from '@/ui/kit';
+import { ConceptHint } from '../help/ConceptGuide';
 
 /** "Título | 120" → { title, xp }. */
 const parseXpLine = (line: string, fallback: number) => {
@@ -109,6 +110,7 @@ export function GoalModal() {
   return (
     <Modal title="Nueva meta" kicker="// Árbol de habilidades" onClose={close}>
       <form onSubmit={submit} className="form">
+        <ConceptHint id="meta" />
         <Field label="Meta">{(fid) => <input id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Aprender Análisis de Datos" required maxLength={100} />}</Field>
         <Field label="Hitos" hint="Uno por línea, en orden. Añade «| 300» para darle XP (por defecto 100).">
           {(fid) => <textarea id={fid} className="input" rows={5} value={milestones} onChange={(e) => setMilestones(e.target.value)} placeholder={'Aprender Excel | 100\nAprender SQL | 200\nProyecto final | 1000'} required />}
@@ -153,6 +155,7 @@ export function ProjectModal() {
   return (
     <Modal title="Nuevo proyecto" kicker="// Mazmorra" onClose={close}>
       <form onSubmit={submit} className="form">
+        <ConceptHint id="proyecto" />
         <Field label="Nombre">{(fid) => <input id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Crear mi primer portafolio" required maxLength={100} />}</Field>
         <Field label="Descripción">{(fid) => <textarea id={fid} className="input" rows={2} value={summary} onChange={(e) => setSummary(e.target.value)} />}</Field>
         <Field label="Tipo">

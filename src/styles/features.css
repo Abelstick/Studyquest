@@ -1269,3 +1269,309 @@
   background: color-mix(in srgb, var(--orange) 16%, var(--panel));
   border-left: 5px solid var(--orange);
 }
+
+/* ---------- Explicaciones: tareas, hábitos, metas y proyectos ---------- */
+.page-head__hint {
+  max-width: 62ch;
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.quick__hint {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+.concept-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.45;
+}
+.guide {
+  display: grid;
+  gap: 16px;
+}
+.guide__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 12px;
+}
+.guide__card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--panel-2);
+  border: var(--bw) solid var(--line);
+  border-top-width: 8px;
+}
+.guide__card--tarea {
+  border-top-color: var(--blue);
+}
+.guide__card--habito {
+  border-top-color: var(--green);
+}
+.guide__card--meta {
+  border-top-color: var(--orange);
+}
+.guide__card--proyecto {
+  border-top-color: var(--violet);
+}
+.guide__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+.guide__what {
+  font-weight: 900;
+  line-height: 1.35;
+}
+.guide__q,
+.guide__ex {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.guide__h {
+  margin-bottom: 6px;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.guide__chain {
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--yellow) 20%, var(--panel));
+  border: 2px dashed var(--line);
+}
+.guide__chain ul {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0;
+  padding-left: 18px;
+  list-style: disc;
+  font-size: 14px;
+}
+.guide__ambition {
+  font-weight: 900;
+}
+.guide__faq {
+  display: grid;
+  gap: 10px;
+}
+.guide__faq dt {
+  font-weight: 900;
+}
+.guide__faq dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* ---------- Cargadores ---------- */
+.spinner {
+  display: inline-flex;
+  animation: spin-coin 0.9s steps(6) infinite;
+}
+.btn.is-loading {
+  gap: 8px;
+  cursor: progress;
+}
+.loader {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 14px 12px;
+  text-align: center;
+  background: color-mix(in srgb, var(--yellow) 18%, var(--panel));
+  border: var(--bw) dashed var(--line);
+}
+.loader--compact {
+  grid-auto-flow: column;
+  justify-content: start;
+  justify-items: start;
+  text-align: left;
+  gap: 12px;
+  padding: 10px 12px;
+}
+.loader__scene {
+  position: relative;
+  width: min(100%, 260px);
+  height: 72px;
+  overflow: hidden;
+  background: linear-gradient(#5c94fc, #9fc4ff);
+  border: 3px solid var(--line);
+}
+:root[data-theme='dark'] .loader__scene {
+  background: linear-gradient(#141446, #2c3f8f);
+}
+.loader__ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 14px;
+  background:
+    linear-gradient(#3aa640 0 4px, transparent 4px),
+    repeating-linear-gradient(90deg, #c8501e 0 14px, #7c2f10 14px 16px);
+  background-size: 16px 100%;
+  border-top: 2px solid #1a1a2e;
+  animation: ground 0.5s steps(8) infinite;
+}
+.loader__runner {
+  position: absolute;
+  left: 22%;
+  bottom: 14px;
+  width: 38px;
+  height: 44px;
+  animation: hop 0.15s steps(1) infinite alternate;
+}
+.loader__frame {
+  position: absolute;
+  inset: 0;
+}
+.loader__frame--a {
+  animation: frame-a 0.3s steps(1) infinite;
+}
+.loader__frame--b {
+  animation: frame-b 0.3s steps(1) infinite;
+}
+.loader__coins span {
+  position: absolute;
+  bottom: 36px;
+  left: 105%;
+  animation: coin-run 2.7s linear infinite;
+}
+.loader__coins span:nth-child(2) {
+  bottom: 24px;
+}
+.loader__text {
+  display: grid;
+  gap: 6px;
+  justify-items: inherit;
+  width: 100%;
+}
+.loader__title {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+.loader__dots::after {
+  content: '';
+  animation: dots 1.2s steps(1) infinite;
+}
+@keyframes dots {
+  0% {
+    content: '';
+  }
+  25% {
+    content: '.';
+  }
+  50% {
+    content: '..';
+  }
+  75% {
+    content: '...';
+  }
+}
+.loader__msg {
+  min-height: 1.4em;
+  font-weight: 800;
+  font-size: 14px;
+}
+.loader__bar {
+  width: min(100%, 260px);
+  height: 12px;
+  border: 3px solid var(--line);
+  background: repeating-linear-gradient(90deg, var(--yellow) 0 12px, var(--orange) 12px 24px);
+  background-size: 48px 100%;
+  animation: loading 0.5s steps(6) infinite;
+}
+.loader--compact .loader__bar {
+  width: 100%;
+}
+.loader__meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.page-loader {
+  display: grid;
+  place-items: center;
+  min-height: 40vh;
+}
+/* Los pasos del planificador se atenúan mientras la IA trabaja */
+.is-waiting {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ---------- Guía: ejemplos, «esto no es» y test ---------- */
+.guide__ex ul {
+  display: grid;
+  gap: 2px;
+  margin: 4px 0 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+.guide__not {
+  font-size: 13px;
+}
+.guide__not summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: var(--red-text);
+}
+.guide__not ul {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding-left: 18px;
+  list-style: '✘ ';
+  line-height: 1.4;
+}
+.guide__chain .chips {
+  margin: 8px 0;
+}
+.quiz {
+  display: grid;
+  gap: 8px;
+  counter-reset: quiz;
+}
+.quiz__item {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+}
+.quiz__item.is-right {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, var(--panel));
+}
+.quiz__item.is-wrong {
+  border-color: var(--red);
+  background: color-mix(in srgb, var(--red) 10%, var(--panel));
+}
+.quiz__text {
+  font-weight: 800;
+}
+.quiz__opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.quiz__opts .chip.is-correct {
+  outline: 3px solid var(--green);
+}
+.quiz__why {
+  font-size: 13px;
+  line-height: 1.4;
+}

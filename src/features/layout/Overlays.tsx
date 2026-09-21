@@ -14,6 +14,7 @@ import { SessionModal } from '../modals/SessionModal';
 import { QuickSheet, WelcomeModal } from '../modals/QuickAndWelcome';
 import { CardsModal } from '../modals/CardsModal';
 import { AiKeyModal } from '../modals/AiKeyModal';
+import { ConceptGuide } from '../help/ConceptGuide';
 
 const CATEGORY: Record<AppNotification['category'], { sprite: SpriteName; label: string }> = {
   mentor: { sprite: 'cap', label: 'Mentor' },
@@ -32,6 +33,8 @@ function ModalHost() {
       return <TaskModal key={`${modal.id ?? 'new'}${modal.dueDate ?? ''}`} id={modal.id} dueDate={modal.dueDate} />;
     case 'ai':
       return <AiKeyModal />;
+    case 'guide':
+      return <ConceptGuide />;
     case 'cards':
       return <CardsModal key={modal.topicId} courseId={modal.courseId} topicId={modal.topicId} />;
     case 'habit':

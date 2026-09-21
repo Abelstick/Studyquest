@@ -45,6 +45,17 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 
 ## Qué incluye
 
+### ¿Tarea, hábito, meta o proyecto?
+
+| Es… | Elígelo si… | Ejemplo |
+| --- | --- | --- |
+| **Tarea** | lo haces **una vez** y se termina (quizá con fecha límite) | Entregar el informe del viernes |
+| **Hábito** | lo **repites** con regularidad y quieres ver tu racha | Leer 20 minutos al día |
+| **Meta** | es lo que quieres **lograr a largo plazo**, dividido en hitos | Aprender análisis de datos |
+| **Proyecto** | vas a **construir y entregar** algo, hecho de partes | Mi portafolio web |
+
+Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *tareas* los pasos concretos y el *proyecto* lo que construyes por el camino. Una tarea que se repite (pagar el alquiler cada mes) sigue siendo una tarea; si lo que importa es la constancia y la racha, es un hábito. La app lo explica donde decides: una frase bajo el título de cada pantalla y el botón **❓ ¿Cuál uso?**, que abre una guía con **5 ejemplos de cada uno**, un apartado «Ojo: esto NO es…» (con qué es en realidad), **4 ejemplos completos** de cómo encajan (estudiar datos, sacar el B2 de inglés, ponerse en forma, lanzar un negocio), las dudas frecuentes y un **mini test** de 10 frases para practicar. También hay pistas dentro de los formularios y en el registro rápido. Si no quieres decidirlo tú, el **Planificador** lo arma todo a partir de un objetivo.
+
 | Pantalla | Qué hace |
 | --- | --- |
 | **Inicio** | Misión del día (hábitos que tocan + tareas más urgentes), nivel y XP, calendario de racha, informe semanal, consejos y repasos pendientes. |
@@ -465,6 +476,10 @@ Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por háb
 
 Todas llevan `user_id` (por defecto `auth.uid()`) y una política RLS «solo el dueño».
 
+## Cargadores y esperas
+
+Todo lo que tarda se ve: el **cargador animado** (un personaje corriendo por el suelo de ladrillos, un mensaje que va cambiando —«Leyendo tu objetivo», «Eligiendo los módulos»…—, la barra de carga, los segundos transcurridos y cuánto suele tardar) aparece cuando la IA diseña una ruta o crea tarjetas, y mientras se cargan las pantallas. Los botones que trabajan muestran una **moneda girando** y se bloquean para que no se pulsen dos veces. Las llamadas a la IA se pueden **cancelar de verdad** (se aborta la petición a Google, sin mensaje de error) y se cortan solas a los 60 segundos. Si sales de la pantalla mientras la IA trabaja, se cancela.
+
 ## Pruebas
 
 ```bash
@@ -481,6 +496,8 @@ Cubren la lógica que más importa:
 - **Planificador de avisos** (compartido por servidor y web): primer aviso, repeticiones, tope de 6, «no repetir», hábito hecho, zonas horarias y medianoche; y el reparto entre banner, notificación del sistema y silencio según la pestaña.
 - **IA con la clave del usuario:** el cliente de Gemini con el SDK simulado (la petición exacta: modelo, `store:false`, JSON con esquema, sin reintentos; errores con la forma real del SDK: clave inválida, 401/403/404/429, tiempo agotado, sin red; respuestas vacías o ilegibles; la clave nunca aparece en mensajes), el almacén de la clave (formato, corrupción, modo privado, que no entre en copias de seguridad), el cifrado (ida y vuelta, frase incorrecta, datos manipulados, la clave no aparece en el texto cifrado), la sincronización con la cuenta entre dispositivos y la limpieza de tarjetas generadas.
 - **Planificador:** validación de lo que devuelve la IA (basura, textos enormes, módulos vacíos), lectura de la respuesta de Gemini, reparto en el tiempo (orden, sin pasarse de tu disponibilidad diaria, recorte si no cabe, días bloqueados, agenda ocupada, cada tema una sola vez), plantillas y creación del plan.
+- **Cancelar y tiempo máximo de la IA:** la petición se aborta con «Cancelar» (y no se llega a enviar si ya estaba cancelada), se corta a los 60 s y no deja temporizadores pendientes.
+- **Guía de conceptos:** cada concepto con 5 ejemplos distintos, sus «esto NO es» apuntando a otro concepto, ejemplos completos y el mini test con respuestas repartidas.
 - **Novedades:** intervalos 1-3-7-14 y dominio del tema, repeticiones de tareas (meses cortos, completar tarde, reabrir), vida de los jefes y victoria, bonus de fin de semana y combo (una sola vez, reinicio diario), cofre, cuadrícula del calendario, fases del Pomodoro y validez de las partituras.
 - Validez de todos los sprites, del catálogo y de los logros, y del decodificador de la clave VAPID (con la clave normalizada y validada).
 

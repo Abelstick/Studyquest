@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } f
 import { useUi } from '@/state/ui';
 import { sfx } from '@/audio/sfx';
 import { Sprite } from './Sprite';
+import { Spinner } from './Spinner';
 import type { SpriteName } from './sprites';
 
 export const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' ');
@@ -12,18 +13,25 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   small?: boolean;
   block?: boolean;
+  /** Muestra una moneda girando y bloquea el botón mientras se trabaja. */
+  loading?: boolean;
 }
-export function Button({ variant = 'ghost', small, block, className, onClick, ...rest }: ButtonProps) {
+export function Button({ variant = 'ghost', small, block, loading, className, onClick, children, disabled, ...rest }: ButtonProps) {
   return (
     <button
       type="button"
-      className={cx('btn', `btn--${variant}`, small && 'btn--sm', block && 'btn--block', className)}
+      className={cx('btn', `btn--${variant}`, small && 'btn--sm', block && 'btn--block', loading && 'is-loading', className)}
       onClick={(e) => {
         if (variant !== 'plain') sfx.click();
         onClick?.(e);
       }}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...rest}
-    />
+    >
+      {loading && <Spinner size={small ? 12 : 16} />}
+      {children}
+    </button>
   );
 }
 
@@ -38,7 +46,7 @@ export function Bar({ pct, tone = 'green', label, tall, className }: { pct: numb
 }
 
 /* ---------- Estructura de página ---------- */
-export function PageHead({ kicker, title, right, sprite }: { kicker: string; title: string; right?: ReactNode; sprite?: SpriteName }) {
+export function PageHead({ kicker, title, right, sprite, hint }: { kicker: string; title: string; right?: ReactNode; sprite?: SpriteName; hint?: string }) {
   return (
     <header className="page-head">
       <div className="page-head__text">
@@ -47,6 +55,7 @@ export function PageHead({ kicker, title, right, sprite }: { kicker: string; tit
           {sprite && <Sprite name={sprite} size={30} />}
           {title}
         </h1>
+        {hint && <p className="page-head__hint">{hint}</p>}
       </div>
       {right && <div className="page-head__right">{right}</div>}
     </header>

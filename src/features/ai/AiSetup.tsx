@@ -147,8 +147,8 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
           </p>
         )}
         <div className="row">
-          <Button type="submit" variant="primary" disabled={busy || !unlockPass}>
-            {busy ? 'Descifrando…' : '🔓 Desbloquear'}
+          <Button type="submit" variant="primary" loading={busy} disabled={!unlockPass}>
+            {busy ? 'Descifrando' : '🔓 Desbloquear'}
           </Button>
           <Button small variant="danger" disabled={busy} onClick={() => void deleteFromAccount()} title="Borra la copia cifrada de tu cuenta para poder pegar una clave nueva">
             Olvidé mi frase
@@ -239,7 +239,7 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
         <div className="row">
           <Button
             small
-            disabled={busy}
+            loading={busy}
             onClick={() =>
               void run(async () => {
                 try {
@@ -251,7 +251,7 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
               })
             }
           >
-            {busy ? 'Probando…' : 'Probar clave'}
+            {busy ? 'Probando' : 'Probar clave'}
           </Button>
           {secrets && remote === 'none' && !saving && (
             <Button small onClick={() => setSaving(true)}>
@@ -322,8 +322,8 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
           {error}
         </p>
       )}
-      <Button type="submit" variant="primary" disabled={busy || !draft.trim()}>
-        {busy ? 'Comprobando…' : '🔑 Probar y activar'}
+      <Button type="submit" variant="primary" loading={busy} disabled={!draft.trim()}>
+        {busy ? 'Comprobando con Google' : '🔑 Probar y activar'}
       </Button>
       <ul className="ai__notes muted small">
         <li>La clave se comprueba con Google sin gastar cuota, y nunca aparece en las copias de seguridad.</li>

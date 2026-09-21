@@ -15,6 +15,7 @@ export type ModalState =
   | { type: 'welcome' }
   | { type: 'cards'; courseId: string; topicId: string }
   | { type: 'ai' }
+  | { type: 'guide' }
   | { type: 'settings' }
   | { type: 'confirm'; title: string; body: string; confirmLabel: string; onConfirm: () => void };
 

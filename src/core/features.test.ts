@@ -13,6 +13,7 @@ import { TRACKS, midiToFreq } from '@/audio/music';
 import { buildBackup, parseBackup } from './backup';
 import { buildDemo } from './seed';
 import { defaultProfile } from './game';
+import { CONCEPTS, CONCEPT_ORDER, EXAMPLE_CHAINS, FAQ, QUIZ } from './concepts';
 
 const NOW = '2026-09-16'; // miércoles
 
@@ -292,5 +293,65 @@ describe('copias de seguridad con lo nuevo', () => {
     if (!res.ok) return;
     expect(res.snapshot.tasks[0].spawnedId).toBe(res.snapshot.tasks[1].id);
     expect(res.snapshot.tasks[0].recurrence).toEqual({ unit: 'day', interval: 2 });
+  });
+});
+
+describe('guía de conceptos (tareas, hábitos, metas y proyectos)', () => {
+  it('cada concepto tiene explicación, pregunta para elegirlo, varios ejemplos y una pista para su pantalla', () => {
+    expect(CONCEPT_ORDER).toEqual(['tarea', 'habito', 'meta', 'proyecto']);
+    for (const id of CONCEPT_ORDER) {
+      const c = CONCEPTS[id];
+      expect(c.name.length).toBeGreaterThan(3);
+      for (const field of [c.what, c.question, c.how, c.hint]) expect(field.length, id).toBeGreaterThan(20);
+      expect(c.examples.length, `${id}: varios ejemplos`).toBeGreaterThanOrEqual(5);
+      expect(new Set(c.examples).size).toBe(c.examples.length);
+      expect(c.id).toBe(id);
+    }
+    expect(new Set(CONCEPT_ORDER.map((id) => CONCEPTS[id].sprite)).size).toBe(4);
+  });
+
+  it('las pistas distinguen unos de otros (tarea = una vez, hábito = se repite, meta = largo plazo, proyecto = se construye)', () => {
+    expect(CONCEPTS.tarea.what).toMatch(/una vez/);
+    expect(CONCEPTS.habito.what).toMatch(/repites/);
+    expect(CONCEPTS.meta.what).toMatch(/largo plazo/);
+    expect(CONCEPTS.proyecto.what).toMatch(/construyes/);
+  });
+
+  it('cada concepto explica qué NO es y a qué concepto pertenece en realidad', () => {
+    for (const id of CONCEPT_ORDER) {
+      const { notThis } = CONCEPTS[id];
+      expect(notThis.length, id).toBeGreaterThanOrEqual(2);
+      for (const n of notThis) {
+        expect(n.instead, `«${n.text}» debe apuntar a OTRO concepto`).not.toBe(id);
+        expect(CONCEPT_ORDER).toContain(n.instead);
+        expect(n.why.length).toBeGreaterThan(15);
+      }
+    }
+  });
+
+  it('hay varios ejemplos completos que cubren los cuatro conceptos', () => {
+    expect(EXAMPLE_CHAINS.length).toBeGreaterThanOrEqual(3);
+    for (const c of EXAMPLE_CHAINS) {
+      expect(c.label && c.ambition).toBeTruthy();
+      expect(c.meta).toMatch(/^Meta:/);
+      expect(c.habito).toMatch(/^Hábito:/);
+      expect(c.tarea).toMatch(/^Tarea:/);
+      expect(c.proyecto).toMatch(/^Proyecto:/);
+    }
+    expect(new Set(EXAMPLE_CHAINS.map((c) => c.label)).size).toBe(EXAMPLE_CHAINS.length);
+  });
+
+  it('el mini test tiene respuestas correctas repartidas entre los cuatro conceptos, cada una explicada', () => {
+    expect(QUIZ.length).toBeGreaterThanOrEqual(8);
+    for (const id of CONCEPT_ORDER) expect(QUIZ.filter((q) => q.answer === id).length, id).toBeGreaterThanOrEqual(2);
+    expect(QUIZ.every((q) => q.why.length > 15)).toBe(true);
+    expect(new Set(QUIZ.map((q) => q.text)).size).toBe(QUIZ.length);
+  });
+
+  it('las dudas frecuentes cubren los casos que confunden', () => {
+    const qs = FAQ.map((f) => f.q).join(' ');
+    expect(qs).toMatch(/repite/);
+    expect(qs).toMatch(/Meta o proyecto/);
+    expect(FAQ.every((f) => f.a.length > 20)).toBe(true);
   });
 });

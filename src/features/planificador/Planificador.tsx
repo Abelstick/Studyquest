@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
@@ -10,6 +10,7 @@ import {
   type Level, type Roadmap, type Template,
 } from '@/core/planner';
 import { Bar, Button, ChipGroup, Field, PageHead, Panel, Tag, cx } from '@/ui/kit';
+import { Loader } from '@/ui/Loader';
 import { RouteEditor } from './RouteEditor';
 
 const STORAGE_KEY = 'sq:planner-week';
@@ -79,6 +80,10 @@ export default function Planificador() {
   const [source, setSource] = useState<'ai' | 'template' | 'manual'>('template');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<AiError | Error | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const waitRef = useRef<HTMLDivElement>(null);
+  // Si sales de la pantalla mientras la IA trabaja, se cancela la petición.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const weeks = Math.max(1, Math.round(diffDays(deadline, now) / 7));
   const suggested = useMemo(() => matchTemplate(goal), [goal]);
@@ -128,16 +133,21 @@ export default function Planificador() {
 
   const generate = async () => {
     if (!apiKey) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
     setGenerating(true);
     setError(null);
+    // En móvil el panel puede quedar fuera de la pantalla: lo traemos a la vista para que se vea que está trabajando.
+    setTimeout(() => waitRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 50);
     try {
-      const r = await generateRoadmap({ apiKey, model }, { goal: goal.trim(), level, weeks, hoursPerWeek: Math.max(1, Math.round((weekTotal(week) / 60) * 2) / 2) });
+      const r = await generateRoadmap({ apiKey, model, signal: controller.signal }, { goal: goal.trim(), level, weeks, hoursPerWeek: Math.max(1, Math.round((weekTotal(week) / 60) * 2) / 2) });
       setRoadmap({ ...r, goal: cleanGoal(goal) || r.goal });
       setSource('ai');
       setStep(2);
     } catch (e) {
-      setError(e instanceof Error ? e : new Error('No se pudo generar la ruta.'));
+      if (!(e instanceof AiError && e.code === 'cancelled')) setError(e instanceof Error ? e : new Error('No se pudo generar la ruta.'));
     } finally {
+      abortRef.current = null;
       setGenerating(false);
     }
   };
@@ -260,35 +270,46 @@ export default function Planificador() {
                   )}
                 </p>
               )}
-              {apiKey ? (
-                <Button variant="primary" block disabled={generating || !canNext || weekTotal(week) === 0} onClick={() => void generate()}>
-                  {generating ? '✨ Diseñando tu ruta…' : '✨ Generar con IA'}
+              {generating && (
+                <div ref={waitRef}>
+                  <Loader
+                    title="Diseñando tu ruta con IA"
+                    steps={['Leyendo tu objetivo', 'Eligiendo los módulos', 'Ordenando los temas', 'Estimando las horas', 'Preparando el proyecto final', 'Revisando la ruta']}
+                    expect="Suele tardar de 10 a 30 segundos"
+                    onCancel={() => abortRef.current?.abort()}
+                  />
+                </div>
+              )}
+              {apiKey && !generating ? (
+                <Button variant="primary" block disabled={!canNext || weekTotal(week) === 0} onClick={() => void generate()}>
+                  ✨ Generar con IA
                 </Button>
-              ) : (
+              ) : !apiKey ? (
                 <div className="ai__cta">
                   <p className="muted small">Con la IA puedes planificar <b>cualquier objetivo</b>. Se activa con tu propia clave gratuita de Google.</p>
                   <Button variant="primary" block onClick={() => openModal({ type: 'ai' })}>
                     {remote === 'encrypted' ? '🔓 Desbloquear funciones inteligentes' : '🔑 Activar funciones inteligentes'}
                   </Button>
                 </div>
-              )}
-              {generating && <div className="login__loading" role="status" aria-label="Generando" />}
+              ) : null}
               <p className="kicker">{apiKey ? 'O sin IA' : 'Sin IA'}</p>
-              <button type="button" className="template template--own" disabled={!canNext} onClick={startManual}>
+              <button type="button" className="template template--own" disabled={!canNext || generating} onClick={startManual}>
                 <b>✍ Crear mi propia ruta</b>
                 <span>Empiezas en blanco: tú pones los módulos, los temas y las horas.</span>
               </button>
               <p className="kicker">O parte de una plantilla (podrás editarla)</p>
               <div className="templates">
                 {TEMPLATES.map((t) => (
-                  <button key={t.id} type="button" className={cx('template', suggested?.id === t.id && 'is-suggested')} disabled={weekTotal(week) === 0} onClick={() => pickTemplate(t)}>
+                  <button key={t.id} type="button" className={cx('template', suggested?.id === t.id && 'is-suggested')} disabled={weekTotal(week) === 0 || generating} onClick={() => pickTemplate(t)}>
                     <b>{t.name}</b>
                     <span>{t.modules.length} módulos + proyecto</span>
                     {suggested?.id === t.id && <Tag tone="xp">Sugerida</Tag>}
                   </button>
                 ))}
               </div>
-              <Button onClick={() => setStep(0)}>← Volver</Button>
+              <Button disabled={generating} onClick={() => setStep(0)}>
+                ← Volver
+              </Button>
             </Panel>
           </div>
         </div>

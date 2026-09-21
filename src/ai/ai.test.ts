@@ -65,7 +65,7 @@ describe('cliente de Gemini (SDK @google/genai, Interactions API)', () => {
     expect(String(params.system_instruction)).toMatch(/JSON/);
     expect(params.response_format).toMatchObject({ type: 'text', mime_type: 'application/json', schema: { type: 'object', required: expect.arrayContaining(['modules']) } });
     expect(options).toMatchObject({ maxRetries: 0 });
-    expect(Number(options.timeout)).toBeGreaterThan(0);
+    expect((options.fetchOptions as { signal: AbortSignal }).signal).toBeInstanceOf(AbortSignal); // permite cancelar y cortar por tiempo
   });
 
   it('la clave nunca va dentro de la petición (el SDK la manda en la cabecera)', async () => {
@@ -143,6 +143,52 @@ describe('cliente de Gemini (SDK @google/genai, Interactions API)', () => {
     expect(String(params.input)).toContain('JOIN');
     expect(String(params.input)).toContain('SQL');
     expect(params.response_format).toMatchObject({ schema: { required: ['cards'] } });
+  });
+});
+
+describe('cancelar y tiempo máximo', () => {
+  /** Una petición que no termina nunca, salvo que su señal se aborte (como hace fetch). */
+  const hanging = () =>
+    vi.fn((_params: unknown, options: { fetchOptions: { signal: AbortSignal } }) => new Promise((_, reject) => options.fetchOptions.signal.addEventListener('abort', () => reject(Object.assign(new Error('The operation was aborted'), { name: 'AbortError' })))));
+
+  it('«Cancelar» corta la petición en curso y lo comunica como cancelación, no como error', async () => {
+    const create = hanging();
+    const controller = new AbortController();
+    const pending = generateRoadmap({ ...cfg(fakeClient(create as never)), signal: controller.signal }, req);
+    await Promise.resolve();
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ code: 'cancelled' });
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it('una señal ya cancelada ni siquiera llama a Google', async () => {
+    const create = out(roadmapJson);
+    const controller = new AbortController();
+    controller.abort();
+    await expect(generateRoadmap({ ...cfg(fakeClient(create)), signal: controller.signal }, req)).rejects.toMatchObject({ code: 'cancelled' });
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('pasado el tiempo máximo (60 s) se corta con un mensaje de tiempo agotado', async () => {
+    vi.useFakeTimers();
+    try {
+      const pending = generateRoadmap(cfg(fakeClient(hanging() as never)), req);
+      const assertion = expect(pending).rejects.toMatchObject({ code: 'timeout' });
+      await vi.advanceTimersByTimeAsync(60_000);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('si responde a tiempo no se queda ningún temporizador pendiente', async () => {
+    vi.useFakeTimers();
+    try {
+      await generateRoadmap(cfg(fakeClient(out(roadmapJson))), req);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

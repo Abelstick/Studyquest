@@ -5,6 +5,8 @@ import { useUi } from '@/state/ui';
 import { dueLabel, today } from '@/core/dates';
 import type { Priority, Task, TaskStatus } from '@/core/domain';
 import { bossHp, isBoss, recurrenceLabel } from '@/core/tasks';
+import { CONCEPTS } from '@/core/concepts';
+import { GuideButton } from '@/features/help/ConceptGuide';
 import { Bar, Button, Empty, PageHead, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
@@ -129,8 +131,10 @@ export default function Tareas() {
         kicker="// Tablero de contratos"
         title="Tareas"
         sprite="qblock"
+        hint={CONCEPTS.tarea.hint}
         right={
           <>
+            <GuideButton />
             <select className="input input--inline" aria-label="Filtrar por curso" value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option value="all">Todos los cursos</option>
               <option value="none">Side quests</option>
@@ -149,7 +153,8 @@ export default function Tareas() {
       {tasks.length === 0 ? (
         <div className="panel">
           <Empty sprite="qblock" title="Bloque ? sin romper">
-            <p>Aquí vivirán tus tareas. Cada una que completes te da XP y monedas.</p>
+            <p>Una tarea es algo concreto que haces una vez y se termina: entregar un trabajo, resolver unos ejercicios. Cada una que completes te da XP y monedas.</p>
+            <p className="muted small">¿Algo que repites cada día? Eso es un hábito. ¿Dudas? Pulsa «¿Cuál uso?».</p>
             <Button variant="primary" onClick={() => openModal({ type: 'task' })}>
               Crear primera tarea
             </Button>

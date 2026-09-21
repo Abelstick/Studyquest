@@ -10,7 +10,8 @@
     "start": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "icons": "tsx scripts/gen-icons.ts"
+    "icons": "tsx scripts/gen-icons.ts",
+    "vapid": "node scripts/gen-vapid.mjs"
   },
   "dependencies": {
     "@fontsource-variable/nunito": "^5.3.0",

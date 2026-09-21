@@ -1,0 +1,26 @@
+-- Programa la Edge Function `send-reminders` para que se ejecute cada minuto.
+-- NO es una migración (lleva datos de tu proyecto): cópialo, rellena los <…> y ejecútalo en el SQL Editor.
+--
+-- Antes: Database → Extensions → activa `pg_cron` y `pg_net`.
+
+-- 1) Guarda el secreto compartido (el MISMO valor que pusiste en CRON_SECRET de la función). Solo una vez.
+select vault.create_secret('<TU_CRON_SECRET>', 'reminders_cron_secret');
+
+-- 2) Cada minuto llama a la función.
+select cron.schedule(
+  'studyquest-reminders',
+  '* * * * *',
+  $$
+  select net.http_post(
+    url     := 'https://<TU_PROJECT_REF>.supabase.co/functions/v1/send-reminders',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-cron-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'reminders_cron_secret')
+    ),
+    body    := '{}'::jsonb
+  );
+  $$
+);
+
+-- Para ver si corre:   select * from cron.job_run_details order by start_time desc limit 10;
+-- Para pausarlo:       select cron.unschedule('studyquest-reminders');

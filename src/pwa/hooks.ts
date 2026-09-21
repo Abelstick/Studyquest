@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import type { SyncPort } from '@/data/ports';
 
 export function useOnline(): boolean {
   return useSyncExternalStore(
@@ -52,4 +53,13 @@ export function useInstallPrompt() {
       setEvent(null);
     },
   };
+}
+
+/** Cambios guardados en el dispositivo pendientes de enviar (0 si el backend no usa cola offline). */
+export function useSyncPending(sync: SyncPort | undefined): number {
+  return useSyncExternalStore(
+    (cb) => sync?.subscribe(cb) ?? (() => {}),
+    () => sync?.pending() ?? 0,
+    () => 0,
+  );
 }

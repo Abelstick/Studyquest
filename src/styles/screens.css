@@ -493,6 +493,16 @@
   gap: 12px;
   min-height: 140px;
 }
+.column.is-over {
+  background: color-mix(in srgb, var(--yellow) 30%, transparent);
+  border-style: solid;
+}
+.task[draggable='true'] {
+  cursor: grab;
+}
+.task[draggable='true']:active {
+  cursor: grabbing;
+}
 .column__head {
   display: flex;
   align-items: center;

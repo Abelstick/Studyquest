@@ -18,6 +18,9 @@ services:
         sync: false
       - key: VITE_SUPABASE_ANON_KEY
         sync: false
+      # Opcional: clave PÚBLICA para los recordatorios push (npm run vapid). Puedes dejarla vacía.
+      - key: VITE_VAPID_PUBLIC_KEY
+        sync: false
     routes:
       # Rutas de la SPA (react-router): cualquier ruta devuelve index.html
       - type: rewrite

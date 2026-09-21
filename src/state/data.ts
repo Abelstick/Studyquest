@@ -24,6 +24,8 @@ export interface DataState extends Data {
   clear: () => void;
 
   updateProfile: (patch: Partial<Omit<Profile, 'id'>>) => void;
+  /** Sustituye TODA la partida (importar copia, mundo de ejemplo). Devuelve si salió bien. */
+  replaceAll: (snapshot: Data) => Promise<boolean>;
   finishOnboarding: (withDemo: boolean) => Promise<void>;
   resetAll: () => Promise<void>;
 
@@ -194,7 +196,7 @@ export function createDataStore(repo: Repository) {
           useUi.getState().setWorld(worldOf(ensured.equipped.world));
           if (!ensured.onboarded) useUi.getState().openModal({ type: 'welcome' });
         } catch (e) {
-          console.error(e);
+          (hydrate ? console.warn : console.error)('[load]', e);
           if (hydrate) useUi.getState().toast({ kind: 'info', title: 'Sin conexión', body: 'Mostrando los últimos datos guardados.' });
           else set({ status: 'error', error: e instanceof Error ? e.message : 'Error desconocido' });
         }
@@ -203,6 +205,35 @@ export function createDataStore(repo: Repository) {
 
       updateProfile: (patch) => patchProfile(patch),
 
+      async replaceAll(snapshot) {
+        set({ status: 'loading' });
+        try {
+          await queue;
+          const id = get().profile.id;
+          await repo.wipe();
+          // Orden importante: lo que otras tablas referencian (cursos, hábitos) va primero.
+          await repo.courses.createMany(snapshot.courses);
+          await repo.habits.createMany(snapshot.habits);
+          await repo.goals.createMany(snapshot.goals);
+          await repo.projects.createMany(snapshot.projects);
+          await repo.personalRewards.createMany(snapshot.personalRewards);
+          await repo.tasks.createMany(snapshot.tasks);
+          await repo.habitLogs.createMany(snapshot.habitLogs);
+          await repo.sessions.createMany(snapshot.sessions);
+          await repo.xpEvents.createMany(snapshot.xpEvents);
+          await repo.notifications.createMany(snapshot.notifications);
+          const profile = await repo.profile.save({ ...snapshot.profile, id });
+          set({ ...snapshot, profile, status: 'ready' });
+          useUi.getState().setWorld(worldOf(profile.equipped.world));
+          return true;
+        } catch (e) {
+          console.error(e);
+          set({ status: 'ready' });
+          notifyError('No se pudo restaurar la partida', e instanceof Error ? e.message : undefined);
+          return false;
+        }
+      },
+
       async finishOnboarding(withDemo) {
         const ui = useUi.getState();
         ui.closeModal();
@@ -210,28 +241,9 @@ export function createDataStore(repo: Repository) {
           patchProfile({ onboarded: true });
           return;
         }
-        set({ status: 'loading' });
-        try {
-          await queue;
-          const demo = buildDemo(get().profile, today());
-          await repo.courses.createMany(demo.courses);
-          await repo.habits.createMany(demo.habits);
-          await repo.goals.createMany(demo.goals);
-          await repo.projects.createMany(demo.projects);
-          await repo.personalRewards.createMany(demo.personalRewards);
-          await repo.tasks.createMany(demo.tasks);
-          await repo.habitLogs.createMany(demo.habitLogs);
-          await repo.sessions.createMany(demo.sessions);
-          await repo.xpEvents.createMany(demo.xpEvents);
-          await repo.notifications.createMany(demo.notifications);
-          await repo.profile.save(demo.profile);
-          set({ ...demo, status: 'ready' });
+        if (await get().replaceAll(buildDemo(get().profile, today()))) {
           ui.toast({ kind: 'info', title: '¡Mundo de ejemplo cargado!', body: 'Explora, rompe bloques y sube de nivel.' });
           sfx.levelUp();
-        } catch (e) {
-          console.error(e);
-          set({ status: 'ready' });
-          notifyError('No se pudo cargar el ejemplo', e instanceof Error ? e.message : undefined);
         }
       },
 

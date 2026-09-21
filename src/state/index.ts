@@ -1,6 +1,7 @@
 import { dataLayer } from '@/data';
 import type { Snapshot } from '@/core/domain';
 import { createDataStore } from './data';
+import { useUi } from './ui';
 
 export const useData = createDataStore(dataLayer.repo);
 export { dataLayer };
@@ -42,3 +43,10 @@ if (dataLayer.kind !== 'local') {
     }, 500);
   });
 }
+
+/* Avisos de la cola offline: cuando vuelve la red y se envían los cambios, o cuando el servidor rechaza uno. */
+dataLayer.sync?.onEvent((e) => {
+  const { toast } = useUi.getState();
+  if (e.type === 'synced') toast({ kind: 'info', title: 'Sincronizado', body: `${e.count} ${e.count === 1 ? 'cambio guardado' : 'cambios guardados'} en la nube.` });
+  else toast({ kind: 'error', title: 'Un cambio no se pudo guardar', body: e.error });
+});

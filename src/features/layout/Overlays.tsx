@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { agoLabel } from '@/core/dates';
@@ -53,14 +54,20 @@ function ModalHost() {
 function Toasts() {
   const toasts = useUi((s) => s.toasts);
   const dismiss = useUi((s) => s.dismissToast);
+  const navigate = useNavigate();
   return (
     <div className="toasts" role="status" aria-live="polite">
       {toasts.map((t) => (
-        <button key={t.id} type="button" className={cx('toast', `toast--${t.kind}`)} onClick={() => dismiss(t.id)}>
+        <button key={t.id} type="button" className={cx('toast', `toast--${t.kind}`)} onClick={() => {
+            dismiss(t.id);
+            if (t.to) navigate(t.to);
+          }}
+        >
           {t.kind === 'xp' && <span className="toast__xp">+{t.xp}</span>}
           {t.kind === 'unlock' && <Sprite name="trophy" size={30} />}
           {t.kind === 'error' && <Sprite name="skull" size={28} />}
           {t.kind === 'info' && <Sprite name="mushroom" size={28} />}
+          {t.kind === 'reminder' && <Sprite name="fire" size={30} className="toast__shake" />}
           <span className="toast__text">
             <span className="toast__title">{t.title}</span>
             {t.body && <span className="toast__body">{t.body}</span>}

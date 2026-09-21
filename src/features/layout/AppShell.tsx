@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useData } from '@/state';
+import { dataLayer, useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { today, longDate, weekStart } from '@/core/dates';
 import { WEEKLY_BONUS_XP, computeStreak, hoursInWeek, rankFor, levelFromXp, worldFor } from '@/core/game';
@@ -9,7 +9,8 @@ import { Bar, Button, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { NAV, navFor } from './nav';
 import { Overlays } from './Overlays';
-import { useOnline } from '@/pwa/hooks';
+import { useOnline, useSyncPending } from '@/pwa/hooks';
+import { useHabitReminders } from '@/pwa/useHabitReminders';
 
 function useRouteTitle(): string {
   const { pathname } = useLocation();
@@ -165,6 +166,7 @@ function Hud() {
   const streak = useMemo(() => computeStreak(events, profile.frozenDates).current, [events, profile.frozenDates]);
   const { theme, sound, toggleTheme, toggleSound, setNotifOpen, setNavOpen, openModal } = useUi();
   const online = useOnline();
+  const pending = useSyncPending(dataLayer.sync);
 
   const openNew = () => {
     const base = '/' + (pathname.split('/')[1] ?? '');
@@ -199,7 +201,12 @@ function Hud() {
           <span className="stat__v">{streak}</span>
         </span>
       </div>
-      {!online && <span className="tag tag--red" title="Sin conexión">OFFLINE</span>}
+      {!online && <span className="tag tag--red" title="Sin conexión: tus cambios se guardan en el dispositivo y se enviarán al volver la red">OFFLINE</span>}
+      {pending > 0 && (
+        <button type="button" className="tag tag--xp tag--btn" onClick={() => void dataLayer.sync?.flush()} title="Cambios guardados en el dispositivo que aún no están en la nube. Pulsa para reintentar.">
+          ⏳ {pending} {pending === 1 ? 'pendiente' : 'pendientes'}
+        </button>
+      )}
       <button type="button" className="icon-btn" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'} title="Día / noche">
         <Sprite name={theme === 'dark' ? 'star' : 'ghost'} size={18} />
       </button>
@@ -237,6 +244,7 @@ function MobileNav() {
 }
 
 export function AppShell() {
+  useHabitReminders();
   return (
     <div className="shell">
       <Sidebar />

@@ -1,7 +1,28 @@
+# Dependencias y builds
 node_modules
 dist
 dev-dist
-.env
-.env.local
-*.local
 dist-local
+dist-sb
+
+# Secretos y configuración local (NUNCA al repositorio)
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+*.p12
+secrets/
+
+# Supabase CLI: estado local del proyecto vinculado
+supabase/.temp/
+supabase/.branches/
+
+# Ruido del sistema y herramientas
+.DS_Store
+Thumbs.db
+*.log
+.vscode/*
+!.vscode/extensions.json
+coverage/

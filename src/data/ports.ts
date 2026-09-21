@@ -41,6 +41,19 @@ export interface Repository {
   notifications: Pick<Collection<AppNotification>, 'list' | 'create' | 'createMany' | 'update'> & { markAllRead(): Promise<void> };
   /** Borra todos los datos del usuario (reiniciar partida). */
   wipe(): Promise<void>;
+  /** Suscripciones Web Push de este usuario. Opcional: solo los backends con servidor de recordatorios lo implementan. */
+  push?: {
+    save(sub: PushSubscriptionRecord): Promise<void>;
+    remove(endpoint: string): Promise<void>;
+  };
+}
+
+export interface PushSubscriptionRecord {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  /** Zona horaria IANA del dispositivo (p. ej. "America/Lima"): el servidor decide "a las 19:00" con ella. */
+  timezone: string;
 }
 
 export interface AuthUser {
@@ -59,8 +72,22 @@ export interface AuthPort {
   signOut(): Promise<void>;
 }
 
+/** Estado de la cola de escritura offline (si el adaptador la usa). */
+export interface SyncPort {
+  /** Cambios guardados en el dispositivo que aún no han llegado al servidor. */
+  pending(): number;
+  subscribe(cb: (pending: number) => void): () => void;
+  /** Intenta enviar la cola ya. */
+  flush(): Promise<void>;
+  /** Eventos: `synced` (se envió algo) o `dropped` (el servidor rechazó un cambio y se descartó). */
+  onEvent(cb: (e: SyncEvent) => void): () => void;
+}
+
+export type SyncEvent = { type: 'synced'; count: number } | { type: 'dropped'; target: string; error: string };
+
 export interface DataLayer {
   kind: 'local' | 'supabase';
   repo: Repository;
   auth: AuthPort;
+  sync?: SyncPort;
 }

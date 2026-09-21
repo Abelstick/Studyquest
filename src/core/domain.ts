@@ -65,7 +65,13 @@ export type Frequency =
   | { type: 'days'; days: number[] } // 0 = lunes … 6 = domingo
   | { type: 'every'; every: number }
   | { type: 'weekly' }
-  | { type: 'monthly' };
+  | { type: 'monthly' }
+  /** Solo en estas fechas concretas. */
+  | { type: 'dates'; dates: ISODate[] }
+  /** Una vez al año (mes 1-12). */
+  | { type: 'yearly'; month: number; day: number }
+  /** "N veces por semana/mes", los días que quieras. */
+  | { type: 'custom'; times: number; per: 'week' | 'month' };
 
 export type Measure = 'times' | 'minutes' | 'hours' | 'pages' | 'exercises' | 'tasks' | 'percent' | 'boolean';
 
@@ -83,6 +89,8 @@ export interface Habit {
   target: number;
   xp: number;
   reminder: string | null;
+  /** Minutos entre avisos mientras no se haga (0 = no repetir). Sin definir = 30. */
+  reminderRepeatMin?: number;
   steps: HabitStep[];
   /** Día local desde el que cuenta el hábito (ancla de "cada X días"). */
   startDate: ISODate;

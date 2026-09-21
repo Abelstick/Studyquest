@@ -29,6 +29,9 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 - [Configurar Supabase](#configurar-supabase)
 - [Desplegar en Render](#desplegar-en-render)
 - [Usarla como app (PWA)](#usarla-como-app-pwa)
+- [Trabajar sin conexión](#trabajar-sin-conexión)
+- [Copias de seguridad](#copias-de-seguridad)
+- [Recordatorios push](#recordatorios-push-opcional)
 - [Reglas del juego](#reglas-del-juego)
 - [Arquitectura](#arquitectura)
 - [Cambiar de base de datos](#cambiar-de-base-de-datos)
@@ -44,13 +47,13 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 | --- | --- |
 | **Inicio** | Misión del día (hábitos que tocan + tareas más urgentes), nivel y XP, calendario de racha, informe semanal, consejos y repasos pendientes. |
 | **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Marca temas como «necesito repasar». |
-| **Tareas** | Tablero *Por jugar / En juego / Superada* con prioridad (el «jefe final» da 120 XP), fecha límite, subtareas y etiquetas. |
-| **Hábitos** | Frecuencia (diaria, días concretos, cada X días, semanal, mensual), medición (minutos, páginas, veces, hecho/no hecho…), pasos de sesión, mapa de 12 semanas y aviso del día en que más fallas. |
+| **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad (el «jefe final» da 120 XP), fecha límite, subtareas y etiquetas. |
+| **Hábitos** | Frecuencia (diaria, días concretos, cada X días, semanal, mensual, **fechas concretas, anual y personalizada** «N veces por semana/mes»), recordatorio con **aviso repetido y sonido**, medición (minutos, páginas, veces, hecho/no hecho…), pasos de sesión, mapa de 12 semanas y aviso del día en que más fallas. |
 | **Metas** | Árbol de hitos con habilidades y recompensa final. |
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
 | **Progreso** | Horas por semana, distribución del tiempo por curso, mapa de actividad de 20 semanas. Filtro 90 días / 6 meses / todo. |
 | **Arsenal** | Tienda de Toad (avatares, marcos, mundos visuales, poderes), 13 logros y recompensas personales de la vida real. |
-| **Perfil** | Camino de aprendizaje, insignias, ajustes, instalar la app, cerrar sesión y reiniciar partida. |
+| **Perfil** | Camino de aprendizaje, insignias, ajustes, instalar la app, **recordatorios**, **exportar/importar tu partida**, cerrar sesión y reiniciar partida. |
 
 Además: sesiones de estudio con temporizador, búsqueda global, notificaciones, modo día/noche, efectos de sonido 8-bit (sintetizados, sin archivos), pantalla de *level up* con lluvia de monedas, y diseño responsive con barra inferior y botón `?` flotante en móvil.
 
@@ -97,6 +100,7 @@ El `.env.example` viene con `VITE_DATA_PROVIDER=local`, así que la app funciona
 | `npm test` | Pruebas unitarias (Vitest) |
 | `npm run typecheck` | Solo comprobación de tipos |
 | `npm run icons` | Regenera los iconos PNG de la PWA desde el sprite del bloque `?` |
+| `npm run vapid` | Genera un par de claves VAPID para los [recordatorios push](#recordatorios-push-opcional) |
 
 ## Configurar Supabase
 
@@ -149,12 +153,97 @@ La app es una **SPA estática**: Render solo sirve archivos y el backend es Supa
 
 - **Android / Chrome / Edge:** abre la web y pulsa *Instalar app* (Perfil → Ajustes) o el icono de instalar de la barra de direcciones.
 - **iPhone / iPad:** Safari → *Compartir* → *Añadir a pantalla de inicio*.
-- **Sin conexión:** todo el código se precachea, así que la app abre sin red. Con Supabase guarda además una copia de tu última partida.
+- **Sin conexión:** todo el código se precachea, así que la app abre sin red, y con Supabase **también puedes guardar cambios sin conexión** (ver [Trabajar sin conexión](#trabajar-sin-conexión)).
 - **Actualizaciones:** cuando hay versión nueva aparece un aviso «Actualizar».
 - **Accesos directos:** mantén pulsado el icono para *Nueva tarea* o *Hábitos de hoy*.
 - Las peticiones a `*.supabase.co` **nunca** se cachean: los datos siempre son los reales.
 
 Para probar la PWA en local usa `npm run build && npm run preview` (el service worker no está activo en `npm run dev`).
+
+## Trabajar sin conexión
+
+Marca hábitos, completa tareas o registra estudio **sin red** (metro, avión, wifi malo): todo se guarda en el dispositivo y se envía solo al volver la conexión.
+
+- Al perder la red, el marcador superior muestra `OFFLINE`. Cada cambio guardado en el dispositivo suma al aviso `⏳ N pendientes` (púlsalo para reintentar ya).
+- Al volver la red se envían **en orden** y aparece «Sincronizado».
+- La cola vive en **IndexedDB**: sobrevive a cerrar la app, recargar o apagar el móvil.
+- Es un decorador ([`src/data/offline`](src/data/offline)) que envuelve **cualquier** adaptador remoto; el local no lo necesita.
+
+**Reglas y límites que conviene saber**
+
+- Un rechazo del servidor que **no** es de red (permisos, dato inválido) descarta ese cambio y te avisa, para no bloquear la cola para siempre.
+- Con cambios pendientes la app no recarga datos del servidor (pisaría lo que aún no se envió): usa tu copia local hasta sincronizar.
+- Conflictos: gana el último cambio enviado (*last write wins*). Si editas lo mismo desde dos dispositivos a la vez, uno pisa al otro.
+- Los cambios de una cuenta solo se envían con esa cuenta iniciada.
+- Hay que haber abierto la app **al menos una vez con conexión** (para cachearla y haber iniciado sesión). Pasada la hora de vida del token, la app sigue abriendo offline con tu último usuario; al volver la red renueva la sesión y sincroniza.
+- Varias pestañas abiertas a la vez no se coordinan entre sí.
+
+## Copias de seguridad
+
+**Perfil → Cuenta y datos → Exportar copia (.json)** descarga toda tu partida: tareas, hábitos, cursos, historial, monedas, compras y logros. **Importar copia** la restaura (reemplaza lo que tengas: te pide confirmación y te muestra qué contiene).
+
+- Sirve como **respaldo**, para **pasar de un dispositivo a otro** y para **migrar de base de datos** (exportas con un adaptador, importas con otro).
+- El archivo lleva versión. Si es de una versión más nueva de la app, se rechaza con un mensaje claro.
+- Al importar se **valida** todo: descarta elementos inválidos y los avisa, regenera ids que no sean UUID reescribiendo las referencias, y quita registros huérfanos (un registro de hábito sin hábito, una sesión de un curso inexistente).
+- No está cifrado: contiene tus datos en claro. Guárdalo donde guardarías cualquier documento personal.
+
+## Recordatorios (con repetición y sonido)
+
+Cada hábito puede tener una hora de recordatorio (p. ej. 19:00) y un intervalo de repetición: **No repetir · cada 15 min · cada 30 min (por defecto) · cada hora**. A esa hora avisa **solo si ese día toca y aún no lo has hecho**, y **insiste cada N minutos hasta que lo marques como hecho** (máximo **6 avisos al día**; nunca cruza la medianoche). Al marcarlo hecho, deja de avisar.
+
+Hay dos canales que funcionan a la vez y **no se duplican**:
+
+| Canal | Cuándo | Cómo avisa | Necesita |
+| --- | --- | --- | --- |
+| **Dentro de la app** | Con la app abierta | Banner naranja que te lleva al hábito + el sonido «1-UP» (respeta el botón de sonido de la barra superior) | Nada: funciona también en modo local |
+| **Push** | Con la app cerrada o en otra pestaña | Notificación del sistema | Supabase + activarlo en Perfil (ver abajo) |
+
+- Con la pestaña **visible**, el aviso del servidor no muestra notificación del sistema: se lo pasa a la propia web, que suena y muestra el banner. Si el servidor y la web disparan el mismo aviso a la vez, solo se ve uno.
+- Con la pestaña **oculta** y push activado, avisa el sistema. Sin push pero con permiso de notificaciones, la app muestra una notificación del sistema.
+- El sonido en una pestaña oculta puede quedar bloqueado por el navegador si no has interactuado con la página desde que la abriste.
+
+> ⚙️ Los **push** requieren **Supabase** (un servidor que envíe los avisos) y un dispositivo compatible: Chrome/Edge/Firefox en escritorio y Android, e **iPhone/iPad con iOS 16.4+ con la app instalada** en la pantalla de inicio (en Safari normal no funciona).
+
+**Cómo funcionan los push:** un cron de Supabase llama cada minuto a la Edge Function [`send-reminders`](supabase/functions/send-reminders/index.ts). Esta le pide al planificador ([`_shared/reminders.ts`](supabase/functions/_shared/reminders.ts), **el mismo código que usa la web**, así nunca discrepan) qué avisos tocan ahora para cada usuario con dispositivos suscritos, según su hora local (la zona horaria de su dispositivo). Cada aviso se reserva en `reminder_log` de forma atómica (contador y hora del último), así que **nunca se envía dos veces** aunque la función se ejecute a la vez dos veces. El servidor usa además las mismas reglas de «¿toca hoy?» que la app: una prueba compara ambas con miles de casos.
+
+**Puesta en marcha (una vez):**
+
+1. **Claves VAPID:** `npm run vapid`. Copia la *pública* en `VITE_VAPID_PUBLIC_KEY` (tu `.env` y las variables de Render, y vuelve a desplegar). La *privada* solo va a Supabase, nunca al frontend ni a git. Si cambias las claves, todos los dispositivos deben volver a activar los recordatorios.
+2. **Migraciones:** ejecuta en el SQL Editor, por orden, [`0002_push_reminders.sql`](supabase/migrations/0002_push_reminders.sql) y [`0003_reminder_repeats.sql`](supabase/migrations/0003_reminder_repeats.sql) (esta última añade el contador de avisos para poder repetirlos).
+3. **Secretos y función** con la [CLI de Supabase](https://supabase.com/docs/guides/cli). No hace falta instalarla (se usa con `npx`), ni Docker, ni `supabase link`. Tu `<ref>` es la parte `xxxx` de `https://xxxx.supabase.co`.
+
+   ```bash
+   # 1) Iniciar sesión (abre el navegador; solo la primera vez)
+   npx supabase login
+
+   # 2) Crea un archivo `supabase.secrets.local` (ya está en .gitignore por acabar en .local) con:
+   #      VAPID_PUBLIC_KEY=<la pública de npm run vapid>
+   #      VAPID_PRIVATE_KEY=<la privada de npm run vapid>
+   #      VAPID_SUBJECT=mailto:tu@correo.com
+   #      CRON_SECRET=<cadena larga aleatoria, p. ej. node -e "console.log(require('crypto').randomBytes(24).toString('hex'))">
+   npx supabase secrets set --env-file supabase.secrets.local --project-ref <ref>
+
+   # 3) Desplegar la función
+   npx supabase functions deploy send-reminders --no-verify-jwt --use-api --project-ref <ref>
+   ```
+
+   - `--no-verify-jwt`: la llama el cron, no un usuario; la protege `CRON_SECRET`.
+   - `--use-api`: empaqueta en el servidor de Supabase, así no necesitas Docker.
+   - `VAPID_SUBJECT` debe empezar por `mailto:` o `https://`, o la función falla al arrancar.
+   - Comprueba que existe: Supabase → **Edge Functions** → debe aparecer `send-reminders`. Y `CRON_SECRET` debe ser el **mismo** valor que pongas en el paso 4.
+4. **Cron:** en Database → Extensions activa `pg_cron` y `pg_net`; abre [`supabase/cron.sql.example`](supabase/cron.sql.example), rellena `<TU_CRON_SECRET>` y `<TU_PROJECT_REF>` y ejecútalo en el SQL Editor.
+5. **En la app:** Perfil → Recordatorios → *Activar recordatorios* (acepta el permiso del navegador) y ponle hora a un hábito. El botón *Probar* muestra una notificación local para comprobar que el sistema las enseña.
+
+**Probarlo sin esperar a la hora:**
+
+```bash
+curl -X POST https://<tu-project-ref>.supabase.co/functions/v1/send-reminders -H "x-cron-secret: <CRON_SECRET>"
+# → {"ok":true,"users":1,"sent":1,"removed":0}
+```
+
+Pon la hora del recordatorio en los últimos 10 minutos (el primer aviso acepta esa ventana por si un minuto se retrasa). Para volver a probar el primer aviso el mismo día, borra la fila de `reminder_log` (`delete from reminder_log;`). Las **repeticiones** no salen hasta que pase el intervalo del hábito desde el último aviso. Si algo no llega, mira **Edge Functions → send-reminders → Logs** y `select * from cron.job_run_details order by start_time desc limit 10;`.
+
+**Privacidad:** se guarda por dispositivo el *endpoint* de push, sus claves públicas y tu zona horaria (tabla `push_subscriptions`, con RLS). Al **cerrar sesión** el dispositivo se da de baja de los recordatorios de esa cuenta.
 
 ## Reglas del juego
 
@@ -191,13 +280,18 @@ src/
 │  ├─ ports.ts      ← contratos: Repository y AuthPort
 │  ├─ local/        ← adaptador localStorage (y almacén en memoria para tests)
 │  ├─ supabase/     ← adaptador Supabase: tablas, columnas, RLS y auth
+│  ├─ offline/      ← decorador con cola de escritura offline (IndexedDB), válido para cualquier adaptador
 │  └─ index.ts      ← ÚNICO sitio que decide qué adaptador se usa
 ├─ state/      data.ts (datos + reglas de juego) · ui.ts (toasts, modales, tema, sonido)
 ├─ features/   Una carpeta por pantalla, más layout y modales
 ├─ ui/         Componentes base y sprites pixel-art (sprites.ts)
 ├─ audio/      Efectos 8-bit con Web Audio
-└─ pwa/        Hooks de conexión e instalación
-supabase/migrations/   Esquema SQL con RLS
+└─ pwa/        Hooks de conexión e instalación, y cliente de notificaciones push
+supabase/
+├─ migrations/   Esquema SQL con RLS (0001 base · 0002 recordatorios)
+├─ functions/    Edge Function `send-reminders` (+ `_shared/due.ts`, espejo de las reglas de «¿toca hoy?»)
+└─ cron.sql.example   Programación del envío cada minuto
+public/push-sw.js      Manejo de notificaciones dentro del service worker
 docs/screenshots/      Capturas del README
 ```
 
@@ -238,7 +332,7 @@ if (provider === 'pocketbase') return createPocketBaseDataLayer(env.VITE_POCKETB
 
 **3.** Pon `VITE_DATA_PROVIDER=pocketbase` y listo. El store, las pantallas y las reglas de juego no cambian. [`src/data/local/local.test.ts`](src/data/local/local.test.ts) sirve de modelo para probar el adaptador nuevo.
 
-Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por hábito y día**; `create` debe ser **idempotente** por id; y `wipe()` debe borrar todo lo del usuario.
+Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por hábito y día**; `create` debe ser **idempotente** por id; y `wipe()` debe borrar todo lo del usuario. `repo.push` es opcional (solo si tu backend puede enviar recordatorios). Si tu backend es remoto, envuélvelo con `withOfflineQueue(...)` en `data/index.ts` y ganas el trabajo sin conexión gratis. Las copias de seguridad JSON funcionan con cualquier adaptador y permiten llevarte tus datos de uno a otro.
 
 ## Modelo de datos
 
@@ -250,6 +344,8 @@ Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por háb
 | `study_sessions` | relacional | `day`, `minutes`, `course_id` |
 | `xp_events` | relacional | `day`, `amount`, `source`, `label` — fuente de la racha y del mapa de actividad |
 | `notifications` | relacional | `category`, `title`, `body`, `read` |
+| `push_subscriptions` | relacional | Dispositivos suscritos a push: `endpoint`, claves, `timezone` — único por `(user_id, endpoint)` *(migración 0002)* |
+| `reminder_log` | relacional | Avisos ya enviados, `(user_id, habit_id, day)`. Solo accesible por la Edge Function *(migración 0002)* |
 
 Todas llevan `user_id` (por defecto `auth.uid()`) y una política RLS «solo el dueño».
 
@@ -259,7 +355,15 @@ Todas llevan `user_id` (por defecto `auth.uid()`) y una política RLS «solo el 
 npm test
 ```
 
-Cubren la lógica que más importa: curva de niveles, rachas (huecos, días congelados, deshacer), frecuencias de hábito, el adaptador local y el **store completo** contra un repositorio en memoria (XP y monedas al completar/deshacer, subida de nivel, compras, reversión si falla el guardado, mundo de ejemplo, reinicio) y la validez de todos los sprites.
+Cubren la lógica que más importa:
+
+- **Juego:** curva de niveles, rachas (huecos, días congelados, deshacer) y **todas** las frecuencias de hábito (incluido el 29 de febrero).
+- **Store completo** contra un repositorio en memoria: XP y monedas al completar/deshacer, subida de nivel, compras, reversión si falla el guardado, mundo de ejemplo y reinicio.
+- **Cola offline:** orden de envío, recuperación tras reiniciar, rechazos del servidor, lecturas con cambios pendientes, cuentas distintas.
+- **Copia de seguridad:** ida y vuelta sin pérdidas, archivos inválidos, ids regenerados y referencias huérfanas.
+- **Servidor de recordatorios:** paridad de «¿toca hoy?» con la app en más de 15 000 casos aleatorios, y la hora local por zona horaria.
+- **Planificador de avisos** (compartido por servidor y web): primer aviso, repeticiones, tope de 6, «no repetir», hábito hecho, zonas horarias y medianoche; y el reparto entre banner, notificación del sistema y silencio según la pestaña.
+- Validez de todos los sprites y del decodificador de la clave VAPID.
 
 ## Problemas frecuentes
 
@@ -274,13 +378,23 @@ Cubren la lógica que más importa: curva de niveles, rachas (huecos, días cong
 | En Render, recargar `/tareas` da **404** | Falta la regla *Rewrite* `/* → /index.html` (ya está en `render.yaml`). |
 | Cambié las variables en Render y no pasa nada | Son variables de *build*: lanza un nuevo despliegue. |
 | La PWA no se actualiza | Cierra todas las pestañas o pulsa «Actualizar» en el aviso. Comprueba que `sw.js` no esté cacheado por un CDN. |
+| Los recordatorios no llegan | Comprueba en orden: (1) Perfil → Recordatorios dice «Activados»; (2) el hábito tiene hora, **hoy le toca** y no está hecho; (3) migración 0002 ejecutada; (4) función desplegada con `--no-verify-jwt` y los 4 secretos; (5) el cron corre (`cron.job_run_details`); (6) en iPhone, la app está instalada y es iOS 16.4+. Prueba la función con el `curl` de la sección de recordatorios. |
+| Suena o avisa demasiado / no quiero repeticiones | Edita el hábito y elige **No repetir** en «Si no lo hago, avisar de nuevo». El máximo es 6 avisos al día por hábito. |
+| Los avisos repetidos no llegan (solo el primero) | Falta ejecutar `0003_reminder_repeats.sql` o **volver a desplegar la función** (`npx supabase functions deploy send-reminders …`). |
+| Con la pestaña abierta no suena | Pulsa cualquier botón de la app una vez (los navegadores bloquean el audio hasta que interactúas) y comprueba que el botón `♪` de la barra superior no esté silenciado. |
+| En Perfil → Recordatorios sale «Falta la clave pública VAPID» | Falta `VITE_VAPID_PUBLIC_KEY` en el build. Añádela (`.env` / Render) y **vuelve a desplegar**. |
+| En Perfil → Recordatorios sale «El service worker no está activo» | Estás en `npm run dev`. Usa `npm run build && npm run preview`. |
+| Muestra `⏳ N pendientes` y no baja | Sigues sin conexión o la sesión caducó. Con red, púlsalo para reintentar; si la sesión caducó, vuelve a iniciar sesión (los cambios pendientes se conservan). |
+| Al importar dice «No parece una copia de StudyQuest» | Solo se admiten archivos exportados desde Perfil → Exportar copia. |
 | Supabase limita los correos | El plan gratuito envía pocos correos por hora. Para pruebas, desactiva *Confirm email* o usa contraseña en vez de enlace mágico. |
 
 ## Límites conocidos
+- **Cola offline sin coordinación entre pestañas** y con *last write wins* ante conflictos entre dispositivos.
+- **Arrastrar y soltar solo con ratón/trackpad.** En pantallas táctiles y con teclado se usan los botones *Empezar / Completar / Reabrir*.
+- **Recordatorios con precisión de minuto**: el primer aviso admite hasta 10 minutos de retraso (si el cron falla más, ese día no llega), el intervalo mínimo entre repeticiones es 15 min y la zona horaria es la del último dispositivo activado.
+- **El aviso dentro de la app solo funciona con la app abierta** (una pestaña en segundo plano puede ralentizar sus temporizadores hasta ~1 min). Con la app cerrada solo avisa el push.
+- Si marcas un hábito como hecho **sin conexión**, el servidor no lo sabe hasta que sincronice y puede llegar algún aviso de más.
 
-- **Frecuencias de hábito no incluidas:** *fechas concretas*, *anual* y *personalizado*. Están diaria, días concretos, cada X días, semanal y mensual.
-- **Offline = solo lectura.** Sin conexión puedes ver tu partida, pero guardar falla con aviso y se revierte; no hay cola de escritura offline.
-- **Tareas sin arrastrar y soltar:** se mueven con los botones *Empezar / Completar / Reabrir*.
 
 ## Créditos y marcas
 

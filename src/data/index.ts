@@ -6,8 +6,9 @@
 import type { DataLayer } from './ports';
 import { createLocalDataLayer } from './local';
 import { createSupabaseDataLayer } from './supabase';
+import { withOfflineQueue } from './offline';
 
-export type { AuthPort, AuthUser, DataLayer, Repository } from './ports';
+export type { AuthPort, AuthUser, DataLayer, Repository, SyncEvent } from './ports';
 
 function build(): DataLayer {
   const env = import.meta.env;
@@ -16,7 +17,8 @@ function build(): DataLayer {
   if (provider === 'supabase') {
     const url = env.VITE_SUPABASE_URL as string | undefined;
     const key = env.VITE_SUPABASE_ANON_KEY as string | undefined;
-    if (url && key) return createSupabaseDataLayer(url, key);
+    // La cola offline envuelve al adaptador remoto: sin red, los cambios se guardan en el dispositivo y se envían al volver.
+    if (url && key) return withOfflineQueue(createSupabaseDataLayer(url, key));
     console.warn('[StudyQuest] VITE_DATA_PROVIDER=supabase pero faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. Usando modo local.');
   }
   return createLocalDataLayer();

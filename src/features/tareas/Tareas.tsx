@@ -29,7 +29,14 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
   const next = NEXT[task.status];
 
   return (
-    <article className={cx('task', `task--${task.priority}`, task.status === 'done' && 'is-done')}>
+    <article
+      className={cx('task', `task--${task.priority}`, task.status === 'done' && 'is-done')}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/plain', task.id);
+        e.dataTransfer.effectAllowed = 'move';
+      }}
+    >
       <div className="split">
         <span className="kicker">{courseName}</span>
         <span className="xp-text">+{task.xp}</span>
@@ -76,6 +83,8 @@ export default function Tareas() {
   const courses = useData((s) => s.courses);
   const openModal = useUi((s) => s.openModal);
   const [filter, setFilter] = useState('all');
+  const [over, setOver] = useState<TaskStatus | null>(null);
+  const setTaskStatus = useData((s) => s.setTaskStatus);
   const [params, setParams] = useSearchParams();
 
   // Atajo de la PWA: /tareas?nuevo=1
@@ -130,12 +139,30 @@ export default function Tareas() {
           {COLUMNS.map((col) => {
             const items = byStatus(col.status);
             return (
-              <section key={col.status} className={`column column--${col.status}`} aria-label={col.title}>
+              <section
+                key={col.status}
+                className={cx('column', `column--${col.status}`, over === col.status && 'is-over')}
+                aria-label={col.title}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (over !== col.status) setOver(col.status);
+                }}
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setOver(null);
+                  const id = e.dataTransfer.getData('text/plain');
+                  if (id) setTaskStatus(id, col.status);
+                }}
+              >
                 <h2 className="column__head">
                   <Sprite name={col.sprite} size={18} />
                   {col.title} <span className="column__n">[{items.length}]</span>
                 </h2>
-                {items.length === 0 && <p className="muted small column__empty">{col.status === 'done' ? 'Aún no has superado ninguna.' : 'Vacío.'}</p>}
+                {items.length === 0 && <p className="muted small column__empty">{col.status === 'done' ? 'Aún no has superado ninguna.' : 'Vacío.'} Arrastra una tarea aquí.</p>}
                 {items.map((t) => (
                   <TaskCard key={t.id} task={t} courseName={courseName(t.courseId)} />
                 ))}

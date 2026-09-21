@@ -35,6 +35,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,woff}'],
         navigateFallback: '/index.html',
+        // Manejo de notificaciones push (public/push-sw.js) dentro del mismo service worker.
+        importScripts: ['push-sw.js'],
         // Las llamadas a Supabase nunca se cachean: los datos siempre vienen frescos.
         runtimeCaching: [{ urlPattern: ({ url }) => url.hostname.endsWith('.supabase.co'), handler: 'NetworkOnly' }],
       },

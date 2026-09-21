@@ -57,6 +57,12 @@ export const sfx = {
   unlock() {
     [784, 988, 1175, 1568].forEach((f, i) => note(f, i * 0.07, 0.12, 'triangle', 0.06));
   },
+  /** Sonido de recordatorio: la melodía del "1-UP", dos veces, para que se note aunque estés en otra cosa. */
+  reminder() {
+    const melody = [659, 784, 1319, 1047, 1175, 1568];
+    melody.forEach((f, i) => note(f, i * 0.1, 0.13, 'square', 0.06));
+    melody.forEach((f, i) => note(f, 0.9 + i * 0.1, 0.13, 'square', 0.06));
+  },
   error() {
     note(180, 0, 0.16, 'sawtooth', 0.04, 90);
   },

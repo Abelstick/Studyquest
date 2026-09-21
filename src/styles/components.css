@@ -427,6 +427,9 @@ a.btn {
   flex-direction: column;
   gap: 16px;
 }
+.form > .btn {
+  align-self: flex-start;
+}
 .form__row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
@@ -698,6 +701,21 @@ textarea.input {
 }
 .toast--error {
   border-color: var(--red);
+}
+.toast--reminder {
+  border-color: var(--orange);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(240, 138, 28, 0.35);
+}
+.toast__shake {
+  animation: shake 0.6s steps(6) 3;
+}
+@keyframes shake {
+  25% {
+    transform: rotate(-12deg);
+  }
+  75% {
+    transform: rotate(12deg);
+  }
 }
 .toast--info {
   border-color: var(--blue);

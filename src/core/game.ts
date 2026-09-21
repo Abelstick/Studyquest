@@ -107,6 +107,20 @@ export function isDueOn(habit: Habit, date: ISODate, logs: HabitLog[]): boolean 
       const key = monthKey(date);
       return !logs.some((l) => l.habitId === habit.id && monthKey(l.date) === key && l.date < date && l.value >= habit.target);
     }
+    case 'dates':
+      return f.dates.includes(date);
+    case 'yearly': {
+      const d = fromISODate(date);
+      const [m, day] = [d.getMonth() + 1, d.getDate()];
+      if (m === f.month && day === f.day) return true;
+      // 29 de febrero en año no bisiesto → se celebra el 28.
+      return f.month === 2 && f.day === 29 && m === 2 && day === 28 && new Date(d.getFullYear(), 1, 29).getMonth() !== 1;
+    }
+    case 'custom': {
+      const from = f.per === 'week' ? weekStart(date) : `${monthKey(date)}-01`;
+      const done = logs.filter((l) => l.habitId === habit.id && l.date >= from && l.date < date && l.value >= habit.target).length;
+      return done < Math.max(1, f.times);
+    }
   }
 }
 
@@ -132,6 +146,9 @@ export function monthlyCompliance(habit: Habit, logs: HabitLog[], now: ISODate =
   if (f.type === 'every') expected = Math.floor(30 / Math.max(1, f.every));
   if (f.type === 'weekly') expected = 4;
   if (f.type === 'monthly') expected = 1;
+  if (f.type === 'dates') expected = f.dates.filter((d) => d >= from && d <= now).length;
+  if (f.type === 'yearly') expected = 1;
+  if (f.type === 'custom') expected = f.per === 'week' ? Math.round((f.times * 30) / 7) : f.times;
   return Math.min(100, Math.round((done / Math.max(1, expected)) * 100));
 }
 
@@ -147,6 +164,12 @@ export function frequencyLabel(f: Habit['frequency']): string {
       return 'Semanal';
     case 'monthly':
       return 'Mensual';
+    case 'dates':
+      return f.dates.length === 1 ? '1 fecha' : `${f.dates.length} fechas`;
+    case 'yearly':
+      return `Cada ${f.day} ${['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][f.month - 1] ?? ''}`.trim();
+    case 'custom':
+      return `${f.times}× por ${f.per === 'week' ? 'semana' : 'mes'}`;
   }
 }
 

@@ -21,6 +21,40 @@ const docMapper = <T extends { id: ID }>(): Mapper<T> => ({
 
 const CHUNK = 500;
 
+const REMEMBERED_USER = 'sq:last-user';
+const remember = (u: AuthUser | null) => {
+  try {
+    if (u) localStorage.setItem(REMEMBERED_USER, JSON.stringify(u));
+    else localStorage.removeItem(REMEMBERED_USER);
+  } catch {
+    /* modo privado */
+  }
+};
+const remembered = (): AuthUser | null => {
+  try {
+    return JSON.parse(localStorage.getItem(REMEMBERED_USER) ?? 'null') as AuthUser | null;
+  } catch {
+    return null;
+  }
+};
+const looksOffline = (e: { message?: string; name?: string } | null | undefined) =>
+  (typeof navigator !== 'undefined' && navigator.onLine === false) || /failed to fetch|network|load failed|retryable/i.test(`${e?.name ?? ''} ${e?.message ?? ''}`);
+
+/**
+ * Usuario actual. Sin red y con el token de acceso caducado (dura 1 h), `getSession()` devuelve null aunque la
+ * sesión siga guardada porque no puede renovarla. En ese caso, y solo si el fallo es de red, se usa el último
+ * usuario conocido: así la app abre offline y los cambios se encolan a nombre de la cuenta correcta.
+ */
+async function currentUser(db: SupabaseClient): Promise<AuthUser | null> {
+  const { data, error } = await db.auth.getSession();
+  if (data.session) {
+    const u = { id: data.session.user.id, email: data.session.user.email ?? null };
+    remember(u);
+    return u;
+  }
+  return looksOffline(error) ? remembered() : null;
+}
+
 function fail(error: { message: string } | null): asserts error is null {
   if (error) throw new Error(error.message);
 }
@@ -74,9 +108,9 @@ const notifMapper: Mapper<AppNotification> = {
 
 function createSupabaseRepository(db: SupabaseClient): Repository {
   const uid = async (): Promise<string> => {
-    const { data } = await db.auth.getSession();
-    if (!data.session) throw new Error('No hay sesión iniciada');
-    return data.session.user.id;
+    const user = await currentUser(db);
+    if (!user) throw new Error('No hay sesión iniciada');
+    return user.id;
   };
 
   const tasks = new SupabaseTable<Task>(db, 'tasks', docMapper());
@@ -149,6 +183,18 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
         fail(error);
       },
     },
+    push: {
+      async save(sub) {
+        const { error } = await db
+          .from('push_subscriptions')
+          .upsert({ user_id: await uid(), endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth, timezone: sub.timezone, updated_at: new Date().toISOString() }, { onConflict: 'user_id,endpoint' });
+        fail(error);
+      },
+      async remove(endpoint) {
+        const { error } = await db.from('push_subscriptions').delete().eq('endpoint', endpoint);
+        fail(error);
+      },
+    },
     async wipe() {
       // Orden: primero lo que referencia a otras tablas.
       for (const t of ['habit_logs', 'study_sessions', 'xp_events', 'notifications', 'tasks', 'habits', 'courses', 'goals', 'projects', 'personal_rewards', 'profiles']) {
@@ -166,12 +212,18 @@ class SupabaseAuth implements AuthPort {
   private static toUser(u: { id: string; email?: string | null } | null | undefined): AuthUser | null {
     return u ? { id: u.id, email: u.email ?? null } : null;
   }
-  async getUser() {
-    const { data } = await this.db.auth.getSession();
-    return SupabaseAuth.toUser(data.session?.user);
+  getUser() {
+    return currentUser(this.db);
   }
   onChange(cb: (user: AuthUser | null) => void) {
-    const { data } = this.db.auth.onAuthStateChange((_event, session) => cb(SupabaseAuth.toUser(session?.user)));
+    const { data } = this.db.auth.onAuthStateChange((event, session) => {
+      const user = SupabaseAuth.toUser(session?.user);
+      if (user) remember(user);
+      // Solo un cierre de sesión REAL borra al usuario recordado (un fallo de red al renovar no lo es).
+      else if (event === 'SIGNED_OUT') remember(null);
+      // Sin sesión por culpa de la red: seguimos como el último usuario conocido.
+      cb(user ?? (event === 'SIGNED_OUT' ? null : remembered()));
+    });
     return () => data.subscription.unsubscribe();
   }
   async signInWithPassword(email: string, password: string) {
@@ -188,6 +240,7 @@ class SupabaseAuth implements AuthPort {
     fail(error);
   }
   async signOut() {
+    remember(null);
     const { error } = await this.db.auth.signOut();
     fail(error);
   }

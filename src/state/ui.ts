@@ -18,11 +18,13 @@ export type ModalState =
 
 export interface Toast {
   id: string;
-  kind: 'xp' | 'info' | 'error' | 'unlock';
+  kind: 'xp' | 'info' | 'error' | 'unlock' | 'reminder';
   title: string;
   body?: string;
   xp?: number;
   coins?: number;
+  /** Ruta a la que lleva el aviso al pulsarlo. */
+  to?: string;
 }
 
 export interface LevelUpInfo {
@@ -100,8 +102,8 @@ export const useUi = create<UiState>((set, get) => ({
   navOpen: false,
   toast: (t) => {
     const id = newId();
-    set((s) => ({ toasts: [...s.toasts.slice(-2), { ...t, id }] }));
-    setTimeout(() => get().dismissToast(id), t.kind === 'error' ? 5000 : 3200);
+    set((s) => ({ toasts: [...s.toasts.slice(t.kind === 'reminder' ? -3 : -2), { ...t, id }] }));
+    setTimeout(() => get().dismissToast(id), t.kind === 'reminder' ? 25_000 : t.kind === 'error' ? 5000 : 3200);
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   showLevelUp: (levelUp) => set({ levelUp }),

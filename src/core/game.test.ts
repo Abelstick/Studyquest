@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Habit, HabitLog, XpEvent } from './domain';
 import { addDays } from './dates';
-import { computeStreak, courseProgress, habitStreaks, isDueOn, levelFromXp, levelProgress, monthlyCompliance, weekStrip, worldFor, xpAtLevelStart } from './game';
+import { computeStreak, courseProgress, frequencyLabel, habitStreaks, isDueOn, levelFromXp, levelProgress, monthlyCompliance, weekStrip, worldFor, xpAtLevelStart } from './game';
 
 const NOW = '2026-09-20'; // domingo
 
@@ -95,6 +95,46 @@ describe('hábitos', () => {
     const h = habit({});
     const logs = Array.from({ length: 30 }, (_, i) => log('h', addDays(NOW, -i), 30));
     expect(monthlyCompliance(h, logs, NOW)).toBe(100);
+  });
+});
+
+describe('frecuencias nuevas', () => {
+  it('fechas concretas: solo toca esos días', () => {
+    const h = habit({ frequency: { type: 'dates', dates: ['2026-10-05', '2026-11-20'] } });
+    expect(isDueOn(h, '2026-10-05', [])).toBe(true);
+    expect(isDueOn(h, '2026-10-06', [])).toBe(false);
+  });
+  it('anual: mismo día y mes cada año', () => {
+    const h = habit({ frequency: { type: 'yearly', month: 3, day: 15 } });
+    expect(isDueOn(h, '2026-03-15', [])).toBe(true);
+    expect(isDueOn(h, '2027-03-15', [])).toBe(true);
+    expect(isDueOn(h, '2026-03-16', [])).toBe(false);
+    expect(isDueOn(h, '2026-04-15', [])).toBe(false);
+  });
+  it('anual 29 de febrero: en año no bisiesto toca el 28', () => {
+    const h = habit({ frequency: { type: 'yearly', month: 2, day: 29 } });
+    expect(isDueOn(h, '2028-02-29', [])).toBe(true); // bisiesto
+    expect(isDueOn(h, '2028-02-28', [])).toBe(false);
+    expect(isDueOn(h, '2027-02-28', [])).toBe(true); // no bisiesto
+    expect(isDueOn(h, '2027-03-01', [])).toBe(false);
+  });
+  it('personalizado 3× por semana: toca hasta cumplir 3 en la semana', () => {
+    const h = habit({ frequency: { type: 'custom', times: 3, per: 'week' }, target: 1 });
+    const logs = [log('h', '2026-09-14', 1), log('h', '2026-09-15', 1)]; // lunes y martes
+    expect(isDueOn(h, '2026-09-16', logs)).toBe(true); // miércoles: van 2 de 3
+    expect(isDueOn(h, '2026-09-17', [...logs, log('h', '2026-09-16', 1)])).toBe(false); // ya son 3
+    expect(isDueOn(h, '2026-09-21', [...logs, log('h', '2026-09-16', 1)])).toBe(true); // semana nueva
+  });
+  it('personalizado por mes cuenta dentro del mes natural', () => {
+    const h = habit({ frequency: { type: 'custom', times: 2, per: 'month' }, target: 1 });
+    const logs = [log('h', '2026-09-03', 1), log('h', '2026-09-10', 1)];
+    expect(isDueOn(h, '2026-09-20', logs)).toBe(false);
+    expect(isDueOn(h, '2026-10-01', logs)).toBe(true);
+  });
+  it('etiquetas legibles', () => {
+    expect(frequencyLabel({ type: 'custom', times: 3, per: 'week' })).toBe('3× por semana');
+    expect(frequencyLabel({ type: 'yearly', month: 3, day: 15 })).toBe('Cada 15 mar');
+    expect(frequencyLabel({ type: 'dates', dates: ['2026-10-05'] })).toBe('1 fecha');
   });
 });
 

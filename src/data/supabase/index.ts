@@ -251,6 +251,8 @@ class SupabaseAuth implements AuthPort {
 }
 
 export function createSupabaseDataLayer(url: string, anonKey: string): DataLayer {
-  const db = createClient(url, anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  // Tolera una URL pegada con barra final o con /rest/v1 detrás: supabase-js necesita solo https://<ref>.supabase.co
+  const cleanUrl = url.trim().replace(/\/(rest|auth)\/v1.*$/, '').replace(/\/+$/, '');
+  const db = createClient(cleanUrl, anonKey.trim(), { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   return { kind: 'supabase', repo: createSupabaseRepository(db), auth: new SupabaseAuth(db) };
 }

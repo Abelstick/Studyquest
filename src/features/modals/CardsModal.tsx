@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AiError, generateCards } from '@/ai/gemini';
+import { aiConfig } from '@/ai/config';
 import { useAi } from '@/ai/store';
 import { Loader } from '@/ui/Loader';
 import { useData } from '@/state';
@@ -13,7 +14,6 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
   const setTopicCards = useData((s) => s.setTopicCards);
   const openModal = useUi((s) => s.openModal);
   const apiKey = useAi((s) => s.apiKey);
-  const model = useAi((s) => s.model);
   const remote = useAi((s) => s.remote);
   const courseTitle = useData((s) => s.courses.find((c) => c.id === courseId)?.title ?? '');
   const [busy, setBusy] = useState(false);
@@ -32,7 +32,9 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
     setBusy(true);
     setError(null);
     try {
-      const cards = await generateCards({ apiKey, model, signal: controller.signal }, { topic: topic.title, course: courseTitle, count: 5, existing: parsed.map((c) => c.q) });
+      const cfg = aiConfig(controller.signal);
+      if (!cfg) return;
+      const cards = await generateCards(cfg, { topic: topic.title, course: courseTitle, count: 5, existing: parsed.map((c) => c.q) });
       setText((t) => `${t.trim()}${t.trim() ? '\n' : ''}${cards.map((c) => `${c.q} :: ${c.a}`).join('\n')}`);
     } catch (e) {
       if (!(e instanceof AiError && e.code === 'cancelled')) setError(e instanceof AiError ? e.message : 'No se pudieron generar las tarjetas.');

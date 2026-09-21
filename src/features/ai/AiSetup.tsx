@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { DEFAULT_MODEL, MODEL_PRESETS, cleanKey, looksLikeKey, maskKey, testKey } from '@/ai/gemini';
+import { cleanKey, looksLikeKey, maskKey, testKey } from '@/ai/gemini';
+import { modelName } from '@/ai/models';
+import { ModelSettings } from './ModelSettings';
 import { MIN_PASSPHRASE, WrongPassphraseError } from '@/ai/crypto';
 import { useAi } from '@/ai/store';
 import { refreshFromAccount, removeFromAccount, saveToAccount, unlockFromAccount, type StorageMode } from '@/ai/sync';
@@ -53,12 +55,11 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
   const model = useAi((s) => s.model);
   const remote = useAi((s) => s.remote);
   const locked = useAi((s) => s.locked);
-  const { setKey, setModel, clear } = useAi.getState();
+  const { setKey, clear } = useAi.getState();
   const toast = useUi((s) => s.toast);
   const secrets = dataLayer.repo.secrets;
 
   const [draft, setDraft] = useState('');
-  const [modelDraft, setModelDraft] = useState(model);
   const [mode, setMode] = useState<StorageMode>('device');
   const [accountMode, setAccountMode] = useState<StorageMode>('encrypted');
   const [pass, setPass] = useState('');
@@ -87,7 +88,7 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
     if (!looksLikeKey(key)) return setError('Eso no parece una clave: no puede estar vacía ni llevar espacios o saltos de línea. Cópiala de nuevo desde Google AI Studio.');
     if (mode === 'encrypted' && pass.length < MIN_PASSPHRASE) return setError(`La frase secreta debe tener al menos ${MIN_PASSPHRASE} caracteres.`);
     void run(async () => {
-      const chosen = modelDraft.trim() || DEFAULT_MODEL;
+      const chosen = useAi.getState().model;
       try {
         await testKey({ apiKey: key, model: chosen });
       } catch (err) {
@@ -191,8 +192,12 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
           <Sprite name="star" size={18} /> <b>Funciones inteligentes activadas</b> en este dispositivo
         </p>
         <p className="muted small">
-          Clave: <code>{maskKey(apiKey)}</code> · Modelo: <code>{model}</code>
+          Clave: <code>{maskKey(apiKey)}</code> · Modelo: <code>{model}</code> ({modelName(model)})
         </p>
+        <details className="ai__advanced">
+          <summary>Modelos: cambiar de modelo o activar el cambio automático</summary>
+          <ModelSettings />
+        </details>
         {secrets && (
           <p className="muted small">
             {remote === 'encrypted' && '🔒 También guardada en tu cuenta, cifrada: la tienes en todos tus dispositivos con tu frase.'}
@@ -303,19 +308,8 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
       <Field label="Tu clave de Gemini">{(id) => <PasswordInput id={id} value={draft} onChange={setDraft} autoComplete="off" noun="clave" placeholder="Pega aquí tu clave de Google AI Studio" />}</Field>
       <StoragePicker mode={mode} onMode={setMode} passphrase={pass} onPassphrase={setPass} />
       <details className="ai__advanced">
-        <summary>Avanzado: modelo</summary>
-        <Field label="Modelo" hint="Por defecto gemini-3.8-flash. Los «flash-lite» son más rápidos y suelen tener más cuota gratuita.">
-          {(id) => (
-            <>
-              <input id={id} className="input" list="ai-models" value={modelDraft} onChange={(e) => setModelDraft(e.target.value)} onBlur={() => setModel(modelDraft)} spellCheck={false} />
-              <datalist id="ai-models">
-                {MODEL_PRESETS.map((m) => (
-                  <option key={m} value={m} />
-                ))}
-              </datalist>
-            </>
-          )}
-        </Field>
+        <summary>Modelos: elegir cuál usar y qué hacer si se agota la cuota</summary>
+        <ModelSettings />
       </details>
       {error && (
         <p className="form__error" role="alert">

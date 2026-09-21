@@ -347,7 +347,30 @@ interaction.output_text; // el JSON, que la app valida antes de usarlo
 - Se envía `store: false`, así que Google no retiene la petición en su almacén de interacciones (por defecto lo haría durante 1 día en el nivel gratuito). Sin reintentos automáticos, para no gastar cuota de más.
 - Todo lo que devuelve el modelo pasa por una validación estricta (textos recortados, horas acotadas, módulos vacíos descartados) antes de tocar tus datos.
 
-Los límites de la capa gratuita (peticiones por minuto y por día) y los nombres de modelo cambian con el tiempo. Si `gemini-3.8-flash` deja de estar disponible en tu cuenta, o quieres más cuota, cambia el modelo en *Avanzado: modelo* (`gemini-3.5-flash-lite` o `gemini-3.1-flash-lite`). Las instalaciones que usaban `gemini-2.5-flash` pasan solas al modelo actual.
+### Modelos gratuitos y cambio automático
+
+Según la [documentación de Google](https://ai.google.dev/gemini-api/docs/pricing) (revisada en septiembre de 2026), estos modelos de texto tienen **nivel gratuito**; los modelos Pro, no:
+
+| Modelo | Nota |
+| --- | --- |
+| `gemini-3.8-flash` | **Por defecto.** El más inteligente de la familia Flash |
+| `gemini-3.7-flash` · `gemini-3.6-flash` · `gemini-3.5-flash` | Generaciones anteriores, cada una con su propia cuota |
+| `gemini-3.5-flash-lite` | Versión ligera: la más rápida y económica de la serie 3.5 |
+| `gemini-2.5-flash` · `gemini-2.5-flash-lite` | Serie 2.5, estable |
+
+> `gemini-3.1-flash-lite` no figura como gratuito y tiene fecha de retirada (mayo de 2027), por eso no se ofrece.
+
+**Por qué cambiar de modelo ayuda.** Los límites (peticiones por minuto, tokens por minuto y peticiones por día) se aplican **por proyecto y por modelo**: cada modelo tiene su propia cuota. Crear otra clave *dentro del mismo proyecto* de Google no aporta nada. Al superar un límite Google responde `429 RESOURCE_EXHAUSTED`; el límite diario se renueva a medianoche (hora del Pacífico). Tus cifras exactas están en [aistudio.google.com/rate-limit](https://aistudio.google.com/rate-limit).
+
+**Cómo lo gestiona la app** (Perfil → Funciones inteligentes → *Modelos*, o el selector «Modelo» del Planificador):
+- **Modelo principal**: eliges uno de la lista (o escribes otro id).
+- **Cambio automático** (activado por defecto): si el principal agota su cuota (429), no existe para tu clave (404) o está saturado (503), la app prueba **el siguiente modelo de reserva** y te avisa («Cambié de modelo: Gemini 3.8 Flash agotó su cuota. Sigo con Gemini 3.7 Flash»). Eliges qué modelos de reserva usar; se prueban en el orden de la lista.
+- Un modelo que acaba de agotar su cuota se **aparta 5 minutos**: la siguiente petición ya no gasta un intento en él.
+- Los demás errores (clave inválida, cancelación, tiempo agotado…) **no** cambian de modelo.
+- Si todos agotan su cuota, el mensaje lista los que probó y cuándo se renuevan. Con el cambio automático apagado, al agotarse la cuota aparecen botones para **reintentar con otro modelo** con un clic.
+- La etiqueta de la ruta generada indica qué modelo respondió.
+
+Los límites y los nombres de modelo cambian con el tiempo: si Google retira uno, se puede escribir otro id en «Otro modelo».
 
 ## Tu ciudad
 
@@ -517,6 +540,7 @@ Cubren la lógica que más importa:
 - **Planificador de avisos** (compartido por servidor y web): primer aviso, repeticiones, tope de 6, «no repetir», hábito hecho, zonas horarias y medianoche; y el reparto entre banner, notificación del sistema y silencio según la pestaña.
 - **IA con la clave del usuario:** el cliente de Gemini con el SDK simulado (la petición exacta: modelo, `store:false`, JSON con esquema, sin reintentos; errores con la forma real del SDK: clave inválida, 401/403/404/429, tiempo agotado, sin red; respuestas vacías o ilegibles; la clave nunca aparece en mensajes), el almacén de la clave (formato, corrupción, modo privado, que no entre en copias de seguridad), el cifrado (ida y vuelta, frase incorrecta, datos manipulados, la clave no aparece en el texto cifrado), la sincronización con la cuenta entre dispositivos y la limpieza de tarjetas generadas.
 - **Planificador:** validación de lo que devuelve la IA (basura, textos enormes, módulos vacíos), lectura de la respuesta de Gemini, reparto en el tiempo (orden, sin pasarse de tu disponibilidad diaria, recorte si no cabe, días bloqueados, agenda ocupada, cada tema una sola vez), plantillas y creación del plan.
+- **Modelos y cambio automático:** el catálogo son exactamente los modelos con nivel gratuito según la documentación (sin Pro ni `3.1-flash-lite`); pasar al siguiente modelo con 429, 404 y 503 y avisar; no cambiar con errores que no son de cuota; una sola tentativa si el cambio está apagado; mensaje cuando todos se agotan; cancelar en mitad de la cadena; apartar 5 minutos al modelo agotado; ajustes guardados y a prueba de valores manipulados.
 - **Cancelar y tiempo máximo de la IA:** la petición se aborta con «Cancelar» (y no se llega a enviar si ya estaba cancelada), se corta a los 60 s y no deja temporizadores pendientes.
 - **Guía de conceptos:** cada concepto con 5 ejemplos distintos, sus «esto NO es» apuntando a otro concepto, ejemplos completos y el mini test con respuestas repartidas.
 - **Ciudad:** niveles exactos de cada edificio (umbrales), puntos de cada área, rangos, adornos y habitantes; premios al mejorar (una sola vez, saltos de varios niveles, sin retroactivos, sin bajar al borrar datos); el arte de los 6 edificios × 6 niveles (cuadrícula regular, solo colores de la paleta, cada nivel distinto, sin recortes) y el flujo real: 5 hábitos suben la Casa.
@@ -541,7 +565,7 @@ Cubren la lógica que más importa:
 | Al guardar la clave en mi cuenta sale un error | Falta ejecutar `0004_user_secrets.sql` en el SQL Editor de Supabase. La clave sí funciona en el dispositivo mientras tanto. |
 | «Frase incorrecta» al desbloquear | La frase es la que elegiste al guardarla (distingue mayúsculas). Si la perdiste, pulsa «Olvidé mi frase», que borra la copia cifrada de tu cuenta, y pega la clave otra vez (la sigues viendo en Google AI Studio). |
 | «Google no aceptó tu clave» | La clave está mal copiada, borrada o restringida. Crea otra en [Google AI Studio](https://aistudio.google.com/apikey) y pégala de nuevo (Perfil → Funciones inteligentes). |
-| «Se agotó la cuota gratuita de tu clave» | Superaste las peticiones por minuto o por día de la capa gratuita. Espera un poco, cambia a `gemini-3.5-flash-lite` (Avanzado: modelo) o usa una plantilla. |
+| «Se agotó la cuota gratuita…» | El modelo llegó a su límite por minuto o por día (los límites son por proyecto y por modelo). Con el cambio automático activado la app prueba otros modelos gratuitos sola; si todos se agotaron, espera unos minutos (o a medianoche, hora del Pacífico, para el límite diario) o usa una plantilla. Puedes ver tus cifras en aistudio.google.com/rate-limit. |
 | «El modelo … no está disponible para tu clave» | Google retira o renombra modelos. Cambia el modelo en Perfil → Funciones inteligentes → Avanzado. |
 | Los recordatorios no llegan | Comprueba en orden: (1) Perfil → Recordatorios dice «Activados»; (2) el hábito tiene hora, **hoy le toca** y no está hecho; (3) migración 0002 ejecutada; (4) función desplegada con `--no-verify-jwt` y los 4 secretos; (5) el cron corre (`cron.job_run_details`); (6) en iPhone, la app está instalada y es iOS 16.4+. Prueba la función con el `curl` de la sección de recordatorios. |
 | Suena o avisa demasiado / no quiero repeticiones | Edita el hábito y elige **No repetir** en «Si no lo hago, avisar de nuevo». El máximo es 6 avisos al día por hábito. |

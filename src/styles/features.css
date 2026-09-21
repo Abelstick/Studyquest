@@ -1831,3 +1831,34 @@
 .plot__stars i.is-on {
   opacity: 1;
 }
+
+/* ---------- Modelos de IA ---------- */
+.models {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+.models__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.modelpick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.modelpick select {
+  flex: 1;
+  min-width: 0;
+}
+.pick__opt code {
+  padding: 1px 5px;
+  font-size: 11px;
+  background: var(--panel-3);
+  border: 1px solid var(--line-soft);
+}
+.pick__opt .input--inline {
+  width: 100%;
+  margin: 4px 0;
+}

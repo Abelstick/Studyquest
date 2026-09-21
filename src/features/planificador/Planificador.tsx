@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { AiError, generateRoadmap } from '@/ai/gemini';
+import { aiConfig } from '@/ai/config';
+import { FREE_MODELS, isFreeModel, modelName } from '@/ai/models';
 import { useAi } from '@/ai/store';
 import { addDays, diffDays, longDate, shortDate, today } from '@/core/dates';
 import {
@@ -65,6 +67,7 @@ export default function Planificador() {
   const { tasks, habits, habitLogs, addPlan } = useData();
   const apiKey = useAi((s) => s.apiKey);
   const model = useAi((s) => s.model);
+  const lastUsed = useAi((s) => s.lastUsed);
   const remote = useAi((s) => s.remote);
   const openModal = useUi((s) => s.openModal);
   const now = today();
@@ -140,7 +143,9 @@ export default function Planificador() {
     // En móvil el panel puede quedar fuera de la pantalla: lo traemos a la vista para que se vea que está trabajando.
     setTimeout(() => waitRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 50);
     try {
-      const r = await generateRoadmap({ apiKey, model, signal: controller.signal }, { goal: goal.trim(), level, weeks, hoursPerWeek: Math.max(1, Math.round((weekTotal(week) / 60) * 2) / 2) });
+      const cfg = aiConfig(controller.signal);
+      if (!cfg) return;
+      const r = await generateRoadmap(cfg, { goal: goal.trim(), level, weeks, hoursPerWeek: Math.max(1, Math.round((weekTotal(week) / 60) * 2) / 2) });
       setRoadmap({ ...r, goal: cleanGoal(goal) || r.goal });
       setSource('ai');
       setStep(2);
@@ -261,14 +266,36 @@ export default function Planificador() {
             </Panel>
             <Panel kicker="// Paso 3" title="Elige cómo crear tu ruta" tone="yellow">
               {error && (
-                <p className="form__error" role="alert">
-                  {error.message}{' '}
-                  {error instanceof AiError && (error.code === 'invalid_key' || error.code === 'model') && (
-                    <button type="button" className="link" onClick={() => openModal({ type: 'ai' })}>
-                      Revisar mi clave
-                    </button>
+                <div className="form__error" role="alert">
+                  <p>
+                    {error.message}{' '}
+                    {error instanceof AiError && (error.code === 'invalid_key' || error.code === 'model') && (
+                      <button type="button" className="link" onClick={() => openModal({ type: 'ai' })}>
+                        Revisar mi clave
+                      </button>
+                    )}
+                  </p>
+                  {error instanceof AiError && (error.code === 'rate_limited' || error.code === 'model') && (
+                    <div className="row">
+                      <span className="small">Prueba con otro modelo gratuito:</span>
+                      {FREE_MODELS.filter((m) => m.id !== model)
+                        .slice(0, 4)
+                        .map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            className="chip chip--sm"
+                            onClick={() => {
+                              useAi.getState().setModel(m.id);
+                              void generate();
+                            }}
+                          >
+                            {m.name.replace('Gemini ', '')}
+                          </button>
+                        ))}
+                    </div>
                   )}
-                </p>
+                </div>
               )}
               {generating && (
                 <div ref={waitRef}>
@@ -281,9 +308,22 @@ export default function Planificador() {
                 </div>
               )}
               {apiKey && !generating ? (
-                <Button variant="primary" block disabled={!canNext || weekTotal(week) === 0} onClick={() => void generate()}>
-                  ✨ Generar con IA
-                </Button>
+                <>
+                  <Button variant="primary" block disabled={!canNext || weekTotal(week) === 0} onClick={() => void generate()}>
+                    ✨ Generar con IA
+                  </Button>
+                  <label className="modelpick">
+                    <span className="muted small">Modelo</span>
+                    <select className="input input--inline" value={model} onChange={(e) => useAi.getState().setModel(e.target.value)} aria-label="Modelo de Gemini">
+                      {!isFreeModel(model) && <option value={model}>{model}</option>}
+                      {FREE_MODELS.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
               ) : !apiKey ? (
                 <div className="ai__cta">
                   <p className="muted small">Con la IA puedes planificar <b>cualquier objetivo</b>. Se activa con tu propia clave gratuita de Google.</p>
@@ -321,7 +361,7 @@ export default function Planificador() {
             <Panel
               kicker={source === 'ai' ? '// Ruta generada con IA' : source === 'manual' ? '// Tu ruta' : '// Ruta de plantilla'}
               title="Edita tu ruta"
-              right={<Tag tone={source === 'ai' ? 'green' : 'plain'}>{source === 'ai' ? '✨ Gemini' : source === 'manual' ? '✍ Hecha por ti' : 'Plantilla'}</Tag>}
+              right={<Tag tone={source === 'ai' ? 'green' : 'plain'}>{source === 'ai' ? `✨ ${modelName(lastUsed ?? model)}` : source === 'manual' ? '✍ Hecha por ti' : 'Plantilla'}</Tag>}
             >
               {roadmap.summary && <p className="muted">{roadmap.summary}</p>}
               <p className="muted small">Cambia lo que quieras: nombres, horas, el orden, y añade o quita módulos, temas y pasos. El calendario se recalcula solo.</p>

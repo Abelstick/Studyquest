@@ -62,9 +62,50 @@ svg {
   image-rendering: pixelated;
   flex: none;
 }
+/*
+ * Foco de teclado en DOS anillos. Con uno solo, el azul desaparecía sobre el ladrillo rojo de la
+ * barra lateral (1.15:1) y no se veía dónde estabas. Con el par, siempre contrasta uno de los dos.
+ */
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--focus-ink);
+}
+/* Sobre el ladrillo y el HUD el amarillo manda: contrasta con ambos y es el color del mundo. */
+.sidebar :focus-visible,
+.hud :focus-visible,
+.bottom-nav :focus-visible {
+  --focus: var(--yellow);
+  --focus-ink: #1a1a2e;
+}
+
+/* ===== Barra de scroll con aspecto de riel de nivel ===== */
+* {
+  scrollbar-color: var(--rail-thumb) var(--rail);
+  scrollbar-width: thin;
+}
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--rail);
+  border-left: 2px solid var(--line);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--rail-thumb);
+  border: 2px solid var(--line);
+  /* Dos muescas, como el agarre de un bloque. */
+  background-image: linear-gradient(var(--line) 0 2px, transparent 2px), linear-gradient(var(--line) 0 2px, transparent 2px);
+  background-position: center 8px, center 14px;
+  background-size: 6px 2px;
+  background-repeat: no-repeat;
+}
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.12);
+}
+::-webkit-scrollbar-corner {
+  background: var(--rail);
 }
 ::selection {
   background: var(--yellow);
@@ -221,30 +262,81 @@ svg {
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
+/* Rótulo de cada tramo del menú: 14 destinos seguidos no se leen, por tramos sí. */
+.nav__group {
+  margin: 10px 2px 2px;
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--side-label);
+}
+.nav__group:first-child {
+  margin-top: 0;
+}
+/*
+ * Cada destino es un bloque del muro: tiene su propia placa para que el texto no flote sobre la
+ * textura de ladrillo, se levanta al pasar por encima y se hunde al pulsarlo.
+ */
 .nav__link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px;
+  padding: 9px 11px;
   color: var(--side-text);
   font-family: var(--font-pixel);
   font-size: 10px;
+  line-height: 1.4;
   text-transform: uppercase;
-  border: var(--bw) solid transparent;
-  transition: transform 0.08s steps(2);
+  background: var(--side-plate);
+  border: 2px solid transparent;
+  /* Cara biselada de bloque: luz arriba, sombra abajo. Es el relieve del mundo, no una pestaña de color. */
+  box-shadow: inset 0 2px 0 var(--side-edge), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+  transition: transform 0.08s steps(2), background-color 0.08s steps(2), box-shadow 0.08s steps(2);
+}
+.nav__link .sprite {
+  transition: transform 0.12s steps(3);
 }
 .nav__link:hover {
-  background: rgba(0, 0, 0, 0.25);
-  border-color: rgba(0, 0, 0, 0.5);
+  background: var(--side-plate-hi);
+  border-color: var(--line);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.28), var(--sh-sm);
+  transform: translate(2px, -2px);
+}
+.nav__link:hover .sprite {
+  transform: translateY(-2px);
+}
+.nav__link:active {
+  transform: translate(2px, 1px);
+  box-shadow: none;
 }
 .nav__link.is-active {
   background: var(--yellow);
   color: #1a1a2e;
   border-color: var(--line);
-  box-shadow: var(--sh-sm);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), var(--sh-sm);
   transform: translateX(4px);
+}
+/* El bloque activo se golpea una vez al llegar, como un bloque «?». */
+.nav__link.is-active .sprite {
+  animation: block-hit 0.28s steps(4) 1;
+}
+.nav__link.is-active:hover {
+  transform: translate(4px, -2px);
+}
+@keyframes block-hit {
+  0% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 .challenge {
   margin-top: auto;

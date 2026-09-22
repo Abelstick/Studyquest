@@ -242,17 +242,25 @@
   line-height: 1.3;
   text-transform: uppercase;
   text-align: center;
-  transition: transform 0.05s steps(2), box-shadow 0.05s steps(2);
+  transition: transform 0.07s steps(2), box-shadow 0.07s steps(2), filter 0.07s steps(2);
 }
 a.btn {
   color: var(--fg);
 }
+/* Gramática de todo el juego: al pasar por encima el bloque se levanta, al pulsarlo se hunde. */
 .btn:hover:not(:disabled) {
   filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--shadow);
 }
 .btn:active:not(:disabled) {
   transform: translateY(3px);
   box-shadow: 0 1px 0 var(--shadow);
+  filter: brightness(0.96);
+}
+.btn--plain:hover:not(:disabled),
+.btn--plain:active:not(:disabled) {
+  box-shadow: none;
 }
 .btn:disabled {
   opacity: 0.5;
@@ -365,10 +373,15 @@ a.btn {
 }
 .tag--btn {
   cursor: pointer;
+  transition: transform 0.07s steps(2), border-color 0.07s steps(2), color 0.07s steps(2);
 }
 .tag--btn:hover {
   border-color: var(--line);
   color: var(--text);
+  transform: translateY(-1px);
+}
+.tag--btn:active {
+  transform: translateY(1px);
 }
 .chips {
   display: flex;
@@ -383,9 +396,18 @@ a.btn {
   font-weight: 800;
   font-size: 13px;
 }
+.chip {
+  transition: transform 0.07s steps(2), border-color 0.07s steps(2), color 0.07s steps(2), box-shadow 0.07s steps(2);
+}
 .chip:hover {
   border-color: var(--line);
   color: var(--text);
+  transform: translateY(-2px);
+  box-shadow: var(--sh-sm);
+}
+.chip:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 .chip.is-on {
   background: var(--yellow);
@@ -415,6 +437,16 @@ a.btn {
 }
 .seg__opt + .seg__opt {
   border-left: 2px solid var(--line-soft);
+}
+.seg__opt {
+  transition: background-color 0.07s steps(2), color 0.07s steps(2);
+}
+.seg__opt:hover:not(.is-on) {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.seg__opt:active {
+  transform: translateY(1px);
 }
 .seg__opt.is-on {
   background: var(--red);

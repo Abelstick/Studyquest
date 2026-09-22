@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Fragment, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { dataLayer, useData } from '@/state';
 import { useUi } from '@/state/ui';
@@ -8,7 +8,7 @@ import { Avatar } from '@/ui/Avatar';
 import { Loader } from '@/ui/Loader';
 import { Bar, Button, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
-import { NAV, navFor } from './nav';
+import { NAV, NAV_GROUPS, navFor } from './nav';
 import { Overlays } from './Overlays';
 import { useOnline, useSyncPending } from '@/pwa/hooks';
 import { useHabitReminders } from '@/pwa/useHabitReminders';
@@ -96,12 +96,17 @@ function Sidebar() {
         </div>
 
         <nav className="nav">
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => cx('nav__link', isActive && 'is-active')} onClick={() => setNavOpen(false)}>
-              <Sprite name={n.sprite} size={20} />
-              <span>{n.label}</span>
-              {n.to === '/repaso' && dueCount > 0 && <span className="badge badge--nav">{dueCount}</span>}
-            </NavLink>
+          {NAV_GROUPS.map((group) => (
+            <Fragment key={group}>
+              <p className="nav__group">{group}</p>
+              {NAV.filter((n) => n.group === group).map((n) => (
+                <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => cx('nav__link', isActive && 'is-active')} onClick={() => setNavOpen(false)}>
+                  <Sprite name={n.sprite} size={20} />
+                  <span>{n.label}</span>
+                  {n.to === '/repaso' && dueCount > 0 && <span className="badge badge--nav">{dueCount}</span>}
+                </NavLink>
+              ))}
+            </Fragment>
           ))}
         </nav>
 

@@ -2138,3 +2138,81 @@ select.input {
     flex-wrap: wrap;
   }
 }
+
+/* ---------- Micro-interacciones: todo lo pulsable responde con el mismo gesto ---------- */
+/* La casilla de misión es un bloque «?» esperando el golpe. */
+.check {
+  transition: transform 0.07s steps(2), box-shadow 0.07s steps(2), filter 0.07s steps(2);
+}
+.check:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--shadow);
+}
+.check:not(:empty):hover {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+/* Al completarla, el sello cae de golpe una sola vez. */
+.check:not(:empty) {
+  animation: stamp 0.18s steps(3) 1;
+}
+@keyframes stamp {
+  0% {
+    transform: translateY(-6px) scale(1.15);
+  }
+  100% {
+    transform: translateY(3px) scale(1);
+  }
+}
+
+/* Módulos de un curso, nodos de proyecto y solares de la ciudad: se levantan al apuntarlos. */
+.module,
+.track__node,
+.plot,
+.citymini__b {
+  transition: transform 0.08s steps(2), box-shadow 0.08s steps(2), border-color 0.08s steps(2);
+}
+.module:hover:not(.module--locked) {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--sh);
+}
+.module:active:not(.module--locked) {
+  transform: translate(0, 0);
+  box-shadow: none;
+}
+.track__node:hover {
+  transform: rotate(45deg) scale(1.12);
+}
+.plot:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-3px);
+}
+.plot:active {
+  transform: translateY(0);
+}
+.citymini__b:hover {
+  transform: translateY(-3px);
+}
+
+/* Filas de tarea y misión: un realce sobrio, que se leen más que se pulsan. */
+.task {
+  transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+}
+.task:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--shadow);
+}
+.mission {
+  transition: background-color 0.08s steps(2);
+}
+.mission:hover {
+  background: var(--panel-2);
+}
+.cert {
+  transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+}
+.cert:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--shadow);
+}

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MemoryStorage, createLocalRepository } from '../local';
 import type { AuthPort, DataLayer, Repository } from '../ports';
-import { MemoryQueueStorage, isNetworkError, methodNames, withOfflineQueue } from './index';
+import { MemoryQueueStorage, NEVER_QUEUED, READS, WRITES, isNetworkError, methodNames, withOfflineQueue } from './index';
 import type { Task } from '@/core/domain';
 
 const task = (id: string, title = id): Task => ({
@@ -50,6 +50,25 @@ const auth = (uid: string | null): AuthPort => ({
   signInWithGoogle: async () => {},
   signOut: async () => {},
 });
+
+/**
+ * Métodos que expone el puerto `Repository`, para comprobar que la cola offline los clasifica todos.
+ * TypeScript obliga a listarlos TODOS: si se añade uno al puerto y no se clasifica, esto no compila.
+ */
+type Namespaces = Omit<Repository, 'wipe' | 'push' | 'secrets'>;
+const PORT_METHODS: { [K in keyof Namespaces]: Record<keyof Namespaces[K], true> } = {
+  profile: { get: true, save: true, update: true },
+  tasks: { list: true, create: true, createMany: true, update: true, remove: true },
+  habits: { list: true, create: true, createMany: true, update: true, remove: true },
+  habitLogs: { list: true, upsert: true, createMany: true, removeByHabit: true },
+  courses: { list: true, create: true, createMany: true, update: true, remove: true },
+  goals: { list: true, create: true, createMany: true, update: true, remove: true },
+  projects: { list: true, create: true, createMany: true, update: true, remove: true },
+  personalRewards: { list: true, create: true, createMany: true, update: true, remove: true },
+  sessions: { list: true, create: true, createMany: true, remove: true },
+  xpEvents: { list: true, create: true, createMany: true },
+  notifications: { list: true, create: true, createMany: true, update: true, markAllRead: true },
+};
 
 let net: Net;
 let real: Repository;
@@ -115,6 +134,28 @@ describe('cola de escritura offline', () => {
     net.offline = false;
     await layer.sync!.flush();
     expect(await real.habitLogs.list()).toHaveLength(1);
+  });
+
+  it('borrar los registros de un hábito viaja por la cola', async () => {
+    await real.habitLogs.createMany([
+      { id: 'l1', habitId: 'h', date: '2026-09-20', value: 1, stepsDone: [] },
+      { id: 'l2', habitId: 'otro', date: '2026-09-20', value: 1, stepsDone: [] },
+    ]);
+    net.offline = true;
+    await layer.repo.habitLogs.removeByHabit('h');
+    expect(await real.habitLogs.list()).toHaveLength(2); // todavía no se ha enviado
+    net.offline = false;
+    await layer.sync!.flush();
+    expect((await real.habitLogs.list()).map((l) => l.id)).toEqual(['l2']);
+  });
+
+  it('todo método del puerto está clasificado como lectura o escritura (si no, se saltaría la cola sin avisar)', () => {
+    const sinClasificar: string[] = [];
+    for (const [ns, methods] of Object.entries(PORT_METHODS)) {
+      if (NEVER_QUEUED.has(ns)) continue;
+      for (const m of Object.keys(methods)) if (!WRITES.has(m) && !READS.has(m)) sinClasificar.push(`${ns}.${m}`);
+    }
+    expect(sinClasificar).toEqual([]);
   });
 
   it('un rechazo del servidor (no de red) descarta ese cambio y sigue con el resto', async () => {

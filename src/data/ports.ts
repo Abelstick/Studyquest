@@ -31,6 +31,8 @@ export interface Repository {
     /** Un registro por hábito y día: si existe, se sobrescribe. */
     upsert(log: HabitLog): Promise<HabitLog>;
     createMany(logs: HabitLog[]): Promise<void>;
+    /** Borra de golpe todos los registros de un hábito (al borrar el hábito). */
+    removeByHabit(habitId: ID): Promise<void>;
   };
   courses: Collection<Course>;
   goals: Collection<Goal>;

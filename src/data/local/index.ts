@@ -112,6 +112,9 @@ export function createLocalRepository(storage: KeyValueStorage): Repository {
         return saved;
       },
       createMany: (items) => logs.createMany(items),
+      async removeByHabit(habitId) {
+        for (const l of (await logs.list()).filter((x) => x.habitId === habitId)) await logs.remove(l.id);
+      },
     },
     courses,
     goals,

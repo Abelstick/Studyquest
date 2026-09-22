@@ -18,11 +18,11 @@ import { createQueueStorage, type QueueStorage, type QueuedOp } from './storage'
 
 export { MemoryQueueStorage, type QueueStorage, type QueuedOp } from './storage';
 
-const WRITES = new Set(['create', 'createMany', 'update', 'remove', 'upsert', 'save', 'markAllRead']);
-const READS = new Set(['get', 'list']);
+export const WRITES = new Set(['create', 'createMany', 'update', 'remove', 'removeByHabit', 'upsert', 'save', 'markAllRead']);
+export const READS = new Set(['get', 'list']);
 /** Espacios de nombres que nunca se encolan (requieren conexión). */
 // Cosas del dispositivo/cuenta que no deben esperar en la cola de escritura ni encolarse: se intentan al momento.
-const NEVER_QUEUED = new Set(['push', 'secrets']);
+export const NEVER_QUEUED = new Set(['push', 'secrets']);
 
 /** Métodos de un objeto, incluidos los del prototipo (los adaptadores son clases: `Object.entries` no los ve). */
 export const methodNames = (obj: object): string[] => {

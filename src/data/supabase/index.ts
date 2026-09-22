@@ -166,6 +166,10 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
           fail(error);
         }
       },
+      removeByHabit: async (habitId) => {
+        const { error } = await db.from('habit_logs').delete().eq('user_id', await uid()).eq('habit_id', habitId);
+        fail(error);
+      },
     },
     courses,
     goals,

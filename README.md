@@ -503,7 +503,7 @@ if (provider === 'pocketbase') return createPocketBaseDataLayer(env.VITE_POCKETB
 
 **3.** Pon `VITE_DATA_PROVIDER=pocketbase` y listo. El store, las pantallas y las reglas de juego no cambian. [`src/data/local/local.test.ts`](src/data/local/local.test.ts) sirve de modelo para probar el adaptador nuevo.
 
-Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por hábito y día**; `create` debe ser **idempotente** por id; y `wipe()` debe borrar todo lo del usuario. `repo.push` es opcional (solo si tu backend puede enviar recordatorios). Si tu backend es remoto, envuélvelo con `withOfflineQueue(...)` en `data/index.ts` y ganas el trabajo sin conexión gratis. Las copias de seguridad JSON funcionan con cualquier adaptador y permiten llevarte tus datos de uno a otro.
+Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por hábito y día**; `habitLogs.removeByHabit` borra de golpe el historial de un hábito (al borrarlo); `create` debe ser **idempotente** por id (se usa también para guardar cambios en lote); y `wipe()` debe borrar todo lo del usuario. `repo.push` es opcional (solo si tu backend puede enviar recordatorios). Si tu backend es remoto, envuélvelo con `withOfflineQueue(...)` en `data/index.ts` y ganas el trabajo sin conexión gratis. Las copias de seguridad JSON funcionan con cualquier adaptador y permiten llevarte tus datos de uno a otro.
 
 ## Modelo de datos
 

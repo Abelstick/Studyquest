@@ -73,7 +73,7 @@ export function CourseModal({ id }: { id?: string }) {
           </Button>
           <Button onClick={close}>Cancelar</Button>
           {editing && (
-            <Button variant="danger" className="push-right" onClick={() => openModal({ type: 'confirm', title: 'Borrar curso', body: `Se eliminará "${editing.title}" con todos sus módulos y temas.`, confirmLabel: 'Borrar', onConfirm: () => deleteCourse(editing.id) })}>
+            <Button variant="danger" className="push-right" onClick={() => openModal({ type: 'confirm', title: 'Borrar curso', body: `Se eliminará "${editing.title}" con todos sus módulos, temas y tareas.`, confirmLabel: 'Borrar', onConfirm: () => deleteCourse(editing.id) })}>
               Borrar
             </Button>
           )}

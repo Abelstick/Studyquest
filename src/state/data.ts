@@ -388,7 +388,13 @@ export function createDataStore(repo: Repository) {
         run((s) => ({ habits: s.habits.map((h) => (h.id === id ? { ...h, ...patch } : h)) }), () => repo.habits.update(id, patch));
       },
       deleteHabit(id) {
-        run((s) => ({ habits: s.habits.filter((h) => h.id !== id), habitLogs: s.habitLogs.filter((l) => l.habitId !== id) }), () => repo.habits.remove(id));
+        run(
+          (s) => ({ habits: s.habits.filter((h) => h.id !== id), habitLogs: s.habitLogs.filter((l) => l.habitId !== id) }),
+          async () => {
+            await repo.habits.remove(id);
+            await repo.habitLogs.removeByHabit(id); // si no, sus registros quedarían huérfanos en la base
+          },
+        );
       },
       setHabitValue(habitId, rawValue) {
         const h = get().habits.find((x) => x.id === habitId);
@@ -427,7 +433,23 @@ export function createDataStore(repo: Repository) {
         run((s) => ({ courses: s.courses.map((c) => (c.id === id ? { ...c, ...patch } : c)) }), () => repo.courses.update(id, patch));
       },
       deleteCourse(id) {
-        run((s) => ({ courses: s.courses.filter((c) => c.id !== id), sessions: s.sessions.map((x) => (x.courseId === id ? { ...x, courseId: null } : x)) }), () => repo.courses.remove(id));
+        // Las tareas de ese curso (creadas a mano o por el planificador) ya no tienen sentido sin él: se borran con él.
+        // Las sesiones de estudio pasadas sí se conservan (son historial), solo se desvinculan del curso.
+        const taskIds = get().tasks.filter((t) => t.courseId === id).map((t) => t.id);
+        const freed = get().sessions.filter((x) => x.courseId === id).map((x) => ({ ...x, courseId: null }));
+        run(
+          (s) => ({
+            courses: s.courses.filter((c) => c.id !== id),
+            tasks: s.tasks.filter((t) => t.courseId !== id),
+            sessions: s.sessions.map((x) => (x.courseId === id ? { ...x, courseId: null } : x)),
+          }),
+          async () => {
+            await repo.courses.remove(id);
+            await Promise.all(taskIds.map((tid) => repo.tasks.remove(tid)));
+            // `create` es idempotente (un upsert por id), así que guarda de golpe las sesiones ya desvinculadas.
+            if (freed.length) await repo.sessions.createMany(freed);
+          },
+        );
       },
       addModule(courseId, title) {
         mutateCourse(courseId, (c) => ({ ...c, modules: [...c.modules, { id: newId(), title, summary: '', xp: 200, topics: [] }] }));

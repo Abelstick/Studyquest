@@ -288,6 +288,50 @@ describe('store de datos', () => {
     });
   });
 
+  describe('cursos', () => {
+    it('borrar un curso borra también sus tareas, pero solo desvincula sus sesiones de estudio', async () => {
+      store.getState().createCourse({ title: 'C', professor: '', field: '', mentor: null, modules: [] });
+      const courseId = store.getState().courses[0].id;
+      store.getState().createTask(draft({ title: 'Del curso', courseId }));
+      store.getState().createTask(draft({ title: 'Suelta', courseId: null }));
+      store.getState().logSession({ minutes: 30, courseId });
+      const sessionId = store.getState().sessions[0].id;
+
+      store.getState().deleteCourse(courseId);
+
+      expect(store.getState().courses).toHaveLength(0);
+      expect(store.getState().tasks.map((t) => t.title)).toEqual(['Suelta']);
+      expect(store.getState().sessions).toHaveLength(1);
+      expect(store.getState().sessions[0].courseId).toBeNull();
+
+      await flush();
+      expect(await repo.courses.list()).toHaveLength(0);
+      expect((await repo.tasks.list()).map((t) => t.title)).toEqual(['Suelta']);
+      const saved = (await repo.sessions.list()).filter((s) => s.id === sessionId);
+      expect(saved).toHaveLength(1); // la sesión se conserva como historial…
+      expect(saved[0].courseId).toBeNull(); // …pero desvinculada también en la base, no solo en pantalla
+    });
+  });
+
+  describe('hábitos', () => {
+    it('borrar un hábito borra también sus registros, en pantalla y en la base', async () => {
+      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+      store.getState().createHabit({ title: 'Correr', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+      const [leer, correr] = store.getState().habits.map((h) => h.id);
+      store.getState().setHabitValue(leer, 1);
+      store.getState().setHabitValue(correr, 1);
+      await flush();
+      expect(await repo.habitLogs.list()).toHaveLength(2);
+
+      store.getState().deleteHabit(leer);
+
+      expect(store.getState().habitLogs.map((l) => l.habitId)).toEqual([correr]);
+      await flush();
+      expect((await repo.habits.list()).map((h) => h.title)).toEqual(['Correr']);
+      expect((await repo.habitLogs.list()).map((l) => l.habitId)).toEqual([correr]);
+    });
+  });
+
   describe('repaso espaciado', () => {
     const setup = () => {
       store.getState().createCourse({ title: 'C', professor: '', field: '', mentor: null, modules: [{ id: 'm1', title: 'M', summary: '', xp: 100, topics: [{ id: 't1', title: 'Tema', status: 'done', review: false, markedAt: null }] }] });

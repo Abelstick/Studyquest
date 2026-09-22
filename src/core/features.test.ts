@@ -14,6 +14,7 @@ import { buildBackup, parseBackup } from './backup';
 import { buildDemo } from './seed';
 import { defaultProfile } from './game';
 import { CONCEPTS, CONCEPT_ORDER, EXAMPLE_CHAINS, FAQ, QUIZ } from './concepts';
+import { isReadyToFinish, missionParts, type Mission } from './missions';
 
 const NOW = '2026-09-16'; // miércoles
 
@@ -353,5 +354,52 @@ describe('guía de conceptos (tareas, hábitos, metas y proyectos)', () => {
     expect(qs).toMatch(/repite/);
     expect(qs).toMatch(/Meta o proyecto/);
     expect(FAQ.every((f) => f.a.length > 20)).toBe(true);
+  });
+});
+
+describe('desglose de las misiones del inicio', () => {
+  const taskMission = (t: Task): Mission => ({ kind: 'task', id: `t:${t.id}`, title: t.title, subtitle: '', xp: t.xp, done: t.status === 'done', task: t });
+  const habitMission = (h: Habit, done = false): Mission => ({ kind: 'habit', id: `h:${h.id}`, title: h.title, subtitle: '', xp: h.xp, done, habit: h });
+  const withSteps = (): Habit => ({ ...habit('h1'), steps: [{ id: 's1', title: 'Calentar', minutes: 5 }, { id: 's2', title: 'Tocar', minutes: 10 }] });
+
+  it('una tarea aporta sus subtareas', () => {
+    const m = taskMission(task({ subtasks: [{ id: 'a', title: 'Uno', done: true }, { id: 'b', title: 'Dos', done: false }] }));
+    expect(missionParts(m, [])).toEqual([
+      { id: 'a', title: 'Uno', done: true },
+      { id: 'b', title: 'Dos', done: false },
+    ]);
+  });
+
+  it('un hábito aporta los pasos de HOY, no los de otro día', () => {
+    const h = withSteps();
+    const logs = [
+      { id: 'l1', habitId: 'h1', date: NOW, value: 0, stepsDone: ['s1'] },
+      { id: 'l2', habitId: 'h1', date: '2026-09-15', value: 0, stepsDone: ['s1', 's2'] },
+    ];
+    expect(missionParts(habitMission(h), logs, NOW).map((p) => p.done)).toEqual([true, false]);
+  });
+
+  it('sin registro de hoy, ningún paso está hecho', () => {
+    expect(missionParts(habitMission(withSteps()), [], NOW).every((p) => !p.done)).toBe(true);
+  });
+
+  it('una misión sin desglose no tiene partes', () => {
+    expect(missionParts(taskMission(task()), [])).toEqual([]);
+    expect(missionParts(habitMission(habit('h2')), [])).toEqual([]);
+  });
+
+  it('con todo el desglose hecho queda «lista», pero solo si sigue abierta', () => {
+    const subtasks = [{ id: 'a', title: 'Uno', done: true }, { id: 'b', title: 'Dos', done: true }];
+    const abierta = taskMission(task({ subtasks }));
+    expect(isReadyToFinish(abierta, missionParts(abierta, []))).toBe(true);
+    const cerrada = taskMission(task({ subtasks, status: 'done' }));
+    expect(isReadyToFinish(cerrada, missionParts(cerrada, []))).toBe(false);
+  });
+
+  it('con el desglose a medias no está lista, y sin desglose tampoco (no hay nada que resaltar)', () => {
+    const media = taskMission(task({ subtasks: [{ id: 'a', title: 'Uno', done: true }, { id: 'b', title: 'Dos', done: false }] }));
+    expect(isReadyToFinish(media, missionParts(media, []))).toBe(false);
+    const sinPartes = taskMission(task());
+    expect(isReadyToFinish(sinPartes, missionParts(sinPartes, []))).toBe(false);
   });
 });

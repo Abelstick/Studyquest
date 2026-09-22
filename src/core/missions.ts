@@ -1,4 +1,4 @@
-import type { Habit, ISODate, Snapshot, Task } from './domain';
+import type { Habit, HabitLog, ISODate, Snapshot, Task } from './domain';
 import { diffDays, today } from './dates';
 import { computeStreak, frequencyLabel, goalLabel, isDueOn, isHabitDone, logFor } from './game';
 import { lastActivityByCourse, weeklyReport } from './stats';
@@ -9,6 +9,26 @@ export type Mission =
   | { kind: 'habit'; id: string; title: string; subtitle: string; xp: number; done: boolean; habit: Habit };
 
 const MAX_MISSIONS = 6;
+
+/** Un paso del desglose de una misión: una subtarea de la tarea o un paso de la sesión del hábito. */
+export interface MissionPart {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+/** Desglose de la misión, para poder marcarlo sin salir del inicio. */
+export function missionParts(m: Mission, logs: HabitLog[], now: ISODate = today()): MissionPart[] {
+  if (m.kind === 'task') return m.task.subtasks.map((s) => ({ id: s.id, title: s.title, done: s.done }));
+  const done = new Set(logFor(logs, m.habit.id, now)?.stepsDone ?? []);
+  return m.habit.steps.map((s) => ({ id: s.id, title: s.title, done: done.has(s.id) }));
+}
+
+/**
+ * Desglose terminado pero misión aún abierta. No la cerramos sola (salvo los jefes, que ya lo hacen
+ * al último golpe): se resalta para que la des por terminada tú.
+ */
+export const isReadyToFinish = (m: Mission, parts: MissionPart[]): boolean => parts.length > 0 && parts.every((p) => p.done) && !m.done;
 
 /** Misión del día: hábitos que tocan hoy + las tareas más urgentes. */
 export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {

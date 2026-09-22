@@ -59,7 +59,7 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 
 | Pantalla | Qué hace |
 | --- | --- |
-| **Inicio** | Misión del día (hábitos que tocan + tareas más urgentes), nivel y XP, calendario de racha, informe semanal, consejos y repasos pendientes. |
+| **Inicio** | Misión del día (hábitos que tocan + tareas más urgentes), **con su desglose desplegable**: marca ahí mismo las subtareas de una tarea o los pasos de un hábito. Además nivel y XP, calendario de racha, informe semanal, consejos y repasos pendientes. |
 | **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Marca temas como «necesito repasar». |
 | **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha límite, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
 | **Planificador** | Le dices «quiero aprender análisis de datos en 3 meses» y genera la ruta (Excel → SQL → Python → Pandas → Power BI → proyecto final) y **un plan con fechas** según tu disponibilidad, tus tareas y tus hábitos. Con **IA (Gemini, gratis)** o con plantillas. |
@@ -398,6 +398,8 @@ Pantalla **Ciudad** (y un resumen en Inicio). Cada área de la app es un edifici
 **Calendario.** Tareas por fecha límite (color por prioridad, ↻ las repetidas, tachadas las hechas), repeticiones futuras proyectadas y repasos. Pulsa un día para ver su detalle y crear una tarea con esa fecha; arrastra una tarea a otro día para moverla.
 
 **Tareas recurrentes.** En el formulario, *Repetir*: cada N días, semanas o meses. Al completarla **nace la siguiente**, con su nueva fecha y sin avance. La fecha sigue el calendario original pero nunca cae en el pasado (completar tarde no crea una cola de atrasadas; 31 ene + 1 mes = 28/29 feb). Si la reabres y nadie tocó la siguiente, esta se retira.
+
+**Desglose y «listo para completar».** Las tareas con subtareas y los hábitos con pasos de sesión se despliegan en Inicio y en Tareas, y se marcan sin abrir nada más. Cuando marcas el último, la tarea **no se cierra sola**: se resalta en verde con un aviso y su botón pasa a «✔ Completar», para que decidas tú cuándo darla por terminada (y cuándo cobrar el XP). La excepción son los jefes finales, que sí caen con el último golpe.
 
 **Jefes finales.** Una tarea con prioridad *Jefe final* y subtareas es una batalla: **cada subtarea es un golpe** y le quita un corazón. Al caer el último, el jefe se derrota solo: pantalla de **victoria**, su XP y un **botín extra de +50 XP**. Reabrir el jefe le devuelve toda la vida.
 

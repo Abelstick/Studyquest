@@ -33,10 +33,12 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
   const [open, setOpen] = useState(boss && task.status !== 'done');
   const next = NEXT[task.status];
   const hp = bossHp(task);
+  // Subtareas todas hechas: no se cierra sola, pero se nota que solo falta pulsar «Completar».
+  const ready = task.subtasks.length > 0 && doneSubs === task.subtasks.length && task.status !== 'done';
 
   return (
     <article
-      className={cx('task', `task--${task.priority}`, task.status === 'done' && 'is-done', boss && hp.hp === 0 && 'is-defeated')}
+      className={cx('task', `task--${task.priority}`, task.status === 'done' && 'is-done', boss && hp.hp === 0 && 'is-defeated', ready && 'is-ready')}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData('text/plain', task.id);
@@ -72,7 +74,7 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
         <span className="tag tag--plain">{PRIORITY_LABEL[task.priority]}</span>
         {task.recurrence && <span className="tag tag--blue" title="Al completarla se crea la siguiente">↻ {recurrenceLabel(task.recurrence)}</span>}
         {task.subtasks.length > 0 && (
-          <button type="button" className="tag tag--plain tag--btn" onClick={() => setOpen(!open)} aria-expanded={open}>
+          <button type="button" className={cx('tag tag--btn', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open}>
             {doneSubs}/{task.subtasks.length} {boss ? 'golpes' : 'subtareas'} {open ? '−' : '+'}
           </button>
         )}
@@ -89,9 +91,11 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
           ))}
         </ul>
       )}
+      {ready && <p className="task__ready">✔ Todo el desglose hecho: solo falta darla por terminada.</p>}
       <div className="task__actions">
-        <Button variant={task.status === 'doing' ? 'primary' : 'ghost'} small block onClick={() => setTaskStatus(task.id, next.to)}>
-          {next.label}
+        {/* Con el desglose terminado el siguiente paso ya no es «empezar», sino cerrarla. */}
+        <Button variant={ready || task.status === 'doing' ? 'primary' : 'ghost'} small block onClick={() => setTaskStatus(task.id, ready ? 'done' : next.to)}>
+          {ready ? '✔ Completar' : next.label}
         </Button>
         <Button small onClick={() => openModal({ type: 'task', id: task.id })} aria-label={`Editar ${task.title}`}>
           Editar

@@ -2010,3 +2010,54 @@ select.input {
 .page {
   overflow-wrap: anywhere;
 }
+
+/* ---------- Desglose de una misión en Inicio (subtareas de la tarea o pasos del hábito) ---------- */
+.mission {
+  flex-wrap: wrap;
+}
+.mission__text {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+}
+.mission__more {
+  margin-top: 2px;
+}
+/* El desglose ocupa una fila propia, alineado bajo el texto de la misión. */
+.mission__subs {
+  flex-basis: 100%;
+  margin: 2px 0 4px 44px;
+}
+@media (max-width: 560px) {
+  .mission__subs {
+    margin-left: 0;
+  }
+}
+
+/* ---------- «Listo para completar»: todo el desglose hecho, falta cerrarla ---------- */
+.mission__ready,
+.task__ready {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--green-text);
+}
+.mission__ready {
+  flex-basis: 100%;
+  margin-left: 44px;
+}
+.task__ready {
+  margin: 2px 0 0;
+}
+/* La casilla de la misión pide que la pulses. */
+.check.is-ready {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 30%, transparent);
+}
+.task.is-ready {
+  border-color: var(--green);
+}
+@media (max-width: 560px) {
+  .mission__ready {
+    margin-left: 0;
+  }
+}

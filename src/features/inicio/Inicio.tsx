@@ -1,11 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
 import { computeStreak, isDueOn, levelProgress, rankFor, worldFor } from '@/core/game';
-import { dailyMissions, tips, type Mission } from '@/core/missions';
+import { dailyMissions, isReadyToFinish, missionParts, tips, type Mission } from '@/core/missions';
 import { dueReviews } from '@/core/review';
+import { isBoss } from '@/core/tasks';
 import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
 import { weeklyReport } from '@/core/stats';
 import type { Snapshot } from '@/core/domain';
@@ -20,20 +21,61 @@ import { useCity } from '@/features/ciudad/useCity';
 function MissionRow({ m }: { m: Mission }) {
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const setHabitValue = useData((s) => s.setHabitValue);
+  const toggleSubtask = useData((s) => s.toggleSubtask);
+  const toggleHabitStep = useData((s) => s.toggleHabitStep);
+  const logs = useData((s) => s.habitLogs);
   const toggle = () => {
     if (m.kind === 'task') setTaskStatus(m.task.id, m.done ? 'todo' : 'done');
     else setHabitValue(m.habit.id, m.done ? 0 : m.habit.target);
   };
+
+  // Desglose de la misión: las subtareas de la tarea o los pasos de hoy del hábito.
+  const parts = missionParts(m, logs);
+  const boss = m.kind === 'task' && isBoss(m.task) && parts.length > 0;
+  const noun = boss ? 'golpes' : m.kind === 'task' ? 'subtareas' : 'pasos';
+  const doneParts = parts.filter((p) => p.done).length;
+  // Los jefes enseñan sus puntos débiles desde el principio, como en Tareas.
+  const [open, setOpen] = useState(boss && !m.done);
+  const togglePart = (id: string) => (m.kind === 'task' ? toggleSubtask(m.task.id, id) : toggleHabitStep(m.habit.id, id));
+  // Con todo el desglose hecho no la damos por terminada sola: se resalta para que la cierres tú.
+  const ready = isReadyToFinish(m, parts);
+
   return (
-    <li className={cx('mission', m.done && 'is-done')}>
-      <button type="button" className="check" role="checkbox" aria-checked={m.done} aria-label={`${m.done ? 'Deshacer' : 'Completar'}: ${m.title}`} onClick={toggle}>
+    <li className={cx('mission', m.done && 'is-done', ready && 'is-ready')}>
+      <button
+        type="button"
+        className={cx('check', ready && 'is-ready')}
+        role="checkbox"
+        aria-checked={m.done}
+        aria-label={`${m.done ? 'Deshacer' : 'Completar'}: ${m.title}${ready ? ' (ya tienes todo el desglose hecho)' : ''}`}
+        title={ready ? '¡Todo listo! Pulsa para darla por terminada' : undefined}
+        onClick={toggle}
+      >
         {m.done ? '✔' : ''}
       </button>
       <div className="mission__text">
         <p className="mission__title">{m.title}</p>
         <p className="mission__sub">{m.subtitle}</p>
+        {parts.length > 0 && (
+          <button type="button" className={cx('tag tag--btn mission__more', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${open ? 'Ocultar' : 'Ver'} ${noun} de ${m.title}`}>
+            {doneParts}/{parts.length} {noun} {open ? '−' : '+'}
+          </button>
+        )}
       </div>
       <Tag tone={m.done ? 'plain' : 'xp'}>+{m.xp} XP</Tag>
+      {ready && <span className="mission__ready">¡Todo listo! Pulsa ✔ para terminarla.</span>}
+      {open && parts.length > 0 && (
+        <ul className="subtasks mission__subs">
+          {parts.map((p) => (
+            <li key={p.id}>
+              <label>
+                <input type="checkbox" checked={p.done} onChange={() => togglePart(p.id)} disabled={m.kind === 'task' && m.done} />
+                <span className={cx(p.done && 'is-struck')}>{p.title}</span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
     </li>
   );
 }

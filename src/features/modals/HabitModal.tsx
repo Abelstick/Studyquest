@@ -3,7 +3,7 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { newId, shortDate, today, WEEKDAYS_SHORT } from '@/core/dates';
 import type { Frequency, Habit, Measure } from '@/core/domain';
-import { Button, ChipGroup, Field, Modal, cx, linesToList } from '@/ui/kit';
+import { Button, ChipGroup, Field, Modal, cx, linesToList, TextInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
 
 const FREQS: { value: Frequency['type']; label: string }[] = [
@@ -113,7 +113,7 @@ export function HabitModal({ id }: { id?: string }) {
     <Modal title={editing ? 'Editar hábito' : 'Nuevo hábito'} kicker="// Habilidad pasiva" onClose={close} wide>
       <form onSubmit={submit} className="form">
         {!editing && <ConceptHint id="habito" />}
-        <Field label="Nombre">{(fid) => <input id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Estudiar Python" required maxLength={80} />}</Field>
+        <Field label="Nombre">{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Estudiar Python" required maxLength={80} />}</Field>
         <Field label="Frecuencia">{() => <ChipGroup label="Frecuencia" value={freq} options={FREQS} onChange={setFreq} />}</Field>
 
         {freq === 'days' && (

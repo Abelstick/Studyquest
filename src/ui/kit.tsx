@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, type ButtonHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import { useUi } from '@/state/ui';
 import { sfx } from '@/audio/sfx';
 import { Sprite } from './Sprite';
@@ -104,6 +104,66 @@ export function Field({ label, hint, children, className }: { label: string; hin
       {children(id)}
       {hint && <p className="field__hint">{hint}</p>}
     </div>
+  );
+}
+
+/**
+ * Campo de texto de una sola línea que **se ajusta en varias líneas** en vez de recortar lo escrito.
+ * Un `<input>` no puede partir el texto, así que en móvil un título largo se cortaba; esto es un textarea
+ * que crece con el contenido pero se comporta como un input: Enter envía el formulario (no crea saltos),
+ * y los saltos de línea pegados se convierten en espacios.
+ */
+export function TextInput({ className, onKeyDown, onPaste, onInput, value, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+  const fit = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight + (el.offsetHeight - el.clientHeight)}px`;
+  };
+  // Se reajusta al cambiar el texto y cuando cambia el ancho (giro de pantalla, teclado, modal que termina de abrirse).
+  useLayoutEffect(fit, [value]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    let w = el.clientWidth;
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth !== w) {
+        w = el.clientWidth;
+        fit();
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      className={cx(className, 'input--wrap')}
+      value={value}
+      onInput={(e) => {
+        fit();
+        onInput?.(e);
+      }}
+      onKeyDown={(e) => {
+        onKeyDown?.(e);
+        if (e.key === 'Enter' && !e.defaultPrevented && !e.shiftKey && !e.nativeEvent.isComposing) {
+          e.preventDefault();
+          e.currentTarget.form?.requestSubmit();
+        }
+      }}
+      onPaste={(e) => {
+        onPaste?.(e);
+        const text = e.clipboardData.getData('text');
+        if (e.defaultPrevented || !/[\r\n]/.test(text)) return;
+        e.preventDefault();
+        const el = e.currentTarget;
+        el.setRangeText(text.replace(/[\r\n]+/g, ' '), el.selectionStart, el.selectionEnd, 'end');
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }}
+      {...rest}
+    />
   );
 }
 

@@ -8,7 +8,7 @@ import { agoDays, diffDays, today } from '@/core/dates';
 import { reviewDueDate } from '@/core/review';
 import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
-import { Bar, Button, Panel, Tag, cx } from '@/ui/kit';
+import { Bar, Button, Panel, Tag, cx, TextInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { nextTopic } from './Cursos';
 
@@ -110,7 +110,7 @@ export default function CursoDetalle() {
               }
             }}
           >
-            <input className="input" value={moduleDraft} onChange={(e) => setModuleDraft(e.target.value)} placeholder="+ Añadir módulo" aria-label="Nuevo módulo" maxLength={80} />
+            <TextInput className="input" value={moduleDraft} onChange={(e) => setModuleDraft(e.target.value)} placeholder="+ Añadir módulo" aria-label="Nuevo módulo" maxLength={80} />
             <Button type="submit" disabled={!moduleDraft.trim()}>
               Añadir
             </Button>
@@ -160,7 +160,7 @@ export default function CursoDetalle() {
                   }
                 }}
               >
-                <input className="input" value={topicDraft} onChange={(e) => setTopicDraft(e.target.value)} placeholder="+ Añadir tema" aria-label="Nuevo tema" maxLength={100} />
+                <TextInput className="input" value={topicDraft} onChange={(e) => setTopicDraft(e.target.value)} placeholder="+ Añadir tema" aria-label="Nuevo tema" maxLength={100} />
                 <Button type="submit" disabled={!topicDraft.trim()}>
                   Añadir
                 </Button>

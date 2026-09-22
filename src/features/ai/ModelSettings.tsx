@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FREE_MODELS, isFreeModel, isModelId } from '@/ai/models';
 import { useAi } from '@/ai/store';
-import { cx } from '@/ui/kit';
+import { cx, TextInput } from '@/ui/kit';
 
 /**
  * Elegir el modelo de Gemini y si se cambia solo a otro cuando se agota la cuota. Solo se ofrecen los modelos con
@@ -34,7 +34,7 @@ export function ModelSettings() {
           <input type="radio" name="ai-model" checked={custom} onChange={() => isModelId(customDraft) && setModel(customDraft)} />
           <span>
             <b>Otro modelo</b>
-            <input
+            <TextInput
               className="input input--inline"
               value={customDraft}
               placeholder="p. ej. gemini-flash-latest"

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MAX_MODULES, MAX_TOPICS, type Roadmap, type RoadmapModule } from '@/core/planner';
-import { Button, Field, cx } from '@/ui/kit';
+import { Button, Field, cx, TextInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
 interface Props {
@@ -14,7 +14,7 @@ function ItemList({ items, label, addLabel, focusKey, onFocused, onChange }: { i
     <ul className="redit__items">
       {items.map((t, k) => (
         <li key={k}>
-          <input
+          <TextInput
             className="input input--inline"
             value={t}
             maxLength={80}
@@ -66,7 +66,7 @@ export function RouteEditor({ roadmap, onChange }: Props) {
 
   return (
     <div className="redit">
-      <Field label="Nombre de tu meta">{(id) => <input id={id} className="input" value={roadmap.goal} maxLength={120} onChange={(e) => onChange({ ...roadmap, goal: e.target.value })} placeholder="Aprender a bailar" />}</Field>
+      <Field label="Nombre de tu meta">{(id) => <TextInput id={id} className="input" value={roadmap.goal} maxLength={120} onChange={(e) => onChange({ ...roadmap, goal: e.target.value })} placeholder="Aprender a bailar" />}</Field>
 
       <ul className="route">
         {roadmap.modules.map((m, i) => (
@@ -75,7 +75,7 @@ export function RouteEditor({ roadmap, onChange }: Props) {
               <span className="route__icon">
                 <Sprite name="flag" size={22} />
               </span>
-              <input
+              <TextInput
                 className="input redit__title"
                 value={m.title}
                 maxLength={80}
@@ -110,7 +110,7 @@ export function RouteEditor({ roadmap, onChange }: Props) {
             <span className="route__icon">
               <Sprite name="boss" size={22} />
             </span>
-            <input
+            <TextInput
               className="input redit__title"
               value={roadmap.project.title}
               maxLength={80}

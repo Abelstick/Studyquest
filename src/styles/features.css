@@ -1862,3 +1862,151 @@
   width: 100%;
   margin: 4px 0;
 }
+
+/* ---------- Móvil: que ningún texto largo quede cortado ---------- */
+/* Campos de una línea que se parten en varias en vez de recortar lo escrito (ver TextInput en ui/kit). */
+.input--wrap,
+textarea.input.input--wrap {
+  display: block;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+textarea.input.input--wrap {
+  min-height: 44px;
+}
+textarea.input.input--inline.input--wrap {
+  min-height: 40px;
+}
+/* Cualquier texto de usuario puede ser larguísimo: que parta en vez de empujar el diseño. */
+.panel__title,
+.page-title,
+.kicker,
+.upper,
+.mission__title,
+.field__label,
+.field__hint,
+.tag,
+.btn,
+.chip,
+.pick__opt,
+.muted {
+  overflow-wrap: anywhere;
+}
+/* Las columnas de una rejilla no se ensanchan por una palabra larga. */
+.page-head__text {
+  grid-template-columns: minmax(0, 1fr);
+}
+.cols > *,
+.stack > * {
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  /* El título de la barra superior ya no se corta con «…»: pasa a dos líneas. */
+  .hud__h,
+  .player__name {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+}
+@media (max-width: 640px) {
+  /* Marcador del Perfil: sus celdas bajan de línea en vez de salirse del panel. */
+  .scoreboard {
+    flex-wrap: wrap;
+  }
+  .scoreboard > div {
+    flex: 1 1 96px;
+    min-width: 0;
+    box-shadow: inset 1px 0 0 #3a3a5c, inset 0 1px 0 #3a3a5c;
+  }
+  .scoreboard > div + div {
+    border-left: 0;
+  }
+  .scoreboard dt,
+  .scoreboard dd {
+    overflow-wrap: anywhere;
+  }
+  /* La columna del título (80-150px) es demasiado angosta para títulos reales:
+     el título pasa a su propia fila, ancho completo, y la barra queda debajo. */
+  .gantt__row {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'label' 'track' 'dates';
+    gap: 2px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px dashed var(--line-soft);
+  }
+  .gantt__row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .gantt__label {
+    grid-area: label;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.3;
+  }
+  .gantt__track {
+    grid-area: track;
+  }
+  .gantt__dates {
+    grid-area: dates;
+    grid-column: auto;
+  }
+}
+@media (max-width: 640px) {
+  /* Selectores segmentados (prioridad, estado…): si no caben en una fila, bajan a otra en lugar de salirse. */
+  .seg {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+    gap: 2px;
+    background: var(--line-soft);
+  }
+  .seg__opt {
+    background: var(--panel);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+  .seg__opt + .seg__opt {
+    border-left: 0;
+  }
+  .seg__opt.is-on {
+    background: var(--red);
+  }
+}
+/* El editor de la ruta: título + horas + reordenar + quitar no caben en una sola fila en móvil.
+   El título pasa a compartir la primera fila con el icono (y usa todo el ancho que sobra); horas
+   y los botones de reordenar/quitar bajan a una segunda fila en vez de aplastar el título a unas
+   pocas letras de ancho. */
+@media (max-width: 640px) {
+  .redit__head {
+    flex-wrap: wrap;
+  }
+  .redit__title {
+    min-width: 140px;
+  }
+  .route__hours {
+    flex-basis: 100%;
+  }
+}
+/* Un desplegable nunca es más ancho que su contenedor, aunque una de sus opciones sea larguísima
+   (p. ej. un curso con nombre largo). En la lista que abre el móvil sí se ve completa. */
+select.input {
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+@media (max-width: 640px) {
+  select.input.input--inline {
+    width: 100%;
+  }
+}
+/* Red de seguridad: cualquier texto del contenido (títulos de tareas, hábitos, cursos…) parte en vez de desbordar. */
+.page {
+  overflow-wrap: anywhere;
+}

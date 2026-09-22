@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useData } from '@/state';
 import { useUi, type ModalState } from '@/state/ui';
-import { Button, Modal } from '@/ui/kit';
+import { Button, Modal, TextInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { CONCEPTS } from '@/core/concepts';
 import type { SpriteName } from '@/ui/sprites';
@@ -66,7 +66,7 @@ export function WelcomeModal() {
         <label className="field__label" htmlFor="player-name">
           ¿Cómo te llamas, jugador?
         </label>
-        <input id="player-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre" maxLength={30} />
+        <TextInput id="player-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre" maxLength={30} />
         <div className="modal__actions">
           <Button variant="primary" onClick={() => go(true)}>
             Cargar mundo de ejemplo

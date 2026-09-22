@@ -5,7 +5,7 @@ import { XP_BY_PRIORITY } from '@/core/game';
 import { newId } from '@/core/dates';
 import type { Priority, Recurrence, TaskStatus } from '@/core/domain';
 import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
-import { Button, Field, Modal, Segmented, linesToList } from '@/ui/kit';
+import { Button, Field, Modal, Segmented, linesToList, TextInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
 
 const PRIORITIES: { value: Priority; label: string }[] = [
@@ -68,7 +68,7 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
     <Modal title={editing ? 'Editar tarea' : 'Crear tarea'} kicker={editing ? '// Contrato' : '// Nuevo contrato'} onClose={close}>
       <form onSubmit={submit} className="form">
         {!editing && <ConceptHint id="tarea" />}
-        <Field label="Título">{(fid) => <input id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Terminar ejercicios de JOIN" required maxLength={120} />}</Field>
+        <Field label="Título">{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Terminar ejercicios de JOIN" required maxLength={120} />}</Field>
         <div className="form__row">
           <Field label="Curso">
             {(fid) => (
@@ -130,7 +130,7 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
         </Field>
         {editing && <Field label="Estado">{() => <Segmented label="Estado" value={status} options={STATUSES} onChange={setStatus} />}</Field>}
         <Field label="Subtareas" hint="Una por línea.">{(fid) => <textarea id={fid} className="input" rows={3} value={subs} onChange={(e) => setSubs(e.target.value)} placeholder={'Repasar INNER vs LEFT\nResolver los 8 ejercicios'} />}</Field>
-        <Field label="Etiquetas" hint="Separadas por comas.">{(fid) => <input id={fid} className="input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="sql, práctica" />}</Field>
+        <Field label="Etiquetas" hint="Separadas por comas.">{(fid) => <TextInput id={fid} className="input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="sql, práctica" />}</Field>
         <div className="modal__actions">
           <Button variant="primary" type="submit" disabled={!title.trim()}>
             {editing ? 'Guardar cambios' : 'Crear tarea'}

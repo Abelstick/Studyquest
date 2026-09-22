@@ -305,7 +305,7 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
           Pégala aquí, elige dónde guardarla y pulsa <b>Probar y activar</b>.
         </li>
       </ol>
-      <Field label="Tu clave de Gemini">{(id) => <PasswordInput id={id} value={draft} onChange={setDraft} autoComplete="off" noun="clave" placeholder="Pega aquí tu clave de Google AI Studio" />}</Field>
+      <Field label="Tu clave de Gemini">{(id) => <PasswordInput id={id} value={draft} onChange={setDraft} autoComplete="off" noun="clave" placeholder="Pega tu clave de AI Studio" />}</Field>
       <StoragePicker mode={mode} onMode={setMode} passphrase={pass} onPassphrase={setPass} />
       <details className="ai__advanced">
         <summary>Modelos: elegir cuál usar y qué hacer si se agota la cuota</summary>

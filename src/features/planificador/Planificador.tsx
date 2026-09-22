@@ -11,7 +11,7 @@ import {
   DEFAULT_WEEK_MINUTES, TEMPLATES, blankRoadmap, buildPlanEntities, busyMinutes, cleanGoal, cleanRoadmap, matchTemplate, sanitizeWeek, schedulePlan, templateRoadmap, validateRoadmap, weekTotal,
   type Level, type Roadmap, type Template,
 } from '@/core/planner';
-import { Bar, Button, ChipGroup, Field, PageHead, Panel, Tag, cx } from '@/ui/kit';
+import { Bar, Button, ChipGroup, Field, PageHead, Panel, Tag, cx, TextInput } from '@/ui/kit';
 import { Loader } from '@/ui/Loader';
 import { RouteEditor } from './RouteEditor';
 
@@ -185,7 +185,7 @@ export default function Planificador() {
         <Panel kicker="// Paso 1" title="¿Qué quieres aprender?">
           <div className="form">
             <Field label="Tu objetivo" hint="Escríbelo con tus palabras: «Aprender análisis de datos», «Inglés B1», «Crear mi portafolio web»…">
-              {(id) => <input id={id} className="input" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Quiero aprender análisis de datos" maxLength={120} autoFocus />}
+              {(id) => <TextInput id={id} className="input" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Quiero aprender análisis de datos" maxLength={120} autoFocus />}
             </Field>
             <Field label="¿En cuánto tiempo?">
               {() => (

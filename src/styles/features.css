@@ -2061,3 +2061,80 @@ select.input {
     margin-left: 0;
   }
 }
+
+/* ---------- Certificaciones ---------- */
+.certs {
+  display: grid;
+  gap: 12px;
+}
+.cert {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  box-shadow: var(--sh);
+  border-left: 10px solid var(--yellow);
+}
+.cert.is-expired {
+  border-left-color: var(--line-soft);
+  opacity: 0.75;
+}
+.cert__medal {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: var(--panel-2);
+  border: 2px solid var(--line);
+}
+.cert__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+.cert__title {
+  font-weight: 900;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.cert__actions {
+  display: grid;
+  gap: 6px;
+  justify-items: stretch;
+  flex: none;
+}
+.cert__host {
+  text-align: center;
+}
+/* Las certificaciones dentro de la ficha de un curso. */
+.certmini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+@media (max-width: 640px) {
+  .cert {
+    flex-wrap: wrap;
+  }
+  /* Los botones bajan a su propia fila, uno al lado del otro y sin apretar el texto. */
+  .cert__actions {
+    flex-basis: 100%;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    justify-content: stretch;
+    align-items: center;
+  }
+  .cert__host {
+    display: none; /* el dominio es un extra; en móvil estorba */
+  }
+  /* Un titular junto a su etiqueta no debe partirse a mitad de palabra por falta de sitio. */
+  .split {
+    flex-wrap: wrap;
+  }
+}

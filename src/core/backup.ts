@@ -6,6 +6,7 @@
 import type { Snapshot } from './domain';
 import { defaultProfile } from './game';
 import { newId } from './dates';
+import { safeUrl } from './certifications';
 
 export const BACKUP_APP = 'studyquest';
 export const BACKUP_VERSION = 1;
@@ -160,6 +161,16 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
         }
       : null,
   );
+  const certifications = list('certifications', 'certificaciones', (o) => {
+    if (!str(o.title)) return null;
+    const courseId = ref(o.courseId);
+    return {
+      id: fixId(o.id), title: str(o.title), issuer: str(o.issuer), date: DATE.test(str(o.date)) ? str(o.date) : new Date().toISOString().slice(0, 10),
+      // El enlace se guarda solo si es http(s): así una copia manipulada no puede meter un «javascript:» en la app.
+      url: safeUrl(str(o.url)) ?? '', credentialId: str(o.credentialId), expiresAt: DATE.test(str(o.expiresAt)) ? str(o.expiresAt) : null,
+      courseId: courseId && courseIds.has(courseId) ? courseId : null, notes: str(o.notes), createdAt: str(o.createdAt, new Date().toISOString()),
+    };
+  });
   const personalRewards = list('personalRewards', 'recompensas personales', (o) =>
     str(o.title) ? { id: fixId(o.id), title: str(o.title), condition: str(o.condition), current: num(o.current), target: Math.max(1, num(o.target, 1)), claimed: o.claimed === true } : null,
   );
@@ -198,11 +209,11 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
   if (fixedIds) warnings.push(`${fixedIds} identificadores se regeneraron.`);
 
   // Los tipos exactos ya se validaron arriba; el cast evita repetirlos en cada colección.
-  const snapshot = { profile, tasks, habits, habitLogs, courses, goals, projects, personalRewards, sessions, xpEvents, notifications } as unknown as Snapshot;
+  const snapshot = { profile, tasks, habits, habitLogs, courses, goals, projects, certifications, personalRewards, sessions, xpEvents, notifications } as unknown as Snapshot;
   return { ok: true, snapshot, warnings };
 }
 
 export const summarize = (s: Snapshot) => ({
-  tareas: s.tasks.length, hábitos: s.habits.length, cursos: s.courses.length, metas: s.goals.length, proyectos: s.projects.length,
+  tareas: s.tasks.length, hábitos: s.habits.length, cursos: s.courses.length, metas: s.goals.length, proyectos: s.projects.length, certificaciones: s.certifications.length,
   'sesiones de estudio': s.sessions.length, 'registros de XP': s.xpEvents.length,
 });

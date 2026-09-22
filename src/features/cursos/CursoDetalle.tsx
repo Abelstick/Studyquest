@@ -6,6 +6,7 @@ import { courseProgress, courseRank, moduleStates, topicXp, type ModuleState } f
 import { courseHours, courseStreak } from '@/core/stats';
 import { agoDays, diffDays, today } from '@/core/dates';
 import { reviewDueDate } from '@/core/review';
+import { certificationsOfCourse, safeUrl } from '@/core/certifications';
 import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Panel, Tag, cx, TextInput } from '@/ui/kit';
@@ -27,6 +28,7 @@ export default function CursoDetalle() {
   const { id } = useParams();
   const course = useData((s) => s.courses.find((c) => c.id === id));
   const sessions = useData((s) => s.sessions);
+  const allCerts = useData((s) => s.certifications);
   const { setTopicStatus, toggleTopicReview, addTopic, removeTopic, addModule } = useData();
   const openModal = useUi((s) => s.openModal);
 
@@ -46,6 +48,7 @@ export default function CursoDetalle() {
   const hours = courseHours(snap, course);
   const streak = courseStreak(snap, course);
   const mentor = course.mentor;
+  const certs = certificationsOfCourse(allCerts, course.id);
 
   return (
     <div className="stack">
@@ -187,6 +190,37 @@ export default function CursoDetalle() {
               )}
             </Panel>
           )}
+          <Panel kicker="// Credenciales" title="Certificaciones">
+            {certs.length === 0 ? (
+              <p className="muted small">
+                ¿Terminaste este curso y te dieron certificado?{' '}
+                <button type="button" className="link" onClick={() => openModal({ type: 'certification' })}>
+                  Regístralo aquí
+                </button>{' '}
+                y quedará guardado con su enlace.
+              </p>
+            ) : (
+              <ul className="stack">
+                {certs.map((c) => {
+                  const link = safeUrl(c.url);
+                  return (
+                    <li key={c.id} className="certmini">
+                      <Sprite name="trophy" size={20} />
+                      <b className="grow">{c.title}</b>
+                      {link && (
+                        <a className="btn btn--sm" href={link} target="_blank" rel="noopener noreferrer">
+                          🔗 Ver
+                        </a>
+                      )}
+                      <Button small onClick={() => openModal({ type: 'certification', id: c.id })}>
+                        Editar
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
           <Panel kicker="// Telemetría">
             <dl className="kv">
               <div>

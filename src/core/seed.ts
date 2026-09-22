@@ -1,5 +1,5 @@
 import type {
-  AppNotification, Course, Goal, Habit, HabitLog, ISODate, Module, PersonalReward, Profile, Project, Snapshot, StudySession, Task, Topic, TopicStatus, XpEvent,
+  AppNotification, Certification, Course, Goal, Habit, HabitLog, ISODate, Module, PersonalReward, Profile, Project, Snapshot, StudySession, Task, Topic, TopicStatus, XpEvent,
 } from './domain';
 import { addDays, isoNow, newId, weekdayIndex } from './dates';
 import { ACHIEVEMENTS } from './achievements';
@@ -176,6 +176,16 @@ export function buildDemo(profile: Profile, now: ISODate): Snapshot {
     ] },
   ];
 
+  /* Certificaciones de ejemplo: una de un curso de la app, una externa y una que ya caducó. */
+  const cert = (title: string, issuer: string, daysAgo: number, url: string, over: Partial<Certification> = {}): Certification => ({
+    id: newId(), title, issuer, date: addDays(now, -daysAgo), url, credentialId: '', expiresAt: null, courseId: null, notes: '', createdAt: created, ...over,
+  });
+  const certifications = [
+    cert('Fundamentos del Análisis de Datos', 'Coursera', 30, 'https://coursera.org/verify/EJEMPLO123', { courseId: datos.id, credentialId: 'EJEMPLO123' }),
+    cert('Scrum Fundamentals', 'ScrumStudy', 120, 'https://scrumstudy.com/certification/verify/EJEMPLO', { expiresAt: addDays(now, 40) }),
+    cert('Inglés B1 · Certificado oficial', 'Cambridge', 400, '', { expiresAt: addDays(now, -20) }),
+  ];
+
   const pr = (title: string, condition: string, current: number, target: number): PersonalReward => ({ id: newId(), title, condition, current, target, claimed: false });
   const personalRewards = [
     pr('Ver una película sin culpa', 'Si completo 5 días seguidos de estudio', 4, 5),
@@ -196,7 +206,7 @@ export function buildDemo(profile: Profile, now: ISODate): Snapshot {
 
   const snapshot: Snapshot = {
     profile: { ...profile, xp: totalXp, credits: 1240, streakFreezes: 1, onboarded: true, joinedAt: new Date(Date.now() - 200 * 86_400_000).toISOString() },
-    tasks, habits, habitLogs, courses, goals: [goal], projects, personalRewards, sessions, xpEvents, notifications,
+    tasks, habits, habitLogs, courses, goals: [goal], projects, certifications, personalRewards, sessions, xpEvents, notifications,
   };
   // Logros ya conseguidos con lo que traen los datos (sin monedas extra).
   const stats = computeStats(snapshot, now);

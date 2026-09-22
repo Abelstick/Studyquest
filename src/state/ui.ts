@@ -10,6 +10,7 @@ export type ModalState =
   | { type: 'goal' }
   | { type: 'project' }
   | { type: 'reward' }
+  | { type: 'certification'; id?: string }
   | { type: 'session'; courseId?: string; minutes?: number }
   | { type: 'quick' }
   | { type: 'welcome' }

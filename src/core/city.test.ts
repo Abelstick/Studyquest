@@ -11,7 +11,7 @@ import { PALETTE } from '@/ui/sprites';
 const zero: Stats = {
   xp: 0, level: 1, tasksDone: 0, habitCompletions: 0, streak: 0, bestStreak: 0, coursesCompleted: 0, projectsCompleted: 0, milestonesDone: 0, purchases: 0, hoursTotal: 0,
   reviews: 0, mastered: 0, bosses: 0, pomodoros: 0, combos: 0, weekendBonuses: 0, recurringDone: 0, worlds: 0, avatars: 0, chests: 0,
-  topicsDone: 0, modulesDone: 0, checkpointsDone: 0, weeklyChallenges: 0, achievementsCount: 0,
+  topicsDone: 0, modulesDone: 0, checkpointsDone: 0, weeklyChallenges: 0, achievementsCount: 0, certifications: 0,
 };
 const stats = (over: Partial<Stats> = {}): Stats => ({ ...zero, ...over });
 const b = (id: string) => buildingById(id)!;

@@ -64,6 +64,7 @@ const PORT_METHODS: { [K in keyof Namespaces]: Record<keyof Namespaces[K], true>
   courses: { list: true, create: true, createMany: true, update: true, remove: true },
   goals: { list: true, create: true, createMany: true, update: true, remove: true },
   projects: { list: true, create: true, createMany: true, update: true, remove: true },
+  certifications: { list: true, create: true, createMany: true, update: true, remove: true },
   personalRewards: { list: true, create: true, createMany: true, update: true, remove: true },
   sessions: { list: true, create: true, createMany: true, remove: true },
   xpEvents: { list: true, create: true, createMany: true },

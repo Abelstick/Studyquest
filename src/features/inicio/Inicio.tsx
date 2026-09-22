@@ -241,14 +241,15 @@ export default function Inicio() {
   const goals = useData((s) => s.goals);
   const projects = useData((s) => s.projects);
   const personalRewards = useData((s) => s.personalRewards);
+  const certifications = useData((s) => s.certifications);
   const sessions = useData((s) => s.sessions);
   const xpEvents = useData((s) => s.xpEvents);
   const notifications = useData((s) => s.notifications);
   const openModal = useUi((s) => s.openModal);
 
   const snap: Snapshot = useMemo(
-    () => ({ profile, tasks, habits, habitLogs, courses, goals, projects, personalRewards, sessions, xpEvents, notifications }),
-    [profile, tasks, habits, habitLogs, courses, goals, projects, personalRewards, sessions, xpEvents, notifications],
+    () => ({ profile, tasks, habits, habitLogs, courses, goals, projects, certifications, personalRewards, sessions, xpEvents, notifications }),
+    [profile, tasks, habits, habitLogs, courses, goals, projects, certifications, personalRewards, sessions, xpEvents, notifications],
   );
   const missions = useMemo(() => dailyMissions(snap), [snap]);
   const review = useMemo(() => dueReviews(snap), [snap]);

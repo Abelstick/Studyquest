@@ -220,6 +220,30 @@ export interface Project {
   createdAt: ISODateTime;
 }
 
+/* ---------- Certificaciones ---------- */
+/**
+ * Una credencial que ya obtuviste (un curso terminado, una certificación oficial…).
+ * `url` es el enlace público para verla o verificarla; puede estar vacío.
+ */
+export interface Certification {
+  id: ID;
+  title: string;
+  /** Quién la emite: Coursera, AWS, la universidad… */
+  issuer: string;
+  /** Fecha en que la obtuviste. */
+  date: ISODate;
+  /** Enlace al certificado. Vacío si aún no lo tienes a mano. */
+  url: string;
+  /** Código o id de credencial, para verificarla. */
+  credentialId: string;
+  /** Algunas caducan (AWS, PMP…). null = no caduca. */
+  expiresAt: ISODate | null;
+  /** Curso de la app con el que se relaciona, si lo hay. */
+  courseId: ID | null;
+  notes: string;
+  createdAt: ISODateTime;
+}
+
 export interface PersonalReward {
   id: ID;
   title: string;
@@ -238,7 +262,7 @@ export interface StudySession {
   label: string;
 }
 
-export type XpSource = 'task' | 'habit' | 'topic' | 'session' | 'milestone' | 'checkpoint' | 'bonus' | 'review' | 'combo' | 'legacy';
+export type XpSource = 'task' | 'habit' | 'topic' | 'session' | 'milestone' | 'checkpoint' | 'bonus' | 'review' | 'combo' | 'certification' | 'legacy';
 
 export interface XpEvent {
   id: ID;
@@ -266,6 +290,7 @@ export interface Snapshot {
   courses: Course[];
   goals: Goal[];
   projects: Project[];
+  certifications: Certification[];
   personalRewards: PersonalReward[];
   sessions: StudySession[];
   xpEvents: XpEvent[];

@@ -4,6 +4,8 @@ import type { Repository } from '@/data/ports';
 import { createDataStore } from './data';
 import { useUi } from './ui';
 import { computeStreak, levelFromXp, xpAtLevelStart } from '@/core/game';
+import { CERT_XP } from '@/core/certifications';
+import { computeStats } from '@/core/stats';
 import { today } from '@/core/dates';
 
 let repo: Repository;
@@ -11,6 +13,13 @@ let store: ReturnType<typeof createDataStore>;
 
 /** Deja que la cola de escritura termine sus promesas pendientes. */
 const flush = () => new Promise((r) => setTimeout(r, 20));
+
+/** El snapshot que ve `computeStats`, tomado del store. */
+const snapshotOf = () => {
+  const s = store.getState();
+  return { profile: s.profile, tasks: s.tasks, habits: s.habits, habitLogs: s.habitLogs, courses: s.courses, goals: s.goals, projects: s.projects,
+    certifications: s.certifications, personalRewards: s.personalRewards, sessions: s.sessions, xpEvents: s.xpEvents, notifications: s.notifications };
+};
 
 const draft = (over = {}) => ({
   title: 'Tarea', courseId: null, priority: 'mid' as const, status: 'todo' as const, dueDate: null, estimateMin: 30, xp: 40, subtasks: [], tags: [], ...over,
@@ -329,6 +338,68 @@ describe('store de datos', () => {
       await flush();
       expect((await repo.habits.list()).map((h) => h.title)).toEqual(['Correr']);
       expect((await repo.habitLogs.list()).map((l) => l.habitId)).toEqual([correr]);
+    });
+  });
+
+  describe('certificaciones', () => {
+    const draft = (over = {}) => ({
+      title: 'AWS Cloud Practitioner', issuer: 'Amazon', date: '2026-09-01', url: 'https://aws.amazon.com/verify/1',
+      credentialId: 'ABC', expiresAt: null, courseId: null, notes: '', ...over,
+    });
+
+    it('registrar una certificación da XP y la guarda con su enlace', async () => {
+      store.getState().createCertification(draft());
+      const cert = store.getState().certifications[0];
+      expect(cert).toMatchObject({ title: 'AWS Cloud Practitioner', url: 'https://aws.amazon.com/verify/1' });
+      expect(store.getState().profile.xp).toBe(CERT_XP);
+      expect(store.getState().xpEvents.some((e) => e.source === 'certification' && e.amount === CERT_XP)).toBe(true);
+      await flush();
+      expect((await repo.certifications.list())[0].title).toBe('AWS Cloud Practitioner');
+    });
+
+    it('borrarla devuelve el XP que dio (no se puede farmear creando y borrando)', () => {
+      store.getState().createCertification(draft());
+      const id = store.getState().certifications[0].id;
+      store.getState().deleteCertification(id);
+      expect(store.getState().certifications).toHaveLength(0);
+      expect(store.getState().profile.xp).toBe(0);
+    });
+
+    it('cuenta como pieza del museo, junto a los logros', () => {
+      const before = computeStats(snapshotOf()).certifications;
+      store.getState().createCertification(draft());
+      expect(computeStats(snapshotOf()).certifications).toBe(before + 1);
+    });
+
+    it('editarla no vuelve a dar XP', () => {
+      store.getState().createCertification(draft());
+      const id = store.getState().certifications[0].id;
+      store.getState().updateCertification(id, { title: 'Otro nombre' });
+      expect(store.getState().profile.xp).toBe(CERT_XP);
+      expect(store.getState().certifications[0].title).toBe('Otro nombre');
+    });
+
+    it('restaurar una partida (copia o mundo de ejemplo) también guarda las certificaciones', async () => {
+      await store.getState().finishOnboarding(true);
+      expect(store.getState().certifications.length).toBeGreaterThan(0);
+      // la prueba de verdad: que llegaron a la base, no solo a la pantalla
+      expect(await repo.certifications.list()).toHaveLength(store.getState().certifications.length);
+    });
+
+    it('al borrar el curso, su certificación se conserva pero pierde el vínculo (en pantalla y en la base)', async () => {
+      store.getState().createCourse({ title: 'Curso', professor: '', field: '', mentor: null, modules: [] });
+      const courseId = store.getState().courses[0].id;
+      store.getState().createCertification(draft({ courseId }));
+      await flush();
+
+      store.getState().deleteCourse(courseId);
+
+      expect(store.getState().certifications).toHaveLength(1);
+      expect(store.getState().certifications[0].courseId).toBeNull();
+      await flush();
+      const saved = await repo.certifications.list();
+      expect(saved).toHaveLength(1);
+      expect(saved[0].courseId).toBeNull();
     });
   });
 

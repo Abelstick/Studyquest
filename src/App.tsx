@@ -16,6 +16,7 @@ const Habitos = lazy(() => import('@/features/habitos/Habitos'));
 const HabitoDetalle = lazy(() => import('@/features/habitos/HabitoDetalle'));
 const Metas = lazy(() => import('@/features/metas/Metas'));
 const Proyectos = lazy(() => import('@/features/proyectos/Proyectos'));
+const Certificaciones = lazy(() => import('@/features/certificaciones/Certificaciones'));
 const Progreso = lazy(() => import('@/features/progreso/Progreso'));
 const Arsenal = lazy(() => import('@/features/arsenal/Arsenal'));
 const Perfil = lazy(() => import('@/features/perfil/Perfil'));
@@ -107,6 +108,7 @@ function AuthGate() {
           <Route path="habitos/:id" element={<HabitoDetalle />} />
           <Route path="metas" element={<Metas />} />
           <Route path="proyectos" element={<Proyectos />} />
+          <Route path="certificaciones" element={<Certificaciones />} />
           <Route path="progreso" element={<Progreso />} />
           <Route path="arsenal" element={<Arsenal />} />
           <Route path="perfil" element={<Perfil />} />

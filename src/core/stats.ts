@@ -29,6 +29,8 @@ export interface Stats {
   checkpointsDone: number;
   weeklyChallenges: number;
   achievementsCount: number;
+  /** Certificaciones registradas (las caducadas también cuentan: las conseguiste). */
+  certifications: number;
 }
 
 export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
@@ -61,6 +63,7 @@ export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
     checkpointsDone: s.projects.reduce((a, p) => a + p.checkpoints.filter((c) => c.done).length, 0),
     weeklyChallenges: s.xpEvents.filter((e) => e.source === 'bonus' && e.amount > 0 && e.label === 'Reto semanal completado').length,
     achievementsCount: s.profile.achievements.length,
+    certifications: s.certifications.length,
   };
 }
 

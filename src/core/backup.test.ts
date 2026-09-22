@@ -76,6 +76,29 @@ describe('copia de seguridad', () => {
     expect(res.snapshot.sessions[0].courseId).toBeNull();
   });
 
+  it('las certificaciones viajan en la copia, con su enlace y su vínculo al curso', () => {
+    const file = buildBackup(demo());
+    expect(file.data.certifications.length).toBeGreaterThan(0);
+    const res = parseBackup(JSON.stringify(file));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.snapshot.certifications).toHaveLength(demo().certifications.length);
+    const conCurso = res.snapshot.certifications.find((c) => c.courseId);
+    expect(conCurso?.url).toMatch(/^https:\/\//);
+    expect(res.snapshot.courses.some((c) => c.id === conCurso?.courseId)).toBe(true);
+  });
+
+  it('una copia manipulada no puede colar un enlace «javascript:» ni un curso inexistente', () => {
+    const file = buildBackup(demo());
+    file.data.certifications[0].url = 'javascript:alert(document.cookie)';
+    file.data.certifications[1].courseId = crypto.randomUUID();
+    const res = parseBackup(JSON.stringify(file));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.snapshot.certifications[0].url).toBe('');
+    expect(res.snapshot.certifications[1].courseId).toBeNull();
+  });
+
   it('convierte ids que no son UUID y reescribe las referencias', () => {
     const file = {
       app: 'studyquest', version: 1, exportedAt: '',

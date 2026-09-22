@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type {
-  AppNotification, Course, Flashcard, Equipped, Goal, Habit, HabitLog, ID, Module, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
+  AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitLog, ID, Module, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
@@ -9,6 +9,7 @@ import {
 import { canOpenChest, chestReward, dayBonusOf, habitBonus, habitsDoneOn } from '@/core/events';
 import { gradeReview, startReview, type Rating } from '@/core/review';
 import { isBoss, spawnNext, taskReward } from '@/core/tasks';
+import { CERT_XP } from '@/core/certifications';
 import type { PlanEntities } from '@/core/planner';
 import { buildingById, cityUpgrades } from '@/core/city';
 import { ACHIEVEMENTS } from '@/core/achievements';
@@ -67,6 +68,10 @@ export interface DataState extends Data {
   deleteProject: (id: ID) => void;
   toggleCheckpoint: (projectId: ID, checkpointId: ID) => void;
 
+  createCertification: (draft: Omit<Certification, 'id' | 'createdAt'>) => void;
+  updateCertification: (id: ID, patch: Partial<Omit<Certification, 'id'>>) => void;
+  deleteCertification: (id: ID) => void;
+
   createReward: (draft: Omit<PersonalReward, 'id' | 'claimed' | 'current'>) => void;
   bumpReward: (id: ID, delta: number) => void;
   claimReward: (id: ID) => void;
@@ -89,12 +94,12 @@ export interface DataState extends Data {
 
 const EMPTY: Data = {
   profile: defaultProfile('pending'),
-  tasks: [], habits: [], habitLogs: [], courses: [], goals: [], projects: [], personalRewards: [], sessions: [], xpEvents: [], notifications: [],
+  tasks: [], habits: [], habitLogs: [], courses: [], goals: [], projects: [], certifications: [], personalRewards: [], sessions: [], xpEvents: [], notifications: [],
 };
 
 const pickData = (s: DataState): Data => ({
   profile: s.profile, tasks: s.tasks, habits: s.habits, habitLogs: s.habitLogs, courses: s.courses, goals: s.goals, projects: s.projects,
-  personalRewards: s.personalRewards, sessions: s.sessions, xpEvents: s.xpEvents, notifications: s.notifications,
+  certifications: s.certifications, personalRewards: s.personalRewards, sessions: s.sessions, xpEvents: s.xpEvents, notifications: s.notifications,
 });
 
 const upsertBy = <T extends { id: ID }>(list: T[], item: T): T[] => (list.some((x) => x.id === item.id) ? list.map((x) => (x.id === item.id ? item : x)) : [...list, item]);
@@ -236,12 +241,12 @@ export function createDataStore(repo: Repository) {
         if (hydrate) set({ ...hydrate, status: 'ready', error: null });
         else set({ status: 'loading', error: null });
         try {
-          const [profile, tasks, habits, habitLogs, courses, goals, projects, personalRewards, sessions, xpEvents, notifications] = await Promise.all([
+          const [profile, tasks, habits, habitLogs, courses, goals, projects, certifications, personalRewards, sessions, xpEvents, notifications] = await Promise.all([
             repo.profile.get(), repo.tasks.list(), repo.habits.list(), repo.habitLogs.list(), repo.courses.list(), repo.goals.list(),
-            repo.projects.list(), repo.personalRewards.list(), repo.sessions.list(), repo.xpEvents.list(), repo.notifications.list(),
+            repo.projects.list(), repo.certifications.list(), repo.personalRewards.list(), repo.sessions.list(), repo.xpEvents.list(), repo.notifications.list(),
           ]);
           const ensured = profile ?? (await repo.profile.save(defaultProfile(userId)));
-          set({ profile: ensured, tasks, habits, habitLogs, courses, goals, projects, personalRewards, sessions, xpEvents, notifications, status: 'ready', error: null });
+          set({ profile: ensured, tasks, habits, habitLogs, courses, goals, projects, certifications, personalRewards, sessions, xpEvents, notifications, status: 'ready', error: null });
           useUi.getState().setWorld(worldOf(ensured.equipped.world));
           if (!ensured.onboarded) useUi.getState().openModal({ type: 'welcome' });
         } catch (e) {
@@ -265,6 +270,7 @@ export function createDataStore(repo: Repository) {
           await repo.habits.createMany(snapshot.habits);
           await repo.goals.createMany(snapshot.goals);
           await repo.projects.createMany(snapshot.projects);
+          await repo.certifications.createMany(snapshot.certifications);
           await repo.personalRewards.createMany(snapshot.personalRewards);
           await repo.tasks.createMany(snapshot.tasks);
           await repo.habitLogs.createMany(snapshot.habitLogs);
@@ -437,17 +443,21 @@ export function createDataStore(repo: Repository) {
         // Las sesiones de estudio pasadas sí se conservan (son historial), solo se desvinculan del curso.
         const taskIds = get().tasks.filter((t) => t.courseId === id).map((t) => t.id);
         const freed = get().sessions.filter((x) => x.courseId === id).map((x) => ({ ...x, courseId: null }));
+        // Un certificado sobrevive al curso: se queda, solo pierde el vínculo.
+        const freedCerts = get().certifications.filter((c) => c.courseId === id).map((c) => ({ ...c, courseId: null }));
         run(
           (s) => ({
             courses: s.courses.filter((c) => c.id !== id),
             tasks: s.tasks.filter((t) => t.courseId !== id),
             sessions: s.sessions.map((x) => (x.courseId === id ? { ...x, courseId: null } : x)),
+            certifications: s.certifications.map((c) => (c.courseId === id ? { ...c, courseId: null } : c)),
           }),
           async () => {
             await repo.courses.remove(id);
             await Promise.all(taskIds.map((tid) => repo.tasks.remove(tid)));
             // `create` es idempotente (un upsert por id), así que guarda de golpe las sesiones ya desvinculadas.
             if (freed.length) await repo.sessions.createMany(freed);
+            if (freedCerts.length) await repo.certifications.createMany(freedCerts);
           },
         );
       },
@@ -540,6 +550,26 @@ export function createDataStore(repo: Repository) {
       },
 
       /* ---------- Recompensas personales ---------- */
+      /* ---------- Certificaciones ---------- */
+      createCertification(draft) {
+        const cert: Certification = { ...draft, id: newId(), createdAt: isoNow() };
+        run((s) => ({ certifications: [...s.certifications, cert] }), () => repo.certifications.create(cert));
+        award(CERT_XP, 'certification', cert.title, '¡Certificación conseguida!');
+        notify({ category: 'achievement', title: `Certificación: ${cert.title}`, body: cert.issuer ? `Emitida por ${cert.issuer}.` : 'Ya forma parte de tu museo.' });
+        unlockAchievements();
+        checkCity();
+      },
+      updateCertification(id, patch) {
+        run((s) => ({ certifications: s.certifications.map((c) => (c.id === id ? { ...c, ...patch } : c)) }), () => repo.certifications.update(id, patch));
+      },
+      deleteCertification(id) {
+        const cert = get().certifications.find((c) => c.id === id);
+        if (!cert) return;
+        run((s) => ({ certifications: s.certifications.filter((c) => c.id !== id) }), () => repo.certifications.remove(id));
+        award(-CERT_XP, 'certification', `Quitada: ${cert.title}`); // se devuelve el XP que dio al registrarla
+        checkCity();
+      },
+
       createReward(draft) {
         const reward: PersonalReward = { ...draft, id: newId(), current: 0, claimed: false };
         run((s) => ({ personalRewards: [...s.personalRewards, reward] }), () => repo.personalRewards.create(reward));

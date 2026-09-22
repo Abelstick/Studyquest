@@ -63,6 +63,7 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 | **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Marca temas como «necesito repasar». |
 | **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha límite, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
 | **Planificador** | Le dices «quiero aprender análisis de datos en 3 meses» y genera la ruta (Excel → SQL → Python → Pandas → Power BI → proyecto final) y **un plan con fechas** según tu disponibilidad, tus tareas y tus hábitos. Con **IA (Gemini, gratis)** o con plantillas. |
+| **Certificaciones** | Vitrina de tus credenciales: título, quién la emite, fecha, **enlace al certificado** (se abre en una pestaña nueva), ID de credencial, caducidad con aviso y, si quieres, el curso con el que se relaciona. Cada una da XP y suma una pieza a tu museo. |
 | **Ciudad** | Seis edificios que **crecen con tu progreso real** (casa, biblioteca, academia, laboratorio, arena y museo), de 0 a 5 niveles, con recompensas en monedas al mejorar. También aparece resumida en Inicio. |
 | **Calendario** | Vista mensual con tus tareas por fecha límite, las repeticiones futuras y los repasos de flashcards. Arrastra una tarea a otro día para reprogramarla. |
 | **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
@@ -124,7 +125,7 @@ El `.env.example` viene con `VITE_DATA_PROVIDER=local`, así que la app funciona
 ## Configurar Supabase
 
 1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. Ve a **SQL Editor**, pega el contenido de [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) y ejecútalo. Crea las tablas y activa **Row Level Security**: cada usuario solo puede ver y modificar sus propias filas.
+2. Ve a **SQL Editor**, pega el contenido de [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) y ejecútalo. Crea las tablas y activa **Row Level Security**: cada usuario solo puede ver y modificar sus propias filas. Ejecuta después [`0005_certifications.sql`](supabase/migrations/0005_certifications.sql), que añade la tabla de certificaciones. **Si ya tenías la base creada antes**, te basta con ejecutar esa última.
 3. En **Project Settings → API** copia la *Project URL* y la clave *anon public* en tu `.env`:
 
    ```ini
@@ -383,7 +384,7 @@ Pantalla **Ciudad** (y un resumen en Inicio). Cada área de la app es un edifici
 | 🏫 **Academia** | Cursos | 3 por módulo completado · 10 por curso terminado · 1 por hora de estudio | Aula (6) · Escuelita (25) · Academia (70) · Instituto (160) · Universidad (350) |
 | 💻 **Laboratorio** | Proyectos | 2 por checkpoint · 10 por proyecto terminado · 2 por hito de una meta | Taller (4) · Laboratorio (16) · Centro de pruebas (45) · Instituto de I+D (110) · Fábrica de ideas (250) |
 | 🏟️ **Arena** | Retos | 3 por jefe derrotado · 5 por reto semanal · 2 por combo ×2 · 1 por Pomodoro | Pista (5) · Gimnasio (20) · Arena (55) · Estadio (130) · Coliseo (300) |
-| 🏆 **Museo** | Logros | 1 por logro desbloqueado | Vitrina (3) · Sala de honor (8) · Museo (16) · Gran museo (28) · Palacio de los récords (40) |
+| 🏆 **Museo** | Logros y certificaciones | 1 por logro desbloqueado · 1 por certificación registrada | Vitrina (3) · Sala de honor (8) · Museo (16) · Gran museo (28) · Palacio de los récords (40) |
 
 - **Mejorar un edificio da monedas**: +50, +100, +200, +400 y +800 por alcanzar los niveles 1 a 5, con aviso y mensaje en el buzón. Si saltas varios niveles a la vez, cobras todos. Deshacer o borrar datos **no baja** lo ya conseguido ni repite premios.
 - **Sin premios retroactivos**: la primera vez que se comprueba la ciudad solo se anota tu punto de partida (no se regalan monedas por progreso anterior a la ciudad).
@@ -461,7 +462,7 @@ src/
 ├─ audio/      Efectos 8-bit con Web Audio
 └─ pwa/        Hooks de conexión e instalación, y cliente de notificaciones push
 supabase/
-├─ migrations/   Esquema SQL con RLS (0001 base · 0002 recordatorios)
+├─ migrations/   Esquema SQL con RLS (0001 base · 0002 recordatorios · 0005 certificaciones)
 ├─ functions/    Edge Function `send-reminders` (+ `_shared/due.ts`, espejo de las reglas de «¿toca hoy?»)
 └─ cron.sql.example   Programación del envío cada minuto
 public/push-sw.js      Manejo de notificaciones dentro del service worker
@@ -565,6 +566,8 @@ Cubren la lógica que más importa:
 | El planificador no muestra «Generar con IA» | Falta activar las funciones inteligentes: pulsa «🔑 Activar funciones inteligentes» (o ve a Perfil) y pega tu clave de Google AI Studio. |
 | «Eso no parece una clave: no puede estar vacía ni llevar espacios» | Se copió con espacios o saltos de línea en medio, o solo un trozo. Vuelve a copiarla entera desde Google AI Studio (el botón de copiar, sin seleccionar a mano). |
 | Al guardar la clave en mi cuenta sale un error | Falta ejecutar `0004_user_secrets.sql` en el SQL Editor de Supabase. La clave sí funciona en el dispositivo mientras tanto. |
+| Al registrar una certificación sale un error al guardar | Falta ejecutar `0005_certifications.sql` en el SQL Editor de Supabase (crea la tabla `certifications`). |
+| Puse un enlace y la certificación se guardó sin él | Solo se aceptan enlaces `http(s)`. Pega la dirección completa, por ejemplo `https://coursera.org/verify/ABC123`. |
 | «Frase incorrecta» al desbloquear | La frase es la que elegiste al guardarla (distingue mayúsculas). Si la perdiste, pulsa «Olvidé mi frase», que borra la copia cifrada de tu cuenta, y pega la clave otra vez (la sigues viendo en Google AI Studio). |
 | «Google no aceptó tu clave» | La clave está mal copiada, borrada o restringida. Crea otra en [Google AI Studio](https://aistudio.google.com/apikey) y pégala de nuevo (Perfil → Funciones inteligentes). |
 | «Se agotó la cuota gratuita…» | El modelo llegó a su límite por minuto o por día (los límites son por proyecto y por modelo). Con el cambio automático activado la app prueba otros modelos gratuitos sola; si todos se agotaron, espera unos minutos (o a medianoche, hora del Pacífico, para el límite diario) o usa una plantilla. Puedes ver tus cifras en aistudio.google.com/rate-limit. |

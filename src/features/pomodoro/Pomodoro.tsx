@@ -6,6 +6,7 @@ import { POMODORO_LABEL, SESSION_XP_PER_MIN } from '@/core/game';
 import { today } from '@/core/dates';
 import { PHASE_LABEL, formatClock, phaseMinutes } from '@/core/pomodoro';
 import { Bar, Button, ChipGroup, Field, PageHead, Panel, cx } from '@/ui/kit';
+import { Jukebox } from '@/features/musica/Jukebox';
 import { Sprite } from '@/ui/Sprite';
 
 const FOCUS = [15, 25, 40, 50].map((v) => ({ value: v, label: `${v} min` }));
@@ -105,6 +106,7 @@ export default function Pomodoro() {
         </Panel>
 
         <div className="stack">
+          <Jukebox />
           <Panel kicker="// Hoy" title="Tu racha de tomates">
             <dl className="stat-grid">
               <div>

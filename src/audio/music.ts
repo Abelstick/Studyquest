@@ -4,9 +4,13 @@
  */
 import { audio } from './sfx';
 
-export type TrackName = 'focus' | 'break';
+export type TrackName = 'focus' | 'break' | 'heroe' | 'cueva' | 'jefe' | 'nieve' | 'agua' | 'creditos';
 
 interface Track {
+  /** Nombre que se ve en el reproductor. */
+  title: string;
+  /** De qué va, para elegir a ojo. */
+  mood: string;
   bpm: number;
   /** Una entrada por corchea; 0 = silencio. Notas MIDI (69 = La4). */
   lead: number[];
@@ -35,10 +39,84 @@ const arp = (n: number[]) => [n[0], n[1], n[2], n[3], n[2], n[1], n[0], 0];
 const BREAK_LEAD = [arp([60, 64, 67, 71]), arp([57, 60, 64, 69]), arp([65, 69, 72, 76]), arp([67, 71, 74, 79])].flat();
 const BREAK_BASS = [48, 45, 41, 43].flatMap((r) => [r, 0, 0, 0, r + 7, 0, 0, 0]);
 
+
+/* ---------- Más melodías originales para el reproductor ----------
+   Todas compuestas para la app: nada transcrito de ningún juego. */
+
+/** Marcha alegre en Do mayor: I - V - vi - IV, la segunda vuelta una octava arriba. */
+const HEROE_LEAD = [
+  72, 72, 76, 79, 76, 74, 72, 0,
+  71, 74, 79, 74, 71, 67, 71, 0,
+  69, 72, 76, 72, 69, 67, 69, 0,
+  65, 69, 72, 69, 65, 64, 65, 0,
+  76, 79, 84, 79, 76, 72, 76, 0,
+  74, 79, 83, 79, 74, 71, 74, 0,
+  72, 76, 81, 76, 72, 69, 72, 0,
+  77, 76, 74, 72, 71, 69, 67, 0,
+];
+const HEROE_BASS = [48, 43, 45, 41, 48, 43, 45, 43].flatMap(bounce);
+
+/** Cueva: pocas notas, muy espaciadas, en La menor. */
+const step4 = (n: number[]) => [n[0], 0, 0, 0, n[1], 0, 0, 0, n[2], 0, 0, 0, n[3], 0, 0, 0];
+const CUEVA_LEAD = [step4([69, 72, 76, 72]), step4([65, 69, 72, 69]), step4([67, 71, 74, 71]), step4([64, 67, 71, 67])].flat();
+const CUEVA_BASS = [45, 41, 43, 40].flatMap((r) => [r, 0, 0, 0, 0, 0, r + 7, 0, 0, 0, 0, 0, r, 0, 0, 0]);
+
+/** Jefe: cromatismo tenso y rápido en Re menor. */
+const JEFE_LEAD = [
+  62, 62, 63, 62, 65, 62, 60, 62,
+  61, 61, 62, 61, 64, 61, 59, 61,
+  62, 65, 69, 65, 62, 60, 58, 57,
+  62, 63, 64, 65, 66, 67, 68, 69,
+  74, 74, 73, 74, 70, 74, 69, 74,
+  72, 72, 71, 72, 69, 72, 67, 72,
+  74, 70, 67, 70, 74, 77, 74, 70,
+  69, 68, 67, 66, 65, 64, 63, 62,
+];
+const JEFE_BASS = [38, 38, 37, 37, 38, 41, 40, 38].flatMap((r) => [r, r, r + 12, r, r, r, r + 12, r]);
+
+/** Nieve: dulce, en Fa mayor, con sextas. */
+const NIEVE_LEAD = [
+  77, 0, 74, 77, 81, 0, 77, 74,
+  76, 0, 72, 76, 79, 0, 76, 72,
+  74, 0, 71, 74, 77, 0, 74, 71,
+  72, 0, 69, 72, 76, 0, 72, 69,
+  81, 0, 77, 81, 84, 0, 81, 77,
+  79, 0, 76, 79, 83, 0, 79, 76,
+  77, 0, 74, 77, 81, 77, 74, 70,
+  72, 0, 0, 0, 0, 0, 0, 0,
+];
+const NIEVE_BASS = [41, 48, 43, 45, 41, 48, 43, 41].flatMap((r) => [r, 0, r + 7, 0, r + 12, 0, r + 7, 0]);
+
+/** Agua: balanceo tranquilo en Sol mayor. */
+const AGUA_LEAD = [arp([67, 71, 74, 79]), arp([64, 67, 71, 76]), arp([65, 69, 72, 77]), arp([62, 66, 69, 74])].flat();
+const AGUA_BASS = [43, 40, 41, 38].flatMap((r) => [r, 0, 0, r + 7, 0, 0, r + 12, 0]);
+
+/** Créditos: cierre cálido y lento. */
+const CREDITOS_LEAD = [
+  72, 0, 71, 0, 69, 0, 67, 0,
+  69, 0, 71, 0, 72, 0, 0, 0,
+  65, 0, 67, 0, 69, 0, 71, 0,
+  72, 0, 0, 0, 0, 0, 0, 0,
+  76, 0, 74, 0, 72, 0, 71, 0,
+  72, 0, 74, 0, 76, 0, 0, 0,
+  77, 0, 76, 0, 74, 0, 72, 0,
+  71, 0, 0, 0, 72, 0, 0, 0,
+];
+const CREDITOS_BASS = [48, 45, 41, 43, 48, 45, 41, 48].flatMap((r) => [r, 0, 0, 0, r + 7, 0, 0, 0]);
+
 export const TRACKS: Record<TrackName, Track> = {
-  focus: { bpm: 140, lead: FOCUS_LEAD, bass: FOCUS_BASS, leadWave: 'square', leadVol: 0.028, drums: true },
-  break: { bpm: 84, lead: BREAK_LEAD, bass: BREAK_BASS, leadWave: 'triangle', leadVol: 0.05, drums: false },
+  focus: { title: 'Bloque de concentración', mood: 'Para trabajar', bpm: 140, lead: FOCUS_LEAD, bass: FOCUS_BASS, leadWave: 'square', leadVol: 0.028, drums: true },
+  break: { title: 'Descanso en la nube', mood: 'Para descansar', bpm: 84, lead: BREAK_LEAD, bass: BREAK_BASS, leadWave: 'triangle', leadVol: 0.05, drums: false },
+  heroe: { title: 'Marcha del héroe', mood: 'Animada', bpm: 132, lead: HEROE_LEAD, bass: HEROE_BASS, leadWave: 'square', leadVol: 0.03, drums: true },
+  cueva: { title: 'Cueva de cristal', mood: 'Tranquila', bpm: 76, lead: CUEVA_LEAD, bass: CUEVA_BASS, leadWave: 'triangle', leadVol: 0.05, drums: false },
+  jefe: { title: 'Jefe a la vista', mood: 'Tensa', bpm: 168, lead: JEFE_LEAD, bass: JEFE_BASS, leadWave: 'sawtooth', leadVol: 0.022, drums: true },
+  nieve: { title: 'Nieve en el nivel 4', mood: 'Suave', bpm: 96, lead: NIEVE_LEAD, bass: NIEVE_BASS, leadWave: 'triangle', leadVol: 0.045, drums: false },
+  agua: { title: 'Zona de agua', mood: 'Tranquila', bpm: 104, lead: AGUA_LEAD, bass: AGUA_BASS, leadWave: 'sine', leadVol: 0.055, drums: false },
+  creditos: { title: 'Créditos finales', mood: 'Para terminar', bpm: 88, lead: CREDITOS_LEAD, bass: CREDITOS_BASS, leadWave: 'square', leadVol: 0.032, drums: true },
 };
+
+/** Orden en que se ven en el reproductor. */
+export const TRACK_LIST: TrackName[] = ['heroe', 'focus', 'jefe', 'agua', 'nieve', 'cueva', 'break', 'creditos'];
 
 export const midiToFreq = (m: number) => 440 * 2 ** ((m - 69) / 12);
 
@@ -49,6 +127,8 @@ let timer: ReturnType<typeof setInterval> | null = null;
 let master: GainNode | null = null;
 let noiseBuf: AudioBuffer | null = null;
 let current: TrackName | null = null;
+/** Volumen general de la música (0 a 1). Se aplica en caliente si ya está sonando. */
+let volume = 0.9;
 let step = 0;
 let nextAt = 0;
 
@@ -121,7 +201,7 @@ export function startMusic(name: TrackName) {
   if (!c) return;
   master = c.createGain();
   master.gain.setValueAtTime(0.0001, c.currentTime);
-  master.gain.exponentialRampToValueAtTime(0.9, c.currentTime + 0.4);
+  master.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), c.currentTime + 0.4);
   master.connect(c.destination);
   current = name;
   step = 0;
@@ -155,3 +235,22 @@ function stop() {
 }
 
 export const isMusicPlaying = () => timer !== null;
+
+/** Qué suena ahora mismo, o null. */
+export const currentTrack = (): TrackName | null => current;
+
+/** Cambia el volumen sin cortar la música. */
+export function setMusicVolume(v: number) {
+  volume = Math.max(0, Math.min(1, v));
+  const c = audio();
+  if (!master || !c) return;
+  try {
+    master.gain.cancelScheduledValues(c.currentTime);
+    master.gain.setValueAtTime(Math.max(0.0001, master.gain.value), c.currentTime);
+    master.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), c.currentTime + 0.12);
+  } catch {
+    /* el contexto ya no acepta cambios */
+  }
+}
+
+export const getMusicVolume = () => volume;

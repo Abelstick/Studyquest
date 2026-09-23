@@ -2551,3 +2551,94 @@ select.input {
 .brand__name span {
   color: color-mix(in srgb, var(--accent) 45%, var(--yellow));
 }
+
+/* ---------- Reproductor de música ---------- */
+.jb__now {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+}
+.jb__disc {
+  flex: none;
+  display: flex;
+}
+/* El disco gira solo mientras suena: dice de un vistazo si hay música. */
+.jb__disc.is-spinning {
+  animation: jb-spin 1.8s steps(6) infinite;
+}
+@keyframes jb-spin {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.25);
+  }
+}
+.jb__title {
+  font-weight: 900;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.jb__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.jb__vol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.jb__vol input {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--yellow);
+}
+.jb__list {
+  display: grid;
+  gap: 2px;
+}
+.jb__track {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  text-align: left;
+  background: transparent;
+  border: 2px solid transparent;
+  color: var(--text);
+  font: inherit;
+  transition: transform 0.07s steps(2), background-color 0.07s steps(2), border-color 0.07s steps(2);
+}
+.jb__track:hover {
+  background: var(--panel-2);
+  border-color: var(--line-soft);
+  transform: translateX(2px);
+}
+.jb__track.is-on {
+  background: var(--yellow);
+  border-color: var(--line);
+  color: var(--on-yellow);
+}
+.jb__n {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--panel-3);
+  border: 2px solid var(--line-soft);
+  font-family: var(--font-pixel);
+  font-size: 8px;
+}
+.jb__track.is-on .jb__n {
+  background: var(--panel);
+  border-color: var(--line);
+}

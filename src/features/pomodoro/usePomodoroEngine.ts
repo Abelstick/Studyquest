@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { sfx } from '@/audio/sfx';
+import { useJukebox } from '@/state/jukebox';
 import { usePomodoro } from '@/state/pomodoro';
 import { useUi } from '@/state/ui';
 import { PHASE_LABEL, formatClock } from '@/core/pomodoro';
-import { startMusic, stopMusic } from '@/audio/music';
 
 /**
  * Motor del Pomodoro: cierra las fases, pone la música de fondo y muestra la cuenta atrás en el título de la pestaña.
@@ -44,9 +44,14 @@ export function usePomodoroEngine() {
     };
   }, [status, tick]);
 
+  /*
+   * Durante la sesión, el Pomodoro toma prestada la música al reproductor y le devuelve
+   * al acabar lo que estuviera sonando antes. Así no se pelean por el mismo canal de audio.
+   */
   useEffect(() => {
-    if (status === 'running' && music && sound) startMusic(phase === 'focus' ? 'focus' : 'break');
-    else stopMusic();
-    return () => stopMusic();
+    const { borrow, giveBack } = useJukebox.getState();
+    if (status === 'running' && music && sound) borrow(phase === 'focus' ? 'focus' : 'break');
+    else giveBack();
+    return () => useJukebox.getState().giveBack();
   }, [status, phase, music, sound]);
 }

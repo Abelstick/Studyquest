@@ -314,17 +314,35 @@ export function Modal({ title, kicker, onClose, children, wide }: { title: strin
   );
 }
 
-export function ConfirmModal({ title, body, confirmLabel, onConfirm }: { title: string; body: string; confirmLabel: string; onConfirm: () => void }) {
+export interface ConfirmExtra {
+  /** Texto de la casilla, p. ej. «Borrar también la meta y el hábito del plan». */
+  label: string;
+  hint?: string;
+  defaultChecked?: boolean;
+}
+
+export function ConfirmModal({ title, body, confirmLabel, onConfirm, extra }: { title: string; body: string; confirmLabel: string; onConfirm: (extra: boolean) => void; extra?: ConfirmExtra }) {
   const close = useUi((s) => s.closeModal);
+  // Una acción opcional que va con el borrado; se decide aquí, no a tus espaldas.
+  const [marcado, setMarcado] = useState(extra?.defaultChecked ?? true);
   return (
     <Modal title={title} kicker="// ¿Seguro?" onClose={close}>
       <p className="muted">{body}</p>
+      {extra && (
+        <label className="stepcheck confirm__extra">
+          <input type="checkbox" checked={marcado} onChange={(e) => setMarcado(e.target.checked)} />
+          <span>
+            {extra.label}
+            {extra.hint && <span className="muted small"> · {extra.hint}</span>}
+          </span>
+        </label>
+      )}
       <div className="modal__actions">
         <Button
           variant="danger"
           onClick={() => {
             close();
-            onConfirm();
+            onConfirm(extra ? marcado : false);
           }}
         >
           {confirmLabel}

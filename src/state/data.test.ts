@@ -7,6 +7,7 @@ import { computeStreak, levelFromXp, xpAtLevelStart } from '@/core/game';
 import { CERT_XP } from '@/core/certifications';
 import { CHAIN_BONUS_XP } from '@/core/chains';
 import { computeStats } from '@/core/stats';
+import { planMembers } from '@/core/plans';
 import { today } from '@/core/dates';
 
 let repo: Repository;
@@ -607,6 +608,60 @@ describe('store de datos', () => {
       store.getState().setHabitValueOn(id, today(), 1);
       expect(store.getState().profile.xp).toBe(20);
       expect(store.getState().habitLogs[0].date).toBe(today());
+    });
+  });
+
+  describe('planes del planificador', () => {
+    const plan = () => {
+      const planId = 'plan-1';
+      return {
+        planId,
+        course: { id: 'c1', planId, title: 'Guitarra', professor: 'Plan inteligente', field: 'plan de estudio', mentor: null, modules: [], createdAt: '' },
+        goal: { id: 'g1', planId, title: 'Guitarra', rewardTitle: '', rewardDescription: '', milestones: [], createdAt: '' },
+        habit: { id: 'h1', planId, title: 'Estudiar Guitarra', frequency: { type: 'daily' as const }, measure: 'minutes' as const, target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-09-01', createdAt: '' },
+        tasks: [{ id: 't1', planId, title: 'Semana 1', courseId: 'c1', priority: 'mid' as const, status: 'todo' as const, dueDate: null, estimateMin: 60, xp: 40, subtasks: [], tags: ['plan'], createdAt: '', completedAt: null }],
+      };
+    };
+
+    it('crear un plan deja las cuatro cosas marcadas con el mismo id', () => {
+      const { course, goal, habit, tasks, planId } = plan();
+      store.getState().addPlan({ course, goal, habit, tasks });
+      const s = store.getState();
+      expect(s.courses[0].planId).toBe(planId);
+      expect(s.goals[0].planId).toBe(planId);
+      expect(s.habits[0].planId).toBe(planId);
+      expect(s.tasks[0].planId).toBe(planId);
+    });
+
+    it('borrar el curso y su plan no deja restos', async () => {
+      const { course, goal, habit, tasks, planId } = plan();
+      store.getState().addPlan({ course, goal, habit, tasks });
+      await flush();
+
+      const miembros = planMembers(planId, store.getState());
+      store.getState().deleteCourse(course.id);
+      store.getState().deletePlanExtras(miembros);
+
+      const s = store.getState();
+      expect([s.courses.length, s.goals.length, s.habits.length, s.tasks.length]).toEqual([0, 0, 0, 0]);
+      await flush();
+      expect(await repo.goals.list()).toHaveLength(0);
+      expect(await repo.habits.list()).toHaveLength(0);
+    });
+
+    it('si NO se pide limpiar el plan, la meta y el hábito se quedan', () => {
+      const { course, goal, habit, tasks } = plan();
+      store.getState().addPlan({ course, goal, habit, tasks });
+      store.getState().deleteCourse(course.id); // sin llamar a deletePlanExtras
+      const s = store.getState();
+      expect(s.courses).toHaveLength(0);
+      expect(s.goals).toHaveLength(1);
+      expect(s.habits).toHaveLength(1);
+    });
+
+    it('limpiar un plan vacío no hace nada', () => {
+      store.getState().deletePlanExtras({ tasks: [] });
+      expect(store.getState().goals).toHaveLength(0);
     });
   });
 

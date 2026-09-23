@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { newId } from '@/core/dates';
 import { setSoundEnabled, sfx } from '@/audio/sfx';
 
+import type { ConfirmExtra } from '@/ui/kit';
+
 export type ModalState =
   | null
   | { type: 'task'; id?: string; dueDate?: string }
@@ -19,7 +21,7 @@ export type ModalState =
   | { type: 'ai' }
   | { type: 'guide' }
   | { type: 'settings' }
-  | { type: 'confirm'; title: string; body: string; confirmLabel: string; onConfirm: () => void };
+  | { type: 'confirm'; title: string; body: string; confirmLabel: string; onConfirm: (extra: boolean) => void; extra?: ConfirmExtra };
 
 export interface Toast {
   id: string;

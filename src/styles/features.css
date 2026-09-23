@@ -2783,3 +2783,9 @@ select.input {
 .week__day.is-off {
   opacity: 0.4;
 }
+/* Casilla opcional dentro de un aviso de borrado. */
+.confirm__extra {
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+}

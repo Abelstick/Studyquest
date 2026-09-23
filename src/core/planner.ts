@@ -197,11 +197,13 @@ export interface PlanEntities {
 
 export function buildPlanEntities(roadmap: Roadmap, schedule: Schedule, weekly: number[], now: ISODate = today()): PlanEntities {
   const created = isoNow();
+  // Marca común: curso, meta, hábito y tareas salen del mismo plan, así se puede deshacer entero.
+  const planId = newId();
   const { items } = schedule;
   const title = roadmap.goal;
 
   const course: Course = {
-    id: newId(), title, professor: 'Plan inteligente', field: 'plan de estudio', mentor: null, createdAt: created,
+    id: newId(), planId, title, professor: 'Plan inteligente', field: 'plan de estudio', mentor: null, createdAt: created,
     modules: items.map((it) => ({
       id: newId(), title: it.title, summary: `${fmtH(it.minutes)} de estudio`, xp: Math.max(100, Math.round(it.minutes / 60) * 20),
       topics: it.topics.map((t) => ({ id: newId(), title: t, status: 'todo' as const, review: false, markedAt: null })),
@@ -209,7 +211,7 @@ export function buildPlanEntities(roadmap: Roadmap, schedule: Schedule, weekly: 
   };
 
   const goal: Goal = {
-    id: newId(), title, createdAt: created,
+    id: newId(), planId, title, createdAt: created,
     rewardTitle: `Ruta completada: ${title}`,
     rewardDescription: 'Terminaste tu plan de estudio de principio a fin. ¡Celébralo!',
     milestones: items.map((it) => ({
@@ -221,7 +223,7 @@ export function buildPlanEntities(roadmap: Roadmap, schedule: Schedule, weekly: 
   const tasks: Task[] = schedule.chunks
     .filter((c) => items[c.item].kind === 'module')
     .map((c) => ({
-      id: newId(), title: `${items[c.item].title} · semana del ${shortDate(c.week < now ? now : c.week)}`, courseId: course.id, priority: 'mid' as const, status: 'todo' as const,
+      id: newId(), planId, title: `${items[c.item].title} · semana del ${shortDate(c.week < now ? now : c.week)}`, courseId: course.id, priority: 'mid' as const, status: 'todo' as const,
       dueDate: c.dueDate, estimateMin: c.minutes, xp: Math.min(150, Math.max(20, Math.round(c.minutes / 10) * 5)),
       subtasks: c.topics.map((t) => ({ id: newId(), title: t, done: false })), tags: ['plan'], createdAt: created, completedAt: null,
     }));
@@ -231,7 +233,7 @@ export function buildPlanEntities(roadmap: Roadmap, schedule: Schedule, weekly: 
   if (projectIdx >= 0 && range) {
     const p = items[projectIdx];
     tasks.push({
-      id: newId(), title: p.title, courseId: course.id, priority: 'boss', status: 'todo', dueDate: range.end, estimateMin: p.minutes, xp: 120,
+      id: newId(), planId, title: p.title, courseId: course.id, priority: 'boss', status: 'todo', dueDate: range.end, estimateMin: p.minutes, xp: 120,
       subtasks: p.topics.map((t) => ({ id: newId(), title: t, done: false })), tags: ['plan', 'proyecto final'], createdAt: created, completedAt: null,
     });
   }
@@ -239,7 +241,7 @@ export function buildPlanEntities(roadmap: Roadmap, schedule: Schedule, weekly: 
   const studyDays = weekly.flatMap((m, i) => (m > 0 ? [i] : []));
   const avg = studyDays.length ? weekTotal(weekly) / studyDays.length : 30;
   const habit: Habit = {
-    id: newId(), title: `Estudiar ${title}`, frequency: studyDays.length === 7 || !studyDays.length ? { type: 'daily' } : { type: 'days', days: studyDays },
+    id: newId(), planId, title: `Estudiar ${title}`, frequency: studyDays.length === 7 || !studyDays.length ? { type: 'daily' } : { type: 'days', days: studyDays },
     measure: 'minutes', target: Math.max(10, Math.round(avg / 5) * 5), xp: 30, reminder: null, steps: [], startDate: now, createdAt: created,
   };
 

@@ -60,7 +60,7 @@ function ModalHost() {
     case 'welcome':
       return <WelcomeModal />;
     case 'confirm':
-      return <ConfirmModal title={modal.title} body={modal.body} confirmLabel={modal.confirmLabel} onConfirm={modal.onConfirm} />;
+      return <ConfirmModal title={modal.title} body={modal.body} confirmLabel={modal.confirmLabel} onConfirm={modal.onConfirm} extra={modal.extra} />;
     default:
       return null;
   }

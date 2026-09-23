@@ -13,6 +13,7 @@ import { CERT_XP } from '@/core/certifications';
 import { CHAIN_BONUS_XP, chainsToReward, cleanChains } from '@/core/chains';
 import { CATCH_UP_DAYS, canCatchUp } from '@/core/catchup';
 import type { PlanEntities } from '@/core/planner';
+import { planIdsToDelete, type PlanMembers } from '@/core/plans';
 import { buildingById, cityUpgrades } from '@/core/city';
 import { ACHIEVEMENTS } from '@/core/achievements';
 import { shopItem } from '@/core/catalog';
@@ -100,6 +101,8 @@ export interface DataState extends Data {
   openChest: () => void;
   /** Crea de una vez lo que genera el planificador: curso, meta, hábito de estudio y tareas con fechas. */
   addPlan: (plan: PlanEntities) => void;
+  /** Borra de golpe la meta y el hábito que salieron del mismo plan que un curso. */
+  deletePlanExtras: (members: PlanMembers) => void;
 
   markAllRead: () => void;
   notify: (n: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => void;
@@ -773,6 +776,14 @@ export function createDataStore(repo: Repository) {
         sfx.chest();
         if (reward.xp) award(reward.xp, 'bonus', 'Cofre diario', '¡Sorpresa en el cofre!');
         else checkAchievements();
+      },
+
+      deletePlanExtras(members) {
+        const { goals, habits } = planIdsToDelete(members);
+        if (!goals.length && !habits.length) return;
+        // El hábito arrastra su historial, igual que al borrarlo a mano.
+        habits.forEach((id) => get().deleteHabit(id));
+        goals.forEach((id) => get().deleteGoal(id));
       },
 
       markAllRead() {

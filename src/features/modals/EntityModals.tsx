@@ -4,6 +4,7 @@ import { useUi } from '@/state/ui';
 import { newId, today } from '@/core/dates';
 import type { Mentor } from '@/core/domain';
 import { Button, ChipGroup, Field, Modal, linesToList, TextInput, NumberInput } from '@/ui/kit';
+import { describeExtras, planOfCourse } from '@/core/plans';
 import { ConceptHint } from '../help/ConceptGuide';
 
 /** "Título | 120" → { title, xp }. */
@@ -15,7 +16,7 @@ const parseXpLine = (line: string, fallback: number) => {
 export function CourseModal({ id }: { id?: string }) {
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
-  const { courses, createCourse, updateCourse, deleteCourse } = useData();
+  const { courses, goals, habits, tasks, createCourse, updateCourse, deleteCourse, deletePlanExtras } = useData();
   const editing = courses.find((c) => c.id === id);
 
   const [title, setTitle] = useState(editing?.title ?? '');
@@ -73,7 +74,27 @@ export function CourseModal({ id }: { id?: string }) {
           </Button>
           <Button onClick={close}>Cancelar</Button>
           {editing && (
-            <Button variant="danger" className="push-right" onClick={() => openModal({ type: 'confirm', title: 'Borrar curso', body: `Se eliminará "${editing.title}" con todos sus módulos, temas y tareas.`, confirmLabel: 'Borrar', onConfirm: () => deleteCourse(editing.id) })}>
+            <Button
+              variant="danger"
+              className="push-right"
+              onClick={() => {
+                // Si el curso salió del planificador, se ofrece borrar también la meta y el hábito
+                // que nacieron con él: si no, quedaban sueltos por ahí.
+                const plan = planOfCourse(editing, { courses, goals, habits, tasks });
+                const extras = plan ? describeExtras(plan) : '';
+                openModal({
+                  type: 'confirm',
+                  title: 'Borrar curso',
+                  body: `Se eliminará "${editing.title}" con todos sus módulos, temas y tareas.`,
+                  confirmLabel: 'Borrar',
+                  extra: extras ? { label: `Borrar también ${extras}`, hint: 'se crearon con este plan', defaultChecked: true } : undefined,
+                  onConfirm: (tambien) => {
+                    deleteCourse(editing.id);
+                    if (tambien && plan) deletePlanExtras(plan);
+                  },
+                });
+              }}
+            >
               Borrar
             </Button>
           )}

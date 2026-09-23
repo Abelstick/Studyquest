@@ -97,6 +97,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     const mentor = isObj(o.mentor) ? { name: str(o.mentor.name), skills: str(o.mentor.skills), feedback: str(o.mentor.feedback), feedbackAt: DATE.test(str(o.mentor.feedbackAt)) ? str(o.mentor.feedbackAt) : null } : null;
     return {
       id: fixId(o.id), title: str(o.title), professor: str(o.professor), field: str(o.field), mentor, createdAt: str(o.createdAt, new Date().toISOString()),
+      ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       modules: subs(o.modules, (m) => ({
         id: fixId(m.id), title: str(m.title, 'Módulo'), summary: str(m.summary), xp: num(m.xp, 100),
         topics: subs(m.topics, (t) => ({
@@ -112,6 +113,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     if (!str(o.title) || !isObj(o.frequency) || typeof o.frequency.type !== 'string') return null;
     return {
       id: fixId(o.id), title: str(o.title), frequency: o.frequency, measure: str(o.measure, 'times'), target: Math.max(1, num(o.target, 1)), xp: num(o.xp, 10),
+      ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       reminder: /^\d{2}:\d{2}$/.test(str(o.reminder)) ? str(o.reminder) : null,
       ...(typeof o.reminderRepeatMin === 'number' && o.reminderRepeatMin >= 0 && o.reminderRepeatMin <= 240 ? { reminderRepeatMin: o.reminderRepeatMin } : {}),
       steps: subs(o.steps, (s) => ({ id: fixId(s.id), title: str(s.title, 'Paso'), minutes: num(s.minutes) })),
@@ -132,6 +134,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       subtasks: subs(o.subtasks, (s) => ({ id: fixId(s.id), title: str(s.title, 'Subtarea'), done: s.done === true })),
       tags: asArray(o.tags).filter((t): t is string => typeof t === 'string'), createdAt: str(o.createdAt, new Date().toISOString()),
       completedAt: DATE.test(str(o.completedAt)) ? str(o.completedAt) : null,
+      ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       ...(isObj(o.recurrence) && ['day', 'week', 'month'].includes(str(o.recurrence.unit)) ? { recurrence: { unit: str(o.recurrence.unit), interval: Math.min(365, Math.max(1, Math.floor(num(o.recurrence.interval, 1)))) } } : {}),
       spawnedRaw: str(o.spawnedId),
     };
@@ -147,6 +150,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     str(o.title)
       ? {
           id: fixId(o.id), title: str(o.title), rewardTitle: str(o.rewardTitle), rewardDescription: str(o.rewardDescription), createdAt: str(o.createdAt, new Date().toISOString()),
+          ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
           milestones: subs(o.milestones, (m) => ({
             id: fixId(m.id), title: str(m.title, 'Hito'), summary: str(m.summary), xp: num(m.xp, 100), done: m.done === true,
             skills: subs(m.skills, (k) => ({ id: fixId(k.id), label: str(k.label, 'Habilidad'), done: k.done === true })),

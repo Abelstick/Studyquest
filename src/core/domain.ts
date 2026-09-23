@@ -81,6 +81,8 @@ export interface Task {
   tags: string[];
   createdAt: ISODateTime;
   /** Fecha local de finalización (no UTC), para agrupar por día sin desfases. */
+  /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
+  planId?: ID;
   completedAt: ISODate | null;
   recurrence?: Recurrence;
   /** Tarea que nació al completar esta (si se reabre y sigue sin tocar, se elimina). */
@@ -123,6 +125,8 @@ export interface Habit {
   /** Día local desde el que cuenta el hábito (ancla de "cada X días"). */
   startDate: ISODate;
   createdAt: ISODateTime;
+  /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
+  planId?: ID;
 }
 
 /**
@@ -191,6 +195,8 @@ export interface Course {
   modules: Module[];
   mentor: Mentor | null;
   createdAt: ISODateTime;
+  /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
+  planId?: ID;
 }
 
 /* ---------- Metas y proyectos ---------- */
@@ -216,6 +222,8 @@ export interface Goal {
   rewardDescription: string;
   milestones: Milestone[];
   createdAt: ISODateTime;
+  /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
+  planId?: ID;
 }
 
 export interface Checkpoint {

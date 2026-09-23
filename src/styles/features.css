@@ -2642,3 +2642,106 @@ select.input {
   background: var(--panel);
   border-color: var(--line);
 }
+
+/* ---------- Apuntes ---------- */
+.notes {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.notes li {
+  position: relative;
+}
+.notecard {
+  width: 100%;
+  display: grid;
+  gap: 6px;
+  padding: 12px 40px 12px 12px;
+  text-align: left;
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  box-shadow: var(--sh-sm);
+  color: var(--text);
+  font: inherit;
+  transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+}
+.notecard:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--sh);
+}
+.notecard.is-on {
+  background: var(--panel-2);
+  border-color: var(--accent, var(--red));
+}
+.notecard__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.notecard__ex {
+  overflow-wrap: anywhere;
+}
+/* La estrella de fijar va encima de la tarjeta, no dentro del botón: dos acciones distintas. */
+.notecard__pin {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 2px solid var(--line-soft);
+  color: var(--xp-text);
+  font-size: 14px;
+  line-height: 1;
+}
+.notecard__pin[aria-pressed='true'] {
+  background: var(--yellow);
+  border-color: var(--line);
+  color: var(--on-yellow);
+}
+/* Cuerpo del apunte ya formateado. */
+.note__body {
+  display: grid;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+.note__h1 {
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.note__h2 {
+  font-weight: 900;
+  font-size: 15px;
+}
+.note__ul,
+.note__ol {
+  display: grid;
+  gap: 4px;
+  padding-left: 22px;
+}
+.note__ul li {
+  list-style: square;
+}
+.note__ol li {
+  list-style: decimal;
+}
+.note__code {
+  padding: 1px 5px;
+  background: var(--panel-3);
+  border: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+.note__editor {
+  min-height: 300px;
+  line-height: 1.5;
+  resize: vertical;
+}
+@media (max-width: 980px) {
+  .note__editor {
+    min-height: 220px;
+  }
+}

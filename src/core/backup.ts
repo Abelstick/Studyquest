@@ -162,6 +162,21 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
         }
       : null,
   );
+  const notes = list('notes', 'apuntes', (o) => {
+    if (!str(o.title) && !str(o.body)) return null;
+    const courseId = ref(o.courseId);
+    const linked = courseId && courseIds.has(courseId) ? courseId : null;
+    const topicId = ref(o.topicId);
+    const when = str(o.createdAt, new Date().toISOString());
+    return {
+      id: fixId(o.id), title: str(o.title).slice(0, 200), body: str(o.body),
+      courseId: linked,
+      // Sin curso no puede haber tema: si el curso se cayó, el apunte se queda suelto.
+      topicId: linked && topicId ? topicId : null,
+      tags: asArray(o.tags).filter((t): t is string => typeof t === 'string'),
+      pinned: o.pinned === true, createdAt: when, updatedAt: str(o.updatedAt, when),
+    };
+  });
   const certifications = list('certifications', 'certificaciones', (o) => {
     if (!str(o.title)) return null;
     const courseId = ref(o.courseId);
@@ -223,11 +238,11 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
   if (fixedIds) warnings.push(`${fixedIds} identificadores se regeneraron.`);
 
   // Los tipos exactos ya se validaron arriba; el cast evita repetirlos en cada colección.
-  const snapshot = { profile, tasks, habits, habitLogs, courses, goals, projects, certifications, personalRewards, sessions, xpEvents, notifications } as unknown as Snapshot;
+  const snapshot = { profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications } as unknown as Snapshot;
   return { ok: true, snapshot, warnings };
 }
 
 export const summarize = (s: Snapshot) => ({
-  tareas: s.tasks.length, hábitos: s.habits.length, cursos: s.courses.length, metas: s.goals.length, proyectos: s.projects.length, certificaciones: s.certifications.length,
+  tareas: s.tasks.length, hábitos: s.habits.length, cursos: s.courses.length, metas: s.goals.length, proyectos: s.projects.length, apuntes: s.notes.length, certificaciones: s.certifications.length,
   'sesiones de estudio': s.sessions.length, 'registros de XP': s.xpEvents.length,
 });

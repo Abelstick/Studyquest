@@ -19,7 +19,7 @@ const flush = () => new Promise((r) => setTimeout(r, 20));
 const snapshotOf = () => {
   const s = store.getState();
   return { profile: s.profile, tasks: s.tasks, habits: s.habits, habitLogs: s.habitLogs, courses: s.courses, goals: s.goals, projects: s.projects,
-    certifications: s.certifications, personalRewards: s.personalRewards, sessions: s.sessions, xpEvents: s.xpEvents, notifications: s.notifications };
+    notes: s.notes, certifications: s.certifications, personalRewards: s.personalRewards, sessions: s.sessions, xpEvents: s.xpEvents, notifications: s.notifications };
 };
 
 const draft = (over = {}) => ({
@@ -464,6 +464,66 @@ describe('store de datos', () => {
       const chains = store.getState().profile.chains ?? [];
       const veces = chains.flatMap((x) => x.habitIds).filter((x) => x === b).length;
       expect(veces).toBe(1);
+    });
+  });
+
+  describe('apuntes', () => {
+    it('crear un apunte lo guarda y lo cuenta en la biblioteca', async () => {
+      const antes = computeStats(snapshotOf()).notes;
+      const id = store.getState().createNote({ title: 'JOINs', body: '- solo lo que casa en las dos tablas', courseId: null, topicId: null, tags: ['sql'], pinned: false });
+      expect(store.getState().notes).toHaveLength(1);
+      expect(computeStats(snapshotOf()).notes).toBe(antes + 1);
+      await flush();
+      expect((await repo.notes.list())[0].id).toBe(id);
+    });
+
+    it('un apunte vacío no suma a la biblioteca', () => {
+      store.getState().createNote({ title: '', body: '   ', courseId: null, topicId: null, tags: [], pinned: false });
+      expect(computeStats(snapshotOf()).notes).toBe(0);
+    });
+
+    it('editarlo actualiza la fecha de cambio', async () => {
+      const id = store.getState().createNote({ title: 'A', body: 'uno', courseId: null, topicId: null, tags: [], pinned: false });
+      const antes = store.getState().notes[0].updatedAt;
+      vi.setSystemTime(new Date(2026, 8, 17, 12));
+      store.getState().updateNote(id, { body: 'dos' });
+      const despues = store.getState().notes[0];
+      expect(despues.body).toBe('dos');
+      expect(despues.updatedAt > antes).toBe(true);
+      expect(despues.createdAt).toBe(store.getState().notes[0].createdAt); // la de creación no se toca
+      await flush();
+      expect((await repo.notes.list())[0].body).toBe('dos');
+    });
+
+    it('al borrar el curso, el apunte se conserva pero pierde curso y tema', async () => {
+      store.getState().createCourse({ title: 'Curso', professor: '', field: '', mentor: null, modules: [] });
+      const courseId = store.getState().courses[0].id;
+      store.getState().createNote({ title: 'Del curso', body: 'algo', courseId, topicId: 't1', tags: [], pinned: false });
+      await flush();
+
+      store.getState().deleteCourse(courseId);
+
+      expect(store.getState().notes).toHaveLength(1);
+      expect(store.getState().notes[0]).toMatchObject({ courseId: null, topicId: null });
+      await flush();
+      const guardado = await repo.notes.list();
+      expect(guardado[0].courseId).toBeNull();
+      expect(guardado[0].topicId).toBeNull();
+    });
+
+    it('borrar un apunte lo quita de la base', async () => {
+      const id = store.getState().createNote({ title: 'A', body: 'x', courseId: null, topicId: null, tags: [], pinned: false });
+      await flush();
+      store.getState().deleteNote(id);
+      expect(store.getState().notes).toHaveLength(0);
+      await flush();
+      expect(await repo.notes.list()).toHaveLength(0);
+    });
+
+    it('restaurar una partida también guarda los apuntes', async () => {
+      await store.getState().finishOnboarding(true);
+      expect(store.getState().notes.length).toBeGreaterThan(0);
+      expect(await repo.notes.list()).toHaveLength(store.getState().notes.length);
     });
   });
 

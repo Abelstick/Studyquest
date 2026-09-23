@@ -3,7 +3,16 @@ import type { ISODate } from './domain';
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export const toISODate = (d: Date): ISODate => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/**
+ * Fecha local a partir de «2026-09-20». Acepta también una marca de tiempo completa
+ * («2026-09-20T22:00:00.000Z»): se convierte al DÍA LOCAL, no al día en UTC, porque si no
+ * cerca de medianoche saldría un día de diferencia.
+ */
 export const fromISODate = (s: ISODate): Date => {
+  if (s.includes('T')) {
+    const t = new Date(s);
+    return Number.isNaN(t.getTime()) ? t : new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  }
   const [y, m, d] = s.split('-').map(Number);
   return new Date(y, m - 1, d);
 };

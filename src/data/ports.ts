@@ -6,7 +6,7 @@
  * implemente `Repository` y `AuthPort`, y registrarlo en `data/index.ts`. Nada más cambia.
  */
 import type {
-  AppNotification, Certification, Course, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent,
+  AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent,
 } from '@/core/domain';
 
 /** Colección genérica. Los ids los genera el cliente, así que crear es idempotente y funciona offline. */
@@ -37,6 +37,7 @@ export interface Repository {
   courses: Collection<Course>;
   goals: Collection<Goal>;
   projects: Collection<Project>;
+  notes: Collection<Note>;
   certifications: Collection<Certification>;
   personalRewards: Collection<PersonalReward>;
   sessions: Pick<Collection<StudySession>, 'list' | 'create' | 'createMany' | 'remove'>;

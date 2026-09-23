@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { courseProgress, courseRank, moduleStates, topicXp, type ModuleState } from '@/core/game';
@@ -7,6 +7,7 @@ import { courseHours, courseStreak } from '@/core/stats';
 import { agoDays, diffDays, today } from '@/core/dates';
 import { reviewDueDate } from '@/core/review';
 import { certificationsOfCourse, safeUrl } from '@/core/certifications';
+import { blankNote, notesOfTopic } from '@/core/notes';
 import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Panel, Tag, cx, TextInput } from '@/ui/kit';
@@ -26,9 +27,12 @@ const TOPIC_LABEL: Record<TopicStatus, string> = { todo: 'Pendiente', doing: 'En
 
 export default function CursoDetalle() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const course = useData((s) => s.courses.find((c) => c.id === id));
   const sessions = useData((s) => s.sessions);
   const allCerts = useData((s) => s.certifications);
+  const allNotes = useData((s) => s.notes);
+  const createNote = useData((s) => s.createNote);
   const { setTopicStatus, toggleTopicReview, addTopic, removeTopic, addModule } = useData();
   const openModal = useUi((s) => s.openModal);
 
@@ -146,6 +150,19 @@ export default function CursoDetalle() {
                     </button>
                     <button type="button" className="chip chip--sm" onClick={() => openModal({ type: 'cards', courseId: course.id, topicId: t.id })} aria-label={`Tarjetas de ${t.title}`}>
                       ♪ Tarjetas{t.cards?.length ? ` (${t.cards.length})` : ''}
+                    </button>
+                    {/* Apuntes del tema: si no hay, lo crea ya colgado de este tema y te lleva a escribirlo. */}
+                    <button
+                      type="button"
+                      className={cx('chip chip--sm', notesOfTopic(allNotes, t.id).length > 0 && 'is-on')}
+                      onClick={() => {
+                        const mios = notesOfTopic(allNotes, t.id);
+                        if (!mios.length) createNote(blankNote({ title: t.title, courseId: course.id, topicId: t.id }));
+                        navigate('/apuntes');
+                      }}
+                      aria-label={`Apuntes de ${t.title}`}
+                    >
+                      ✎ Apuntes{notesOfTopic(allNotes, t.id).length ? ` (${notesOfTopic(allNotes, t.id).length})` : ''}
                     </button>
                     <button type="button" className="icon-btn icon-btn--sm" aria-label={`Quitar ${t.title}`} onClick={() => removeTopic(course.id, t.id)}>
                       ✕

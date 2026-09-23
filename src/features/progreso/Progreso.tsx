@@ -25,6 +25,7 @@ export default function Progreso() {
   const goals = useData((s) => s.goals);
   const projects = useData((s) => s.projects);
   const personalRewards = useData((s) => s.personalRewards);
+  const notes = useData((s) => s.notes);
   const certifications = useData((s) => s.certifications);
   const sessions = useData((s) => s.sessions);
   const xpEvents = useData((s) => s.xpEvents);
@@ -32,8 +33,8 @@ export default function Progreso() {
   const [range, setRange] = useState<Range>('90');
 
   const snap: Snapshot = useMemo(
-    () => ({ profile, tasks, habits, habitLogs, courses, goals, projects, certifications, personalRewards, sessions, xpEvents, notifications }),
-    [profile, tasks, habits, habitLogs, courses, goals, projects, certifications, personalRewards, sessions, xpEvents, notifications],
+    () => ({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications }),
+    [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications],
   );
   const now = today();
 

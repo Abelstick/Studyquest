@@ -64,6 +64,7 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 | **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha límite, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
 | **Planificador** | Le dices «quiero aprender análisis de datos en 3 meses» y genera la ruta (Excel → SQL → Python → Pandas → Power BI → proyecto final) y **un plan con fechas** según tu disponibilidad, tus tareas y tus hábitos. Con **IA (Gemini, gratis)** o con plantillas. |
 | **Certificaciones** | Vitrina de tus credenciales: título, quién la emite, fecha, **enlace al certificado** (se abre en una pestaña nueva), ID de credencial, caducidad con aviso y, si quieres, el curso con el que se relaciona. Cada una da XP y suma una pieza a tu museo. |
+| **Apuntes** | Tu cuaderno: escribe lo que aprendes con un formato mínimo (`# título`, `- punto`, `**negrita**`, `` `código` ``). Cada apunte puede colgar de un curso y de un tema concreto, o ir suelto. Búsqueda sin tildes, etiquetas, fijar arriba y **exportar todo a Markdown** para llevártelo a Obsidian. Cada apunte suma un punto a tu biblioteca. |
 | **Ciudad** | Seis edificios que **crecen con tu progreso real** (casa, biblioteca, academia, laboratorio, arena y museo), de 0 a 5 niveles, con recompensas en monedas al mejorar. También aparece resumida en Inicio. |
 | **Calendario** | Vista mensual con tus tareas por fecha límite, las repeticiones futuras y los repasos de flashcards. Arrastra una tarea a otro día para reprogramarla. |
 | **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
@@ -128,7 +129,7 @@ El `.env.example` viene con `VITE_DATA_PROVIDER=local`, así que la app funciona
 ## Configurar Supabase
 
 1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. Ve a **SQL Editor**, pega el contenido de [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) y ejecútalo. Crea las tablas y activa **Row Level Security**: cada usuario solo puede ver y modificar sus propias filas. Ejecuta después [`0005_certifications.sql`](supabase/migrations/0005_certifications.sql), que añade la tabla de certificaciones. **Si ya tenías la base creada antes**, te basta con ejecutar esa última.
+2. Ve a **SQL Editor**, pega el contenido de [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) y ejecútalo. Crea las tablas y activa **Row Level Security**: cada usuario solo puede ver y modificar sus propias filas. Ejecuta después [`0005_certifications.sql`](supabase/migrations/0005_certifications.sql) y [`0006_notes.sql`](supabase/migrations/0006_notes.sql), que añaden las tablas de certificaciones y apuntes. **Si ya tenías la base creada antes**, te basta con ejecutar esa última.
 3. En **Project Settings → API** copia la *Project URL* y la clave *anon public* en tu `.env`:
 
    ```ini
@@ -403,6 +404,8 @@ Pantalla **Ciudad** (y un resumen en Inicio). Cada área de la app es un edifici
 
 **Tareas recurrentes.** En el formulario, *Repetir*: cada N días, semanas o meses. Al completarla **nace la siguiente**, con su nueva fecha y sin avance. La fecha sigue el calendario original pero nunca cae en el pasado (completar tarde no crea una cola de atrasadas; 31 ene + 1 mes = 28/29 feb). Si la reabres y nadie tocó la siguiente, esta se retira.
 
+**Apuntes.** El cuerpo se escribe en texto plano con un formato mínimo y **se analiza a una estructura de datos que la pantalla pinta con elementos de React, nunca convirtiéndolo a HTML**: así, por raro que sea lo que escribas, no puede inyectar nada en la app. Los apuntes viven en su propia tabla y no dentro del documento del curso, a propósito: los cursos se reescriben enteros cada vez que marcas un tema, y arrastrar todos los apuntes en cada marca sería tirar ancho de banda a la basura. Si borras un curso, sus apuntes **se conservan** y solo pierden el vínculo.
+
 **Fondos por capas.** El fondo de cada mundo no es un color plano: son cuatro capas a distinta profundidad, como el fondo de un juego de plataformas — **cielo** en degradado, **lo que flota en él** (nubes, estrellas, luna en cuarto creciente, burbujas, copos, sol), **silueta lejana** (colinas, montañas, dunas, almenas, árboles secos) y **detalle cercano** (arbustos, pinos, cactus, algas, lápidas, brillo de lava). Todo es pixel art dibujado con rectángulos, sin una sola imagen que descargar: se genera con `npm run worlds` en [`scripts/gen-worlds.mjs`](scripts/gen-worlds.mjs) y sale como data-URIs dentro del CSS. Comprimido, la hoja de estilos entera pesa unos 20 KB, y el scroll no se resiente (medido: 16,6 ms por fotograma con decorado frente a 16,5 sin él).
 
 **Mundos con material propio.** Cada mundo comprable no cambia solo el fondo: cambia el **suelo** (hierba, piedra, arena mojada, hielo, adobe, tablones), la **textura del muro** de la barra lateral y el **color de acento** que tiñe los detalles. Los siete mundos están comprobados en día y noche: el texto de la barra pasa el contraste mínimo en los catorce combinados.
@@ -475,7 +478,7 @@ src/
 ├─ audio/      Efectos 8-bit con Web Audio
 └─ pwa/        Hooks de conexión e instalación, y cliente de notificaciones push
 supabase/
-├─ migrations/   Esquema SQL con RLS (0001 base · 0002 recordatorios · 0005 certificaciones)
+├─ migrations/   Esquema SQL con RLS (0001 base · 0002 recordatorios · 0005 certificaciones · 0006 apuntes)
 ├─ functions/    Edge Function `send-reminders` (+ `_shared/due.ts`, espejo de las reglas de «¿toca hoy?»)
 └─ cron.sql.example   Programación del envío cada minuto
 public/push-sw.js      Manejo de notificaciones dentro del service worker
@@ -579,6 +582,7 @@ Cubren la lógica que más importa:
 | El planificador no muestra «Generar con IA» | Falta activar las funciones inteligentes: pulsa «🔑 Activar funciones inteligentes» (o ve a Perfil) y pega tu clave de Google AI Studio. |
 | «Eso no parece una clave: no puede estar vacía ni llevar espacios» | Se copió con espacios o saltos de línea en medio, o solo un trozo. Vuelve a copiarla entera desde Google AI Studio (el botón de copiar, sin seleccionar a mano). |
 | Al guardar la clave en mi cuenta sale un error | Falta ejecutar `0004_user_secrets.sql` en el SQL Editor de Supabase. La clave sí funciona en el dispositivo mientras tanto. |
+| Al guardar un apunte sale un error | Falta ejecutar `0006_notes.sql` en el SQL Editor de Supabase (crea la tabla `notes`). |
 | Al registrar una certificación sale un error al guardar | Falta ejecutar `0005_certifications.sql` en el SQL Editor de Supabase (crea la tabla `certifications`). |
 | Puse un enlace y la certificación se guardó sin él | Solo se aceptan enlaces `http(s)`. Pega la dirección completa, por ejemplo `https://coursera.org/verify/ABC123`. |
 | «Frase incorrecta» al desbloquear | La frase es la que elegiste al guardarla (distingue mayúsculas). Si la perdiste, pulsa «Olvidé mi frase», que borra la copia cifrada de tu cuenta, y pega la clave otra vez (la sigues viendo en Google AI Studio). |

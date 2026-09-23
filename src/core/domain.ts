@@ -235,6 +235,26 @@ export interface Project {
   createdAt: ISODateTime;
 }
 
+/* ---------- Apuntes ---------- */
+/**
+ * Lo que escribes mientras estudias. Puede ir suelto o colgar de un curso y, dentro de él,
+ * de un tema concreto. El cuerpo es texto plano con un formato mínimo (ver core/notes.ts).
+ */
+export interface Note {
+  id: ID;
+  title: string;
+  body: string;
+  /** Curso al que pertenece, si lo hay. */
+  courseId: ID | null;
+  /** Tema concreto dentro de ese curso. Solo tiene sentido con `courseId`. */
+  topicId: ID | null;
+  tags: string[];
+  /** Fijado arriba del todo. */
+  pinned: boolean;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+}
+
 /* ---------- Certificaciones ---------- */
 /**
  * Una credencial que ya obtuviste (un curso terminado, una certificación oficial…).
@@ -305,6 +325,7 @@ export interface Snapshot {
   courses: Course[];
   goals: Goal[];
   projects: Project[];
+  notes: Note[];
   certifications: Certification[];
   personalRewards: PersonalReward[];
   sessions: StudySession[];

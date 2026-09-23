@@ -20,6 +20,7 @@ export const NAV: NavItem[] = [
   { to: '/planificador', label: 'Planificador', sprite: 'sword', kicker: 'Estratega', group: 'aprender' },
   { to: '/tareas', label: 'Tareas', sprite: 'qblock', kicker: 'Bloques ?', mobile: true, group: 'hoy' },
   { to: '/calendario', label: 'Calendario', sprite: 'flag', kicker: 'Mapa del mundo', group: 'hoy' },
+  { to: '/apuntes', label: 'Apuntes', sprite: 'note', kicker: 'Cuaderno', group: 'aprender' },
   { to: '/repaso', label: 'Repaso', sprite: 'note', kicker: 'Flashcards', group: 'aprender' },
   { to: '/pomodoro', label: 'Pomodoro', sprite: 'tomato', kicker: 'Modo enfoque', group: 'hoy' },
   { to: '/habitos', label: 'Hábitos', sprite: 'flower', kicker: 'Power-ups', mobile: true, group: 'lograr' },

@@ -1,4 +1,4 @@
-import type { AppNotification, Certification, Course, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent } from '@/core/domain';
+import type { AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent } from '@/core/domain';
 import type { AuthPort, AuthUser, Collection, DataLayer, Repository } from '../ports';
 import { defaultProfile } from '@/core/game';
 
@@ -70,12 +70,13 @@ export function createLocalRepository(storage: KeyValueStorage): Repository {
   const courses = c<Course>('courses');
   const goals = c<Goal>('goals');
   const projects = c<Project>('projects');
+  const notes = c<Note>('notes');
   const certifications = c<Certification>('certifications');
   const personalRewards = c<PersonalReward>('personal_rewards');
   const sessions = c<StudySession>('study_sessions');
   const xpEvents = c<XpEvent>('xp_events');
   const notifications = c<AppNotification>('notifications');
-  const all = [tasks, habits, logs, courses, goals, projects, certifications, personalRewards, sessions, xpEvents, notifications];
+  const all = [tasks, habits, logs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications];
   const profileKey = `${PREFIX}profile`;
 
   const readProfile = () => {
@@ -120,6 +121,7 @@ export function createLocalRepository(storage: KeyValueStorage): Repository {
     courses,
     goals,
     projects,
+    notes,
     certifications,
     personalRewards,
     sessions,

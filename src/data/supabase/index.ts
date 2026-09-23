@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type {
-  AppNotification, Certification, Course, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent,
+  AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent,
 } from '@/core/domain';
 import type { AuthPort, AuthUser, Collection, DataLayer, Repository } from '../ports';
 
@@ -119,6 +119,7 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
   const courses = new SupabaseTable<Course>(db, 'courses', docMapper());
   const goals = new SupabaseTable<Goal>(db, 'goals', docMapper());
   const projects = new SupabaseTable<Project>(db, 'projects', docMapper());
+  const notes = new SupabaseTable<Note>(db, 'notes', docMapper());
   const certifications = new SupabaseTable<Certification>(db, 'certifications', docMapper());
   const personalRewards = new SupabaseTable<PersonalReward>(db, 'personal_rewards', docMapper());
   const sessions = new SupabaseTable<StudySession>(db, 'study_sessions', sessionMapper);
@@ -175,6 +176,7 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
     courses,
     goals,
     projects,
+    notes,
     certifications,
     personalRewards,
     sessions,
@@ -218,7 +220,7 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
     },
     async wipe() {
       // Orden: primero lo que referencia a otras tablas.
-      for (const t of ['habit_logs', 'study_sessions', 'xp_events', 'notifications', 'tasks', 'habits', 'courses', 'goals', 'projects', 'certifications', 'personal_rewards', 'profiles']) {
+      for (const t of ['habit_logs', 'study_sessions', 'xp_events', 'notifications', 'tasks', 'habits', 'courses', 'goals', 'projects', 'notes', 'certifications', 'personal_rewards', 'profiles']) {
         const { error } = await db.from(t).delete().not('id', 'is', null);
         fail(error);
       }

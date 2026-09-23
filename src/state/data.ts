@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type {
-  AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, ID, Module, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
+  AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, ID, ISODate, Module, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
@@ -11,6 +11,7 @@ import { gradeReview, startReview, type Rating } from '@/core/review';
 import { isBoss, spawnNext, taskReward } from '@/core/tasks';
 import { CERT_XP } from '@/core/certifications';
 import { CHAIN_BONUS_XP, chainsToReward, cleanChains } from '@/core/chains';
+import { CATCH_UP_DAYS, canCatchUp } from '@/core/catchup';
 import type { PlanEntities } from '@/core/planner';
 import { buildingById, cityUpgrades } from '@/core/city';
 import { ACHIEVEMENTS } from '@/core/achievements';
@@ -46,6 +47,8 @@ export interface DataState extends Data {
   updateHabit: (id: ID, patch: Partial<Omit<Habit, 'id'>>) => void;
   deleteHabit: (id: ID) => void;
   setHabitValue: (habitId: ID, value: number) => void;
+  /** Marca (o desmarca) un hábito en un día que ya pasó, por si se te olvidó marcarlo. */
+  setHabitValueOn: (habitId: ID, date: ISODate, value: number) => void;
   toggleHabitStep: (habitId: ID, stepId: ID) => void;
 
   /** Cadenas de hábitos: rutinas en orden. Guían y premian; nunca bloquean. */
@@ -181,7 +184,12 @@ export function createDataStore(repo: Repository) {
     };
 
     /** Suma (o resta, si es negativo) XP y monedas; detecta subidas de nivel y logros. */
-    const award = (amount: number, source: XpSource, label: string, title = '¡Misión completada!') => {
+    /**
+     * `on` es el día al que corresponde el XP. Por defecto hoy, pero al ponerse al día con un
+     * hábito olvidado se fecha en SU día: así la racha se recalcula bien (se mide por los días
+     * con XP), que es justo lo que arregla haber olvidado marcarlo.
+     */
+    const award = (amount: number, source: XpSource, label: string, title = '¡Misión completada!', on: string = today()) => {
       const p = get().profile;
       const before = levelFromXp(p.xp);
       const xp = Math.max(0, p.xp + amount);
@@ -189,7 +197,7 @@ export function createDataStore(repo: Repository) {
       let credits = Math.max(0, p.credits + coinsForXp(amount));
       const gained = after > before;
       if (gained) credits += LEVEL_UP_BONUS * (after - before);
-      const event: XpEvent = { id: newId(), date: today(), amount, source, label };
+      const event: XpEvent = { id: newId(), date: on, amount, source, label };
       run(
         (s) => ({ xpEvents: [...s.xpEvents, event], profile: { ...s.profile, xp, credits } }),
         async () => {
@@ -449,6 +457,28 @@ export function createDataStore(repo: Repository) {
           claimChainBonus(h, date);
         } else if (was && !now) award(-h.xp, 'habit', `Deshacer: ${h.title}`);
         else sfx.click();
+      },
+      setHabitValueOn(habitId, date, rawValue) {
+        const h = get().habits.find((x) => x.id === habitId);
+        if (!h) return;
+        const now = today();
+        if (date === now) return get().setHabitValue(habitId, rawValue);
+        // La pantalla ya limita los días, pero el store no se fía: es el que guarda.
+        if (!canCatchUp(h, get().habitLogs, date, now)) {
+          return notifyError('Ese día no se puede marcar', `Solo puedes ponerte al día con los últimos ${CATCH_UP_DAYS} días, y solo en los días que tocaba.`);
+        }
+        const prev = logFor(get().habitLogs, habitId, date);
+        const value = Math.max(0, rawValue);
+        const log: HabitLog = { id: prev?.id ?? newId(), habitId, date, value, stepsDone: prev?.stepsDone ?? [] };
+        run((s) => ({ habitLogs: upsertBy(s.habitLogs, log) }), () => repo.habitLogs.upsert(log));
+
+        const was = (prev?.value ?? 0) >= h.target;
+        const nowDone = value >= h.target;
+        if (nowDone === was) return void sfx.click();
+        // El XP se fecha en SU día para que la racha se repare. Los bonos del día (finde,
+        // combo, cadena) no se cobran hacia atrás: son mecánicas de «hoy».
+        award(nowDone ? h.xp : -h.xp, 'habit', `${nowDone ? 'Recuperado' : 'Deshacer'}: ${h.title} · ${date}`, nowDone ? '¡Te pusiste al día!' : 'Marca quitada', date);
+        if (nowDone) sfx.oneUp();
       },
       toggleHabitStep(habitId, stepId) {
         const date = today();

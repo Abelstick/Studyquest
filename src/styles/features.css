@@ -2745,3 +2745,41 @@ select.input {
     min-height: 220px;
   }
 }
+
+/* ---------- Ponerse al día con un hábito olvidado ---------- */
+.catchup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-left: 10px solid var(--yellow);
+}
+/* Un día pasado que se puede marcar: se nota que se puede pulsar. */
+.week__day--can {
+  cursor: pointer;
+  background: transparent;
+  font: inherit;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--muted);
+  transition: transform 0.07s steps(2), border-color 0.07s steps(2), background-color 0.07s steps(2);
+}
+.week__day--can:hover {
+  border-color: var(--line);
+  transform: translateY(-2px);
+}
+.week__day--can:active {
+  transform: translateY(1px);
+}
+/* Día que tocaba y quedó sin marcar: borde discontinuo, como un hueco por rellenar. */
+.week__day--can.is-missed {
+  border-style: dashed;
+  border-color: var(--xp-text);
+  color: var(--xp-text);
+}
+.week__day--can.is-missed:hover {
+  background: color-mix(in srgb, var(--yellow) 35%, transparent);
+}
+/* Día en el que no tocaba: ni se marca ni estorba. */
+.week__day.is-off {
+  opacity: 0.4;
+}

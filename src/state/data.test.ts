@@ -527,6 +527,89 @@ describe('store de datos', () => {
     });
   });
 
+  describe('ponerse al día con un hábito olvidado', () => {
+    const crear = () => {
+      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+      // El hábito nace hoy; se retrasa su inicio para poder rellenar días anteriores.
+      const id = store.getState().habits[0].id;
+      store.getState().updateHabit(id, { startDate: '2026-09-01' });
+      return id;
+    };
+    const rachaHoy = () => computeStreak(store.getState().xpEvents, store.getState().profile.frozenDates, today()).current;
+
+    it('marca un día pasado y da su XP', async () => {
+      const id = crear();
+      store.getState().setHabitValueOn(id, '2026-09-15', 1);
+      expect(store.getState().habitLogs.find((l) => l.date === '2026-09-15')?.value).toBe(1);
+      expect(store.getState().profile.xp).toBe(20);
+      await flush();
+      expect((await repo.habitLogs.list()).some((l) => l.date === '2026-09-15')).toBe(true);
+    });
+
+    it('el XP se fecha en SU día, que es lo que repara la racha', () => {
+      const id = crear();
+      // Hoy es miércoles 16. Se rellenan lunes, martes y hoy: tres días seguidos.
+      store.getState().setHabitValueOn(id, '2026-09-14', 1);
+      store.getState().setHabitValueOn(id, '2026-09-15', 1);
+      store.getState().setHabitValue(id, 1);
+      const fechas = store.getState().xpEvents.filter((e) => e.source === 'habit').map((e) => e.date).sort();
+      expect(fechas).toEqual(['2026-09-14', '2026-09-15', '2026-09-16']);
+      expect(rachaHoy()).toBe(3);
+    });
+
+    it('desmarcar un día pasado devuelve el XP de ese día', () => {
+      const id = crear();
+      store.getState().setHabitValueOn(id, '2026-09-15', 1);
+      expect(store.getState().profile.xp).toBe(20);
+      store.getState().setHabitValueOn(id, '2026-09-15', 0);
+      expect(store.getState().profile.xp).toBe(0);
+      expect(rachaHoy()).toBe(0);
+    });
+
+    it('marcarlo dos veces no da XP de más', () => {
+      const id = crear();
+      store.getState().setHabitValueOn(id, '2026-09-15', 1);
+      store.getState().setHabitValueOn(id, '2026-09-15', 1);
+      expect(store.getState().profile.xp).toBe(20);
+    });
+
+    it('NO deja marcar el futuro ni más atrás del límite', () => {
+      const id = crear();
+      store.getState().setHabitValueOn(id, '2026-09-17', 1); // mañana
+      store.getState().setHabitValueOn(id, '2026-09-02', 1); // hace 14 días
+      expect(store.getState().habitLogs).toHaveLength(0);
+      expect(store.getState().profile.xp).toBe(0);
+      expect(useUi.getState().toasts.at(-1)?.kind).toBe('error');
+    });
+
+    it('un día que no tocaba tampoco se rellena', () => {
+      store.getState().createHabit({ title: 'Gym', frequency: { type: 'days', days: [0, 4] }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+      const id = store.getState().habits[0].id;
+      store.getState().updateHabit(id, { startDate: '2026-09-01' });
+      store.getState().setHabitValueOn(id, '2026-09-15', 1); // martes, no tocaba
+      expect(store.getState().habitLogs).toHaveLength(0);
+    });
+
+    it('rellenar un día pasado NO cobra los bonos de hoy (combo ni finde)', () => {
+      const ids = ['A', 'B', 'C'].map((t) => {
+        store.getState().createHabit({ title: t, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+        return store.getState().habits.at(-1)!.id;
+      });
+      ids.forEach((id) => store.getState().updateHabit(id, { startDate: '2026-09-01' }));
+      // Tres hábitos rellenados en un día pasado: el combo ×2 es de «hoy», no se cobra hacia atrás.
+      ids.forEach((id) => store.getState().setHabitValueOn(id, '2026-09-15', 1));
+      expect(store.getState().xpEvents.some((e) => e.source === 'combo')).toBe(false);
+      expect(store.getState().profile.xp).toBe(60);
+    });
+
+    it('con la fecha de hoy se comporta como el marcado normal', () => {
+      const id = crear();
+      store.getState().setHabitValueOn(id, today(), 1);
+      expect(store.getState().profile.xp).toBe(20);
+      expect(store.getState().habitLogs[0].date).toBe(today());
+    });
+  });
+
   describe('repaso espaciado', () => {
     const setup = () => {
       store.getState().createCourse({ title: 'C', professor: '', field: '', mentor: null, modules: [{ id: 'm1', title: 'M', summary: '', xp: 100, topics: [{ id: 't1', title: 'Tema', status: 'done', review: false, markedAt: null }] }] });

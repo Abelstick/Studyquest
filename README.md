@@ -69,6 +69,7 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 | **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
 | **Pomodoro** | Temporizador de enfoque/descanso con **música 8-bit** y un personaje que **corre mientras estudias**. Sigue vivo al cambiar de pantalla. |
 | **Hábitos** | Frecuencia (diaria, días concretos, cada X días, semanal, mensual, **fechas concretas, anual y personalizada** «N veces por semana/mes»), recordatorio con **aviso repetido y sonido**, medición (minutos, páginas, veces, hecho/no hecho…), pasos de sesión, mapa de 12 semanas y aviso del día en que más fallas. |
+| **Cadenas de hábitos** | Encadena una rutina en orden (dormir temprano → levantarse → ejercicio → estudio → proyecto). Cada eslabón es la **señal** del siguiente: la app te dice cuál toca ahora y a cuál va después, en Hábitos y en la misión de Inicio. **Nunca bloquea** —puedes registrar cualquier hábito cuando quieras— y completar la cadena entera en un día da **+100 XP**. |
 | **Metas** | Árbol de hitos con habilidades y recompensa final. |
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
 | **Progreso** | Horas por semana, distribución del tiempo por curso, mapa de actividad de 20 semanas. Filtro 90 días / 6 meses / todo. |
@@ -399,6 +400,8 @@ Pantalla **Ciudad** (y un resumen en Inicio). Cada área de la app es un edifici
 **Calendario.** Tareas por fecha límite (color por prioridad, ↻ las repetidas, tachadas las hechas), repeticiones futuras proyectadas y repasos. Pulsa un día para ver su detalle y crear una tarea con esa fecha; arrastra una tarea a otro día para moverla.
 
 **Tareas recurrentes.** En el formulario, *Repetir*: cada N días, semanas o meses. Al completarla **nace la siguiente**, con su nueva fecha y sin avance. La fecha sigue el calendario original pero nunca cae en el pasado (completar tarde no crea una cola de atrasadas; 31 ene + 1 mes = 28/29 feb). Si la reabres y nadie tocó la siguiente, esta se retira.
+
+**Cadenas de hábitos.** Una cadena es una rutina en orden, la técnica de «apilar hábitos»: el anterior es la señal del siguiente. Se guía y se premia, **nunca se bloquea**, porque un día malo no debe impedirte apuntar lo que sí hiciste ni costarte la racha. Los hábitos que hoy no tocan (por su propia frecuencia) no cuentan ni estorban. Un hábito pertenece como mucho a una cadena, y si lo borras la cadena se queda sin ese eslabón (y desaparece si se queda en uno solo). Las cadenas viven en tu perfil, así que **no necesitan ninguna migración** y viajan en las copias de seguridad.
 
 **Desglose y «listo para completar».** Las tareas con subtareas y los hábitos con pasos de sesión se despliegan en Inicio y en Tareas, y se marcan sin abrir nada más. Cuando marcas el último, la tarea **no se cierra sola**: se resalta en verde con un aviso y su botón pasa a «✔ Completar», para que decidas tú cuándo darla por terminada (y cuándo cobrar el XP). La excepción son los jefes finales, que sí caen con el último golpe.
 

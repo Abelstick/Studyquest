@@ -6,7 +6,7 @@ import { shopItem } from '@/core/catalog';
 import { shortDate } from '@/core/dates';
 import { computeStreak, levelFromXp, rankFor, worldFor } from '@/core/game';
 import { Avatar } from '@/ui/Avatar';
-import { Button, Field, Panel, cx } from '@/ui/kit';
+import { Button, Field, Panel, cx, NumberInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { useInstallPrompt } from '@/pwa/hooks';
 import { AiSetup } from '@/features/ai/AiSetup';
@@ -267,7 +267,7 @@ export default function Perfil() {
           <Panel kicker="// Ajustes">
             <form className="form" onSubmit={save}>
               <Field label="Nombre de jugador">{(fid) => <input id={fid} className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} />}</Field>
-              <Field label="Reto semanal (horas)">{(fid) => <input id={fid} className="input" type="number" min={1} max={80} value={goal} onChange={(e) => setGoal(Number(e.target.value))} />}</Field>
+              <Field label="Reto semanal (horas)">{(fid) => <NumberInput id={fid} className="input" min={1} max={80} value={goal} onValue={(n) => setGoal(n)}/>}</Field>
               <Button type="submit" variant="primary" small>
                 Guardar
               </Button>

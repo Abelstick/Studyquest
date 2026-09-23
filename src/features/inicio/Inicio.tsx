@@ -7,9 +7,10 @@ import { computeStreak, isDueOn, levelProgress, rankFor, worldFor } from '@/core
 import { dailyMissions, isReadyToFinish, missionParts, tips, type Mission } from '@/core/missions';
 import { dueReviews } from '@/core/review';
 import { isBoss } from '@/core/tasks';
+import { chainOf, chainState } from '@/core/chains';
 import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
 import { weeklyReport } from '@/core/stats';
-import type { Snapshot } from '@/core/domain';
+import type { HabitChain, Snapshot } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Empty, Panel, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
@@ -18,12 +19,17 @@ import { buildingRows } from '@/ui/city-art';
 import { CITY_MAX } from '@/core/city';
 import { useCity } from '@/features/ciudad/useCity';
 
+/** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
+const NO_CHAINS: HabitChain[] = [];
+
 function MissionRow({ m }: { m: Mission }) {
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const setHabitValue = useData((s) => s.setHabitValue);
   const toggleSubtask = useData((s) => s.toggleSubtask);
   const toggleHabitStep = useData((s) => s.toggleHabitStep);
   const logs = useData((s) => s.habitLogs);
+  const habits = useData((s) => s.habits);
+  const chains = useData((s) => s.profile.chains) ?? NO_CHAINS;
   const toggle = () => {
     if (m.kind === 'task') setTaskStatus(m.task.id, m.done ? 'todo' : 'done');
     else setHabitValue(m.habit.id, m.done ? 0 : m.habit.target);
@@ -39,6 +45,10 @@ function MissionRow({ m }: { m: Mission }) {
   const togglePart = (id: string) => (m.kind === 'task' ? toggleSubtask(m.task.id, id) : toggleHabitStep(m.habit.id, id));
   // Con todo el desglose hecho no la damos por terminada sola: se resalta para que la cierres tú.
   const ready = isReadyToFinish(m, parts);
+  // Si el hábito es un eslabón de una cadena, se dice de qué rutina viene y a qué sigue.
+  const chain = m.kind === 'habit' ? chainOf(chains, m.habit.id) : undefined;
+  const chainNow = chain ? chainState(chain, habits, logs) : null;
+  const linkNow = chainNow?.links.find((l) => l.habit.id === (m.kind === 'habit' ? m.habit.id : ''));
 
   return (
     <li className={cx('mission', m.done && 'is-done', ready && 'is-ready')}>
@@ -56,6 +66,12 @@ function MissionRow({ m }: { m: Mission }) {
       <div className="mission__text">
         <p className="mission__title">{m.title}</p>
         <p className="mission__sub">{m.subtitle}</p>
+        {chain && chainNow && (
+          <p className="mission__chain">
+            🔗 {chain.name} · {chainNow.doneCount}/{chainNow.dueCount}
+            {linkNow?.after && <> · sigue a {linkNow.after.title}</>}
+          </p>
+        )}
         {parts.length > 0 && (
           <button type="button" className={cx('tag tag--btn mission__more', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${open ? 'Ocultar' : 'Ver'} ${noun} de ${m.title}`}>
             {doneParts}/{parts.length} {noun} {open ? '−' : '+'}

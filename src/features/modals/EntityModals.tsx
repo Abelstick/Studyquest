@@ -3,7 +3,7 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { newId, today } from '@/core/dates';
 import type { Mentor } from '@/core/domain';
-import { Button, ChipGroup, Field, Modal, linesToList, TextInput } from '@/ui/kit';
+import { Button, ChipGroup, Field, Modal, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
 
 /** "Título | 120" → { title, xp }. */
@@ -204,7 +204,7 @@ export function RewardModal() {
       <form onSubmit={submit} className="form">
         <Field label="Premio">{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ver una película sin culpa" required maxLength={100} />}</Field>
         <Field label="Condición">{(fid) => <TextInput id={fid} className="input" value={condition} onChange={(e) => setCondition(e.target.value)} placeholder="Si completo 5 días seguidos de estudio" />}</Field>
-        <Field label="Pasos para conseguirlo" hint="Podrás sumar avances con +1 en el Arsenal.">{(fid) => <input id={fid} className="input" type="number" min={1} max={999} value={target} onChange={(e) => setTarget(Number(e.target.value))} />}</Field>
+        <Field label="Pasos para conseguirlo" hint="Podrás sumar avances con +1 en el Arsenal.">{(fid) => <NumberInput id={fid} className="input" min={1} max={999} value={target} onValue={(n) => setTarget(n)}/>}</Field>
         <div className="modal__actions">
           <Button variant="primary" type="submit" disabled={!title.trim()}>
             Crear recompensa

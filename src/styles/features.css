@@ -2216,3 +2216,131 @@ select.input {
   transform: translate(-2px, -2px);
   box-shadow: 6px 6px 0 var(--shadow);
 }
+
+/* ---------- Cadenas de hábitos ---------- */
+.chain {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  box-shadow: var(--sh);
+}
+.chain.is-complete {
+  background: color-mix(in srgb, var(--green) 12%, var(--panel));
+}
+.chain__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chain__empty {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+/* Los eslabones, unidos por una línea vertical: se lee como una cadena. */
+.chain__links {
+  display: grid;
+  gap: 0;
+}
+.chlink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0 9px 4px;
+}
+.chlink + .chlink::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: -6px;
+  width: 3px;
+  height: 12px;
+  background: var(--line-soft);
+}
+.chlink__mark {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 23px;
+  height: 23px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+  font-size: 12px;
+  font-weight: 900;
+}
+.chlink.is-done .chlink__mark {
+  background: var(--green);
+  border-color: var(--line);
+  color: #fff;
+}
+.chlink.is-next .chlink__mark {
+  background: var(--yellow);
+  border-color: var(--line);
+  color: var(--on-yellow);
+}
+.chlink.is-off {
+  opacity: 0.55;
+}
+.chlink__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.chlink__title {
+  font-weight: 800;
+}
+.chlink.is-done .chlink__title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.chlink.is-next .chlink__title {
+  color: var(--text);
+}
+/* El eslabón que toca ahora se distingue por su placa, no solo por el color. */
+.chlink.is-next {
+  background: color-mix(in srgb, var(--yellow) 18%, transparent);
+  box-shadow: inset 3px 0 0 var(--yellow);
+}
+/* Aviso de cadena dentro de una misión del inicio. */
+.mission__chain {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--xp-text);
+}
+/* Lista ordenable dentro del modal. */
+.chainpick {
+  display: grid;
+  gap: 6px;
+}
+.chainpick li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.chainpick__n {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--yellow);
+  border: 2px solid var(--line);
+  font-family: var(--font-pixel);
+  font-size: 8px;
+}
+@media (max-width: 640px) {
+  /* El botón de registrar no puede robarle el ancho al nombre del hábito: baja a su fila. */
+  .chlink {
+    flex-wrap: wrap;
+  }
+  .chlink .btn,
+  .chlink .counter {
+    flex-basis: 100%;
+    margin-left: 33px;
+  }
+}

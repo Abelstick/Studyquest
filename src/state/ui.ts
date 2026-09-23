@@ -11,6 +11,7 @@ export type ModalState =
   | { type: 'project' }
   | { type: 'reward' }
   | { type: 'certification'; id?: string }
+  | { type: 'chain'; id?: string }
   | { type: 'session'; courseId?: string; minutes?: number }
   | { type: 'quick' }
   | { type: 'welcome' }

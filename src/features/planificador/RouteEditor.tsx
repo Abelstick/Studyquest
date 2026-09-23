@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MAX_MODULES, MAX_TOPICS, type Roadmap, type RoadmapModule } from '@/core/planner';
-import { Button, Field, cx, TextInput } from '@/ui/kit';
+import { Button, Field, cx, TextInput, NumberInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
 interface Props {
@@ -85,7 +85,7 @@ export function RouteEditor({ roadmap, onChange }: Props) {
                 onChange={(e) => patchModule(i, { title: e.target.value })}
               />
               <label className="route__hours">
-                <input className="input input--inline" type="number" min={1} max={80} step={0.5} value={m.hours} onChange={(e) => patchModule(i, { hours: Number(e.target.value) })} aria-label={`Horas de ${m.title || `módulo ${i + 1}`}`} />
+                <NumberInput className="input input--inline" min={1} max={80} step={0.5} value={m.hours} onValue={(n) => patchModule(i, { hours: n })} aria-label={`Horas de ${m.title || `módulo ${i + 1}`}`}/>
                 <span className="muted small">h</span>
               </label>
               <span className="redit__actions">
@@ -119,14 +119,13 @@ export function RouteEditor({ roadmap, onChange }: Props) {
               onChange={(e) => onChange({ ...roadmap, project: { ...roadmap.project, title: e.target.value } })}
             />
             <label className="route__hours">
-              <input
+              <NumberInput
                 className="input input--inline"
-                type="number"
                 min={1}
                 max={80}
                 step={0.5}
                 value={roadmap.project.hours}
-                onChange={(e) => onChange({ ...roadmap, project: { ...roadmap.project, hours: Number(e.target.value) } })}
+                onValue={(n) => onChange({ ...roadmap, project: { ...roadmap.project, hours: n } })}
                 aria-label={`Horas de ${roadmap.project.title || 'proyecto final'}`}
               />
               <span className="muted small">h</span>

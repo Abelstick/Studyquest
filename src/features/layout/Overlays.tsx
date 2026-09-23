@@ -14,6 +14,7 @@ import { SessionModal } from '../modals/SessionModal';
 import { QuickSheet, WelcomeModal } from '../modals/QuickAndWelcome';
 import { CardsModal } from '../modals/CardsModal';
 import { CertificationModal } from '../modals/CertificationModal';
+import { ChainModal } from '../modals/ChainModal';
 import { AiKeyModal } from '../modals/AiKeyModal';
 import { ConceptGuide } from '../help/ConceptGuide';
 
@@ -50,6 +51,8 @@ function ModalHost() {
       return <RewardModal />;
     case 'certification':
       return <CertificationModal key={modal.id ?? 'new'} id={modal.id} />;
+    case 'chain':
+      return <ChainModal key={modal.id ?? 'new'} id={modal.id} />;
     case 'session':
       return <SessionModal courseId={modal.courseId} minutes={modal.minutes} />;
     case 'quick':

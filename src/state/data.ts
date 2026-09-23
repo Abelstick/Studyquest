@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type {
-  AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitLog, ID, Module, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
+  AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, ID, Module, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
@@ -10,6 +10,7 @@ import { canOpenChest, chestReward, dayBonusOf, habitBonus, habitsDoneOn } from 
 import { gradeReview, startReview, type Rating } from '@/core/review';
 import { isBoss, spawnNext, taskReward } from '@/core/tasks';
 import { CERT_XP } from '@/core/certifications';
+import { CHAIN_BONUS_XP, chainsToReward, cleanChains } from '@/core/chains';
 import type { PlanEntities } from '@/core/planner';
 import { buildingById, cityUpgrades } from '@/core/city';
 import { ACHIEVEMENTS } from '@/core/achievements';
@@ -46,6 +47,10 @@ export interface DataState extends Data {
   deleteHabit: (id: ID) => void;
   setHabitValue: (habitId: ID, value: number) => void;
   toggleHabitStep: (habitId: ID, stepId: ID) => void;
+
+  /** Cadenas de hábitos: rutinas en orden. Guían y premian; nunca bloquean. */
+  saveChain: (chain: HabitChain) => void;
+  deleteChain: (id: ID) => void;
 
   createCourse: (draft: Omit<Course, 'id' | 'createdAt'>) => void;
   updateCourse: (id: ID, patch: Partial<Omit<Course, 'id'>>) => void;
@@ -212,6 +217,19 @@ export function createDataStore(repo: Repository) {
         award(b.combo, 'combo', `Combo ×2 · ${done.length} hábitos hoy`, '¡COMBO ×2!');
         sfx.combo();
       }
+    };
+
+    /** Si con este hábito se cierra su cadena del día, paga el bonus (una vez por cadena y día). */
+    const claimChainBonus = (h: Habit, date: string) => {
+      const s = get();
+      const bonus = dayBonusOf(s.profile, date);
+      const claimed = bonus.chains ?? [];
+      const [completed] = chainsToReward(s.profile.chains ?? [], s.habits, s.habitLogs, h.id, claimed, date);
+      if (!completed) return;
+      patchProfile({ dayBonus: { ...bonus, chains: [...claimed, completed.chain.id] } });
+      award(CHAIN_BONUS_XP, 'combo', `Cadena completa · ${completed.chain.name}`, '¡CADENA COMPLETA!');
+      notify({ category: 'streak', title: `Cadena completa: ${completed.chain.name}`, body: `${completed.dueCount} hábitos enlazados hoy. +${CHAIN_BONUS_XP} XP.` });
+      sfx.combo();
     };
 
     const mutateCourse = (courseId: ID, fn: (c: Course) => Course) => {
@@ -394,6 +412,11 @@ export function createDataStore(repo: Repository) {
         run((s) => ({ habits: s.habits.map((h) => (h.id === id ? { ...h, ...patch } : h)) }), () => repo.habits.update(id, patch));
       },
       deleteHabit(id) {
+        const chains = get().profile.chains ?? [];
+        // Si estaba en una cadena, esta se queda sin ese eslabón (y desaparece si se queda en uno).
+        if (chains.some((c) => c.habitIds.includes(id))) {
+          patchProfile({ chains: cleanChains(chains, get().habits.filter((h) => h.id !== id)) });
+        }
         run(
           (s) => ({ habits: s.habits.filter((h) => h.id !== id), habitLogs: s.habitLogs.filter((l) => l.habitId !== id) }),
           async () => {
@@ -415,6 +438,7 @@ export function createDataStore(repo: Repository) {
         if (now && !was) {
           award(h.xp, 'habit', h.title);
           claimHabitBonuses(h, date);
+          claimChainBonus(h, date);
         } else if (was && !now) award(-h.xp, 'habit', `Deshacer: ${h.title}`);
         else sfx.click();
       },
@@ -430,6 +454,17 @@ export function createDataStore(repo: Repository) {
       },
 
       /* ---------- Cursos ---------- */
+      saveChain(chain) {
+        const s = get();
+        const others = (s.profile.chains ?? []).filter((c) => c.id !== chain.id);
+        patchProfile({ chains: cleanChains([...others, chain], s.habits) });
+        sfx.jump();
+      },
+      deleteChain(id) {
+        const s = get();
+        patchProfile({ chains: (s.profile.chains ?? []).filter((c) => c.id !== id) });
+      },
+
       createCourse(draft) {
         const course: Course = { ...draft, id: newId(), createdAt: isoNow() };
         run((s) => ({ courses: [...s.courses, course] }), () => repo.courses.create(course));

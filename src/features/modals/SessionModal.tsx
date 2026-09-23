@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { SESSION_XP_PER_MIN } from '@/core/game';
-import { Button, ChipGroup, Field, Modal, Bar } from '@/ui/kit';
+import { Button, ChipGroup, Field, Modal, Bar, NumberInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { sfx } from '@/audio/sfx';
 
@@ -84,7 +84,7 @@ export function SessionModal({ courseId: initialCourse, minutes: initialMinutes 
                   options={[...MINUTES, { value: -1, label: 'Otro' }]}
                   onChange={(v) => (v === -1 ? setCustom(true) : (setCustom(false), setMinutes(v)))}
                 />
-                {custom && <input className="input" type="number" min={1} max={480} value={minutes} onChange={(e) => setMinutes(Math.max(1, Number(e.target.value)))} aria-label="Minutos" style={{ marginTop: 8 }} />}
+                {custom && <NumberInput className="input" min={1} max={480} value={minutes} onValue={(n) => setMinutes(n)} aria-label="Minutos" style={{ marginTop: 8 }}/>}
               </>
             )}
           </Field>

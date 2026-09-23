@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, type ButtonHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import { useUi } from '@/state/ui';
 import { sfx } from '@/audio/sfx';
 import { Sprite } from './Sprite';
@@ -161,6 +161,69 @@ export function TextInput({ className, onKeyDown, onPaste, onInput, value, ...re
         const el = e.currentTarget;
         el.setRangeText(text.replace(/[\r\n]+/g, ' '), el.selectionStart, el.selectionEnd, 'end');
         el.dispatchEvent(new Event('input', { bubbles: true }));
+      }}
+      {...rest}
+    />
+  );
+}
+
+/**
+ * Campo numérico que se puede vaciar sin que aparezca un 0 de la nada.
+ *
+ * Con un `<input type="number">` controlado a pelo, borrar el contenido daba `Number('') === 0`,
+ * eso metía un «0» en la casilla y al escribir después quedaba «05»: React NO lo corrige porque
+ * para los campos numéricos compara con `!=` («05» != 5 es falso) y da el valor por bueno.
+ *
+ * Aquí, mientras escribes manda el texto: si lo vacías, se queda vacío. Al salir del campo se
+ * normaliza (se recorta a min/max y, si lo dejaste vacío, vuelve el último valor válido).
+ * Además, al entrar se selecciona todo, así el primer dígito que escribes reemplaza en vez de sumarse.
+ */
+interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type'> {
+  value: number;
+  onValue: (n: number) => void;
+}
+export function NumberInput({ value, onValue, min, max, onFocus, onBlur, ...rest }: NumberInputProps) {
+  const [text, setText] = useState(() => String(value));
+  const [editing, setEditing] = useState(false);
+  // Mientras no lo estés editando, manda el valor de fuera (p. ej. si otra cosa lo cambia).
+  useEffect(() => {
+    if (!editing) setText(String(value));
+  }, [value, editing]);
+
+  const clamp = (n: number) => {
+    let out = n;
+    if (typeof min === 'number' && out < min) out = min;
+    if (typeof max === 'number' && out > max) out = max;
+    return out;
+  };
+
+  return (
+    <input
+      type="number"
+      inputMode="decimal"
+      min={min}
+      max={max}
+      value={editing ? text : String(value)}
+      onFocus={(e) => {
+        setEditing(true);
+        e.currentTarget.select();
+        onFocus?.(e);
+      }}
+      onChange={(e) => {
+        const raw = e.target.value;
+        setText(raw);
+        // Vacío (o a medio escribir, como «-» o «1.») no se manda: el padre conserva el último número válido.
+        if (raw.trim() === '') return;
+        const n = Number(raw);
+        if (Number.isFinite(n)) onValue(n);
+      }}
+      onBlur={(e) => {
+        setEditing(false);
+        const n = Number(text);
+        const next = text.trim() === '' || !Number.isFinite(n) ? value : clamp(n);
+        setText(String(next));
+        if (next !== value) onValue(next);
+        onBlur?.(e);
       }}
       {...rest}
     />

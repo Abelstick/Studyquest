@@ -205,7 +205,12 @@ export function buildDemo(profile: Profile, now: ISODate): Snapshot {
   ];
 
   const snapshot: Snapshot = {
-    profile: { ...profile, xp: totalXp, credits: 1240, streakFreezes: 1, onboarded: true, joinedAt: new Date(Date.now() - 200 * 86_400_000).toISOString() },
+    profile: {
+      ...profile, xp: totalXp, credits: 1240, streakFreezes: 1, onboarded: true, joinedAt: new Date(Date.now() - 200 * 86_400_000).toISOString(),
+      // Rutina de ejemplo: dormir → ejercicio → estudiar. «Estudiar Python» solo toca L/X/V,
+      // así que los demás días se ve cómo un eslabón que hoy no toca no estorba a la cadena.
+      chains: [{ id: newId(), name: 'Rutina de la mañana', habitIds: [hSleep.id, hGym.id, hPython.id] }],
+    },
     tasks, habits, habitLogs, courses, goals: [goal], projects, certifications, personalRewards, sessions, xpEvents, notifications,
   };
   // Logros ya conseguidos con lo que traen los datos (sin monedas extra).

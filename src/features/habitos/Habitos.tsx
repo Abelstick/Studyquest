@@ -8,6 +8,7 @@ import type { Habit, HabitLog } from '@/core/domain';
 import { Bar, Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
+import { Chains } from './ChainPanel';
 
 /** Medidas que se registran con contador (páginas, ejercicios…) en lugar de un solo botón. */
 export const isCounter = (h: Habit) => h.measure !== 'boolean' && h.measure !== 'minutes' && h.measure !== 'hours' && h.target > 1;
@@ -89,7 +90,9 @@ export default function Habitos() {
           </Empty>
         </div>
       ) : (
-        <div className="grid grid--cards">
+        <>
+          <Chains />
+          <div className="grid grid--cards">
           {cards.map(({ h, log, strip, pct, due, done }) => (
             <article key={h.id} className={cx('habit', done ? 'habit--done' : due && 'habit--due')}>
               <div className="split split--top">
@@ -123,7 +126,8 @@ export default function Habitos() {
               </div>
             </article>
           ))}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

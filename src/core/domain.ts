@@ -39,6 +39,8 @@ export interface Profile {
   chests?: number;
   /** Nivel de cada edificio de la ciudad ya celebrado (y premiado), para no repetir premios. */
   city?: Partial<Record<string, number>>;
+  /** Cadenas de hábitos (rutinas en orden). Son configuración, no registros: viven con el perfil. */
+  chains?: HabitChain[];
 }
 
 export interface DayBonus {
@@ -46,6 +48,8 @@ export interface DayBonus {
   /** Hábitos que ya cobraron el bonus de fin de semana hoy. */
   weekend: ID[];
   combo: boolean;
+  /** Cadenas que ya cobraron su bonus hoy. */
+  chains?: ID[];
 }
 
 /* ---------- Tareas ---------- */
@@ -119,6 +123,17 @@ export interface Habit {
   /** Día local desde el que cuenta el hábito (ancla de "cada X días"). */
   startDate: ISODate;
   createdAt: ISODateTime;
+}
+
+/**
+ * Cadena de hábitos: una rutina en orden, donde cada eslabón es la señal del siguiente.
+ * Guía y premia; nunca impide registrar un hábito suelto.
+ */
+export interface HabitChain {
+  id: ID;
+  name: string;
+  /** Hábitos en el orden de la rutina. Un hábito pertenece como mucho a una cadena. */
+  habitIds: ID[];
 }
 
 export interface HabitLog {

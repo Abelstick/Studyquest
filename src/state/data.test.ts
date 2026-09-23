@@ -5,6 +5,7 @@ import { createDataStore } from './data';
 import { useUi } from './ui';
 import { computeStreak, levelFromXp, xpAtLevelStart } from '@/core/game';
 import { CERT_XP } from '@/core/certifications';
+import { CHAIN_BONUS_XP } from '@/core/chains';
 import { computeStats } from '@/core/stats';
 import { today } from '@/core/dates';
 
@@ -400,6 +401,69 @@ describe('store de datos', () => {
       const saved = await repo.certifications.list();
       expect(saved).toHaveLength(1);
       expect(saved[0].courseId).toBeNull();
+    });
+  });
+
+  describe('cadenas de hábitos', () => {
+    const mkHabits = (names: string[]) => {
+      names.forEach((t) => store.getState().createHabit({ title: t, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] }));
+      return store.getState().habits.map((h) => h.id);
+    };
+    const chainXp = () => store.getState().xpEvents.filter((e) => e.label.startsWith('Cadena completa')).reduce((a, e) => a + e.amount, 0);
+
+    it('completar la cadena entera da el bonus, una sola vez al día', () => {
+      const [a, b, c] = mkHabits(['Dormir', 'Ejercicio', 'Estudio']);
+      store.getState().saveChain({ id: 'ch1', name: 'Rutina de mañana', habitIds: [a, b, c] });
+
+      store.getState().setHabitValue(a, 1);
+      store.getState().setHabitValue(b, 1);
+      expect(chainXp()).toBe(0); // aún falta el último
+      store.getState().setHabitValue(c, 1);
+      expect(chainXp()).toBe(CHAIN_BONUS_XP);
+
+      // deshacer y rehacer no vuelve a pagar
+      store.getState().setHabitValue(c, 0);
+      store.getState().setHabitValue(c, 1);
+      expect(chainXp()).toBe(CHAIN_BONUS_XP);
+    });
+
+    it('NO bloquea: se puede registrar un eslabón del medio sin los anteriores', () => {
+      const [a, b, c] = mkHabits(['Dormir', 'Ejercicio', 'Estudio']);
+      store.getState().saveChain({ id: 'ch1', name: 'Rutina', habitIds: [a, b, c] });
+      store.getState().setHabitValue(c, 1);
+      expect(store.getState().habitLogs.find((l) => l.habitId === c)?.value).toBe(1);
+      expect(store.getState().profile.xp).toBeGreaterThan(0); // cobró su XP normal
+      expect(chainXp()).toBe(0); // pero no el bonus de cadena
+    });
+
+    it('borrar un hábito lo saca de la cadena', () => {
+      const ids = mkHabits(['A', 'B', 'C']);
+      store.getState().saveChain({ id: 'ch1', name: 'Rutina', habitIds: ids });
+      store.getState().deleteHabit(ids[1]);
+      expect(store.getState().profile.chains?.[0].habitIds).toEqual([ids[0], ids[2]]);
+    });
+
+    it('si la cadena se queda con un solo eslabón, desaparece', () => {
+      const ids = mkHabits(['A', 'B']);
+      store.getState().saveChain({ id: 'ch1', name: 'Rutina', habitIds: ids });
+      store.getState().deleteHabit(ids[0]);
+      expect(store.getState().profile.chains).toEqual([]);
+    });
+
+    it('se guarda en el perfil y sobrevive a recargar', async () => {
+      const ids = mkHabits(['A', 'B']);
+      store.getState().saveChain({ id: 'ch1', name: 'Rutina de mañana', habitIds: ids });
+      await flush();
+      expect((await repo.profile.get())?.chains?.[0].name).toBe('Rutina de mañana');
+    });
+
+    it('un hábito no puede quedar en dos cadenas a la vez', () => {
+      const [a, b, c, d] = mkHabits(['A', 'B', 'C', 'D']);
+      store.getState().saveChain({ id: 'ch1', name: 'Una', habitIds: [a, b] });
+      store.getState().saveChain({ id: 'ch2', name: 'Otra', habitIds: [b, c, d] });
+      const chains = store.getState().profile.chains ?? [];
+      const veces = chains.flatMap((x) => x.habitIds).filter((x) => x === b).length;
+      expect(veces).toBe(1);
     });
   });
 

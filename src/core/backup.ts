@@ -3,10 +3,11 @@
  * Sirve como respaldo, para pasar de un dispositivo a otro y para migrar de base de datos:
  * no depende de ningún adaptador, solo del modelo de dominio.
  */
-import type { Snapshot } from './domain';
+import type { Habit, HabitChain, Snapshot } from './domain';
 import { defaultProfile } from './game';
 import { newId } from './dates';
 import { safeUrl } from './certifications';
+import { cleanChains } from './chains';
 
 export const BACKUP_APP = 'studyquest';
 export const BACKUP_VERSION = 1;
@@ -203,6 +204,19 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     ...(DATE.test(str(p.lastChest)) ? { lastChest: str(p.lastChest) } : {}),
     ...(isObj(p.city) ? { city: Object.fromEntries(Object.entries(p.city).filter(([k, v]) => ['casa', 'biblioteca', 'academia', 'laboratorio', 'arena', 'museo'].includes(k) && typeof v === 'number').map(([k, v]) => [k, Math.max(0, Math.min(5, Math.floor(v as number)))])) } : {}),
     ...(typeof p.chests === 'number' && p.chests > 0 ? { chests: Math.floor(p.chests) } : {}),
+    // Las cadenas apuntan a hábitos: se reescriben las referencias y se descartan las que quedan sueltas.
+    ...(asArray(p.chains).length
+      ? {
+          chains: cleanChains(
+            subs(p.chains, (c) => ({
+              id: fixId(c.id),
+              name: str(c.name, 'Rutina').slice(0, 60),
+              habitIds: asArray(c.habitIds).map(ref).filter((x): x is string => !!x && habitIds.has(x)),
+            })) as unknown as HabitChain[],
+            habits as unknown as Habit[],
+          ),
+        }
+      : {}),
   };
 
   for (const [what, n] of Object.entries(dropped)) warnings.push(`${n} ${what} descartados por datos inválidos.`);

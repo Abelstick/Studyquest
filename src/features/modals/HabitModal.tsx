@@ -3,7 +3,7 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { newId, shortDate, today, WEEKDAYS_SHORT } from '@/core/dates';
 import type { Frequency, Habit, Measure } from '@/core/domain';
-import { Button, ChipGroup, Field, Modal, cx, linesToList, TextInput } from '@/ui/kit';
+import { Button, ChipGroup, Field, Modal, cx, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
 
 const FREQS: { value: Frequency['type']; label: string }[] = [
@@ -125,7 +125,7 @@ export function HabitModal({ id }: { id?: string }) {
             ))}
           </div>
         )}
-        {freq === 'every' && <Field label="Cada cuántos días">{(fid) => <input id={fid} className="input" type="number" min={1} max={60} value={every} onChange={(e) => setEvery(Number(e.target.value))} />}</Field>}
+        {freq === 'every' && <Field label="Cada cuántos días">{(fid) => <NumberInput id={fid} className="input" min={1} max={60} value={every} onValue={(n) => setEvery(n)}/>}</Field>}
         {freq === 'dates' && (
           <Field label="Fechas concretas" hint="Añade cada fecha en la que quieras que toque (cumpleaños, exámenes, entregas…).">
             {(fid) => (
@@ -161,13 +161,13 @@ export function HabitModal({ id }: { id?: string }) {
                 </select>
               )}
             </Field>
-            <Field label="Día">{(fid) => <input id={fid} className="input" type="number" min={1} max={31} value={day} onChange={(e) => setDay(Number(e.target.value))} />}</Field>
+            <Field label="Día">{(fid) => <NumberInput id={fid} className="input" min={1} max={31} value={day} onValue={(n) => setDay(n)}/>}</Field>
           </div>
         )}
         {freq === 'custom' && (
           <div className="form__row">
             <Field label="Veces" hint="Los días que quieras, hasta llegar a esta cifra.">
-              {(fid) => <input id={fid} className="input" type="number" min={1} max={31} value={times} onChange={(e) => setTimes(Number(e.target.value))} />}
+              {(fid) => <NumberInput id={fid} className="input" min={1} max={31} value={times} onValue={(n) => setTimes(n)}/>}
             </Field>
             <Field label="Por">
               {(fid) => (
@@ -182,8 +182,8 @@ export function HabitModal({ id }: { id?: string }) {
 
         <Field label="Forma de medición">{() => <ChipGroup label="Forma de medición" value={measure} options={MEASURES} onChange={setMeasure} />}</Field>
         <div className="form__row">
-          {measure !== 'boolean' && <Field label="Objetivo">{(fid) => <input id={fid} className="input" type="number" min={1} value={target} onChange={(e) => setTarget(Number(e.target.value))} />}</Field>}
-          <Field label="Recompensa (XP)">{(fid) => <input id={fid} className="input input--xp" type="number" min={0} step={5} value={xp} onChange={(e) => setXp(Number(e.target.value))} />}</Field>
+          {measure !== 'boolean' && <Field label="Objetivo">{(fid) => <NumberInput id={fid} className="input" min={1} value={target} onValue={(n) => setTarget(n)}/>}</Field>}
+          <Field label="Recompensa (XP)">{(fid) => <NumberInput id={fid} className="input input--xp" min={0} step={5} value={xp} onValue={(n) => setXp(n)}/>}</Field>
           <Field label="Recordatorio" hint="Avisa dentro de la app (con sonido) y, si activas los push en Perfil, también con la app cerrada.">
             {(fid) => <input id={fid} className="input" type="time" value={reminder} onChange={(e) => setReminder(e.target.value)} />}
           </Field>

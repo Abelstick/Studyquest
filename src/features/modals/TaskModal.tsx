@@ -5,7 +5,7 @@ import { XP_BY_PRIORITY } from '@/core/game';
 import { newId } from '@/core/dates';
 import type { Priority, Recurrence, TaskStatus } from '@/core/domain';
 import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
-import { Button, Field, Modal, Segmented, linesToList, TextInput } from '@/ui/kit';
+import { Button, Field, Modal, Segmented, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
 
 const PRIORITIES: { value: Priority; label: string }[] = [
@@ -91,21 +91,19 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
           </p>
         )}
         <div className="form__row">
-          <Field label="Tiempo estimado (min)">{(fid) => <input id={fid} className="input" type="number" min={0} step={5} value={estimate} onChange={(e) => setEstimate(Number(e.target.value))} />}</Field>
+          <Field label="Tiempo estimado (min)">{(fid) => <NumberInput id={fid} className="input" min={0} step={5} value={estimate} onValue={(n) => setEstimate(n)}/>}</Field>
           <Field label="Recompensa (XP)">
             {(fid) => (
-              <input
+              <NumberInput
                 id={fid}
                 className="input input--xp"
-                type="number"
                 min={0}
                 step={5}
                 value={xp}
-                onChange={(e) => {
-                  setXp(Number(e.target.value));
+                onValue={(n) => {
+                  setXp(n);
                   setXpTouched(true);
-                }}
-              />
+                }}/>
             )}
           </Field>
         </div>
@@ -121,7 +119,7 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
               {repeat && (
                 <label className="repeat__every">
                   Cada
-                  <input className="input input--inline" type="number" min={1} max={365} value={repeat.interval} onChange={(e) => setRepeat({ ...repeat, interval: Number(e.target.value) })} aria-label="Cada cuántos" />
+                  <NumberInput className="input input--inline" min={1} max={365} value={repeat.interval} onValue={(n) => setRepeat({ ...repeat, interval: n })} aria-label="Cada cuántos" />
                   {repeat.unit === 'day' ? 'días' : repeat.unit === 'week' ? 'semanas' : 'meses'}
                 </label>
               )}

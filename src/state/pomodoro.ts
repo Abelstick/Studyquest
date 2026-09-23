@@ -93,10 +93,12 @@ export const usePomodoro = create<PomodoroState>((set, get) => {
       const { status, endsAt } = get();
       if (status !== 'running' || endsAt === null) return;
       set({ status: 'paused', endsAt: null, remainingMs: Math.max(1000, endsAt - Date.now()) });
+      sfx.pause();
     },
     resume() {
       if (get().status !== 'paused') return;
       set({ status: 'running', endsAt: Date.now() + get().remainingMs });
+      sfx.pause();
     },
     skip() {
       const { phase, doneInRound } = get();

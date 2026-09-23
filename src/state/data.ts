@@ -166,7 +166,7 @@ export function createDataStore(repo: Repository) {
         useUi.getState().toast({ kind: 'unlock', title: `¡Logro desbloqueado! ${a.title}`, body: a.hint, coins: a.reward });
         notify({ category: 'achievement', title: `Desbloqueaste "${a.title}"`, body: `+${a.reward} monedas acreditadas.` });
       }
-      sfx.unlock();
+      sfx.star();
     };
 
     /** Logros y, a continuación, la ciudad (el museo cuenta logros, así que va después). */
@@ -351,6 +351,7 @@ export function createDataStore(repo: Repository) {
       },
       deleteTask(id) {
         run((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }), () => repo.tasks.remove(id));
+        sfx.stomp();
       },
       setTaskStatus(id, status) {
         const t = get().tasks.find((x) => x.id === id);
@@ -395,7 +396,7 @@ export function createDataStore(repo: Repository) {
         const boss = isBoss(t) && t.status !== 'done';
         const status = boss && t.status === 'todo' && !sub.done ? 'doing' : t.status;
         run((s) => ({ tasks: s.tasks.map((x) => (x.id === taskId ? { ...x, subtasks, status } : x)) }), () => repo.tasks.update(taskId, { subtasks, status }));
-        if (!boss) return void sfx.click();
+        if (!boss) return void sfx.bump();
         const left = subtasks.filter((s) => !s.done).length;
         if (!sub.done && left === 0) return get().setTaskStatus(taskId, 'done'); // el último golpe: victoria
         sfx[sub.done ? 'click' : 'hit']();
@@ -424,6 +425,7 @@ export function createDataStore(repo: Repository) {
             await repo.habitLogs.removeByHabit(id); // si no, sus registros quedarían huérfanos en la base
           },
         );
+        sfx.stomp();
       },
       setHabitValue(habitId, rawValue) {
         const h = get().habits.find((x) => x.id === habitId);
@@ -547,6 +549,7 @@ export function createDataStore(repo: Repository) {
       },
       deleteGoal(id) {
         run((s) => ({ goals: s.goals.filter((g) => g.id !== id) }), () => repo.goals.remove(id));
+        sfx.stomp();
       },
       toggleSkill(goalId, milestoneId, skillId) {
         const g = get().goals.find((x) => x.id === goalId);
@@ -574,6 +577,7 @@ export function createDataStore(repo: Repository) {
       },
       deleteProject(id) {
         run((s) => ({ projects: s.projects.filter((p) => p.id !== id) }), () => repo.projects.remove(id));
+        sfx.stomp();
       },
       toggleCheckpoint(projectId, checkpointId) {
         const p = get().projects.find((x) => x.id === projectId);
@@ -603,6 +607,7 @@ export function createDataStore(repo: Repository) {
         run((s) => ({ certifications: s.certifications.filter((c) => c.id !== id) }), () => repo.certifications.remove(id));
         award(-CERT_XP, 'certification', `Quitada: ${cert.title}`); // se devuelve el XP que dio al registrarla
         checkCity();
+        sfx.stomp();
       },
 
       createReward(draft) {
@@ -654,7 +659,10 @@ export function createDataStore(repo: Repository) {
         if (itemId && !p.inventory.includes(itemId)) return;
         patchProfile({ equipped: { ...p.equipped, [kind]: itemId } });
         if (kind === 'world') useUi.getState().setWorld(worldOf(itemId));
-        sfx.click();
+        // Cambiar de mundo suena a tubería; ponerse un objeto, a power-up.
+        if (kind === 'world' && itemId) sfx.pipe();
+        else if (itemId) sfx.powerUp();
+        else sfx.click();
       },
 
       /* ---------- Estudio ---------- */
@@ -670,7 +678,7 @@ export function createDataStore(repo: Repository) {
         if (p.streakFreezes < 1 || p.frozenDates.includes(now)) return;
         patchProfile({ streakFreezes: p.streakFreezes - 1, frozenDates: [...p.frozenDates, now] });
         useUi.getState().toast({ kind: 'info', title: '¡Racha congelada!', body: 'Hoy cuenta como día activo.' });
-        sfx.unlock();
+        sfx.oneUp();
       },
       claimWeeklyBonus() {
         const s = get();

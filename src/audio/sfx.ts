@@ -93,4 +93,52 @@ export const sfx = {
     note(1568, 0.06, 0.06);
     note(2093, 0.12, 0.18);
   },
+  /** Champiñón: la escala rápida que sube al coger un power-up. */
+  powerUp() {
+    [392, 523, 659, 784, 1047, 1319].forEach((f, i) => note(f, i * 0.045, 0.1, 'square', 0.05));
+  },
+  /** 1-UP: vida extra. */
+  oneUp() {
+    [1319, 1568, 2637, 2093, 2349, 3136].forEach((f, i) => note(f, i * 0.09, 0.12, 'square', 0.05));
+  },
+  /** Entrar por la tubería: descenso rápido. */
+  pipe() {
+    note(1047, 0, 0.22, 'square', 0.05, 220);
+    note(523, 0.1, 0.2, 'triangle', 0.035, 130);
+  },
+  /** Pisotón: romper un bloque. */
+  stomp() {
+    note(160, 0, 0.07, 'square', 0.055, 70);
+    note(90, 0.04, 0.1, 'sawtooth', 0.04, 45);
+  },
+  /** Bloque «?» golpeado: el tintineo seco antes de que salga el premio. */
+  bump() {
+    note(330, 0, 0.05, 'square', 0.045, 520);
+  },
+  /** Estrella de invencibilidad: motivo corto y alegre. */
+  star() {
+    [784, 880, 988, 1175, 988, 1175, 1319].forEach((f, i) => note(f, i * 0.055, 0.1, 'square', 0.045));
+  },
+  /** Pausa del juego. */
+  pause() {
+    note(880, 0, 0.06, 'triangle', 0.04);
+    note(587, 0.07, 0.12, 'triangle', 0.04);
+  },
+  /** Moverse por un menú. */
+  select() {
+    note(1175, 0, 0.035, 'square', 0.03);
+  },
+  /** Game over: la caída. */
+  gameOver() {
+    [523, 392, 330, 262].forEach((f, i) => note(f, i * 0.16, 0.24, 'triangle', 0.05));
+    note(196, 0.64, 0.5, 'sawtooth', 0.04, 98);
+  },
+  /** Cuenta atrás: los últimos segundos del Pomodoro. */
+  tick() {
+    note(1568, 0, 0.04, 'square', 0.035);
+  },
+  /** Texto que aparece letra a letra. */
+  blip() {
+    note(740, 0, 0.025, 'square', 0.022);
+  },
 };

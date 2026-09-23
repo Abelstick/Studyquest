@@ -234,7 +234,7 @@ export function Segmented<T extends string | number>({ value, options, onChange,
   return (
     <div className="seg" role="radiogroup" aria-label={label}>
       {options.map((o) => (
-        <button key={String(o.value)} type="button" role="radio" aria-checked={o.value === value} className={cx('seg__opt', o.value === value && 'is-on')} onClick={() => onChange(o.value)}>
+        <button key={String(o.value)} type="button" role="radio" aria-checked={o.value === value} className={cx('seg__opt', o.value === value && 'is-on')} onClick={() => { sfx.select(); onChange(o.value); }}>
           {o.label}
         </button>
       ))}

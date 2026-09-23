@@ -13,7 +13,17 @@ html[data-theme='dark'] {
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--page) var(--page-art) 0 0 / auto fixed;
+  /*
+   * El fondo es un decorado por capas, de delante hacia atrás: patrón suelto (nubes, estrellas,
+   * burbujas), detalle cercano, silueta lejana y cielo. Todas fijas, así el decorado se queda
+   * quieto mientras el contenido pasa por encima.
+   */
+  background:
+    var(--near, none) 0 100% / auto auto repeat-x fixed,
+    var(--far, none) 0 100% / auto auto repeat-x fixed,
+    var(--skybits, none) 0 0 / auto auto repeat-x fixed,
+    var(--sky, none) 0 0 / 100% 100% no-repeat fixed,
+    var(--page);
   color: var(--text);
   font-family: var(--font-body);
   font-size: 15px;
@@ -165,11 +175,12 @@ svg {
   width: 100%;
   margin: 0 auto;
 }
+/* El césped del suelo cambia con el mundo: hierba, arena, hielo, piedra… */
 .ground {
   height: 32px;
   border-top: var(--bw) solid var(--line);
   background:
-    linear-gradient(#3fbf4a 0 8px, #2a9a36 8px 12px, transparent 12px),
+    linear-gradient(var(--turf) 0 8px, var(--turf-2) 8px 12px, transparent 12px),
     repeating-linear-gradient(90deg, transparent 0 30px, rgba(0, 0, 0, 0.35) 30px 32px),
     repeating-linear-gradient(0deg, transparent 0 14px, rgba(0, 0, 0, 0.35) 14px 16px),
     var(--side);
@@ -187,10 +198,7 @@ svg {
   padding: 18px 14px 16px;
   color: var(--side-text);
   border-right: var(--bw) solid var(--line);
-  background:
-    repeating-linear-gradient(90deg, transparent 0 46px, rgba(0, 0, 0, 0.22) 46px 48px),
-    repeating-linear-gradient(0deg, transparent 0 22px, rgba(0, 0, 0, 0.22) 22px 24px),
-    var(--side);
+  background: var(--side-texture), var(--side);
 }
 .brand {
   display: flex;

@@ -1,4 +1,5 @@
 import { Fragment, Suspense, useEffect, useMemo, useState } from 'react';
+import { sfx } from '@/audio/sfx';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { dataLayer, useData } from '@/state';
 import { useUi } from '@/state/ui';
@@ -100,7 +101,7 @@ function Sidebar() {
             <Fragment key={group}>
               <p className="nav__group">{group}</p>
               {NAV.filter((n) => n.group === group).map((n) => (
-                <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => cx('nav__link', isActive && 'is-active')} onClick={() => setNavOpen(false)}>
+                <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => cx('nav__link', isActive && 'is-active')} onClick={() => { sfx.select(); setNavOpen(false); }}>
                   <Sprite name={n.sprite} size={20} />
                   <span>{n.label}</span>
                   {n.to === '/repaso' && dueCount > 0 && <span className="badge badge--nav">{dueCount}</span>}

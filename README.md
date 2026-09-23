@@ -74,6 +74,7 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
 | **Progreso** | Horas por semana, distribución del tiempo por curso, mapa de actividad de 20 semanas. Filtro 90 días / 6 meses / todo. |
 | **Arsenal** | Tienda de Toad (11 avatares, marcos, **6 mundos visuales**, insignias, poderes), **42 logros** y recompensas personales de la vida real. |
+| **Personajes** | **21 avatares** con arte pixel propio (búho, mago, ninja, astronauta, zorro, pingüino, rana, murciélago, ajolote, dragón…) y **cada uno con su gesto de reposo**: el fantasma flota, el slime se aplasta, el ninja parpadea de sitio, el dragón respira. Se ven moviéndose ya en la tienda, antes de comprarlos. |
 | **Perfil** | Camino de aprendizaje, insignias, ajustes, instalar la app, **recordatorios**, **exportar/importar tu partida**, cerrar sesión y reiniciar partida. |
 
 Además: sesiones de estudio con temporizador, búsqueda global, notificaciones, modo día/noche, efectos de sonido 8-bit (sintetizados, sin archivos), pantalla de *level up* con lluvia de monedas, y diseño responsive con barra inferior y botón `?` flotante en móvil.
@@ -121,6 +122,7 @@ El `.env.example` viene con `VITE_DATA_PROVIDER=local`, así que la app funciona
 | `npm test` | Pruebas unitarias (Vitest) |
 | `npm run typecheck` | Solo comprobación de tipos |
 | `npm run icons` | Regenera los iconos PNG de la PWA desde el sprite del bloque `?` |
+| `npm run worlds` | Regenera el decorado de los mundos (`src/styles/worlds.css`). |
 | `npm run vapid` | Genera un par de claves VAPID para los [recordatorios push](#recordatorios-push-opcional) |
 
 ## Configurar Supabase
@@ -400,6 +402,12 @@ Pantalla **Ciudad** (y un resumen en Inicio). Cada área de la app es un edifici
 **Calendario.** Tareas por fecha límite (color por prioridad, ↻ las repetidas, tachadas las hechas), repeticiones futuras proyectadas y repasos. Pulsa un día para ver su detalle y crear una tarea con esa fecha; arrastra una tarea a otro día para moverla.
 
 **Tareas recurrentes.** En el formulario, *Repetir*: cada N días, semanas o meses. Al completarla **nace la siguiente**, con su nueva fecha y sin avance. La fecha sigue el calendario original pero nunca cae en el pasado (completar tarde no crea una cola de atrasadas; 31 ene + 1 mes = 28/29 feb). Si la reabres y nadie tocó la siguiente, esta se retira.
+
+**Fondos por capas.** El fondo de cada mundo no es un color plano: son cuatro capas a distinta profundidad, como el fondo de un juego de plataformas — **cielo** en degradado, **lo que flota en él** (nubes, estrellas, luna en cuarto creciente, burbujas, copos, sol), **silueta lejana** (colinas, montañas, dunas, almenas, árboles secos) y **detalle cercano** (arbustos, pinos, cactus, algas, lápidas, brillo de lava). Todo es pixel art dibujado con rectángulos, sin una sola imagen que descargar: se genera con `npm run worlds` en [`scripts/gen-worlds.mjs`](scripts/gen-worlds.mjs) y sale como data-URIs dentro del CSS. Comprimido, la hoja de estilos entera pesa unos 20 KB, y el scroll no se resiente (medido: 16,6 ms por fotograma con decorado frente a 16,5 sin él).
+
+**Mundos con material propio.** Cada mundo comprable no cambia solo el fondo: cambia el **suelo** (hierba, piedra, arena mojada, hielo, adobe, tablones), la **textura del muro** de la barra lateral y el **color de acento** que tiñe los detalles. Los siete mundos están comprobados en día y noche: el texto de la barra pasa el contraste mínimo en los catorce combinados.
+
+**Sonido.** 24 efectos 8-bit sintetizados con Web Audio, sin un solo archivo que descargar: moneda, salto, golpe al bloque, power-up, 1-UP, tubería, pisotón, estrella, pausa, cuenta atrás de los últimos 5 segundos del Pomodoro, victoria, game over… Todo se apaga con el interruptor de sonido del Perfil.
 
 **Cadenas de hábitos.** Una cadena es una rutina en orden, la técnica de «apilar hábitos»: el anterior es la señal del siguiente. Se guía y se premia, **nunca se bloquea**, porque un día malo no debe impedirte apuntar lo que sí hiciste ni costarte la racha. Los hábitos que hoy no tocan (por su propia frecuencia) no cuentan ni estorban. Un hábito pertenece como mucho a una cadena, y si lo borras la cadena se queda sin ese eslabón (y desaparece si se queda en uno solo). Las cadenas viven en tu perfil, así que **no necesitan ninguna migración** y viajan en las copias de seguridad.
 

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { sfx } from '@/audio/sfx';
 import { usePomodoro } from '@/state/pomodoro';
 import { useUi } from '@/state/ui';
 import { PHASE_LABEL, formatClock } from '@/core/pomodoro';
@@ -18,10 +19,19 @@ export function usePomodoroEngine() {
   useEffect(() => {
     if (status !== 'running') return;
     const base = document.title;
+    let lastBeep = 0; // para no repetir el pitido dentro del mismo segundo
     const update = () => {
       const now = Date.now();
       tick(now);
       const { endsAt, phase: p, status: st } = usePomodoro.getState();
+      // Últimos 5 segundos: cuenta atrás, como el aviso de tiempo de un nivel.
+      if (st === 'running' && endsAt) {
+        const left = Math.ceil((endsAt - now) / 1000);
+        if (left > 0 && left <= 5 && left !== lastBeep) {
+          lastBeep = left;
+          sfx.tick();
+        }
+      }
       document.title = st === 'running' && endsAt ? `${formatClock(endsAt - now)} · ${PHASE_LABEL[p]} — StudyQuest` : base;
     };
     update();

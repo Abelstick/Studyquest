@@ -38,7 +38,10 @@ function ShopCard({ item }: { item: ShopItem }) {
   return (
     <article className={cx('shopcard', unavailable && 'is-dim', equipped && 'is-equipped')}>
       <div className="shopcard__art">
-        <Sprite name={item.sprite} size={54} />
+        {/* El personaje se mueve ya en la tienda: así ves su carácter antes de comprarlo. */}
+        <span className={cx('idle', item.idle && `idle--${item.idle}`)}>
+          <Sprite name={item.sprite} size={54} />
+        </span>
       </div>
       <div>
         <p className="kicker">{item.category}</p>

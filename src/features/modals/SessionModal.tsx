@@ -1,124 +1,93 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
+import { usePomodoro } from '@/state/pomodoro';
 import { SESSION_XP_PER_MIN } from '@/core/game';
-import { Button, ChipGroup, Field, Modal, Bar, NumberInput } from '@/ui/kit';
-import { Sprite } from '@/ui/Sprite';
-import { sfx } from '@/audio/sfx';
+import { Button, ChipGroup, Field, Modal, NumberInput } from '@/ui/kit';
 
 const MINUTES = [5, 10, 20, 30, 45, 60].map((m) => ({ value: m, label: `${m} min` }));
-const fmt = (ms: number) => {
-  const s = Math.max(0, Math.ceil(ms / 1000));
-  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-};
 
-/** Sesión de estudio: temporizador (estilo "tiempo restante" de Mario) o registro manual. */
+/**
+ * Registrar una sesión de estudio: al instante («ya lo hice») o con temporizador en vivo.
+ *
+ * El temporizador en vivo vive en el Pomodoro (`state/pomodoro.ts`), no aquí: ese store
+ * sobrevive a cambiar de pantalla y a recargar la página. Antes este modal tenía su propio
+ * cronómetro local y, como una ventana modal se cierra sola con Escape o al tocar fuera,
+ * cerrarla sin querer perdía toda la sesión en marcha. Ahora «Empezar» solo dice qué vas a
+ * estudiar y por cuánto, y te lleva al Pomodoro ya con eso puesto.
+ */
 export function SessionModal({ courseId: initialCourse, minutes: initialMinutes }: { courseId?: string; minutes?: number }) {
   const close = useUi((s) => s.closeModal);
+  const navigate = useNavigate();
   const { courses, logSession } = useData();
+  const { setCourse, setConfig } = usePomodoro();
   const [courseId, setCourseId] = useState(initialCourse ?? courses[0]?.id ?? '');
   const [minutes, setMinutes] = useState(initialMinutes ?? 20);
   const [custom, setCustom] = useState(false);
-  const [endsAt, setEndsAt] = useState<number | null>(null);
-  const [startedAt, setStartedAt] = useState(0);
-  const [now, setNow] = useState(Date.now());
-  const finished = useRef(false);
 
-  const running = endsAt !== null;
-  const total = minutes * 60_000;
-  const left = endsAt ? endsAt - now : total;
+  const startPomodoro = () => {
+    setCourse(courseId || null);
+    setConfig({ focus: minutes });
+    close();
+    navigate('/pomodoro');
+  };
 
-  const save = (mins: number) => {
-    if (finished.current || mins < 1) return;
-    finished.current = true;
-    logSession({ minutes: mins, courseId: courseId || null });
+  const logNow = () => {
+    if (minutes < 1) return;
+    logSession({ minutes, courseId: courseId || null });
     close();
   };
 
-  useEffect(() => {
-    if (!running) return;
-    const t = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(t);
-  }, [running]);
-
-  useEffect(() => {
-    if (running && endsAt && now >= endsAt) {
-      sfx.levelUp();
-      save(minutes);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [now]);
-
-  const start = () => {
-    const t = Date.now();
-    setStartedAt(t);
-    setNow(t);
-    setEndsAt(t + total);
-    sfx.jump();
-  };
-
-  const elapsedMin = Math.floor((now - startedAt) / 60_000);
-
   return (
-    <Modal title={running ? 'Sesión en curso' : 'Sesión de estudio'} kicker="// Tiempo" onClose={close}>
-      {!running ? (
-        <div className="form">
-          <Field label="¿Qué vas a estudiar?">
-            {(fid) => (
-              <select id={fid} className="input" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
-                <option value="">Estudio libre</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            )}
-          </Field>
-          <Field label="Duración">
-            {() => (
-              <>
-                <ChipGroup
-                  label="Duración"
-                  value={custom ? -1 : minutes}
-                  options={[...MINUTES, { value: -1, label: 'Otro' }]}
-                  onChange={(v) => (v === -1 ? setCustom(true) : (setCustom(false), setMinutes(v)))}
-                />
-                {custom && <NumberInput className="input" min={1} max={480} value={minutes} onValue={(n) => setMinutes(n)} aria-label="Minutos" style={{ marginTop: 8 }}/>}
-              </>
-            )}
-          </Field>
-          <p className="muted">
-            Ganas <b className="xp-text">+{minutes * SESSION_XP_PER_MIN} XP</b> al terminar.
-          </p>
+    <Modal title="Sesión de estudio" kicker="// Tiempo" onClose={close}>
+      <div className="form">
+        <Field label="¿Qué vas a estudiar?">
+          {(fid) => (
+            <select id={fid} className="input" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+              <option value="">Estudio libre</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+          )}
+        </Field>
+        <Field label="Duración">
+          {() => (
+            <>
+              <ChipGroup
+                label="Duración"
+                value={custom ? -1 : minutes}
+                options={[...MINUTES, { value: -1, label: 'Otro' }]}
+                onChange={(v) => (v === -1 ? setCustom(true) : (setCustom(false), setMinutes(v)))}
+              />
+              {custom && <NumberInput className="input" min={1} max={480} value={minutes} onValue={(n) => setMinutes(n)} aria-label="Minutos" style={{ marginTop: 8 }} />}
+            </>
+          )}
+        </Field>
+        <p className="muted">
+          Ganas <b className="xp-text">+{minutes * SESSION_XP_PER_MIN} XP</b> por estos {minutes} min.
+        </p>
+
+        <div className="session__choice">
+          <p className="session__question">¿Vas a estudiar ahora, o ya terminaste?</p>
           <div className="modal__actions">
-            <Button variant="primary" onClick={start}>
-              ▶ Empezar
+            <Button variant="primary" onClick={startPomodoro} title="Abre el Pomodoro con este curso y esta duración de enfoque ya puestos">
+              ▶ Voy a estudiar: abrir el Pomodoro
             </Button>
-            <Button onClick={() => save(minutes)} title="Registrar el tiempo sin usar el temporizador">
-              Ya lo hice
+            <Button variant="green" onClick={logNow} title="Marca estos minutos como estudiados ahora mismo, sin temporizador">
+              ✔ Ya estudié: registrar {minutes} min
             </Button>
-            <Button onClick={close}>Cancelar</Button>
           </div>
-        </div>
-      ) : (
-        <div className="timer">
-          <Sprite name="pacman" size={40} className="timer__sprite" />
-          <p className="timer__clock" aria-live="off">
-            {fmt(left)}
+          <p className="muted small">
+            El Pomodoro sigue corriendo aunque cambies de pantalla: no se cancela por cerrar esta ventana ni por moverte a otra.
           </p>
-          <Bar pct={((total - left) / total) * 100} tone="yellow" tall label="Progreso de la sesión" />
-          <p className="muted">Concéntrate: cada minuto vale {SESSION_XP_PER_MIN} XP.</p>
-          <div className="modal__actions modal__actions--center">
-            <Button variant="green" onClick={() => save(Math.max(1, elapsedMin))} disabled={elapsedMin < 1} title={elapsedMin < 1 ? 'Espera al menos un minuto' : undefined}>
-              Terminar ahora ({Math.max(0, elapsedMin)} min)
-            </Button>
-            <Button variant="danger" onClick={close}>
-              Descartar
-            </Button>
-          </div>
         </div>
-      )}
+
+        <Button onClick={close}>Cancelar</Button>
+      </div>
     </Modal>
   );
 }

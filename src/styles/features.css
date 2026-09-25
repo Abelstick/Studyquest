@@ -2023,6 +2023,19 @@ select.input {
 .mission__more {
   margin-top: 2px;
 }
+/* Contador de un hábito por cantidad (agua, páginas…), directo desde Inicio, sin entrar al detalle. */
+.mission__counter {
+  margin-top: 2px;
+  max-width: 100%;
+}
+.mission__counter .counter {
+  flex: none;
+  max-width: 100%;
+}
+.mission__counter .counter__value {
+  flex: none;
+  min-width: 7em;
+}
 /* El desglose ocupa una fila propia, alineado bajo el texto de la misión. */
 .mission__subs {
   flex-basis: 100%;
@@ -2739,6 +2752,11 @@ select.input {
   min-height: 300px;
   line-height: 1.5;
   resize: vertical;
+}
+/* Enlace a Notion/Obsidian/etc.: se ve arriba del todo, antes que el cuerpo del apunte. */
+.note__link {
+  align-self: flex-start;
+  margin-bottom: 6px;
 }
 @media (max-width: 980px) {
   .note__editor {

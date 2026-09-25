@@ -112,6 +112,29 @@ describe('copia de seguridad', () => {
     expect(res.snapshot.certifications[1].courseId).toBeNull();
   });
 
+  it('un apunte con enlace externo (Notion, Obsidian…) viaja en la copia, incluso sin título ni cuerpo', () => {
+    const file = buildBackup(demo());
+    const conEnlace = demo().notes.find((n) => n.link);
+    expect(conEnlace).toBeTruthy();
+    const res = parseBackup(JSON.stringify(file));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.snapshot.notes.some((n) => n.link === conEnlace!.link)).toBe(true);
+  });
+
+  it('una copia manipulada no puede colar un enlace «javascript:» en un apunte, pero uno solo con enlace sigue siendo válido', () => {
+    const file = buildBackup(demo());
+    const idx = file.data.notes.findIndex((n) => n.link);
+    file.data.notes[idx].link = 'javascript:alert(1)';
+    file.data.notes[idx].title = '';
+    file.data.notes[idx].body = '';
+    const res = parseBackup(JSON.stringify(file));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    const restaurado = res.snapshot.notes[idx];
+    expect(restaurado.link).toBeNull();
+  });
+
   it('convierte ids que no son UUID y reescribe las referencias', () => {
     const file = {
       app: 'studyquest', version: 1, exportedAt: '',

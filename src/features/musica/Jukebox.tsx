@@ -5,8 +5,10 @@ import { Button, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
 /**
- * Reproductor de la música de fondo. Las melodías son originales de la app, sintetizadas
- * con Web Audio: no hay archivos que descargar, así que también suena sin conexión.
+ * Reproductor de la música de fondo, sintetizada con Web Audio: no hay archivos que descargar,
+ * así que también suena sin conexión. Varias pistas son canciones reales y conocidas, nota por
+ * nota, todas de dominio público (Korobeiniki de Tetris, el Himno de la Alegría, Para Elisa,
+ * Estrellita); el resto son composiciones originales de la app.
  */
 export function Jukebox() {
   const { track, playing, volume, shuffle, play, toggle, next, prev, setVolume, toggleShuffle } = useJukebox();
@@ -78,7 +80,8 @@ export function Jukebox() {
       </ol>
 
       <p className="muted small">
-        Las ocho melodías son originales, compuestas para StudyQuest y sintetizadas en el momento: no hay archivos de audio, por eso funciona también sin conexión. Durante una sesión de Pomodoro manda la música de
+        «Korobeiniki» (el tema de Tetris), el «Himno de la Alegría», «Para Elisa» y «Estrellita» son canciones reales, nota por nota — todas de dominio público, así que se pueden tocar sin infringir nada.
+        Las demás son composiciones originales de StudyQuest. Todas se sintetizan en el momento, sin archivos de audio, por eso funciona también sin conexión. Durante una sesión de Pomodoro manda la música de
         la sesión y, al terminar, vuelve lo que estuvieras escuchando.
       </p>
     </Panel>

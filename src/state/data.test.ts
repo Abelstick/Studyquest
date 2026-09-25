@@ -471,7 +471,7 @@ describe('store de datos', () => {
   describe('apuntes', () => {
     it('crear un apunte lo guarda y lo cuenta en la biblioteca', async () => {
       const antes = computeStats(snapshotOf()).notes;
-      const id = store.getState().createNote({ title: 'JOINs', body: '- solo lo que casa en las dos tablas', courseId: null, topicId: null, tags: ['sql'], pinned: false });
+      const id = store.getState().createNote({ title: 'JOINs', body: '- solo lo que casa en las dos tablas', courseId: null, topicId: null, tags: ['sql'], pinned: false, link: null });
       expect(store.getState().notes).toHaveLength(1);
       expect(computeStats(snapshotOf()).notes).toBe(antes + 1);
       await flush();
@@ -479,12 +479,17 @@ describe('store de datos', () => {
     });
 
     it('un apunte vacío no suma a la biblioteca', () => {
-      store.getState().createNote({ title: '', body: '   ', courseId: null, topicId: null, tags: [], pinned: false });
+      store.getState().createNote({ title: '', body: '   ', courseId: null, topicId: null, tags: [], pinned: false, link: null });
       expect(computeStats(snapshotOf()).notes).toBe(0);
     });
 
+    it('un apunte solo con enlace (Notion, Obsidian…) sí suma, aunque no tenga título ni cuerpo', () => {
+      store.getState().createNote({ title: '', body: '', courseId: null, topicId: null, tags: [], pinned: false, link: 'https://notion.so/mis-apuntes' });
+      expect(computeStats(snapshotOf()).notes).toBe(1);
+    });
+
     it('editarlo actualiza la fecha de cambio', async () => {
-      const id = store.getState().createNote({ title: 'A', body: 'uno', courseId: null, topicId: null, tags: [], pinned: false });
+      const id = store.getState().createNote({ title: 'A', body: 'uno', courseId: null, topicId: null, tags: [], pinned: false, link: null });
       const antes = store.getState().notes[0].updatedAt;
       vi.setSystemTime(new Date(2026, 8, 17, 12));
       store.getState().updateNote(id, { body: 'dos' });
@@ -499,7 +504,7 @@ describe('store de datos', () => {
     it('al borrar el curso, el apunte se conserva pero pierde curso y tema', async () => {
       store.getState().createCourse({ title: 'Curso', professor: '', field: '', mentor: null, modules: [] });
       const courseId = store.getState().courses[0].id;
-      store.getState().createNote({ title: 'Del curso', body: 'algo', courseId, topicId: 't1', tags: [], pinned: false });
+      store.getState().createNote({ title: 'Del curso', body: 'algo', courseId, topicId: 't1', tags: [], pinned: false, link: null });
       await flush();
 
       store.getState().deleteCourse(courseId);
@@ -513,7 +518,7 @@ describe('store de datos', () => {
     });
 
     it('borrar un apunte lo quita de la base', async () => {
-      const id = store.getState().createNote({ title: 'A', body: 'x', courseId: null, topicId: null, tags: [], pinned: false });
+      const id = store.getState().createNote({ title: 'A', body: 'x', courseId: null, topicId: null, tags: [], pinned: false, link: null });
       await flush();
       store.getState().deleteNote(id);
       expect(store.getState().notes).toHaveLength(0);

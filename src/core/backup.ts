@@ -168,7 +168,8 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       : null,
   );
   const notes = list('notes', 'apuntes', (o) => {
-    if (!str(o.title) && !str(o.body)) return null;
+    // Un apunte solo con enlace (Notion, Obsidian Publish…) y sin título ni cuerpo también es válido.
+    if (!str(o.title) && !str(o.body) && !str(o.link)) return null;
     const courseId = ref(o.courseId);
     const linked = courseId && courseIds.has(courseId) ? courseId : null;
     const topicId = ref(o.topicId);
@@ -179,7 +180,10 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       // Sin curso no puede haber tema: si el curso se cayó, el apunte se queda suelto.
       topicId: linked && topicId ? topicId : null,
       tags: asArray(o.tags).filter((t): t is string => typeof t === 'string'),
-      pinned: o.pinned === true, createdAt: when, updatedAt: str(o.updatedAt, when),
+      pinned: o.pinned === true,
+      // Igual que con las certificaciones: solo se guarda si es http(s), para que una copia manipulada no cuele un «javascript:».
+      link: str(o.link) ? safeUrl(str(o.link)) : null,
+      createdAt: when, updatedAt: str(o.updatedAt, when),
     };
   });
   const certifications = list('certifications', 'certificaciones', (o) => {

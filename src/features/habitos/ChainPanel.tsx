@@ -6,7 +6,7 @@ import { CHAIN_BONUS_XP, chainState } from '@/core/chains';
 import type { HabitChain } from '@/core/domain';
 import { Bar, Button, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
-import { HabitAction } from './Habitos';
+import { HabitAction } from './HabitAction';
 
 /** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
 const NO_CHAINS: HabitChain[] = [];

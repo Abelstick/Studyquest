@@ -176,9 +176,9 @@ export function buildDemo(profile: Profile, now: ISODate): Snapshot {
     ] },
   ];
 
-  /* Apuntes de ejemplo: uno colgado de un tema, otro del curso y otro suelto. */
+  /* Apuntes de ejemplo: uno colgado de un tema, otro del curso, otro suelto y uno que vive en Notion. */
   const note = (title: string, body: string, daysAgo: number, over: Partial<Note> = {}): Note => ({
-    id: newId(), title, body, courseId: null, topicId: null, tags: [], pinned: false,
+    id: newId(), title, body, courseId: null, topicId: null, tags: [], pinned: false, link: null,
     createdAt: new Date(Date.now() - daysAgo * 86_400_000).toISOString(),
     updatedAt: new Date(Date.now() - daysAgo * 86_400_000).toISOString(), ...over,
   });
@@ -186,6 +186,7 @@ export function buildDemo(profile: Profile, now: ISODate): Snapshot {
     note('Tipos de JOIN', '# Los cuatro JOIN\n\n- **INNER**: solo las filas que casan en las dos tablas.\n- **LEFT**: todas las de la izquierda; si no hay pareja, `NULL`.\n- **RIGHT**: al revés.\n- **FULL**: todo, con huecos donde no hay pareja.\n\nSi dudas, empieza por INNER y ve ampliando.', 2, { courseId: datos.id, tags: ['sql'], pinned: true }),
     note('Errores típicos en Pandas', '- Confundir `loc` (por etiqueta) con `iloc` (por posición).\n- Modificar una copia sin darte cuenta: ojo con el aviso `SettingWithCopyWarning`.\n- Olvidar `axis=1` al borrar columnas.', 5, { courseId: datos.id, tags: ['python', 'pandas'] }),
     note('Ideas para el portafolio', 'Un panel con datos de verdad pesa más que tres ejercicios de clase.\n\n1. Elegir un conjunto de datos público.\n2. Limpiarlo y documentar qué se tiró y por qué.\n3. Tres gráficos que respondan a una pregunta concreta.', 9, { tags: ['portafolio'] }),
+    note('Apuntes de la clase de Python', '', 1, { courseId: datos.id, tags: ['python'], link: 'https://www.notion.so/Apuntes-de-Python-ejemplo' }),
   ];
 
   /* Certificaciones de ejemplo: una de un curso de la app, una externa y una que ya caducó. */

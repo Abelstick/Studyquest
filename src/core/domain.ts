@@ -276,6 +276,13 @@ export interface Note {
   tags: string[];
   /** Fijado arriba del todo. */
   pinned: boolean;
+  /**
+   * Enlace a donde vive el apunte de verdad (Notion, Obsidian Publish, Google Docs…), si prefieres
+   * tomar notas ahí. `body` puede quedar vacío cuando solo se usa el enlace: el apunte sigue
+   * contando para la Biblioteca de tu ciudad igual, así no pierdes esa parte del juego por
+   * apuntar fuera de la app.
+   */
+  link: string | null;
   createdAt: ISODateTime;
   updatedAt: ISODateTime;
 }

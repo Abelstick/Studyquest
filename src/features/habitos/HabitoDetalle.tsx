@@ -5,7 +5,7 @@ import { useUi } from '@/state/ui';
 import { addDays, today, weekdayAbbr, weekdayIndex } from '@/core/dates';
 import { frequencyLabel, goalLabel, habitStreaks, isHabitDone, logFor, weakestWeekday, MEASURE_LABEL } from '@/core/game';
 import { Bar, Button, Panel, cx } from '@/ui/kit';
-import { HabitAction } from './Habitos';
+import { HabitAction } from './HabitAction';
 
 const DAYS_FULL = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 

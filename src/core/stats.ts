@@ -70,7 +70,7 @@ export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
     weeklyChallenges: s.xpEvents.filter((e) => e.source === 'bonus' && e.amount > 0 && e.label === 'Reto semanal completado').length,
     achievementsCount: s.profile.achievements.length,
     certifications: s.certifications.length,
-    notes: s.notes.filter((n) => n.body.trim() || n.title.trim()).length,
+    notes: s.notes.filter((n) => n.body.trim() || n.title.trim() || n.link).length,
     heroStage: s.profile.hero ? s.profile.hero.stage : -1,
     heroItems: s.profile.inventory.filter((i) => i.startsWith('hero-')).length,
   };

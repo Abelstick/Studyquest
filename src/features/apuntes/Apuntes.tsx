@@ -3,6 +3,7 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import type { Note } from '@/core/domain';
 import { allTags, blankNote, excerpt, readingMinutes, searchNotes, sortNotes, toMarkdown, wordCount } from '@/core/notes';
+import { linkLabel, safeUrl } from '@/core/certifications';
 import { agoDays } from '@/core/dates';
 import { Button, Empty, Field, PageHead, Panel, Tag, TextInput, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
@@ -26,14 +27,17 @@ function Detail({ note, onClose }: { note: Note; onClose: () => void }) {
   const deleteNote = useData((s) => s.deleteNote);
   const openModal = useUi((s) => s.openModal);
 
-  const [editing, setEditing] = useState(!note.title && !note.body);
+  const [editing, setEditing] = useState(!note.title && !note.body && !note.link);
   const [title, setTitle] = useState(note.title);
   const [body, setBody] = useState(note.body);
   const [tags, setTags] = useState(note.tags.join(', '));
   const [courseId, setCourseId] = useState(note.courseId ?? '');
+  const [link, setLink] = useState(note.link ?? '');
+  const badLink = link.trim().length > 0 && safeUrl(link) === null;
 
   const course = courses.find((c) => c.id === note.courseId);
   const topic = course?.modules.flatMap((m) => m.topics).find((t) => t.id === note.topicId);
+  const openLink = safeUrl(note.link ?? '');
 
   const save = () => {
     updateNote(note.id, {
@@ -43,6 +47,7 @@ function Detail({ note, onClose }: { note: Note; onClose: () => void }) {
       courseId: courseId || null,
       // Si cambias de curso, el vínculo al tema deja de tener sentido.
       topicId: courseId === note.courseId ? note.topicId : null,
+      link: safeUrl(link),
     });
     setEditing(false);
   };
@@ -65,7 +70,15 @@ function Detail({ note, onClose }: { note: Note; onClose: () => void }) {
       {editing ? (
         <>
           <Field label="Título">{(id) => <TextInput id={id} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Tipos de JOIN" maxLength={200} />}</Field>
-          <Field label="Apunte" hint="Escribe a tu ritmo: «# Título», «- punto», «1. paso», «**negrita**» y «`código`».">
+          <Field label="¿Lo tienes en Notion, Obsidian u otro sitio?" hint={badLink ? undefined : 'Pega el enlace y déjalo abrir desde aquí. Solo se aceptan enlaces http(s); el apunte de abajo es opcional si ya usas esto.'}>
+            {(id) => <TextInput id={id} className="input" value={link} onChange={(e) => setLink(e.target.value)} placeholder="notion.so/tu-página" spellCheck={false} aria-invalid={badLink || undefined} />}
+          </Field>
+          {badLink && (
+            <p className="form__error" role="alert">
+              Eso no parece un enlace válido. Pega la dirección completa, por ejemplo <b>https://notion.so/tu-página</b>. Si lo dejas así, se guardará sin enlace.
+            </p>
+          )}
+          <Field label="Apunte" hint="Opcional si ya escribes en otro sitio. Aquí puedes ir a tu ritmo: «# Título», «- punto», «1. paso», «**negrita**» y «`código`».">
             {(id) => <textarea id={id} className="input note__editor" rows={16} value={body} onChange={(e) => setBody(e.target.value)} placeholder={'# Lo importante\n\n- Primer punto\n- Segundo punto'} />}
           </Field>
           <div className="form__row">
@@ -112,9 +125,18 @@ function Detail({ note, onClose }: { note: Note; onClose: () => void }) {
         </>
       ) : (
         <>
+          {openLink && (
+            <a className="btn btn--primary note__link" href={openLink} target="_blank" rel="noopener noreferrer">
+              ↗ Abrir en {linkLabel(note.link ?? '')}
+            </a>
+          )}
           <div className="tags">
-            <span className="tag tag--plain">{wordCount(note.body)} palabras</span>
-            <span className="tag tag--plain">{readingMinutes(note.body)} min de lectura</span>
+            {note.body.trim() && (
+              <>
+                <span className="tag tag--plain">{wordCount(note.body)} palabras</span>
+                <span className="tag tag--plain">{readingMinutes(note.body)} min de lectura</span>
+              </>
+            )}
             <span className="tag tag--plain">Editado {agoDays(note.updatedAt)}</span>
             {note.tags.map((t) => (
               <span key={t} className="tag tag--blue">
@@ -122,7 +144,7 @@ function Detail({ note, onClose }: { note: Note; onClose: () => void }) {
               </span>
             ))}
           </div>
-          <NoteBody body={note.body} />
+          {note.body.trim() ? <NoteBody body={note.body} /> : !openLink && <p className="muted">Vacío. Pulsa «✎ Editar» para escribir algo o pegar un enlace.</p>}
         </>
       )}
     </Panel>
@@ -214,8 +236,13 @@ export default function Apuntes() {
                       </b>
                       <span className="muted small">{agoDays(n.updatedAt)}</span>
                     </span>
-                    <span className="muted small notecard__ex">{excerpt(n.body, 90) || 'Vacío'}</span>
+                    <span className="muted small notecard__ex">{excerpt(n.body, 90) || (n.link ? '↗ Enlace externo' : 'Vacío')}</span>
                     <span className="tags">
+                      {n.link && (
+                        <span className="tag tag--blue" title={n.link}>
+                          ↗ {linkLabel(n.link)}
+                        </span>
+                      )}
                       {n.courseId && <span className="tag tag--plain">{courseName(n.courseId) ?? 'Curso borrado'}</span>}
                       {n.tags.slice(0, 3).map((t) => (
                         <span key={t} className="tag tag--blue">

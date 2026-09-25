@@ -90,6 +90,11 @@ export const logFor = (logs: HabitLog[], habitId: string, date: ISODate): HabitL
 
 export const isHabitDone = (habit: Habit, log?: HabitLog): boolean => !!log && log.value >= habit.target;
 
+/** Medidas que se registran con contador (páginas, ejercicios…) en un +/− en lugar de un solo botón. */
+export const isCounter = (h: Habit): boolean => h.measure !== 'boolean' && h.measure !== 'minutes' && h.measure !== 'hours' && h.target > 1;
+/** Cuánto suma cada pulsación del +/−: de golpe en golpe para objetivos grandes (porcentaje, 50+). */
+export const stepForCounter = (h: Habit): number => (h.measure === 'percent' ? 10 : h.target >= 50 ? 5 : 1);
+
 export function isDueOn(habit: Habit, date: ISODate, logs: HabitLog[]): boolean {
   const f = habit.frequency;
   switch (f.type) {

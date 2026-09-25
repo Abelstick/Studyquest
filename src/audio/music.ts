@@ -1,10 +1,19 @@
 /**
- * Música de fondo 8-bit, sintetizada con Web Audio (sin archivos). Las melodías son originales.
+ * Música de fondo 8-bit, sintetizada con Web Audio (sin archivos).
  * Un secuenciador con «lookahead» programa las notas justo antes de que suenen, así no se descuadra aunque la pestaña vaya lenta.
+ *
+ * Varias pistas transcriben nota por nota canciones REALES y conocidas que son de dominio
+ * público (nadie tiene ya sus derechos, por edad o porque siempre fueron populares): "focus"
+ * y "break" son «Korobeiniki» (la canción popular rusa de 1898 que Tetris usa tal cual como su
+ * tema A), "alegria" es el «Himno de la Alegría» de Beethoven, "elisa" es «Para Elisa» y
+ * "estrellita" es la tonada de 1761 de «Twinkle Twinkle». Las demás pistas siguen siendo
+ * composiciones originales: los temas de Mario, Zelda, Pokémon… tienen copyright vigente y
+ * transcribirlos nota por nota sería infringirlo igual que subir el MP3, incluso en un
+ * proyecto personal — así que en vez de copiarlos, esas pistas solo evocan su ambiente.
  */
 import { audio } from './sfx';
 
-export type TrackName = 'focus' | 'break' | 'heroe' | 'cueva' | 'jefe' | 'nieve' | 'agua' | 'creditos';
+export type TrackName = 'focus' | 'break' | 'heroe' | 'cueva' | 'jefe' | 'nieve' | 'agua' | 'creditos' | 'alegria' | 'elisa' | 'estrellita';
 
 interface Track {
   /** Nombre que se ve en el reproductor. */
@@ -18,30 +27,30 @@ interface Track {
   leadWave: OscillatorType;
   leadVol: number;
   drums: boolean;
+  /** Cola de eco (delay con realimentación): para las pistas tranquilas, tipo "ambiente bajo el agua". */
+  ambient?: boolean;
 }
 
-/** Cuatro compases por «frase»: Am · F · C · G, dos veces (la segunda, más aguda). */
-const FOCUS_LEAD = [
-  69, 72, 76, 72, 74, 72, 69, 0,
-  65, 69, 72, 69, 77, 0, 72, 69,
-  72, 76, 79, 76, 74, 72, 67, 0,
-  71, 74, 79, 74, 71, 67, 71, 0,
-  76, 0, 72, 76, 81, 0, 76, 72,
-  77, 0, 72, 77, 76, 72, 69, 72,
-  79, 76, 72, 76, 74, 76, 79, 0,
-  74, 71, 67, 71, 74, 79, 74, 71,
-];
 const bounce = (root: number) => [root, root + 12, root, root + 12, root, root + 12, root, root + 12];
-const FOCUS_BASS = [45, 41, 48, 43, 45, 41, 48, 43].flatMap(bounce);
 
-/** Descanso: arpegios suaves sobre C · Am · F · G. */
-const arp = (n: number[]) => [n[0], n[1], n[2], n[3], n[2], n[1], n[0], 0];
-const BREAK_LEAD = [arp([60, 64, 67, 71]), arp([57, 60, 64, 69]), arp([65, 69, 72, 76]), arp([67, 71, 74, 79])].flat();
-const BREAK_BASS = [48, 45, 41, 43].flatMap((r) => [r, 0, 0, 0, r + 7, 0, 0, 0]);
+/**
+ * «Korobeiniki»: melodía popular rusa de 1898 (dominio público) que Tetris usa, sin cambiarla,
+ * como su Tema A — el fragmento de música de videojuego más reconocible que existe. En La menor,
+ * transcrita nota por nota tal y como se toca. "focus" la toca a todo trapo; "break" es la misma
+ * melodía, más lenta y sin batería, para el descanso.
+ */
+const KOROBEINIKI_LEAD = [
+  76, 71, 72, 74, 72, 71, 69, 69,
+  72, 76, 74, 72, 71, 71, 72, 74,
+  76, 72, 69, 69, 0, 0, 0, 0,
+  74, 74, 77, 81, 79, 77, 76, 72,
+  76, 74, 72, 71, 71, 72, 74, 76,
+  72, 69, 69, 69, 0, 0, 0, 0,
+];
+const KOROBEINIKI_BASS = [40, 36, 33, 40, 36, 33].flatMap(bounce);
 
-
-/* ---------- Más melodías originales para el reproductor ----------
-   Todas compuestas para la app: nada transcrito de ningún juego. */
+/* ---------- Más melodías para el reproductor: de aquí en adelante, composiciones
+   originales de la app (nada transcrito de ningún juego con copyright vigente). ---------- */
 
 /** Marcha alegre en Do mayor: I - V - vi - IV, la segunda vuelta una octava arriba. */
 const HEROE_LEAD = [
@@ -87,9 +96,23 @@ const NIEVE_LEAD = [
 ];
 const NIEVE_BASS = [41, 48, 43, 45, 41, 48, 43, 41].flatMap((r) => [r, 0, r + 7, 0, r + 12, 0, r + 7, 0]);
 
-/** Agua: balanceo tranquilo en Sol mayor. */
-const AGUA_LEAD = [arp([67, 71, 74, 79]), arp([64, 67, 71, 76]), arp([65, 69, 72, 77]), arp([62, 66, 69, 74])].flat();
-const AGUA_BASS = [43, 40, 41, 38].flatMap((r) => [r, 0, 0, r + 7, 0, 0, r + 12, 0]);
+/**
+ * Agua: arpegios lentos y reverberantes en Re mayor, pensados para evocar esa sensación de
+ * ambiente acuático y soñador (burbujas, ecos, calma) sin transcribir ninguna melodía real
+ * — a diferencia de Korobeiniki, las bandas sonoras de Donkey Kong Country siguen protegidas
+ * por copyright, así que esto es una composición propia con ese espíritu, no una copia.
+ */
+const AGUA_LEAD = [
+  62, 66, 69, 73, 69, 66, 62, 0,
+  59, 62, 66, 69, 66, 62, 59, 0,
+  67, 71, 74, 78, 74, 71, 67, 0,
+  69, 73, 76, 79, 76, 73, 69, 0,
+  74, 78, 81, 78, 74, 71, 69, 66,
+  71, 74, 78, 81, 78, 74, 71, 67,
+  79, 83, 86, 83, 79, 76, 74, 71,
+  81, 79, 76, 73, 69, 0, 0, 0,
+];
+const AGUA_BASS = [38, 35, 43, 45, 38, 35, 43, 45].flatMap((r) => [r, 0, 0, 0, r + 7, 0, 0, 0]);
 
 /** Créditos: cierre cálido y lento. */
 const CREDITOS_LEAD = [
@@ -104,19 +127,54 @@ const CREDITOS_LEAD = [
 ];
 const CREDITOS_BASS = [48, 45, 41, 43, 48, 45, 41, 48].flatMap((r) => [r, 0, 0, 0, r + 7, 0, 0, 0]);
 
+/* ---------- Más melodías reales y de dominio público: canciones conocidas de verdad,
+   gratis porque nadie tiene sus derechos (autores fallecidos hace más de 70 años). ---------- */
+
+/** «Himno de la Alegría»: tema de la Novena Sinfonía de Beethoven (1824), en Do mayor. */
+const ALEGRIA_LEAD = [
+  76, 76, 77, 79, 79, 77, 76, 74,
+  72, 72, 74, 76, 76, 74, 74, 0,
+  76, 76, 77, 79, 79, 77, 76, 74,
+  72, 72, 74, 76, 74, 72, 72, 0,
+];
+const ALEGRIA_BASS = [36, 36, 41, 36].flatMap((r) => [r, 0, 0, 0, r + 7, 0, 0, 0]);
+
+/** «Para Elisa» de Beethoven (~1810): el arranque, el fragmento más reconocido de toda la música clásica. */
+const ELISA_LEAD = [
+  76, 75, 76, 75, 76, 71, 74, 72,
+  69, 0, 72, 0, 76, 0, 0, 0,
+  76, 75, 76, 75, 76, 71, 74, 72,
+  69, 0, 72, 0, 76, 0, 0, 0,
+];
+const ELISA_BASS = [45, 45, 48, 45].flatMap((r) => [r, 0, 0, 0, r + 7, 0, 0, 0]);
+
+/** «Estrellita» (Ah! vous dirai-je, Maman, la tonada de «Twinkle Twinkle»): melodía popular francesa de 1761. */
+const ESTRELLITA_LEAD = [
+  60, 60, 67, 67, 69, 69, 67, 0,
+  65, 65, 64, 64, 62, 62, 60, 0,
+  67, 67, 65, 65, 64, 64, 62, 0,
+  67, 67, 65, 65, 64, 64, 62, 0,
+  60, 60, 67, 67, 69, 69, 67, 0,
+  65, 65, 64, 64, 62, 62, 60, 0,
+];
+const ESTRELLITA_BASS = [36, 41, 43, 43, 36, 41].flatMap((r) => [r, 0, 0, 0, r + 7, 0, 0, 0]);
+
 export const TRACKS: Record<TrackName, Track> = {
-  focus: { title: 'Bloque de concentración', mood: 'Para trabajar', bpm: 140, lead: FOCUS_LEAD, bass: FOCUS_BASS, leadWave: 'square', leadVol: 0.028, drums: true },
-  break: { title: 'Descanso en la nube', mood: 'Para descansar', bpm: 84, lead: BREAK_LEAD, bass: BREAK_BASS, leadWave: 'triangle', leadVol: 0.05, drums: false },
+  focus: { title: 'Korobeiniki (a toda marcha)', mood: 'El tema real de Tetris · dominio público', bpm: 152, lead: KOROBEINIKI_LEAD, bass: KOROBEINIKI_BASS, leadWave: 'square', leadVol: 0.028, drums: true },
+  break: { title: 'Korobeiniki (con calma)', mood: 'El mismo tema de Tetris, más lento', bpm: 78, lead: KOROBEINIKI_LEAD, bass: KOROBEINIKI_BASS, leadWave: 'triangle', leadVol: 0.05, drums: false },
   heroe: { title: 'Marcha del héroe', mood: 'Animada', bpm: 132, lead: HEROE_LEAD, bass: HEROE_BASS, leadWave: 'square', leadVol: 0.03, drums: true },
   cueva: { title: 'Cueva de cristal', mood: 'Tranquila', bpm: 76, lead: CUEVA_LEAD, bass: CUEVA_BASS, leadWave: 'triangle', leadVol: 0.05, drums: false },
   jefe: { title: 'Jefe a la vista', mood: 'Tensa', bpm: 168, lead: JEFE_LEAD, bass: JEFE_BASS, leadWave: 'sawtooth', leadVol: 0.022, drums: true },
   nieve: { title: 'Nieve en el nivel 4', mood: 'Suave', bpm: 96, lead: NIEVE_LEAD, bass: NIEVE_BASS, leadWave: 'triangle', leadVol: 0.045, drums: false },
-  agua: { title: 'Zona de agua', mood: 'Tranquila', bpm: 104, lead: AGUA_LEAD, bass: AGUA_BASS, leadWave: 'sine', leadVol: 0.055, drums: false },
+  agua: { title: 'Ambiente acuático', mood: 'Soñadora, con eco · inspirada en las bandas sonoras acuáticas de los 90', bpm: 72, lead: AGUA_LEAD, bass: AGUA_BASS, leadWave: 'sine', leadVol: 0.045, drums: false, ambient: true },
   creditos: { title: 'Créditos finales', mood: 'Para terminar', bpm: 88, lead: CREDITOS_LEAD, bass: CREDITOS_BASS, leadWave: 'square', leadVol: 0.032, drums: true },
+  alegria: { title: 'Himno de la Alegría', mood: 'Beethoven · dominio público', bpm: 120, lead: ALEGRIA_LEAD, bass: ALEGRIA_BASS, leadWave: 'square', leadVol: 0.03, drums: true },
+  elisa: { title: 'Para Elisa', mood: 'Beethoven · dominio público', bpm: 78, lead: ELISA_LEAD, bass: ELISA_BASS, leadWave: 'triangle', leadVol: 0.05, drums: false },
+  estrellita: { title: 'Estrellita', mood: 'Melodía popular de 1761 · dominio público', bpm: 92, lead: ESTRELLITA_LEAD, bass: ESTRELLITA_BASS, leadWave: 'sine', leadVol: 0.05, drums: false },
 };
 
 /** Orden en que se ven en el reproductor. */
-export const TRACK_LIST: TrackName[] = ['heroe', 'focus', 'jefe', 'agua', 'nieve', 'cueva', 'break', 'creditos'];
+export const TRACK_LIST: TrackName[] = ['heroe', 'focus', 'alegria', 'jefe', 'agua', 'nieve', 'elisa', 'cueva', 'break', 'estrellita', 'creditos'];
 
 export const midiToFreq = (m: number) => 440 * 2 ** ((m - 69) / 12);
 
@@ -125,6 +183,8 @@ const TICK_MS = 60;
 
 let timer: ReturnType<typeof setInterval> | null = null;
 let master: GainNode | null = null;
+/** Nodos de la cola de eco de la pista actual (solo existen si `ambient: true`), para poder desconectarlos al parar. */
+let echoNodes: DelayNode | null = null;
 let noiseBuf: AudioBuffer | null = null;
 let current: TrackName | null = null;
 /** Volumen general de la música (0 a 1). Se aplica en caliente si ya está sonando. */
@@ -175,6 +235,22 @@ function kick(c: AudioContext, out: AudioNode, at: number) {
   osc.stop(at + 0.14);
 }
 
+/** Conecta la pista a los altavoces; si pide eco, añade una cola de delay con realimentación (así suena "bajo el agua"). */
+function connectOutput(c: AudioContext, node: GainNode, ambient: boolean) {
+  node.connect(c.destination);
+  if (!ambient) return;
+  const delay = c.createDelay(1.5);
+  delay.delayTime.value = 0.42;
+  const feedback = c.createGain();
+  feedback.gain.value = 0.4;
+  const wet = c.createGain();
+  wet.gain.value = 0.55;
+  node.connect(delay);
+  delay.connect(feedback).connect(delay);
+  delay.connect(wet).connect(c.destination);
+  echoNodes = delay;
+}
+
 function schedule() {
   const c = audio();
   if (!c || !master || !current) return stop();
@@ -202,7 +278,7 @@ export function startMusic(name: TrackName) {
   master = c.createGain();
   master.gain.setValueAtTime(0.0001, c.currentTime);
   master.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), c.currentTime + 0.4);
-  master.connect(c.destination);
+  connectOutput(c, master, TRACKS[name].ambient === true);
   current = name;
   step = 0;
   nextAt = c.currentTime + 0.1;
@@ -216,15 +292,29 @@ export function stopMusic(immediate = false) {
   current = null;
   const m = master;
   master = null;
+  const echo = echoNodes;
+  echoNodes = null;
   if (!m) return;
   const c = audio();
+  // El eco tarda en apagarse solo (la realimentación va bajando); se desconecta un poco después que la pista.
+  const dropEcho = () => {
+    try {
+      echo?.disconnect();
+    } catch {
+      /* ya desconectado */
+    }
+  };
   try {
     if (c && !immediate) {
       m.gain.cancelScheduledValues(c.currentTime);
       m.gain.setValueAtTime(Math.max(0.0001, m.gain.value), c.currentTime);
       m.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.3);
       setTimeout(() => m.disconnect(), 400);
-    } else m.disconnect();
+      setTimeout(dropEcho, echo ? 2200 : 400);
+    } else {
+      m.disconnect();
+      dropEcho();
+    }
   } catch {
     /* ya desconectado */
   }

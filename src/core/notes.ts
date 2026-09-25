@@ -155,6 +155,7 @@ export const blankNote = (over: Partial<Note> = {}): Omit<Note, 'id' | 'createdA
   topicId: null,
   tags: [],
   pinned: false,
+  link: null,
   ...over,
 });
 
@@ -165,7 +166,8 @@ export function toMarkdown(list: Note[], courseName: (id: ID) => string | undefi
       const meta = [n.courseId ? courseName(n.courseId) : null, n.tags.length ? n.tags.map((t) => `#${t.replace(/\s+/g, '-')}`).join(' ') : null]
         .filter(Boolean)
         .join(' · ');
-      return `# ${n.title || 'Sin título'}\n${meta ? `\n*${meta}*\n` : ''}\n${n.body.trim()}\n`;
+      const link = n.link ? `[Abrir enlace](${n.link})\n\n` : '';
+      return `# ${n.title || 'Sin título'}\n${meta ? `\n*${meta}*\n` : ''}\n${link}${n.body.trim()}\n`;
     })
     .join('\n---\n\n');
 }

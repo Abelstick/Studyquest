@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
-import { computeStreak, isDueOn, levelProgress, rankFor, worldFor } from '@/core/game';
+import { computeStreak, isCounter, isDueOn, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
 import { dailyMissions, isReadyToFinish, missionParts, tips, type Mission } from '@/core/missions';
 import { dueReviews } from '@/core/review';
 import { isBoss } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
+import { HabitAction } from '@/features/habitos/HabitAction';
 import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
 import { weeklyReport } from '@/core/stats';
 import type { HabitChain, Snapshot } from '@/core/domain';
@@ -71,6 +72,12 @@ function MissionRow({ m }: { m: Mission }) {
             🔗 {chain.name} · {chainNow.doneCount}/{chainNow.dueCount}
             {linkNow?.after && <> · sigue a {linkNow.after.title}</>}
           </p>
+        )}
+        {/* Hábitos por cantidad (agua, páginas, repeticiones…): se registra una repetición sin entrar al detalle. */}
+        {m.kind === 'habit' && isCounter(m.habit) && (
+          <div className="mission__counter">
+            <HabitAction habit={m.habit} log={logFor(logs, m.habit.id, today())} />
+          </div>
         )}
         {parts.length > 0 && (
           <button type="button" className={cx('tag tag--btn mission__more', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${open ? 'Ocultar' : 'Ver'} ${noun} de ${m.title}`}>
@@ -262,6 +269,7 @@ export default function Inicio() {
   const sessions = useData((s) => s.sessions);
   const xpEvents = useData((s) => s.xpEvents);
   const notifications = useData((s) => s.notifications);
+  const logSession = useData((s) => s.logSession);
   const openModal = useUi((s) => s.openModal);
 
   const snap: Snapshot = useMemo(
@@ -401,10 +409,10 @@ export default function Inicio() {
                 </ul>
               )}
               <div className="row row--top">
-                <span className="kicker">Sesión rápida</span>
+                <span className="kicker">¿Ya estudiaste? Márcalo</span>
                 {[5, 10, 20, 30].map((m) => (
-                  <button key={m} type="button" className="chip" onClick={() => openModal({ type: 'session', minutes: m })}>
-                    {m} min
+                  <button key={m} type="button" className="chip" onClick={() => logSession({ minutes: m, courseId: null })} title={`Registrar ${m} min de estudio ya hecho, sin abrir nada más`}>
+                    ✔ {m} min
                   </button>
                 ))}
               </div>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Habit, HabitLog, XpEvent } from './domain';
 import { addDays } from './dates';
-import { computeStreak, courseProgress, frequencyLabel, habitStreaks, isDueOn, levelFromXp, levelProgress, monthlyCompliance, weekStrip, worldFor, xpAtLevelStart } from './game';
+import { computeStreak, courseProgress, frequencyLabel, habitStreaks, isCounter, isDueOn, levelFromXp, levelProgress, monthlyCompliance, stepForCounter, weekStrip, worldFor, xpAtLevelStart } from './game';
 
 const NOW = '2026-09-20'; // domingo
 
@@ -95,6 +95,19 @@ describe('hábitos', () => {
     const h = habit({});
     const logs = Array.from({ length: 30 }, (_, i) => log('h', addDays(NOW, -i), 30));
     expect(monthlyCompliance(h, logs, NOW)).toBe(100);
+  });
+  it('un hábito de cantidad (con meta > 1) usa contador; booleano, minutos y horas no', () => {
+    expect(isCounter(habit({ measure: 'times', target: 8 }))).toBe(true);
+    expect(isCounter(habit({ measure: 'pages', target: 20 }))).toBe(true);
+    expect(isCounter(habit({ measure: 'boolean', target: 1 }))).toBe(false);
+    expect(isCounter(habit({ measure: 'minutes', target: 30 }))).toBe(false);
+    expect(isCounter(habit({ measure: 'hours', target: 2 }))).toBe(false);
+    expect(isCounter(habit({ measure: 'times', target: 1 }))).toBe(false); // una sola vez: no hace falta contador
+  });
+  it('el paso del contador crece con metas grandes', () => {
+    expect(stepForCounter(habit({ measure: 'times', target: 8 }))).toBe(1);
+    expect(stepForCounter(habit({ measure: 'exercises', target: 60 }))).toBe(5);
+    expect(stepForCounter(habit({ measure: 'percent', target: 100 }))).toBe(10);
   });
 });
 

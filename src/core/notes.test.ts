@@ -4,7 +4,7 @@ import { agoDays, toISODate } from './dates';
 import { allTags, excerpt, fold, notesOfCourse, notesOfTopic, parseInline, parseNote, plainText, readingMinutes, searchNotes, sortNotes, toMarkdown, wordCount } from './notes';
 
 const note = (over: Partial<Note> = {}): Note => ({
-  id: 'n1', title: 'Apunte', body: '', courseId: null, topicId: null, tags: [], pinned: false,
+  id: 'n1', title: 'Apunte', body: '', courseId: null, topicId: null, tags: [], pinned: false, link: null,
   createdAt: '2026-09-01T10:00:00.000Z', updatedAt: '2026-09-01T10:00:00.000Z', ...over,
 });
 
@@ -136,6 +136,11 @@ describe('exportar a Markdown', () => {
     const md = toMarkdown([note({ id: 'a', title: '' }), note({ id: 'b', title: 'Dos', updatedAt: '2026-09-02T00:00:00.000Z' })], () => undefined);
     expect(md).toContain('# Sin título');
     expect(md).toContain('\n---\n');
+  });
+
+  it('un apunte con enlace externo (Notion, Obsidian…) lo incluye, incluso sin cuerpo', () => {
+    const md = toMarkdown([note({ title: 'En Notion', body: '', link: 'https://notion.so/mis-apuntes' })], () => undefined);
+    expect(md).toContain('[Abrir enlace](https://notion.so/mis-apuntes)');
   });
 });
 

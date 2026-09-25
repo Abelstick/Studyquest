@@ -33,6 +33,10 @@ export interface Stats {
   certifications: number;
   /** Apuntes escritos (con algo dentro: los vacíos no cuentan). */
   notes: number;
+  /** Etapa del héroe 3D (-1 si aún no lo creaste). */
+  heroStage: number;
+  /** Armas, poderes y skins del héroe comprados. */
+  heroItems: number;
 }
 
 export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
@@ -67,6 +71,8 @@ export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
     achievementsCount: s.profile.achievements.length,
     certifications: s.certifications.length,
     notes: s.notes.filter((n) => n.body.trim() || n.title.trim()).length,
+    heroStage: s.profile.hero ? s.profile.hero.stage : -1,
+    heroItems: s.profile.inventory.filter((i) => i.startsWith('hero-')).length,
   };
 }
 

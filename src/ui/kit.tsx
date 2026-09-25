@@ -46,7 +46,7 @@ export function Bar({ pct, tone = 'green', label, tall, className }: { pct: numb
 }
 
 /* ---------- Estructura de página ---------- */
-export function PageHead({ kicker, title, right, sprite, hint }: { kicker: string; title: string; right?: ReactNode; sprite?: SpriteName; hint?: string }) {
+export function PageHead({ kicker, title, right, sprite, hint }: { kicker: string; title: string; right?: ReactNode; sprite?: SpriteName; hint?: ReactNode }) {
   return (
     <header className="page-head">
       <div className="page-head__text">

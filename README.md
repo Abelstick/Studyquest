@@ -34,6 +34,7 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 - [Recordatorios push](#recordatorios-con-repetición-y-sonido)
 - [Planificador inteligente](#planificador-inteligente)
 - [Tu ciudad](#tu-ciudad)
+- [Tu héroe 3D](#tu-héroe-3d)
 - [Repaso espaciado, calendario, jefes y Pomodoro](#repaso-espaciado-calendario-jefes-y-pomodoro)
 - [Reglas del juego](#reglas-del-juego)
 - [Arquitectura](#arquitectura)
@@ -74,7 +75,8 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 | **Metas** | Árbol de hitos con habilidades y recompensa final. |
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
 | **Progreso** | Horas por semana, distribución del tiempo por curso, mapa de actividad de 20 semanas. Filtro 90 días / 6 meses / todo. |
-| **Arsenal** | Tienda de Toad (11 avatares, marcos, **6 mundos visuales**, insignias, poderes), **42 logros** y recompensas personales de la vida real. |
+| **Héroe 3D** | Tu personaje en **3D con bloques**: eliges raza (**Saiyajin, Mario, Koopa, Protoss, Terran o Zerg**), **evoluciona** en 4 etapas a medida que subes de nivel estudiando y le compras **armas, poderes y skins** con tus monedas (puedes **probarlos antes de comprar**). Arrástralo para girarlo. |
+| **Arsenal** | Tienda de Toad (11 avatares, marcos, **6 mundos visuales**, insignias, poderes), **51 logros** y recompensas personales de la vida real. |
 | **Personajes** | **21 avatares** con arte pixel propio (búho, mago, ninja, astronauta, zorro, pingüino, rana, murciélago, ajolote, dragón…) y **cada uno con su gesto de reposo**: el fantasma flota, el slime se aplasta, el ninja parpadea de sitio, el dragón respira. Se ven moviéndose ya en la tienda, antes de comprarlos. |
 | **Perfil** | Camino de aprendizaje, insignias, ajustes, instalar la app, **recordatorios**, **exportar/importar tu partida**, cerrar sesión y reiniciar partida. |
 
@@ -396,6 +398,29 @@ Pantalla **Ciudad** (y un resumen en Inicio). Cada área de la app es un edifici
 - Al pulsar un edificio ves sus 5 niveles con su recompensa, **cómo se ganan los puntos**, cuánto falta y un botón a la pantalla donde mejorarlo. La ciudad te señala cuál está **más cerca de subir**.
 - Los edificios se **dibujan por código** (cada uno tiene 5 niveles que crecen y ganan detalles), y hay **5 logros nuevos** (Primera piedra, Sin solares vacíos, Alcalde, Urbanista y Obra maestra). El nivel de cada edificio ya celebrado se guarda en tu perfil (también en las copias de seguridad).
 
+## Tu héroe 3D
+
+Pantalla **Héroe 3D** (menú *Tu juego*). La primera vez eliges raza y nombre; mientras eliges puedes ver cómo será cada raza en sus cuatro etapas.
+
+| Raza | De… | Destaca en | Evoluciona así |
+| --- | --- | --- | --- |
+| **Saiyajin** | Dragon Ball | Fuerza y energía | Guerrero Saiyajin → Super Saiyajin (pelo dorado y aura) → Super Saiyajin 2 (rayos) → Super Saiyajin 3 (melena hasta la cintura) |
+| **Mario** | Super Mario | Velocidad | Mario pequeño → Súper Mario → Mario de fuego (con bolas de fuego) → Mario capa |
+| **Koopa** | Super Mario | Defensa | Koopa Troopa → Koopa Paratroopa (alas) → Hermano Martillo (casco y martillo) → Rey Bowser |
+| **Protoss** | StarCraft | Energía | Zelote (hojas psiónicas) → Alto Templario (túnica, levita) → Templario Oscuro → Arconte de pura energía |
+| **Terran** | StarCraft | Defensa | Recluta → Marine (hombreras y rifle gauss) → Firebat (lanzallamas) → Comandante (mochila propulsora) |
+| **Zerg** | StarCraft | Velocidad y fuerza | Zergling → Hidralisco (capucha de cobra) → Ultralisco (cuchillas gigantes) → Reina de Espadas |
+
+Son **fan art en bloques** hecho para este proyecto personal: los personajes pertenecen a sus dueños (ver [Créditos y marcas](#créditos-y-marcas)). Si le pones una skin, cambia los colores de cualquier etapa; sin skin, cada etapa lleva sus colores propios (Mario de fuego en blanco y rojo, el Templario Oscuro en negro y verde…).
+
+- **Evolución**: cuatro etapas, en los niveles 1, 5, 10 y 16. El nivel la **habilita** y tú pulsas **«Evolucionar»**: el héroe da una vuelta, crece y se ilumina. Cuando cruzas el nivel de una etapa nueva te llega un aviso. Cada etapa multiplica las estadísticas (×1,15 · ×1,35 · ×1,6), hace crecer el modelo y desbloquea objetos nuevos en la tienda.
+- **Estadísticas**: fuerza, defensa, velocidad y energía. Todas las razas suman lo mismo, cada una repartido a su manera; crecen con tu nivel, se multiplican con la etapa y el arma y el poder suman su extra. El **poder** es la suma de las cuatro.
+- **Tienda del héroe** (con las monedas de siempre): **8 armas** (espada, martillo, arco, bastón, cañón de plasma, garras, hoja de luz, lanza estelar), **6 poderes** con efecto visible (chispas, escarcha, escudo, llamas, rayos, alas de luz) y **8 skins** que recolorean a cualquier raza. Los objetos de etapas altas salen con candado. Al comprar algo se equipa solo, y **«Probar»** te lo pone en el modelo sin comprarlo y te enseña cómo cambiaría tu poder.
+- **Cambiar de raza o de nombre es gratis**: conservas etapa y objetos.
+- **4 logros nuevos**: Nace un héroe, Primera evolución, Leyenda viviente y Armería completa.
+- **Cómo está hecho**: el modelo es una lista de cajas que calcula `core/hero.ts` (código puro, probado sin navegador) (con alguna pieza propia de cada etapa: el rifle del Marine, el martillo del Hermano Martillo, las bolas de fuego de Mario) y el visor lo pinta con [three.js](https://threejs.org) a media resolución y sin suavizado, para que el 3D tenga los mismos píxeles gordos que el resto de la app. three.js (~120 KB comprimido) va en su propio archivo y **solo se descarga al abrir la pantalla**; se guarda para usarla sin conexión. El visor deja de pintar cuando no está a la vista y, con *reducir movimiento* activado, se queda quieto. Se gira arrastrando, con las flechas del teclado o con los botones ◀ ▶, y tiene una descripción en texto para lectores de pantalla. Sin WebGL, la pantalla lo explica en vez de romperse.
+- El héroe se guarda **dentro del perfil** (no hace falta migración en Supabase) y viaja en las copias de seguridad; al importar, un héroe solo puede llevar objetos que están en el inventario.
+
 ## Repaso espaciado, calendario, jefes y Pomodoro
 
 **Repaso espaciado (Repaso).** Marca un tema como *«Necesito repasar»* dentro de un curso: reaparece **al día siguiente** y, cada vez que lo recuerdas, a los **3, 7 y 14 días**. Fallar reinicia la escalera; superar los cuatro escalones deja el tema **dominado** (+40 XP). Cada repaso superado da +10 XP. Las tarjetas son tuyas: botón **♪ Tarjetas** en cada tema, una por línea con el formato `pregunta :: respuesta` (si no hay ninguna, se te pregunta si recuerdas el tema). Atajos: `espacio` gira la tarjeta, `1` `2` `3` califican. La agenda se ve también en el calendario y en el menú (insignia con lo que toca hoy).
@@ -438,7 +463,7 @@ Los límites son a propósito: solo **los últimos 7 días**, nunca el futuro, n
 
 Los bonos se cobran **una sola vez** (se anotan en el perfil): deshacer y rehacer un hábito no los repite.
 
-**Mundos y logros.** Seis mundos visuales (subterráneo, castillo, **submarino, montaña nevada, desierto, casa encantada**), siete avatares nuevos (slime, invasor 8-bit, dino, gato, robot, caballero, mini jefe), marcos de fuego/hielo/real, insignias y **42 logros** (repaso, jefes, Pomodoro, combos, rachas largas, coleccionismo…).
+**Mundos y logros.** Seis mundos visuales (subterráneo, castillo, **submarino, montaña nevada, desierto, casa encantada**), siete avatares nuevos (slime, invasor 8-bit, dino, gato, robot, caballero, mini jefe), marcos de fuego/hielo/real, insignias y **51 logros** (repaso, jefes, Pomodoro, combos, rachas largas, coleccionismo…).
 
 ## Reglas del juego
 
@@ -612,6 +637,7 @@ Cubren la lógica que más importa:
 
 ## Límites conocidos
 - **Cola offline sin coordinación entre pestañas** y con *last write wins* ante conflictos entre dispositivos.
+- **El héroe 3D necesita WebGL** (cualquier navegador actual lo tiene). Sin él se ve la ficha y la tienda, pero no el modelo.
 - **Arrastrar y soltar solo con ratón/trackpad.** En pantallas táctiles y con teclado se usan los botones *Empezar / Completar / Reabrir*.
 - **Recordatorios con precisión de minuto**: el primer aviso admite hasta 10 minutos de retraso (si el cron falla más, ese día no llega), el intervalo mínimo entre repeticiones es 15 min y la zona horaria es la del último dispositivo activado.
 - **El aviso dentro de la app solo funciona con la app abierta** (una pestaña en segundo plano puede ralentizar sus temporizadores hasta ~1 min). Con la app cerrada solo avisa el push.
@@ -620,4 +646,4 @@ Cubren la lógica que más importa:
 
 ## Créditos y marcas
 
-Proyecto personal sin fines comerciales. Los sprites son dibujos propios inspirados en la estética 8-bit; **Mario, Luigi, Yoshi, Pac-Man, Zelda, Minecraft, Sonic, Metroid y demás nombres o personajes mencionados pertenecen a sus respectivos dueños** y se usan solo como guiño. Fuentes: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) y [Nunito](https://fonts.google.com/specimen/Nunito) (SIL Open Font License), empaquetadas con [Fontsource](https://fontsource.org).
+Proyecto personal sin fines comerciales. Los sprites son dibujos propios inspirados en la estética 8-bit; **Mario, Luigi, Yoshi, Bowser, Pac-Man, Zelda, Minecraft, Sonic, Metroid, Dragon Ball, StarCraft y demás nombres o personajes mencionados pertenecen a sus respectivos dueños** y se usan solo como guiño. Las razas del héroe 3D son fan art de Dragon Ball (Saiyajin), Super Mario (Mario, Koopa, Bowser) y StarCraft (Protoss, Terran, Zerg). Motor 3D: [three.js](https://github.com/mrdoob/three.js) (licencia MIT). Fuentes: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) y [Nunito](https://fonts.google.com/specimen/Nunito) (SIL Open Font License), empaquetadas con [Fontsource](https://fontsource.org).

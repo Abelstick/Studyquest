@@ -24,6 +24,19 @@ describe('copia de seguridad', () => {
     expect(res.snapshot.profile.achievements.length).toBe(original.profile.achievements.length);
   });
 
+  it('el héroe 3D viaja en la copia con sus objetos', () => {
+    const original = demo();
+    const res = roundtrip(original);
+    expect(res.ok && res.snapshot.profile.hero).toEqual(original.profile.hero);
+  });
+
+  it('un héroe manipulado no puede llevar objetos que no compró', () => {
+    const data = demo();
+    data.profile.hero = { race: 'terran', name: 'Rex', stage: 9, weapon: 'hero-w-lanza', power: 'hero-p-chispas', skin: 'hero-s-cosmos' };
+    const res = roundtrip(data);
+    expect(res.ok && res.snapshot.profile.hero).toEqual({ race: 'terran', name: 'Rex', stage: 3, weapon: null, power: 'hero-p-chispas', skin: null });
+  });
+
   it('el id de perfil lo pone quien importa, no el archivo', () => {
     const res = roundtrip();
     expect(res.ok && res.snapshot.profile.id).toBe('u2');

@@ -53,6 +53,8 @@ export default defineConfig({
           groups: [
             { name: 'supabase', test: /node_modules[\/]@supabase/ },
             { name: 'genai', test: /node_modules[\/]@google[\/]genai/ },
+            // El motor 3D del héroe va aparte: solo lo pide esa pantalla.
+            { name: 'three', test: /node_modules[\/]three[\/]/ },
             { name: 'react', test: /node_modules[\/](react|react-dom|react-router|react-router-dom|scheduler)[\/]/ },
           ],
         },

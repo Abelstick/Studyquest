@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type {
-  AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, ID, ISODate, Module, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
+  AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
@@ -17,6 +17,7 @@ import { planIdsToDelete, type PlanMembers } from '@/core/plans';
 import { buildingById, cityUpgrades } from '@/core/city';
 import { ACHIEVEMENTS } from '@/core/achievements';
 import { shopItem } from '@/core/catalog';
+import { canEvolve, cleanHeroName, heroItem, newHero, raceOf, stageForLevel, stageName } from '@/core/hero';
 import { buildDemo } from '@/core/seed';
 import { computeStats } from '@/core/stats';
 import type { Repository } from '@/data/ports';
@@ -93,6 +94,15 @@ export interface DataState extends Data {
 
   buy: (itemId: string) => void;
   equip: (kind: keyof Equipped, itemId: string | null) => void;
+
+  /** Héroe 3D: nace al elegir raza; cambiar de raza o de nombre no cuesta nada. */
+  createHero: (race: HeroRace, name: string) => void;
+  updateHero: (patch: { race?: HeroRace; name?: string }) => void;
+  /** Sube una etapa si el nivel ya lo permite. */
+  evolveHero: () => void;
+  /** Compra un arma, poder o skin del héroe y se la pone. */
+  buyHeroItem: (itemId: string) => void;
+  equipHero: (slot: HeroSlot, itemId: string | null) => void;
 
   logSession: (input: { minutes: number; courseId: ID | null; label?: string }) => void;
   freezeToday: () => void;
@@ -217,6 +227,10 @@ export function createDataStore(repo: Repository) {
         ui.showLevelUp({ level: after, rank: rankFor(after), world: worldFor(after), bonus: LEVEL_UP_BONUS * (after - before) });
         notify({ category: 'achievement', title: `¡Subiste al nivel ${after}!`, body: `${rankFor(after)} · Mundo ${worldFor(after)}` });
         sfx.levelUp();
+        // Aviso solo al cruzar el umbral de una etapa nueva, no en cada nivel.
+        const hero = p.hero;
+        if (hero && stageForLevel(after) > stageForLevel(before) && canEvolve(hero, after))
+          notify({ category: 'achievement', title: `${hero.name} puede evolucionar`, body: `Ya puede llegar a ${stageName(hero.race, hero.stage + 1)}. Entra en Héroe 3D y pulsa «Evolucionar».` });
       }
       checkAchievements();
     };
@@ -724,6 +738,66 @@ export function createDataStore(repo: Repository) {
         // Cambiar de mundo suena a tubería; ponerse un objeto, a power-up.
         if (kind === 'world' && itemId) sfx.pipe();
         else if (itemId) sfx.powerUp();
+        else sfx.click();
+      },
+
+      /* ---------- Héroe 3D ---------- */
+      createHero(race, name) {
+        if (get().profile.hero) return;
+        const hero = newHero(race, name);
+        patchProfile({ hero });
+        useUi.getState().toast({ kind: 'unlock', title: `¡Nace ${hero.name}!`, body: `${raceOf(race).name} · ${raceOf(race).archetype}. Estudia para hacerlo evolucionar.` });
+        sfx.oneUp();
+        checkAchievements();
+      },
+      updateHero(patch) {
+        const hero = get().profile.hero;
+        if (!hero) return;
+        const name = patch.name !== undefined ? cleanHeroName(patch.name) : hero.name;
+        patchProfile({ hero: { ...hero, ...(patch.race ? { race: patch.race } : {}), name: name || hero.name } });
+        if (patch.race && patch.race !== hero.race) sfx.pipe();
+        else sfx.select();
+      },
+      evolveHero() {
+        const p = get().profile;
+        const hero = p.hero;
+        if (!hero || !canEvolve(hero, levelFromXp(p.xp))) return;
+        const stage = hero.stage + 1;
+        patchProfile({ hero: { ...hero, stage } });
+        const nombre = stageName(hero.race, stage);
+        useUi.getState().toast({ kind: 'unlock', title: `¡${hero.name} evolucionó!`, body: `Ahora es ${nombre}. Hay armas y poderes nuevos en su tienda.` });
+        notify({ category: 'achievement', title: `${hero.name} evolucionó a ${nombre}`, body: `${raceOf(hero.race).name} · etapa ${stage + 1} de 4.` });
+        sfx.star();
+        checkAchievements();
+      },
+      buyHeroItem(itemId) {
+        const item = heroItem(itemId);
+        const p = get().profile;
+        const hero = p.hero;
+        if (!item || !hero || p.inventory.includes(item.id)) return;
+        if (item.stage > hero.stage) {
+          notifyError('Todavía no', `"${item.title}" se desbloquea al evolucionar a ${stageName(hero.race, item.stage)}.`);
+          return;
+        }
+        if (p.credits < item.price) {
+          notifyError('Te faltan monedas', `Necesitas ${item.price - p.credits} más para "${item.title}".`);
+          return;
+        }
+        // Se compra y se equipa en el mismo gesto: quien compra algo quiere verlo puesto.
+        patchProfile({ credits: p.credits - item.price, inventory: [...p.inventory, item.id], hero: { ...hero, [item.slot]: item.id } });
+        useUi.getState().toast({ kind: 'unlock', title: `¡${item.title}!`, body: `${hero.name} ya lo lleva puesto.` });
+        notify({ category: 'shop', title: `Compraste "${item.title}"`, body: `-${item.price} monedas.` });
+        sfx.buy();
+        checkAchievements();
+      },
+      equipHero(slot, itemId) {
+        const p = get().profile;
+        const hero = p.hero;
+        if (!hero) return;
+        const item = heroItem(itemId);
+        if (itemId && (!item || item.slot !== slot || !p.inventory.includes(itemId))) return;
+        patchProfile({ hero: { ...hero, [slot]: itemId } });
+        if (itemId) sfx.powerUp();
         else sfx.click();
       },
 

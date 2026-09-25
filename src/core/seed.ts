@@ -222,6 +222,9 @@ export function buildDemo(profile: Profile, now: ISODate): Snapshot {
       // Rutina de ejemplo: dormir → ejercicio → estudiar. «Estudiar Python» solo toca L/X/V,
       // así que los demás días se ve cómo un eslabón que hoy no toca no estorba a la cadena.
       chains: [{ id: newId(), name: 'Rutina de la mañana', habitIds: [hSleep.id, hGym.id, hPython.id] }],
+      // Héroe de ejemplo una etapa por detrás de lo que permite su nivel: así se ve el botón de evolucionar.
+      inventory: [...profile.inventory, 'hero-w-espada', 'hero-p-chispas'],
+      hero: { race: 'saiyajin', name: 'Goku', stage: 1, weapon: 'hero-w-espada', power: 'hero-p-chispas', skin: null },
     },
     tasks, habits, habitLogs, courses, goals: [goal], projects, notes, certifications, personalRewards, sessions, xpEvents, notifications,
   };

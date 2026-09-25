@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { SHOP, type ShopItem } from '@/core/catalog';
@@ -70,6 +71,11 @@ export default function Arsenal() {
         kicker="// Tienda de Toad"
         title="Recompensas y logros"
         sprite="mushroom"
+        hint={
+          <>
+            ¿Buscas armas, poderes o skins para tu personaje? Están en la tienda de tu <Link to="/heroe">Héroe 3D</Link>.
+          </>
+        }
         right={
           <div className="wallet" aria-label={`${profile.credits} monedas`}>
             <Sprite name="coin" size={22} />

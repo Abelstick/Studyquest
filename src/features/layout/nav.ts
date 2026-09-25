@@ -28,6 +28,7 @@ export const NAV: NavItem[] = [
   { to: '/proyectos', label: 'Proyectos', sprite: 'chest', kicker: 'Mazmorras', group: 'lograr' },
   { to: '/certificaciones', label: 'Certificaciones', sprite: 'trophy', kicker: 'Vitrina de credenciales', group: 'lograr' },
   { to: '/progreso', label: 'Progreso', sprite: 'star', kicker: 'Hoja de personaje', mobile: true, group: 'tu juego' },
+  { to: '/heroe', label: 'Héroe 3D', sprite: 'knight', kicker: 'Tu personaje', group: 'tu juego' },
   { to: '/ciudad', label: 'Ciudad', sprite: 'house', kicker: 'Tu ciudad', group: 'tu juego' },
   { to: '/arsenal', label: 'Arsenal', sprite: 'mushroom', kicker: 'Tienda de Toad', group: 'tu juego' },
   { to: '/perfil', label: 'Perfil', sprite: 'cap', kicker: 'Personaje', mobile: true, group: 'tu juego' },

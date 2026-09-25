@@ -41,6 +41,23 @@ export interface Profile {
   city?: Partial<Record<string, number>>;
   /** Cadenas de hábitos (rutinas en orden). Son configuración, no registros: viven con el perfil. */
   chains?: HabitChain[];
+  /** Tu héroe 3D. Opcional: no existe hasta que eliges raza. */
+  hero?: Hero;
+}
+
+/* ---------- Héroe 3D ---------- */
+export type HeroRace = 'saiyajin' | 'mario' | 'koopa' | 'protoss' | 'terran' | 'zerg';
+export type HeroSlot = 'weapon' | 'power' | 'skin';
+
+export interface Hero {
+  race: HeroRace;
+  name: string;
+  /** Etapa de evolución alcanzada (0 a 3). El nivel la habilita; el jugador decide cuándo evolucionar. */
+  stage: number;
+  /** Objetos equipados (ids del catálogo del héroe). Deben estar en el inventario. */
+  weapon: string | null;
+  power: string | null;
+  skin: string | null;
 }
 
 export interface DayBonus {

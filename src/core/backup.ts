@@ -8,6 +8,7 @@ import { defaultProfile } from './game';
 import { newId } from './dates';
 import { safeUrl } from './certifications';
 import { cleanChains } from './chains';
+import { sanitizeHero } from './hero';
 
 export const BACKUP_APP = 'studyquest';
 export const BACKUP_VERSION = 1;
@@ -208,12 +209,15 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
 
   const p = isObj(d.profile) ? d.profile : {};
   const base = defaultProfile(userId);
+  const inventory = asArray(p.inventory).filter((x): x is string => typeof x === 'string');
+  // El héroe solo puede llevar objetos que están en el inventario.
+  const hero = sanitizeHero(p.hero, inventory);
   const profile = {
     ...base,
     displayName: str(p.displayName, base.displayName), xp: Math.max(0, num(p.xp)), credits: Math.max(0, num(p.credits)), streakFreezes: Math.max(0, num(p.streakFreezes)),
     frozenDates: asArray(p.frozenDates).filter((x): x is string => DATE.test(str(x))), weeklyGoalHours: Math.max(1, num(p.weeklyGoalHours, 15)),
     weeklyBonusClaimed: DATE.test(str(p.weeklyBonusClaimed)) ? str(p.weeklyBonusClaimed) : null,
-    inventory: asArray(p.inventory).filter((x): x is string => typeof x === 'string'),
+    inventory,
     equipped: { avatar: isObj(p.equipped) ? (str(p.equipped.avatar) || null) : null, frame: isObj(p.equipped) ? (str(p.equipped.frame) || null) : null, world: isObj(p.equipped) ? (str(p.equipped.world) || null) : null },
     achievements: subs(p.achievements, (a) => (str(a.id) ? { id: str(a.id), at: str(a.at, new Date().toISOString()) } : null)),
     onboarded: true, joinedAt: str(p.joinedAt, base.joinedAt),
@@ -236,6 +240,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
           ),
         }
       : {}),
+    ...(hero ? { hero } : {}),
   };
 
   for (const [what, n] of Object.entries(dropped)) warnings.push(`${n} ${what} descartados por datos inválidos.`);

@@ -808,4 +808,93 @@ describe('store de datos', () => {
       expect(store.getState().profile.chests).toBe(2);
     });
   });
+
+  describe('héroe 3D', () => {
+    const hero = () => store.getState().profile.hero!;
+
+    it('nace al elegir raza, una sola vez, y se guarda', async () => {
+      store.getState().createHero('koopa', '  Tortu  ');
+      expect(hero()).toEqual({ race: 'koopa', name: 'Tortu', stage: 0, weapon: null, power: null, skin: null });
+      store.getState().createHero('saiyajin', 'Otro');
+      expect(hero().race).toBe('koopa');
+      expect(store.getState().profile.achievements.map((a) => a.id)).toContain('hero-born');
+      await flush();
+      expect((await repo.profile.get())?.hero?.name).toBe('Tortu');
+    });
+
+    it('cambiar de raza o de nombre conserva etapa y objetos', () => {
+      store.getState().createHero('saiyajin', 'Kai');
+      store.getState().updateProfile({ inventory: ['hero-w-espada'], hero: { ...hero(), stage: 1, weapon: 'hero-w-espada' } });
+      store.getState().updateHero({ race: 'zerg', name: '   ' });
+      expect(hero()).toMatchObject({ race: 'zerg', name: 'Kai', stage: 1, weapon: 'hero-w-espada' });
+    });
+
+    it('solo evoluciona cuando el nivel lo permite, y de etapa en etapa', () => {
+      store.getState().createHero('protoss', 'Zen');
+      store.getState().evolveHero();
+      expect(hero().stage).toBe(0);
+      store.getState().updateProfile({ xp: xpAtLevelStart(10) });
+      store.getState().evolveHero();
+      expect(hero().stage).toBe(1);
+      store.getState().evolveHero();
+      expect(hero().stage).toBe(2);
+      store.getState().evolveHero();
+      expect(hero().stage).toBe(2);
+      expect(store.getState().profile.achievements.map((a) => a.id)).toContain('hero-evolve');
+    });
+
+    it('comprar descuenta, guarda en el inventario y se lo pone', async () => {
+      store.getState().createHero('mario', 'Lía');
+      const before = store.getState().profile.credits;
+      store.getState().updateProfile({ credits: before + 1000 });
+      store.getState().buyHeroItem('hero-w-arco');
+      const p = store.getState().profile;
+      expect(p.inventory).toContain('hero-w-arco');
+      expect(p.hero?.weapon).toBe('hero-w-arco');
+      expect(p.credits).toBeGreaterThanOrEqual(before + 500);
+      expect(p.credits).toBeLessThan(before + 1000);
+      await flush();
+      expect((await repo.profile.get())?.hero?.weapon).toBe('hero-w-arco');
+    });
+
+    it('no vende lo de una etapa más alta ni lo que no puedes pagar', () => {
+      store.getState().createHero('terran', 'Rex');
+      store.getState().updateProfile({ credits: 99999 });
+      store.getState().buyHeroItem('hero-w-lanza');
+      expect(store.getState().profile.inventory).not.toContain('hero-w-lanza');
+      expect(useUi.getState().toasts.at(-1)?.kind).toBe('error');
+      store.getState().updateProfile({ credits: 10 });
+      store.getState().buyHeroItem('hero-w-arco');
+      expect(store.getState().profile.inventory).not.toContain('hero-w-arco');
+      expect(store.getState().profile.credits).toBe(10);
+    });
+
+    it('sin héroe no se compra nada', () => {
+      store.getState().updateProfile({ credits: 5000 });
+      store.getState().buyHeroItem('hero-w-espada');
+      expect(store.getState().profile.inventory).toEqual([]);
+    });
+
+    it('solo se equipa lo que tienes, y en su hueco', () => {
+      store.getState().createHero('saiyajin', 'Kai');
+      store.getState().equipHero('weapon', 'hero-w-espada');
+      expect(hero().weapon).toBeNull();
+      store.getState().updateProfile({ inventory: ['hero-w-espada', 'hero-p-chispas'] });
+      store.getState().equipHero('weapon', 'hero-p-chispas');
+      expect(hero().weapon).toBeNull();
+      store.getState().equipHero('weapon', 'hero-w-espada');
+      store.getState().equipHero('power', 'hero-p-chispas');
+      expect(hero()).toMatchObject({ weapon: 'hero-w-espada', power: 'hero-p-chispas' });
+      store.getState().equipHero('weapon', null);
+      expect(hero().weapon).toBeNull();
+    });
+
+    it('avisa al cruzar el nivel de una etapa nueva', () => {
+      store.getState().createHero('saiyajin', 'Kai');
+      store.getState().updateProfile({ xp: xpAtLevelStart(5) - 10 });
+      store.getState().logSession({ minutes: 10, courseId: null });
+      expect(levelFromXp(store.getState().profile.xp)).toBe(5);
+      expect(store.getState().notifications.some((n) => n.title === 'Kai puede evolucionar')).toBe(true);
+    });
+  });
 });

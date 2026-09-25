@@ -26,6 +26,7 @@ const Calendario = lazy(() => import('@/features/calendario/Calendario'));
 const Pomodoro = lazy(() => import('@/features/pomodoro/Pomodoro'));
 const Planificador = lazy(() => import('@/features/planificador/Planificador'));
 const Ciudad = lazy(() => import('@/features/ciudad/Ciudad'));
+const Heroe = lazy(() => import('@/features/heroe/Heroe'));
 
 function Splash({ text = 'Cargando…' }: { text?: string }) {
   return (
@@ -105,6 +106,7 @@ function AuthGate() {
           <Route path="pomodoro" element={<Pomodoro />} />
           <Route path="planificador" element={<Planificador />} />
           <Route path="ciudad" element={<Ciudad />} />
+          <Route path="heroe" element={<Heroe />} />
           <Route path="habitos" element={<Habitos />} />
           <Route path="habitos/:id" element={<HabitoDetalle />} />
           <Route path="metas" element={<Metas />} />

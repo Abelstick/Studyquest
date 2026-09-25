@@ -57,6 +57,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'city-1', title: 'Primera piedra', hint: 'Sube cualquier edificio de tu ciudad al nivel 1', sprite: 'house', reward: 30, check: (s) => cityTotal(s) >= 1 },
   { id: 'city-all', title: 'Sin solares vacíos', hint: 'Construye los 6 edificios de tu ciudad', sprite: 'castle', reward: 100, check: (s) => cityStates(s).every((b) => b.level >= 1) },
   { id: 'city-town', title: 'Alcalde', hint: 'Lleva tu ciudad al rango de Pueblo (8 niveles en total)', sprite: 'tree', reward: 150, check: (s) => cityTotal(s) >= 8 },
+  { id: 'hero-born', title: 'Nace un héroe', hint: 'Elige la raza de tu héroe 3D', sprite: 'knight', reward: 30, check: (s) => s.heroStage >= 0 },
+  { id: 'hero-evolve', title: 'Primera evolución', hint: 'Haz evolucionar a tu héroe', sprite: 'star', reward: 100, check: (s) => s.heroStage >= 1 },
+  { id: 'hero-legend', title: 'Leyenda viviente', hint: 'Lleva a tu héroe a su última etapa', sprite: 'crown', reward: 500, check: (s) => s.heroStage >= 3 },
+  { id: 'hero-armory', title: 'Armería completa', hint: 'Compra 5 objetos para tu héroe', sprite: 'sword', reward: 150, check: (s) => s.heroItems >= 5 },
   { id: 'city-metropolis', title: 'Urbanista', hint: 'Lleva tu ciudad al rango de Ciudad (14 niveles en total)', sprite: 'crown', reward: 400, check: (s) => cityTotal(s) >= 14 },
   { id: 'city-max', title: 'Obra maestra', hint: 'Sube un edificio al nivel máximo', sprite: 'trophy', reward: 300, check: (s) => cityStates(s).some((b) => b.level >= MAX_LEVEL) },
 ];

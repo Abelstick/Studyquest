@@ -2789,3 +2789,426 @@ select.input {
   background: var(--panel-2);
   border: 2px solid var(--line-soft);
 }
+
+/* ---------- Héroe 3D ---------- */
+.hero-page,
+.hero-pick {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .hero-page,
+  .hero-pick {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.hero-card__view {
+  position: relative;
+}
+/* Escenario: cielo nocturno de píxeles con un foco sobre la plataforma. */
+.hero3d {
+  position: relative;
+  height: clamp(300px, 52vh, 460px);
+  border: var(--bw) solid var(--line);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 55% 35% at 50% 88%, rgba(255, 255, 255, 0.22), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 6px),
+    linear-gradient(#141033, #2f2766 55%, #5a4aa8);
+}
+@media (max-width: 560px) {
+  .hero3d {
+    height: 340px;
+  }
+}
+.hero3d__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Se pinta a media resolución: sin suavizado, los píxeles quedan nítidos y grandes. */
+  image-rendering: pixelated;
+  /* En el móvil, arrastrar en horizontal gira al héroe y en vertical sigue haciendo scroll. */
+  touch-action: pan-y;
+  cursor: grab;
+}
+.hero3d__canvas:active {
+  cursor: grabbing;
+}
+.hero3d__canvas:focus-visible {
+  outline-offset: -6px;
+}
+.hero3d__turn {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero3d__hint {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #000000;
+  white-space: nowrap;
+}
+.hero3d--off {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  text-align: center;
+}
+.hero3d--off .muted {
+  color: #e6e1ff;
+}
+.hero3d__off {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  line-height: 1.6;
+  color: #ffffff;
+}
+.hero-preview {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  box-shadow: var(--sh-sm);
+  font-size: 13px;
+}
+.hero-card__id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hero-card__name {
+  margin: 4px 0 8px;
+  font-family: var(--font-pixel);
+  font-size: 18px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* Evolución: cuatro casillas; la siguiente se mueve cuando ya se puede. */
+.evo__track {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.evo__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  text-align: center;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+}
+.evo__step.is-done {
+  background: color-mix(in srgb, var(--yellow) 28%, var(--panel));
+  border-color: var(--line);
+}
+.evo__step.is-now {
+  background: var(--yellow);
+  box-shadow: var(--sh-sm);
+}
+.evo__step.is-ready {
+  border: 2px dashed var(--xp-text);
+  animation: evo-ready 0.9s steps(2) infinite;
+}
+.evo__n {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+}
+.evo__name {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.evo__lv {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--muted);
+}
+.evo__step.is-now .evo__lv {
+  color: var(--text);
+}
+.evo__go {
+  animation: evo-go 0.9s steps(2) infinite;
+}
+.evo__next {
+  margin: 0;
+}
+@keyframes evo-ready {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes evo-go {
+  50% {
+    box-shadow: 4px 4px 0 var(--shadow), 0 0 0 4px var(--yellow);
+  }
+}
+
+/* Estadísticas */
+.hpower {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  white-space: nowrap;
+}
+.hpower strong {
+  font-size: 16px;
+  color: var(--xp-text);
+}
+.hpower__delta {
+  font-size: 12px;
+}
+.hpower__delta.is-up {
+  color: var(--green-text);
+}
+.hpower__delta.is-down {
+  color: var(--red-text);
+}
+.hstats {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.hstat {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+.hstat dt {
+  font-size: 13px;
+  font-weight: 800;
+}
+.hstat dd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  min-width: 0;
+}
+.hstat dd .bar {
+  flex: 1;
+}
+.hstat__n {
+  min-width: 4.5em;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+.hstat__bonus {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--green-text);
+}
+
+/* Tienda del héroe */
+.hero-shop__head {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.hitems {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hitem {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  box-shadow: var(--sh-sm);
+  transition: transform 0.07s steps(2);
+}
+.hitem:hover {
+  transform: translateY(-2px);
+}
+.hitem.is-equipped {
+  border-color: var(--green);
+  box-shadow: 4px 4px 0 var(--green);
+}
+.hitem.is-preview {
+  outline: 3px dashed var(--blue);
+  outline-offset: 2px;
+}
+.hitem.is-dim .hitem__art {
+  filter: grayscale(0.7);
+  opacity: 0.6;
+}
+.hitem__art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: var(--panel-2);
+  border: 2px solid var(--line);
+}
+.hitem__body {
+  min-width: 0;
+}
+.hitem__title {
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.hitem__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+/* Un bonus largo (varias estadísticas) baja de línea en vez de empujar la pantalla. */
+.hitem__meta .tag {
+  max-width: 100%;
+  white-space: normal;
+}
+.hitem__cta {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+@media (max-width: 560px) {
+  .hitem {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+  .hitem__art {
+    width: 48px;
+    height: 48px;
+  }
+  .hitem__cta {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+.swatch4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 2px solid var(--line);
+}
+.swatch4 i {
+  display: block;
+}
+
+/* Elegir raza */
+.hero-pick__peek {
+  margin: 0;
+  text-align: center;
+}
+.hero-pick__view .hero3d {
+  width: 100%;
+}
+.races {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.races legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+.race {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--panel-2);
+  border: var(--bw) solid var(--line-soft);
+  cursor: pointer;
+  transition: transform 0.07s steps(2), border-color 0.07s steps(2);
+}
+.race:hover {
+  border-color: var(--line);
+  transform: translateY(-2px);
+}
+.race.is-on {
+  background: var(--yellow);
+  border-color: var(--line);
+  box-shadow: var(--sh-sm);
+}
+/* El radio se oculta a la vista pero sigue siendo el control: el foco se dibuja en la tarjeta. */
+.race input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.race:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--focus-ink);
+}
+.race__swatch {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 4px solid;
+  outline: 2px solid var(--line);
+}
+.race__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.race__name {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.race__arch {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--muted);
+}
+.race.is-on .race__arch {
+  color: var(--text);
+}
+@media (max-width: 420px) {
+  .races {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

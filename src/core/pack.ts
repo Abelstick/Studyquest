@@ -10,6 +10,7 @@ import { safeUrl } from './certifications';
 import type { Course, Frequency, Goal, Habit, ISODate, Measure, Priority, Project, Task } from './domain';
 import { addDays, isoNow, newId, today } from './dates';
 import { XP_BY_PRIORITY } from './game';
+import { scaleDays } from './pace';
 
 export const PACK_VERSION = 1;
 
@@ -190,7 +191,7 @@ export function describePack(p: Record<'courses' | 'goals' | 'projects' | 'habit
  * Convierte el pack en entidades listas para guardar: ids nuevos y fechas resueltas desde hoy.
  * `existingCourses` permite vincular tareas a cursos que ya tenías (por título, sin distinguir mayúsculas).
  */
-export function buildPackEntities(pack: Pack, existingCourses: Pick<Course, 'id' | 'title'>[] = [], now: ISODate = today()): PackEntities {
+export function buildPackEntities(pack: Pack, existingCourses: Pick<Course, 'id' | 'title'>[] = [], now: ISODate = today(), paceFactor = 1): PackEntities {
   const created = isoNow();
   const withIds = <T extends { id: string }>(xs: T[]): T[] => xs.map((x) => ({ ...x, id: newId() }));
 
@@ -209,7 +210,7 @@ export function buildPackEntities(pack: Pack, existingCourses: Pick<Course, 'id'
   const tasks: Task[] = pack.tasks.map(({ course, dueInDays, dueDate, ...t }) => ({
     ...t, id: newId(), createdAt: created, completedAt: null,
     courseId: course ? (byTitle.get(course.toLowerCase()) ?? null) : null,
-    dueDate: dueDate ?? (dueInDays !== null ? addDays(now, dueInDays) : null),
+    dueDate: dueDate ?? (dueInDays !== null ? addDays(now, scaleDays(dueInDays, paceFactor)) : null),
     subtasks: withIds(t.subtasks),
   }));
   return { courses, goals, projects, habits, tasks };
@@ -290,6 +291,7 @@ Reglas del formato:
 - "link" del curso: URL real de la plataforma (Udemy, Coursera, YouTube, campus…). Si no estás seguro de que exista, omítelo: no inventes enlaces.
 - "kind" de un proyecto: main (principal) o side (secundario).
 - "xp" es opcional; si lo pones, entre 10 y 500 según la dificultad.
+- Adapta la ruta a mi nivel y a mi tiempo: si ya domino algo, no lo repitas; reparte las tareas de forma realista con "dueInDays" y "estimateMin" (yo podré acelerar o aflojar el ritmo después).
 - Máximo ~10 módulos por curso, ~8 temas por módulo y ~25 tareas en total.
 - Escribe todo en español.`;
 }

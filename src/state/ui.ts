@@ -20,6 +20,7 @@ export type ModalState =
   | { type: 'cards'; courseId: string; topicId: string }
   | { type: 'ai' }
   | { type: 'pack' }
+  | { type: 'pace'; courseId: string }
   | { type: 'guide' }
   | { type: 'settings' }
   | { type: 'confirm'; title: string; body: string; confirmLabel: string; onConfirm: (extra: boolean) => void; extra?: ConfirmExtra };

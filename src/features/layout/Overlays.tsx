@@ -17,6 +17,7 @@ import { CertificationModal } from '../modals/CertificationModal';
 import { ChainModal } from '../modals/ChainModal';
 import { AiKeyModal } from '../modals/AiKeyModal';
 import { PackModal } from '../modals/PackModal';
+import { PaceModal } from '../modals/PaceModal';
 import { ConceptGuide } from '../help/ConceptGuide';
 
 const CATEGORY: Record<AppNotification['category'], { sprite: SpriteName; label: string }> = {
@@ -34,6 +35,8 @@ function ModalHost() {
   switch (modal.type) {
     case 'task':
       return <TaskModal key={`${modal.id ?? 'new'}${modal.dueDate ?? ''}`} id={modal.id} dueDate={modal.dueDate} />;
+    case 'pace':
+      return <PaceModal courseId={modal.courseId} />;
     case 'pack':
       return <PackModal />;
     case 'ai':

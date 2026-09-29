@@ -7,6 +7,7 @@ import { courseHours, courseStreak } from '@/core/stats';
 import { agoDays, diffDays, today } from '@/core/dates';
 import { reviewDueDate } from '@/core/review';
 import { certificationsOfCourse, linkLabel, safeUrl } from '@/core/certifications';
+import { overdueOf } from '@/core/pace';
 import { blankNote, notesOfTopic } from '@/core/notes';
 import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
@@ -32,6 +33,7 @@ export default function CursoDetalle() {
   const sessions = useData((s) => s.sessions);
   const allCerts = useData((s) => s.certifications);
   const allNotes = useData((s) => s.notes);
+  const overdue = useData((s) => overdueOf(s.tasks.filter((t) => t.courseId === id)));
   const createNote = useData((s) => s.createNote);
   const { setTopicStatus, toggleTopicReview, addTopic, removeTopic, addModule } = useData();
   const openModal = useUi((s) => s.openModal);
@@ -81,6 +83,7 @@ export default function CursoDetalle() {
                 ↗ Abrir en {linkLabel(course.link ?? '')}
               </a>
             )}
+            <Button onClick={() => openModal({ type: 'pace', courseId: course.id })}>{overdue ? `⏱ Ajustar plazos (${overdue} atrasadas)` : '⏱ Ajustar plazos'}</Button>
             <Button onClick={() => openModal({ type: 'course', id: course.id })}>Editar</Button>
           </div>
         </div>

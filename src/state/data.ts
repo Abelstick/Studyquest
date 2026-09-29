@@ -114,6 +114,8 @@ export interface DataState extends Data {
   addPlan: (plan: PlanEntities) => void;
   /** Crea de golpe lo que trae un pack de aprendizaje pegado por el usuario (cursos, metas, proyectos, hábitos y tareas). */
   importPack: (entities: PackEntities) => void;
+  /** Cambia de golpe las fechas límite de varias tareas (ajustar el ritmo de un curso). */
+  shiftTasks: (shifts: { id: ID; dueDate: ISODate }[]) => void;
   /** Borra de golpe la meta y el hábito que salieron del mismo plan que un curso. */
   deletePlanExtras: (members: PlanMembers) => void;
 
@@ -862,6 +864,18 @@ export function createDataStore(repo: Repository) {
         notify({ category: 'mission', title: 'Pack importado', body: `Se creó: ${what}.` });
         useUi.getState().toast({ kind: 'unlock', title: '¡Pack importado!', body: what });
         sfx.levelUp();
+      },
+      shiftTasks(shifts) {
+        if (!shifts.length) return;
+        const to = new Map(shifts.map((x) => [x.id, x.dueDate]));
+        run(
+          (s) => ({ tasks: s.tasks.map((t) => (to.has(t.id) ? { ...t, dueDate: to.get(t.id) as ISODate } : t)) }),
+          async () => {
+            for (const [id, dueDate] of to) await repo.tasks.update(id, { dueDate });
+          },
+        );
+        useUi.getState().toast({ kind: 'info', title: 'Plazos ajustados', body: `${shifts.length} ${shifts.length === 1 ? 'tarea cambió' : 'tareas cambiaron'} de fecha.` });
+        sfx.click();
       },
       openChest() {
         const p = get().profile;

@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { buildPackEntities, describePack, packPrompt, parsePack } from '@/core/pack';
-import { Button, Field, Modal, Tag, TextInput } from '@/ui/kit';
+import { PACE_OPTIONS, lastDue } from '@/core/pace';
+import { longDate } from '@/core/dates';
+import { Button, ChipGroup, Field, Modal, Tag, TextInput } from '@/ui/kit';
 
 /** Copia el prompt para la IA y pega aquí su respuesta (JSON): crea cursos, metas, proyectos, hábitos y tareas de una vez. */
 export function PackModal() {
@@ -12,6 +14,8 @@ export function PackModal() {
   const importPack = useData((s) => s.importPack);
   const [topic, setTopic] = useState('');
   const [raw, setRaw] = useState('');
+  const [pace, setPace] = useState('same');
+  const factor = PACE_OPTIONS.find((p) => p.id === pace)?.factor ?? 1;
 
   const result = useMemo(() => (raw.trim() ? parsePack(raw) : null), [raw]);
 
@@ -24,9 +28,11 @@ export function PackModal() {
     }
   };
 
+  const lastTask = useMemo(() => (result?.ok ? lastDue(buildPackEntities(result.pack, courses, undefined, factor).tasks) : null), [result, courses, factor]);
+
   const create = () => {
     if (!result?.ok) return;
-    importPack(buildPackEntities(result.pack, courses));
+    importPack(buildPackEntities(result.pack, courses, undefined, factor));
     close();
   };
 
@@ -68,6 +74,15 @@ export function PackModal() {
               {result.pack.tasks.slice(0, 5).map((t) => <li key={`t${t.title}`}>Tarea: {t.title}</li>)}
               {result.pack.tasks.length > 5 && <li>…y {result.pack.tasks.length - 5} tareas más</li>}
             </ul>
+            {result.pack.tasks.length > 0 && (
+              <div className="stack">
+                <p className="field__label">Ritmo de las tareas</p>
+                <ChipGroup label="Ritmo" value={pace} onChange={setPace} options={PACE_OPTIONS.map((p) => ({ value: p.id, label: p.label }))} />
+                <p className="field__hint">
+                  {PACE_OPTIONS.find((p) => p.id === pace)?.hint}.{lastTask && <> La última tarea caería el {longDate(lastTask)}.</>} Podrás cambiarlo después desde el curso con «Ajustar plazos».
+                </p>
+              </div>
+            )}
             {result.warnings.map((w) => <p key={w} className="field__hint">⚠ {w}</p>)}
           </div>
         )}

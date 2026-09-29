@@ -3,7 +3,7 @@ import { buildPackEntities, packPrompt, parsePack } from './pack';
 
 const sample = {
   studyquest: 'pack', version: 1,
-  courses: [{ title: 'SQL', modules: [{ title: 'Básico', topics: ['SELECT', { title: 'JOIN' }] }] }],
+  courses: [{ title: 'SQL', link: 'udemy.com/course/sql', modules: [{ title: 'Básico', topics: ['SELECT', { title: 'JOIN' }] }] }],
   goals: [{ title: 'Ser analista', milestones: [{ title: 'SQL', skills: ['SELECT'] }] }],
   projects: [{ title: 'Dashboard', checkpoints: ['Datos', { title: 'Gráficos', xp: 200 }] }],
   habits: [{ title: 'Estudiar', frequency: { type: 'days', days: [0, 2, 9] }, measure: 'minutes', target: 30, reminder: '19:00' }],
@@ -32,6 +32,7 @@ describe('pack de aprendizaje', () => {
     const r = parsePack(JSON.stringify(sample));
     if (!r.ok) throw new Error(r.error);
     const e = buildPackEntities(r.pack, [], '2026-10-01');
+    expect(e.courses[0].link).toBe('https://udemy.com/course/sql');
     expect(e.tasks[0].courseId).toBe(e.courses[0].id);
     expect(e.tasks[0].dueDate).toBe('2026-10-04');
     expect(e.tasks[0].xp).toBe(50);
@@ -52,5 +53,13 @@ describe('pack de aprendizaje', () => {
     expect(prompt).toContain('SQL');
     const r = parsePack(prompt.slice(prompt.indexOf('{'), prompt.indexOf('Reglas del formato')));
     expect(r.ok).toBe(true);
+  });
+});
+
+describe('enlace del curso', () => {
+  it('descarta enlaces peligrosos o inválidos', () => {
+    const r = parsePack('{"courses":[{"title":"A","link":"javascript:alert(1)"},{"title":"B","link":"no es url"}]}');
+    if (!r.ok) throw new Error(r.error);
+    expect(r.pack.courses.map((c) => c.link)).toEqual([undefined, undefined]);
   });
 });

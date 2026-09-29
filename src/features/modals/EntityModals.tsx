@@ -3,6 +3,7 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { newId, today } from '@/core/dates';
 import type { Mentor } from '@/core/domain';
+import { safeUrl } from '@/core/certifications';
 import { Button, ChipGroup, Field, Modal, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { describeExtras, planOfCourse } from '@/core/plans';
 import { ConceptHint } from '../help/ConceptGuide';
@@ -22,6 +23,8 @@ export function CourseModal({ id }: { id?: string }) {
   const [title, setTitle] = useState(editing?.title ?? '');
   const [professor, setProfessor] = useState(editing?.professor ?? '');
   const [field, setField] = useState(editing?.field ?? '');
+  const [link, setLink] = useState(editing?.link ?? '');
+  const badLink = link.trim().length > 0 && safeUrl(link) === null;
   const [modules, setModules] = useState('');
   const [mentorName, setMentorName] = useState(editing?.mentor?.name ?? '');
   const [mentorSkills, setMentorSkills] = useState(editing?.mentor?.skills ?? '');
@@ -29,11 +32,11 @@ export function CourseModal({ id }: { id?: string }) {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || badLink) return;
     const mentor: Mentor | null = mentorName.trim()
       ? { name: mentorName.trim(), skills: mentorSkills.trim(), feedback: feedback.trim(), feedbackAt: feedback.trim() && feedback.trim() !== editing?.mentor?.feedback ? today() : (editing?.mentor?.feedbackAt ?? null) }
       : null;
-    const base = { title: title.trim(), professor: professor.trim(), field: field.trim(), mentor };
+    const base = { title: title.trim(), professor: professor.trim(), field: field.trim(), mentor, link: safeUrl(link) ?? undefined };
     if (editing) updateCourse(editing.id, base);
     else {
       createCourse({
@@ -55,6 +58,9 @@ export function CourseModal({ id }: { id?: string }) {
           <Field label="Profesor/a">{(fid) => <TextInput id={fid} className="input" value={professor} onChange={(e) => setProfessor(e.target.value)} placeholder="Prof. Marta Núñez" />}</Field>
           <Field label="Área">{(fid) => <TextInput id={fid} className="input" value={field} onChange={(e) => setField(e.target.value)} placeholder="ciencia de datos" />}</Field>
         </div>
+        <Field label="Enlace del curso (opcional)" hint="Si es de una plataforma (Udemy, Coursera, YouTube…), para abrirlo desde aquí.">
+          {(fid) => <TextInput id={fid} className="input" value={link} onChange={(e) => setLink(e.target.value)} placeholder="udemy.com/course/..." spellCheck={false} aria-invalid={badLink || undefined} />}
+        </Field>
         {!editing && (
           <Field label="Módulos" hint="Uno por línea; añade «| 300» para darle XP. Los temas los agregas después, dentro del curso.">
             {(fid) => <textarea id={fid} className="input" rows={4} value={modules} onChange={(e) => setModules(e.target.value)} placeholder={'Fundamentos | 300\nSQL | 600\nPandas | 600'} />}
@@ -69,7 +75,7 @@ export function CourseModal({ id }: { id?: string }) {
           <Field label="Último feedback">{(fid) => <textarea id={fid} className="input" rows={2} value={feedback} onChange={(e) => setFeedback(e.target.value)} />}</Field>
         </fieldset>
         <div className="modal__actions">
-          <Button variant="primary" type="submit" disabled={!title.trim()}>
+          <Button variant="primary" type="submit" disabled={!title.trim() || badLink}>
             {editing ? 'Guardar cambios' : 'Crear curso'}
           </Button>
           <Button onClick={close}>Cancelar</Button>

@@ -6,7 +6,7 @@ import { courseProgress, courseRank, moduleStates, topicXp, type ModuleState } f
 import { courseHours, courseStreak } from '@/core/stats';
 import { agoDays, diffDays, today } from '@/core/dates';
 import { reviewDueDate } from '@/core/review';
-import { certificationsOfCourse, safeUrl } from '@/core/certifications';
+import { certificationsOfCourse, linkLabel, safeUrl } from '@/core/certifications';
 import { blankNote, notesOfTopic } from '@/core/notes';
 import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
@@ -76,6 +76,11 @@ export default function CursoDetalle() {
           <Bar pct={p.pct} tone="green" tall label="Progreso del curso" />
           <div className="row">
             <Button onClick={() => openModal({ type: 'session', courseId: course.id })}>▶ Estudiar</Button>
+            {safeUrl(course.link ?? '') && (
+              <a className="btn btn--ghost" href={safeUrl(course.link ?? '') as string} target="_blank" rel="noopener noreferrer">
+                ↗ Abrir en {linkLabel(course.link ?? '')}
+              </a>
+            )}
             <Button onClick={() => openModal({ type: 'course', id: course.id })}>Editar</Button>
           </div>
         </div>

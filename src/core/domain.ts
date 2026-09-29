@@ -211,6 +211,8 @@ export interface Course {
   field: string;
   modules: Module[];
   mentor: Mentor | null;
+  /** Enlace de acceso al curso (Udemy, Coursera, YouTube, campus…), si es de una plataforma. */
+  link?: string;
   createdAt: ISODateTime;
   /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
   planId?: ID;

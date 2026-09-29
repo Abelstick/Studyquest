@@ -6,6 +6,7 @@
  * `dueInDays` y se vinculan al curso por su título. Aquí se lee, valida y convierte a entidades de la app.
  * Nada de lo que venga de la IA se usa sin pasar por `parsePack`. Lógica pura, sin React ni base de datos.
  */
+import { safeUrl } from './certifications';
 import type { Course, Frequency, Goal, Habit, ISODate, Measure, Priority, Project, Task } from './domain';
 import { addDays, isoNow, newId, today } from './dates';
 import { XP_BY_PRIORITY } from './game';
@@ -101,6 +102,7 @@ export function parsePack(raw: string): PackResult {
     if (!title) return null;
     return {
       title, professor: text(o.professor, 60) || 'Mi ruta', field: text(o.field, 60),
+      ...(safeUrl(text(o.link, 500)) ? { link: safeUrl(text(o.link, 500)) as string } : {}),
       modules: arr(o.modules).slice(0, LIMITS.children).flatMap((m) => {
         if (!isObj(m) || !text(m.title)) return [];
         const topics = arr(m.topics).slice(0, LIMITS.subchildren).map(titleOf).filter(Boolean);
@@ -228,6 +230,7 @@ Devuélveme SOLO un bloque de código JSON (sin explicaciones antes ni después)
       "title": "Nombre del curso",
       "professor": "Plataforma o autor (opcional)",
       "field": "Área, p. ej. programación",
+      "link": "https://... enlace al curso si es de una plataforma (opcional)",
       "modules": [
         { "title": "Módulo 1", "summary": "De qué trata", "xp": 150, "topics": ["Tema 1", "Tema 2"] }
       ]
@@ -284,6 +287,7 @@ Reglas del formato:
 - "frequency": {"type":"daily"} | {"type":"days","days":[0,2,4]} (0 = lunes … 6 = domingo) | {"type":"every","every":3} | {"type":"weekly"} | {"type":"monthly"} | {"type":"custom","times":3,"per":"week"}.
 - "measure": times | minutes | hours | pages | exercises | tasks | percent | boolean.
 - "priority": low | mid | high | boss (boss = entrega final, la más difícil).
+- "link" del curso: URL real de la plataforma (Udemy, Coursera, YouTube, campus…). Si no estás seguro de que exista, omítelo: no inventes enlaces.
 - "kind" de un proyecto: main (principal) o side (secundario).
 - "xp" es opcional; si lo pones, entre 10 y 500 según la dificultad.
 - Máximo ~10 módulos por curso, ~8 temas por módulo y ~25 tareas en total.

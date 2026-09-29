@@ -61,7 +61,7 @@ export function PackModal() {
               <Tag tone="green">Listo para crear</Tag> {describePack(result.pack)}
             </p>
             <ul className="small muted">
-              {result.pack.courses.map((c) => <li key={`c${c.title}`}>Curso: {c.title} · {c.modules.length} módulos</li>)}
+              {result.pack.courses.map((c) => <li key={`c${c.title}`}>Curso: {c.title} · {c.modules.length} módulos{c.link ? ' · con enlace' : ''}</li>)}
               {result.pack.goals.map((g) => <li key={`g${g.title}`}>Meta: {g.title} · {g.milestones.length} hitos</li>)}
               {result.pack.projects.map((p) => <li key={`p${p.title}`}>Proyecto: {p.title} · {p.checkpoints.length} checkpoints</li>)}
               {result.pack.habits.map((h) => <li key={`h${h.title}`}>Hábito: {h.title}</li>)}

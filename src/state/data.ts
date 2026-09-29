@@ -13,6 +13,7 @@ import { CERT_XP } from '@/core/certifications';
 import { CHAIN_BONUS_XP, chainsToReward, cleanChains } from '@/core/chains';
 import { CATCH_UP_DAYS, canCatchUp } from '@/core/catchup';
 import type { PlanEntities } from '@/core/planner';
+import { describePack, type PackEntities } from '@/core/pack';
 import { planIdsToDelete, type PlanMembers } from '@/core/plans';
 import { buildingById, cityUpgrades } from '@/core/city';
 import { ACHIEVEMENTS } from '@/core/achievements';
@@ -111,6 +112,8 @@ export interface DataState extends Data {
   openChest: () => void;
   /** Crea de una vez lo que genera el planificador: curso, meta, hábito de estudio y tareas con fechas. */
   addPlan: (plan: PlanEntities) => void;
+  /** Crea de golpe lo que trae un pack de aprendizaje pegado por el usuario (cursos, metas, proyectos, hábitos y tareas). */
+  importPack: (entities: PackEntities) => void;
   /** Borra de golpe la meta y el hábito que salieron del mismo plan que un curso. */
   deletePlanExtras: (members: PlanMembers) => void;
 
@@ -838,6 +841,26 @@ export function createDataStore(repo: Repository) {
         );
         notify({ category: 'mission', title: `Plan creado: ${plan.goal.title}`, body: `${plan.tasks.length} tareas con fecha, una meta con ${plan.goal.milestones.length} hitos y un hábito de estudio.` });
         useUi.getState().toast({ kind: 'unlock', title: '¡Plan creado!', body: `${plan.tasks.length} tareas ya están en tu calendario.` });
+        sfx.levelUp();
+      },
+      importPack(e) {
+        run(
+          (s) => ({
+            courses: [...s.courses, ...e.courses], goals: [...s.goals, ...e.goals], projects: [...s.projects, ...e.projects],
+            habits: [...s.habits, ...e.habits], tasks: [...s.tasks, ...e.tasks],
+          }),
+          async () => {
+            // Primero lo que otras cosas referencian (los cursos), después el resto.
+            for (const c of e.courses) await repo.courses.create(c);
+            for (const g of e.goals) await repo.goals.create(g);
+            for (const p of e.projects) await repo.projects.create(p);
+            for (const h of e.habits) await repo.habits.create(h);
+            if (e.tasks.length) await repo.tasks.createMany(e.tasks);
+          },
+        );
+        const what = describePack(e);
+        notify({ category: 'mission', title: 'Pack importado', body: `Se creó: ${what}.` });
+        useUi.getState().toast({ kind: 'unlock', title: '¡Pack importado!', body: what });
         sfx.levelUp();
       },
       openChest() {

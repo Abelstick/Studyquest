@@ -169,7 +169,7 @@ export default function Planificador() {
 
   return (
     <div className="stack">
-      <PageHead kicker="// Estratega" title="Planificador inteligente" sprite="sword" />
+      <PageHead kicker="// Estratega" title="Planificador inteligente" sprite="sword" right={<Button onClick={() => openModal({ type: 'pack' })}>✨ Importar pack de IA</Button>} />
 
       <ol className="wizard" aria-label="Pasos">
         {STEPS.map((s, i) => (

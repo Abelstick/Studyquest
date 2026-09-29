@@ -13,6 +13,7 @@ const ACTIONS: { label: string; sprite: SpriteName; modal: Exclude<ModalState, n
   { label: 'Nueva meta', sprite: 'flag', modal: { type: 'goal' }, hint: 'Lo que quieres lograr' },
   { label: 'Nuevo curso', sprite: 'pipe', modal: { type: 'course' }, hint: 'Una asignatura con temas' },
   { label: 'Nuevo proyecto', sprite: 'chest', modal: { type: 'project' }, hint: 'Algo que construyes' },
+  { label: 'Importar con IA', sprite: 'star', modal: { type: 'pack' }, hint: 'Pega un pack de la IA' },
 ];
 
 /** Hoja de acciones rápidas (botón "?" flotante en móvil). */

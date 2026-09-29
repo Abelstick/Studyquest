@@ -41,6 +41,7 @@ export default function Cursos() {
             <span className="kicker">
               {Math.round(totalHours)} h · {totalXp.toLocaleString('en-US')} XP
             </span>
+            <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'course' })}>
               ＋ Nuevo curso
             </Button>
@@ -51,6 +52,7 @@ export default function Cursos() {
         <div className="panel">
           <Empty sprite="pipe" title="Ninguna tubería a la vista">
             <p>Cada curso es un mundo con módulos y temas. Crea el primero.</p>
+            <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'course' })}>
               Crear curso
             </Button>

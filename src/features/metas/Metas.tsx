@@ -27,6 +27,7 @@ export default function Metas() {
                 ✨ Planificar con el asistente
               </Link>
               <Button onClick={() => openModal({ type: 'goal' })}>Crear a mano</Button>
+              <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
             </div>
           </Empty>
         </div>
@@ -58,6 +59,7 @@ export default function Metas() {
                 {earnedXp.toLocaleString('en-US')} / {totalXp.toLocaleString('en-US')} XP
               </span>
             </div>
+            <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'goal' })}>
               ＋ Nueva meta
             </Button>

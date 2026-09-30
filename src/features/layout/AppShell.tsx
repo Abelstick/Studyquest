@@ -4,7 +4,9 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { dataLayer, useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { today, longDate, weekStart } from '@/core/dates';
-import { WEEKLY_BONUS_XP, computeStreak, hoursInWeek, rankFor, levelFromXp, worldFor } from '@/core/game';
+import { WEEKLY_BONUS_XP, computeStreak, hoursInWeek, isDueOn, isHabitDone, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
+import { CITY_MAX } from '@/core/city';
+import { useCity } from '@/features/ciudad/useCity';
 import { Avatar } from '@/ui/Avatar';
 import { Loader } from '@/ui/Loader';
 import { Bar, Button, cx } from '@/ui/kit';
@@ -61,9 +63,57 @@ function Sidebar() {
   const claim = useData((s) => s.claimWeeklyBonus);
   const navOpen = useUi((s) => s.navOpen);
   const setNavOpen = useUi((s) => s.setNavOpen);
-  const level = levelFromXp(profile.xp);
+  const { level, into, needed, pct } = levelProgress(profile.xp);
   const courses = useData((s) => s.courses);
+  const tasks = useData((s) => s.tasks);
+  const habits = useData((s) => s.habits);
+  const habitLogs = useData((s) => s.habitLogs);
+  const sound = useUi((s) => s.sound);
+  const toggleSound = useUi((s) => s.toggleSound);
+  const pomoStatus = usePomodoro((s) => s.status);
+  const pomoEndsAt = usePomodoro((s) => s.endsAt);
+  const pomoRemaining = usePomodoro((s) => s.remainingMs);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (pomoStatus !== 'running') return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [pomoStatus]);
+  const city = useCity();
   const dueCount = useMemo(() => dueReviews({ courses }).length, [courses]);
+
+  // Contadores en vivo de cada destino (solo se muestran si hay algo que contar).
+  const counts = useMemo(() => {
+    const day = today();
+    const openToday = tasks.filter((t) => t.status !== 'done' && t.dueDate !== null && t.dueDate <= day).length;
+    const dueHabits = habits.filter((h) => isDueOn(h, day, habitLogs));
+    const doneHabits = dueHabits.filter((h) => isHabitDone(h, logFor(habitLogs, h.id, day))).length;
+    return { openToday, dueHabits: dueHabits.length, doneHabits };
+  }, [tasks, habits, habitLogs]);
+  const pomoLeft = pomoStatus === 'running' && pomoEndsAt ? Math.max(0, pomoEndsAt - now) : pomoRemaining;
+
+  const badgeFor = (to: string): { text: string; tone: string } | null => {
+    switch (to) {
+      case '/':
+        return { text: 'LIVE', tone: 'live' };
+      case '/tareas':
+        return counts.openToday > 0 ? { text: `${counts.openToday} hoy`, tone: 'plain' } : null;
+      case '/pomodoro':
+        return pomoStatus !== 'idle' ? { text: `${formatClock(pomoLeft)}${pomoStatus === 'paused' ? ' ⏸' : ''}`, tone: 'live' } : null;
+      case '/cursos':
+        return courses.length > 0 ? { text: `${courses.length} activo${courses.length === 1 ? '' : 's'}`, tone: 'plain' } : null;
+      case '/repaso':
+        return dueCount > 0 ? { text: `${dueCount} due`, tone: 'warn' } : null;
+      case '/habitos':
+        return counts.dueHabits > 0 ? { text: `${counts.doneHabits}/${counts.dueHabits}`, tone: counts.doneHabits === counts.dueHabits ? 'live' : 'plain' } : null;
+      case '/heroe':
+        return profile.hero ? null : { text: 'NEW', tone: 'new' };
+      case '/ciudad':
+        return { text: `${Math.round((city.total / CITY_MAX) * 100)}%`, tone: 'plain' };
+      default:
+        return null;
+    }
+  };
 
   const from = weekStart(today());
   const hours = hoursInWeek(sessions, from);
@@ -78,7 +128,9 @@ function Sidebar() {
         <div className="brand">
           <Sprite name="coin" size={26} className="brand__coin" />
           <div>
-            <p className="brand__build">// build 0.5</p>
+            <p className="brand__build">
+              // build 0.5 <span className="brand__beta">β</span>
+            </p>
             <p className="brand__name">
               STUDY<span>QUEST</span>
             </p>
@@ -94,6 +146,12 @@ function Sidebar() {
               Nvl {level} · {rankFor(level)}
             </p>
           </div>
+          <div className="player__xp">
+            <Bar pct={pct} tone="yellow" label="Experiencia hacia el siguiente nivel" />
+            <p className="player__xp-meta">
+              {into.toLocaleString('en-US')} / {needed.toLocaleString('en-US')} XP
+            </p>
+          </div>
         </div>
 
         <nav className="nav">
@@ -104,7 +162,10 @@ function Sidebar() {
                 <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => cx('nav__link', isActive && 'is-active')} onClick={() => { sfx.select(); setNavOpen(false); }}>
                   <Sprite name={n.sprite} size={20} />
                   <span>{n.label}</span>
-                  {n.to === '/repaso' && dueCount > 0 && <span className="badge badge--nav">{dueCount}</span>}
+                  {(() => {
+                    const b = badgeFor(n.to);
+                    return b && <span className={cx('nav__badge', `nav__badge--${b.tone}`)}>{b.text}</span>;
+                  })()}
                 </NavLink>
               ))}
             </Fragment>
@@ -126,6 +187,13 @@ function Sidebar() {
             </Button>
           )}
           {claimed && <p className="challenge__meta">Bono reclamado ✔</p>}
+        </div>
+
+        <div className="sysbar">
+          <span className="sysbar__label">Efectos de sonido</span>
+          <button type="button" className="icon-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Silenciar efectos' : 'Activar efectos de sonido'} title="Efectos de sonido">
+            <span aria-hidden="true">{sound ? '♪' : '✕'}</span>
+          </button>
         </div>
       </aside>
     </>

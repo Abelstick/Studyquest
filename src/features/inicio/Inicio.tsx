@@ -52,7 +52,7 @@ function MissionRow({ m }: { m: Mission }) {
   const linkNow = chainNow?.links.find((l) => l.habit.id === (m.kind === 'habit' ? m.habit.id : ''));
 
   return (
-    <li className={cx('mission', m.done && 'is-done', ready && 'is-ready')}>
+    <li className={cx('mission', `mission--${m.kind}`, m.done && 'is-done', ready && 'is-ready')}>
       <button
         type="button"
         className={cx('check', ready && 'is-ready')}
@@ -100,6 +100,63 @@ function MissionRow({ m }: { m: Mission }) {
         </ul>
       )}
     </li>
+  );
+}
+
+type MissionTab = 'all' | 'habit' | 'task';
+
+/** Hábitos y tareas se separan con pestañas; en «Todo» van en grupos con su propio rótulo. */
+function MissionTabs({ missions }: { missions: Mission[] }) {
+  const [tab, setTab] = useState<MissionTab>('all');
+  const habits = missions.filter((m) => m.kind === 'habit');
+  const tasks = missions.filter((m) => m.kind === 'task');
+  const tabs: { id: MissionTab; label: string; sprite: 'star' | 'flower' | 'qblock'; items: Mission[] }[] = [
+    { id: 'all', label: 'Todo', sprite: 'star', items: missions },
+    { id: 'habit', label: 'Hábitos', sprite: 'flower', items: habits },
+    { id: 'task', label: 'Tareas', sprite: 'qblock', items: tasks },
+  ];
+  const current = tabs.find((t) => t.id === tab) ?? tabs[0];
+  const groups = [
+    { kind: 'habit', label: 'Hábitos de hoy', sprite: 'flower' as const, items: habits },
+    { kind: 'task', label: 'Tareas', sprite: 'qblock' as const, items: tasks },
+  ].filter((g) => g.items.length > 0);
+  const list = (items: Mission[]) => (
+    <ul className="missions">
+      {items.map((m) => (
+        <MissionRow key={m.id} m={m} />
+      ))}
+    </ul>
+  );
+  return (
+    <>
+      <div className="tabs" role="tablist" aria-label="Filtrar misiones">
+        {tabs.map((t) => (
+          <button key={t.id} type="button" role="tab" id={`mtab-${t.id}`} aria-selected={t.id === tab} aria-controls="mpanel" className={cx('tabs__tab', `tabs__tab--${t.id}`, t.id === tab && 'is-on')} onClick={() => setTab(t.id)}>
+            <Sprite name={t.sprite} size={16} />
+            {t.label}
+            <span className="tabs__count">
+              {t.items.filter((m) => m.done).length}/{t.items.length}
+            </span>
+          </button>
+        ))}
+      </div>
+      <div id="mpanel" role="tabpanel" aria-labelledby={`mtab-${tab}`}>
+        {current.items.length === 0 ? (
+          <p className="muted">{tab === 'habit' ? 'Hoy no te toca ningún hábito.' : 'No tienes tareas pendientes para hoy.'}</p>
+        ) : tab === 'all' ? (
+          groups.map((g) => (
+            <section key={g.kind} className={cx('mgroup', `mgroup--${g.kind}`)} aria-label={g.label}>
+              <h3 className="mgroup__title">
+                <Sprite name={g.sprite} size={16} /> {g.label}
+              </h3>
+              {list(g.items)}
+            </section>
+          ))
+        ) : (
+          list(current.items)
+        )}
+      </div>
+    </>
   );
 }
 
@@ -289,7 +346,7 @@ export default function Inicio() {
   const isEmpty = !tasks.length && !habits.length && !courses.length;
 
   return (
-    <div className="stack">
+    <div className="stack home">
       <section className="hero panel">
         <div className="hero__stripe" aria-hidden="true" />
         <div className="hero__body">
@@ -361,11 +418,7 @@ export default function Inicio() {
                   <p>No hay nada pendiente para hoy.</p>
                 </Empty>
               ) : (
-                <ul className="missions">
-                  {missions.map((m) => (
-                    <MissionRow key={m.id} m={m} />
-                  ))}
-                </ul>
+                <MissionTabs missions={missions} />
               )}
               <div className="row row--top">
                 <Link className="btn btn--ghost" to="/tareas">

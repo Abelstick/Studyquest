@@ -133,7 +133,9 @@ export default function Calendario() {
     if (t && t.dueDate !== date) updateTask(id, { dueDate: date });
   };
   const openTask = (id: string) => openModal({ type: 'task', id });
+  // Toda la casilla elige el día (no solo el número); el botón del número queda para el teclado.
   const dropProps = (d: ISODate) => ({
+    onClick: () => setSelected(d),
     onDragOver: (ev: React.DragEvent) => {
       ev.preventDefault();
       if (over !== d) setOver(d);

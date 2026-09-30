@@ -4390,3 +4390,17 @@ button.week__day--rich {
     gap: 8px;
   }
 }
+
+/* Toda la casilla del día es clicable, no solo su número. */
+.calday,
+.calweek__day {
+  cursor: pointer;
+}
+.calday:not(.is-selected):hover,
+.calweek__day:not(.is-selected):hover {
+  background-color: var(--panel-2);
+}
+.calday__num,
+.calweek__head {
+  cursor: pointer;
+}

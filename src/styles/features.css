@@ -4340,3 +4340,53 @@ button.week__day--rich {
     transition: none;
   }
 }
+
+/* ---------- Semana en filas: cada día ocupa el ancho completo y el texto largo se envuelve ---------- */
+.calweek {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.calweek__day {
+  grid-template-columns: 84px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 10px;
+}
+.calweek__head {
+  grid-auto-flow: row;
+  align-content: start;
+  padding: 0;
+}
+.calweek__items {
+  gap: 6px;
+  align-content: start;
+}
+/* Las tareas y los hábitos de la semana muestran el título entero, en las líneas que hagan falta. */
+.calweek .chip-task {
+  padding: 5px 8px;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.3;
+}
+.calweek__habit {
+  align-items: flex-start;
+  padding: 5px 8px;
+  font-size: 13px;
+  line-height: 1.3;
+}
+.calweek__hname {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .calweek__day {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 8px;
+  }
+}

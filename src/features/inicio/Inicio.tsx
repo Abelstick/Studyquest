@@ -4,7 +4,7 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
 import { computeStreak, isCounter, isDueOn, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
-import { dailyMissions, isReadyToFinish, missionParts, tips, type Mission } from '@/core/missions';
+import { dailyMissions, isReadyToFinish, missionParts, missionUrgency, tips, type Mission } from '@/core/missions';
 import { dueReviews } from '@/core/review';
 import { isBoss } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
@@ -104,29 +104,69 @@ function MissionRow({ m }: { m: Mission }) {
 }
 
 type MissionTab = 'all' | 'habit' | 'task';
+type MissionSort = 'urgency' | 'xp' | 'name';
+const SORTS: { value: MissionSort; label: string }[] = [
+  { value: 'urgency', label: 'Más urgente' },
+  { value: 'xp', label: 'Más XP' },
+  { value: 'name', label: 'A–Z' },
+];
+/** Cuántas misiones se enseñan de entrada; el resto queda tras «Ver más». */
+const SHOW_ALL_TAB = 3;
+const SHOW_ONE_TAB = 6;
 
-/** Hábitos y tareas se separan con pestañas; en «Todo» van en grupos con su propio rótulo. */
+/** Ordena sin mover lo hecho de sitio: lo pendiente va primero y, dentro, el criterio elegido. */
+function sortMissions(items: Mission[], sort: MissionSort): Mission[] {
+  const by = (a: Mission, b: Mission) => {
+    if (sort === 'xp') return b.xp - a.xp;
+    if (sort === 'name') return a.title.localeCompare(b.title, 'es');
+    return missionUrgency(a) - missionUrgency(b) || b.xp - a.xp;
+  };
+  return [...items].sort((a, b) => Number(a.done) - Number(b.done) || by(a, b));
+}
+
+/** Lista con «Ver más / Ver menos»: enseña las primeras y esconde el resto sin perderlas. */
+function MissionList({ items, limit }: { items: Mission[]; limit: number }) {
+  const [expanded, setExpanded] = useState(false);
+  const shown = expanded ? items : items.slice(0, limit);
+  const hidden = items.length - shown.length;
+  return (
+    <>
+      <ul className="missions">
+        {shown.map((m) => (
+          <MissionRow key={m.id} m={m} />
+        ))}
+      </ul>
+      {items.length > limit && (
+        <button type="button" className="btn btn--ghost btn--sm missions__more" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>
+          {expanded ? 'Ver menos' : `Ver ${hidden} más`}
+        </button>
+      )}
+    </>
+  );
+}
+
+/** Hábitos y tareas se separan con pestañas; se pueden ordenar y ocultar las ya hechas. */
 function MissionTabs({ missions }: { missions: Mission[] }) {
   const [tab, setTab] = useState<MissionTab>('all');
-  const habits = missions.filter((m) => m.kind === 'habit');
-  const tasks = missions.filter((m) => m.kind === 'task');
-  const tabs: { id: MissionTab; label: string; sprite: 'star' | 'flower' | 'qblock'; items: Mission[] }[] = [
-    { id: 'all', label: 'Todo', sprite: 'star', items: missions },
-    { id: 'habit', label: 'Hábitos', sprite: 'flower', items: habits },
-    { id: 'task', label: 'Tareas', sprite: 'qblock', items: tasks },
+  const [sort, setSort] = useState<MissionSort>('urgency');
+  const [onlyPending, setOnlyPending] = useState(false);
+  const pick = (kind?: Mission['kind']) => sortMissions(missions.filter((m) => (!kind || m.kind === kind) && (!onlyPending || !m.done)), sort);
+  const habits = pick('habit');
+  const tasks = pick('task');
+  const count = (kind?: Mission['kind']) => {
+    const all = missions.filter((m) => !kind || m.kind === kind);
+    return `${all.filter((m) => m.done).length}/${all.length}`;
+  };
+  const tabs: { id: MissionTab; label: string; sprite: 'star' | 'flower' | 'qblock'; kind?: Mission['kind'] }[] = [
+    { id: 'all', label: 'Todo', sprite: 'star' },
+    { id: 'habit', label: 'Hábitos', sprite: 'flower', kind: 'habit' },
+    { id: 'task', label: 'Tareas', sprite: 'qblock', kind: 'task' },
   ];
-  const current = tabs.find((t) => t.id === tab) ?? tabs[0];
   const groups = [
     { kind: 'habit', label: 'Hábitos de hoy', sprite: 'flower' as const, items: habits },
     { kind: 'task', label: 'Tareas', sprite: 'qblock' as const, items: tasks },
   ].filter((g) => g.items.length > 0);
-  const list = (items: Mission[]) => (
-    <ul className="missions">
-      {items.map((m) => (
-        <MissionRow key={m.id} m={m} />
-      ))}
-    </ul>
-  );
+  const current = tab === 'habit' ? habits : tab === 'task' ? tasks : [...habits, ...tasks];
   return (
     <>
       <div className="tabs" role="tablist" aria-label="Filtrar misiones">
@@ -134,26 +174,39 @@ function MissionTabs({ missions }: { missions: Mission[] }) {
           <button key={t.id} type="button" role="tab" id={`mtab-${t.id}`} aria-selected={t.id === tab} aria-controls="mpanel" className={cx('tabs__tab', `tabs__tab--${t.id}`, t.id === tab && 'is-on')} onClick={() => setTab(t.id)}>
             <Sprite name={t.sprite} size={16} />
             {t.label}
-            <span className="tabs__count">
-              {t.items.filter((m) => m.done).length}/{t.items.length}
-            </span>
+            <span className="tabs__count">{count(t.kind)}</span>
           </button>
         ))}
       </div>
+      <div className="mtools">
+        <label className="mtools__sort">
+          <span className="muted small">Ordenar</span>
+          <select className="input input--inline" value={sort} onChange={(e) => setSort(e.target.value as MissionSort)} aria-label="Ordenar misiones">
+            {SORTS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="mtools__check">
+          <input type="checkbox" checked={onlyPending} onChange={(e) => setOnlyPending(e.target.checked)} /> <span className="small">Solo pendientes</span>
+        </label>
+      </div>
       <div id="mpanel" role="tabpanel" aria-labelledby={`mtab-${tab}`}>
-        {current.items.length === 0 ? (
-          <p className="muted">{tab === 'habit' ? 'Hoy no te toca ningún hábito.' : 'No tienes tareas pendientes para hoy.'}</p>
+        {current.length === 0 ? (
+          <p className="muted">{onlyPending ? '¡Todo lo de hoy está hecho!' : tab === 'habit' ? 'Hoy no te toca ningún hábito.' : 'No tienes tareas pendientes para hoy.'}</p>
         ) : tab === 'all' ? (
           groups.map((g) => (
             <section key={g.kind} className={cx('mgroup', `mgroup--${g.kind}`)} aria-label={g.label}>
               <h3 className="mgroup__title">
                 <Sprite name={g.sprite} size={16} /> {g.label}
               </h3>
-              {list(g.items)}
+              <MissionList key={`${g.kind}-${sort}-${onlyPending}`} items={g.items} limit={SHOW_ALL_TAB} />
             </section>
           ))
         ) : (
-          list(current.items)
+          <MissionList key={`${tab}-${sort}-${onlyPending}`} items={current} limit={SHOW_ONE_TAB} />
         )}
       </div>
     </>

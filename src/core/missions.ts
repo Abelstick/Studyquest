@@ -9,8 +9,6 @@ export type Mission =
   | { kind: 'task'; id: string; title: string; subtitle: string; xp: number; done: boolean; task: Task }
   | { kind: 'habit'; id: string; title: string; subtitle: string; xp: number; done: boolean; habit: Habit };
 
-const MAX_MISSIONS = 6;
-
 /** Un paso del desglose de una misión: una subtarea de la tarea o un paso de la sesión del hábito. */
 export interface MissionPart {
   id: string;
@@ -31,7 +29,10 @@ export function missionParts(m: Mission, logs: HabitLog[], now: ISODate = today(
  */
 export const isReadyToFinish = (m: Mission, parts: MissionPart[]): boolean => parts.length > 0 && parts.every((p) => p.done) && !m.done;
 
-/** Misión del día: hábitos que tocan hoy + las tareas más urgentes. */
+/**
+ * Misiones del día: los hábitos que tocan hoy y las tareas abiertas (más las hechas hoy). Devuelve todas:
+ * la pantalla decide cuántas enseña y cómo se ordenan, para que nada quede fuera sin poder verlo.
+ */
 export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {
   const courseName = (id: string | null) => s.courses.find((c) => c.id === id)?.title;
 
@@ -59,11 +60,11 @@ export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {
       task: t,
     }));
 
-  const urgency = (m: Mission) => (m.kind === 'task' && m.task.dueDate ? diffDays(m.task.dueDate, now) : 30);
-  const pending = [...habits, ...tasks].filter((m) => !m.done).sort((a, b) => urgency(a) - urgency(b) || b.xp - a.xp);
-  const done = [...habits, ...tasks].filter((m) => m.done);
-  return [...done, ...pending.slice(0, Math.max(0, MAX_MISSIONS - done.length))].slice(0, MAX_MISSIONS).sort((a, b) => Number(a.done) - Number(b.done) || b.xp - a.xp);
+  return [...habits, ...tasks].sort((a, b) => Number(a.done) - Number(b.done) || missionUrgency(a, now) - missionUrgency(b, now) || b.xp - a.xp);
 }
+
+/** Cuánto apremia una misión: los hábitos de hoy cuentan como «hoy» (0); las tareas, por los días que faltan. */
+export const missionUrgency = (m: Mission, now: ISODate = today()): number => (m.kind === 'habit' ? 0 : m.task.dueDate ? diffDays(m.task.dueDate, now) : 30);
 
 export interface Tip {
   title: string;

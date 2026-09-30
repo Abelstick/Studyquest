@@ -4404,3 +4404,30 @@ button.week__day--rich {
 .calweek__head {
   cursor: pointer;
 }
+
+/* ---------- Inicio: orden de misiones y «Ver más» ---------- */
+.mtools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 10px 0 4px;
+}
+.mtools__sort,
+.mtools__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.mtools__sort .input {
+  width: auto;
+  min-width: 130px;
+}
+.missions__more {
+  margin-top: 8px;
+  justify-self: start;
+}
+.home .missions + .missions__more {
+  margin-top: 10px;
+}

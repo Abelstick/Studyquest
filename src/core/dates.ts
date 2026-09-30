@@ -65,6 +65,15 @@ export const dueLabel = (due: ISODate | null, now: ISODate = today()): string =>
   const d = fromISODate(due);
   return `${DAY_NAMES[d.getDay()]} ${d.getDate()}`;
 };
+/** Cuánto falta para una fecha límite: «Faltan 3 días», «Vence hoy», «Venció hace 2 días». */
+export const daysLeftLabel = (due: ISODate | null, now: ISODate = today()): string | null => {
+  if (!due) return null;
+  const n = diffDays(due, now);
+  if (n === 0) return 'Vence hoy';
+  if (n === 1) return 'Falta 1 día';
+  if (n > 1) return `Faltan ${n} días`;
+  return n === -1 ? 'Venció ayer' : `Venció hace ${-n} días`;
+};
 export const shortDate = (s: ISODate): string => {
   const d = fromISODate(s);
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;

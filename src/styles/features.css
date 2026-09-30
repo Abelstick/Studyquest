@@ -3594,3 +3594,170 @@ select.input {
 .home .mgroup--task .mgroup__title {
   background: transparent;
 }
+
+/* ---------- Hábitos: semana con avance por día ---------- */
+:root {
+  --partial: #f59e0b;
+}
+.week__day--rich {
+  flex-direction: column;
+  gap: 2px;
+  height: 44px;
+  padding: 3px 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--panel);
+}
+.week__name {
+  position: relative;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+}
+.week__val {
+  position: relative;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+}
+button.week__day--rich {
+  font-family: inherit;
+}
+/* Día a medias: se llena desde abajo en ámbar, en proporción a lo hecho (6 de 10 = 60 %). */
+.week__day--rich.is-partial {
+  border-color: var(--line);
+  background: linear-gradient(to top, var(--partial) var(--p, 50%), var(--panel) var(--p, 50%));
+  color: #1a1a2e;
+}
+.week__day--rich.is-done {
+  background: var(--green);
+  color: #fff;
+}
+.week__day--rich.is-editing {
+  outline: 3px solid var(--yellow);
+  outline-offset: 1px;
+}
+.dayedit {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--panel-2);
+  border: 2px solid var(--line);
+}
+.dayedit > .btn {
+  justify-self: start;
+}
+.dayedit__head {
+  font-size: 14px;
+}
+.hweek {
+  display: grid;
+}
+/* Mapa de calor del detalle: el día a medias en ámbar, como en la semana. */
+.heat__cell.is-partial {
+  background: var(--partial);
+}
+
+/* ---------- Historial por semanas ---------- */
+.hhist {
+  display: grid;
+  gap: 14px;
+}
+.hhist__list {
+  display: grid;
+  gap: 14px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.hhist__row {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+}
+.hhist__head {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.hhist__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.hhist__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 0;
+  min-width: 0;
+  background: var(--panel);
+  border: 2px solid var(--line-soft);
+  color: var(--muted);
+}
+.hhist__wd {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+}
+.hhist__v {
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+}
+.hhist__day.is-done {
+  background: var(--green);
+  border-color: var(--line);
+  color: #fff;
+}
+.hhist__day.is-partial {
+  border-color: var(--line);
+  background: linear-gradient(to top, var(--partial) var(--p, 50%), var(--panel) var(--p, 50%));
+  color: #1a1a2e;
+}
+.hhist__day.is-off,
+.hhist__day.is-future {
+  opacity: 0.4;
+}
+
+/* ---------- Hábitos de cuota y de calendario ---------- */
+.hperiod {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+}
+.hperiod.is-met {
+  border-color: var(--green);
+}
+.hperiod.is-tight {
+  border-color: var(--red);
+}
+.hperiod__pips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.hperiod__pip {
+  width: 22px;
+  height: 22px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+}
+.hperiod__pip.is-done {
+  background: var(--green);
+}
+.hperiod__pip.is-partial {
+  background: linear-gradient(to top, var(--partial) var(--p, 50%), var(--panel) var(--p, 50%));
+}
+.hperiod__next {
+  font-weight: 800;
+  font-size: 14px;
+}

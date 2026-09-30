@@ -1,3 +1,4 @@
+import { addDays } from '@/core/dates';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStorage, createLocalRepository } from '@/data/local';
 import type { Repository } from '@/data/ports';
@@ -79,17 +80,40 @@ describe('store de datos', () => {
     expect(store.getState().profile.credits).toBeGreaterThanOrEqual(500);
   });
 
-  it('un hábito solo da XP al alcanzar el objetivo, y una sola vez', () => {
+  it('un hábito da XP en proporción a lo avanzado, el total al completarlo y una sola vez', () => {
     store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'pages', target: 20, xp: 25, reminder: null, steps: [] });
     const id = store.getState().habits[0].id;
     store.getState().setHabitValue(id, 12);
-    expect(store.getState().profile.xp).toBe(0);
+    expect(store.getState().profile.xp).toBe(15); // 12/20 de 25 XP: lo avanzado no se pierde
     store.getState().setHabitValue(id, 20);
-    expect(store.getState().profile.xp).toBe(25);
+    expect(store.getState().profile.xp).toBe(25); // al completar solo se cobra lo que faltaba
     store.getState().setHabitValue(id, 25);
     expect(store.getState().profile.xp).toBe(25);
     expect(store.getState().habitLogs).toHaveLength(1);
     store.getState().setHabitValue(id, 5);
+    expect(store.getState().profile.xp).toBe(6); // bajar el contador devuelve el XP de más
+    store.getState().setHabitValue(id, 0);
+    expect(store.getState().profile.xp).toBe(0);
+  });
+
+  it('un día pasado a medias (6 de 10) se guarda, da XP proporcional y se puede completar después', () => {
+    store.getState().createHabit({ title: 'Agua', frequency: { type: 'daily' }, measure: 'times', target: 10, xp: 20, reminder: null, steps: [] });
+    const id = store.getState().habits[0].id;
+    const ayer = addDays(today(), -1);
+    store.getState().updateHabit(id, { startDate: addDays(today(), -5) });
+    store.getState().setHabitValueOn(id, ayer, 6);
+    expect(store.getState().habitLogs.find((l) => l.date === ayer)?.value).toBe(6);
+    expect(store.getState().profile.xp).toBe(12); // 6/10 de 20 XP
+    store.getState().setHabitValueOn(id, ayer, 10);
+    expect(store.getState().profile.xp).toBe(20);
+  });
+
+  it('marcar pasos de un hábito con desglose suma su parte de XP', () => {
+    store.getState().createHabit({ title: 'Rutina', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [{ id: 'a', title: 'A', minutes: 5 }, { id: 'b', title: 'B', minutes: 5 }] });
+    const id = store.getState().habits[0].id;
+    store.getState().toggleHabitStep(id, 'a');
+    expect(store.getState().profile.xp).toBe(10);
+    store.getState().toggleHabitStep(id, 'a');
     expect(store.getState().profile.xp).toBe(0);
   });
 

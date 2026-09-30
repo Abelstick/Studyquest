@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { dueLabel, today } from '@/core/dates';
+import { daysLeftLabel, diffDays, dueLabel, today } from '@/core/dates';
 import type { Priority, Task, TaskStatus } from '@/core/domain';
 import { bossHp, isBoss, recurrenceLabel } from '@/core/tasks';
 import { CONCEPTS } from '@/core/concepts';
@@ -27,6 +27,8 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
   const toggleSubtask = useData((s) => s.toggleSubtask);
   const openModal = useUi((s) => s.openModal);
   const overdue = task.status !== 'done' && !!task.dueDate && task.dueDate < today();
+  const daysLeft = daysLeftLabel(task.dueDate);
+  const soon = !overdue && !!task.dueDate && diffDays(task.dueDate, today()) <= 2;
   const doneSubs = task.subtasks.filter((s) => s.done).length;
   const boss = isBoss(task) && task.subtasks.length > 0;
   // Los jefes muestran sus subtareas (sus «puntos débiles») desde el principio.
@@ -70,6 +72,7 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
       )}
       <div className="tags">
         <span className={cx('tag', overdue ? 'tag--red' : 'tag--plain')}>{dueLabel(task.dueDate)}</span>
+        {task.status !== 'done' && daysLeft && <span className={cx('tag', overdue ? 'tag--red' : soon ? 'tag--xp' : 'tag--plain')}>{daysLeft}</span>}
         {task.estimateMin > 0 && <span className="tag tag--plain">{task.estimateMin >= 60 ? `${+(task.estimateMin / 60).toFixed(1)} h` : `${task.estimateMin} min`}</span>}
         <span className="tag tag--plain">{PRIORITY_LABEL[task.priority]}</span>
         {task.recurrence && <span className="tag tag--blue" title="Al completarla se crea la siguiente">↻ {recurrenceLabel(task.recurrence)}</span>}

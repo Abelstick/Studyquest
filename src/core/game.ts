@@ -90,6 +90,25 @@ export const logFor = (logs: HabitLog[], habitId: string, date: ISODate): HabitL
 
 export const isHabitDone = (habit: Habit, log?: HabitLog): boolean => !!log && log.value >= habit.target;
 
+/**
+ * Cuánto del hábito se cumplió hoy, de 0 a 1. Cuenta lo avanzado aunque no se llegue a la meta
+ * (8 de 10 vasos = 0.8), y también los pasos hechos de un hábito con desglose.
+ */
+export function habitProgress(habit: Habit, log?: HabitLog): number {
+  if (!log) return 0;
+  if (log.value >= habit.target) return 1;
+  const byValue = habit.target > 0 ? Math.max(0, log.value) / habit.target : 0;
+  const ids = new Set(habit.steps.map((s) => s.id));
+  const bySteps = ids.size ? log.stepsDone.filter((id) => ids.has(id)).length / ids.size : 0;
+  return Math.min(1, Math.max(byValue, bySteps));
+}
+
+/** XP que ya se ganó por lo avanzado: proporcional al avance, y el total solo al completarlo. */
+export function habitCreditXp(habit: Habit, log?: HabitLog): number {
+  if (isHabitDone(habit, log)) return habit.xp;
+  return Math.min(Math.floor(habit.xp * habitProgress(habit, log)), Math.max(0, habit.xp - 1));
+}
+
 /** Medidas que se registran con contador (páginas, ejercicios…) en un +/− en lugar de un solo botón. */
 export const isCounter = (h: Habit): boolean => h.measure !== 'boolean' && h.measure !== 'minutes' && h.measure !== 'hours' && h.target > 1;
 /** Cuánto suma cada pulsación del +/−: de golpe en golpe para objetivos grandes (porcentaje, 50+). */
@@ -131,22 +150,58 @@ export function isDueOn(habit: Habit, date: ISODate, logs: HabitLog[]): boolean 
   }
 }
 
-export type DayState = 'done' | 'today' | 'idle';
+export type DayState = 'done' | 'partial' | 'today' | 'idle';
 /** Semana en curso (lunes a domingo) para la tira de días de cada hábito. */
 export function weekStrip(habit: Habit, logs: HabitLog[], now: ISODate = today()) {
   const start = weekStart(now);
   return Array.from({ length: 7 }, (_, i) => {
     const date = addDays(start, i);
-    const done = isHabitDone(habit, logFor(logs, habit.id, date));
-    const state: DayState = done ? 'done' : date === now && isDueOn(habit, date, logs) ? 'today' : 'idle';
-    return { date, state };
+    const log = logFor(logs, habit.id, date);
+    const done = isHabitDone(habit, log);
+    const partial = !done && habitProgress(habit, log) > 0;
+    const state: DayState = done ? 'done' : partial ? 'partial' : date === now && isDueOn(habit, date, logs) ? 'today' : 'idle';
+    return { date, state, progress: habitProgress(habit, log), value: log?.value ?? 0 };
   });
+}
+
+export interface WeekDay {
+  date: ISODate;
+  value: number;
+  progress: number;
+  done: boolean;
+  /** Tocaba ese día (y el hábito ya existía y no es futuro). */
+  due: boolean;
+  future: boolean;
+}
+
+/** Resumen de la semana que contiene `weekOf`: cada día con su avance, y cuánto se cumplió en total. */
+export function weekSummary(habit: Habit, logs: HabitLog[], weekOf: ISODate, now: ISODate = today()) {
+  const from = weekStart(weekOf);
+  const days: WeekDay[] = Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(from, i);
+    const log = logFor(logs, habit.id, date);
+    const future = date > now;
+    const due = !future && date >= habit.startDate && isDueOn(habit, date, logs);
+    return { date, value: log?.value ?? 0, progress: habitProgress(habit, log), done: isHabitDone(habit, log), due, future };
+  });
+  const dueDays = days.filter((d) => d.due);
+  const credit = dueDays.reduce((a, d) => a + d.progress, 0);
+  return {
+    from,
+    to: addDays(from, 6),
+    days,
+    due: dueDays.length,
+    done: dueDays.filter((d) => d.done).length,
+    partial: dueDays.filter((d) => !d.done && d.progress > 0).length,
+    pct: dueDays.length ? Math.round((credit / dueDays.length) * 100) : 0,
+  };
 }
 
 /** % de cumplimiento de los últimos 30 días. */
 export function monthlyCompliance(habit: Habit, logs: HabitLog[], now: ISODate = today()): number {
   const from = addDays(now, -29);
-  const done = logs.filter((l) => l.habitId === habit.id && l.date >= from && l.date <= now && l.value >= habit.target).length;
+  // Un día a medias cuenta en proporción (8 de 10 vasos = 0,8 de día): el hábito se construye poco a poco.
+  const done = logs.filter((l) => l.habitId === habit.id && l.date >= from && l.date <= now).reduce((a, l) => a + Math.min(1, Math.max(0, l.value) / Math.max(1, habit.target)), 0);
   let expected = 30;
   const f = habit.frequency;
   if (f.type === 'days') expected = Array.from({ length: 30 }, (_, i) => weekdayIndex(addDays(from, i))).filter((d) => f.days.includes(d)).length;

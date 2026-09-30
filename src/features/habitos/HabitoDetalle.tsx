@@ -6,6 +6,9 @@ import { addDays, today, weekdayAbbr, weekdayIndex } from '@/core/dates';
 import { frequencyLabel, goalLabel, habitStreaks, isHabitDone, logFor, weakestWeekday, MEASURE_LABEL } from '@/core/game';
 import { Bar, Button, Panel, cx } from '@/ui/kit';
 import { HabitAction } from './HabitAction';
+import { HabitWeek } from './HabitWeek';
+import { HabitHistory } from './HabitHistory';
+import { HabitPeriod } from './HabitPeriod';
 
 const DAYS_FULL = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 
@@ -28,7 +31,7 @@ export default function HabitoDetalle() {
       const day = i % 7;
       const date = addDays(start, week * 7 + day);
       const log = logFor(logs, habit.id, date);
-      return { date, done: isHabitDone(habit, log), partial: !!log && log.value > 0 && !isHabitDone(habit, log), future: date > now };
+      return { date, value: log?.value ?? 0, done: isHabitDone(habit, log), partial: !!log && log.value > 0 && !isHabitDone(habit, log), future: date > now };
     });
   }, [habit, logs, now]);
 
@@ -96,12 +99,24 @@ export default function HabitoDetalle() {
             )}
           </Panel>
 
+          <Panel kicker="// Esta semana · pulsa un día para registrar avance">
+            <HabitPeriod habit={habit} logs={logs} now={now} />
+            <HabitWeek habit={habit} logs={logs} now={now} />
+          </Panel>
+
+          <Panel kicker="// Historial por semanas">
+            <HabitHistory habit={habit} logs={logs} now={now} />
+          </Panel>
+
           <Panel kicker="// Últimas 12 semanas">
             <div className="heat heat--habit" role="img" aria-label={`${stats.completions} veces cumplido en total`}>
               {heat.map((c) => (
-                <span key={c.date} title={c.date} className={cx('heat__cell', c.done && 'is-3', c.partial && 'is-1', c.future && 'is-future')} />
+                <span key={c.date} title={c.value > 0 ? `${c.date} · ${c.value}/${habit.target}${c.done ? '' : ' (a medias)'}` : c.date} className={cx('heat__cell', c.done && 'is-3', c.partial && 'is-partial', c.future && 'is-future')} />
               ))}
             </div>
+            <p className="legend muted small">
+              <span className="heat__cell is-3" /> Completo <span className="heat__cell is-partial" /> A medias
+            </p>
             <p className="muted small upper">
               {stats.completions} sesiones{minutes ? ` · ${(minutes / 60).toFixed(1)} h` : ''} · racha {stats.current} · mejor racha {stats.best}
             </p>

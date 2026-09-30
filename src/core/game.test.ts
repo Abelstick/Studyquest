@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Habit, HabitLog, XpEvent } from './domain';
 import { addDays } from './dates';
-import { computeStreak, courseProgress, frequencyLabel, habitStreaks, isCounter, isDueOn, levelFromXp, levelProgress, monthlyCompliance, stepForCounter, weekStrip, worldFor, xpAtLevelStart } from './game';
+import { computeStreak, courseProgress, frequencyLabel, habitStreaks, isCounter, isDueOn, levelFromXp, levelProgress, monthlyCompliance, stepForCounter, weekStrip, weekSummary, worldFor, xpAtLevelStart } from './game';
 
 const NOW = '2026-09-20'; // domingo
 
@@ -81,10 +81,19 @@ describe('hábitos', () => {
     expect(isDueOn(h, '2026-09-17', [log('h', '2026-09-15', 1)])).toBe(false);
     expect(isDueOn(h, '2026-09-21', [log('h', '2026-09-15', 1)])).toBe(true); // semana nueva
   });
-  it('la tira semanal marca hecho / hoy / nada', () => {
+  it('la tira semanal marca hecho / a medias / hoy / nada', () => {
     const h = habit({});
     const strip = weekStrip(h, [log('h', '2026-09-14', 30), log('h', '2026-09-15', 10)], NOW);
-    expect(strip.map((d) => d.state)).toEqual(['done', 'idle', 'idle', 'idle', 'idle', 'idle', 'today']);
+    expect(strip.map((d) => d.state)).toEqual(['done', 'partial', 'idle', 'idle', 'idle', 'idle', 'today']);
+  });
+  it('el resumen de una semana pasada cuenta completos, a medias y el porcentaje', () => {
+    const h = habit({ target: 10 });
+    const logs = [log('h', '2026-09-14', 10), log('h', '2026-09-15', 6)];
+    const w = weekSummary(h, logs, '2026-09-16', NOW);
+    expect(w.from).toBe('2026-09-14');
+    expect(w.done).toBe(1);
+    expect(w.partial).toBe(1);
+    expect(w.pct).toBe(Math.round(((1 + 0.6) / w.due) * 100));
   });
   it('rachas del hábito ignoran los días en que no tocaba', () => {
     const h = habit({ frequency: { type: 'days', days: [0, 2, 4] } });

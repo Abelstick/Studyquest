@@ -2,28 +2,30 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { shortDate, today, WEEKDAYS_SHORT } from '@/core/dates';
-import { frequencyLabel, goalLabel, isDueOn, isHabitDone, logFor, monthlyCompliance, weekStrip } from '@/core/game';
+import { today } from '@/core/dates';
+import { frequencyLabel, goalLabel, habitCreditXp, habitProgress, isDueOn, isHabitDone, logFor, monthlyCompliance } from '@/core/game';
 import { Bar, Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
-import { catchUpDay, totalPending } from '@/core/catchup';
+import { totalPending } from '@/core/catchup';
 import { Sprite } from '@/ui/Sprite';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { Chains } from './ChainPanel';
 import { HabitAction } from './HabitAction';
+import { HabitSteps, progressNote } from './HabitSteps';
+import { HabitWeek } from './HabitWeek';
+import { HabitPeriod } from './HabitPeriod';
 
 export default function Habitos() {
   const habits = useData((s) => s.habits);
   const logs = useData((s) => s.habitLogs);
   const openModal = useUi((s) => s.openModal);
-  const setHabitValueOn = useData((s) => s.setHabitValueOn);
   const now = today();
 
   const cards = useMemo(
     () =>
       habits.map((h) => {
         const log = logFor(logs, h.id, now);
-        return { h, log, strip: weekStrip(h, logs, now), pct: monthlyCompliance(h, logs, now), due: isDueOn(h, now, logs), done: isHabitDone(h, log) };
+        return { h, log, pct: monthlyCompliance(h, logs, now), due: isDueOn(h, now, logs), done: isHabitDone(h, log), progress: habitProgress(h, log), credit: habitCreditXp(h, log) };
       }),
     [habits, logs, now],
   );
@@ -75,7 +77,7 @@ export default function Habitos() {
           )}
           <Chains />
           <div className="grid grid--cards">
-          {cards.map(({ h, log, strip, pct, due, done }) => (
+          {cards.map(({ h, log, pct, due, done, progress, credit }) => (
             <article key={h.id} className={cx('habit', done ? 'habit--done' : due && 'habit--due')}>
               <div className="split split--top">
                 <div>
@@ -86,35 +88,18 @@ export default function Habitos() {
                     {frequencyLabel(h.frequency)} · {goalLabel(h)}
                   </p>
                 </div>
-                <Tag tone={done ? 'green' : 'xp'}>+{h.xp} XP</Tag>
+                <Tag tone={done ? 'green' : 'xp'}>{!done && credit > 0 ? `+${credit} / ${h.xp} XP` : `+${h.xp} XP`}</Tag>
               </div>
-              {/* Los días pasados se pueden pulsar: sirve para marcar lo que se te olvidó. */}
-              <div className="week" aria-label={`Semana de ${h.title}`}>
-                {strip.map((d, i) => {
-                  const c = catchUpDay(h, logs, d.date, now);
-                  const etiqueta = `${WEEKDAYS_SHORT[i]} ${shortDate(d.date)}: ${c.done ? 'hecho' : 'sin marcar'}`;
-                  if (!c.editable || c.isToday) {
-                    return (
-                      <span key={d.date} className={cx('week__day', `is-${d.state}`, !c.editable && !c.done && 'is-off')} title={etiqueta} aria-label={etiqueta}>
-                        {WEEKDAYS_SHORT[i]}
-                      </span>
-                    );
-                  }
-                  return (
-                    <button
-                      key={d.date}
-                      type="button"
-                      className={cx('week__day', 'week__day--can', `is-${d.state}`, !c.done && 'is-missed')}
-                      onClick={() => setHabitValueOn(h.id, d.date, c.done ? 0 : h.target)}
-                      aria-pressed={c.done}
-                      title={c.done ? `${etiqueta} · pulsa para quitar la marca` : `${etiqueta} · pulsa si lo hiciste y se te olvidó marcarlo`}
-                      aria-label={`${etiqueta}. ${c.done ? 'Quitar la marca' : 'Marcar como hecho'}`}
-                    >
-                      {WEEKDAYS_SHORT[i]}
-                    </button>
-                  );
-                })}
-              </div>
+              {/* Los días pasados se abren para registrar cuánto se hizo, aunque no se llegara a la meta. */}
+              <HabitPeriod habit={h} logs={logs} now={now} />
+              <HabitWeek habit={h} logs={logs} now={now} />
+              {!done && progress > 0 && (
+                <div className="habit__today">
+                  <Bar pct={progress * 100} tone="yellow" label={`Avance de hoy de ${h.title}`} />
+                  <p className="muted small">{progressNote(h, log)}</p>
+                </div>
+              )}
+              <HabitSteps habit={h} log={log} />
               <div className="split">
                 <span className="kicker">Cumplimiento mensual</span>
                 <b>{pct}%</b>

@@ -4,7 +4,7 @@ import type {
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
-  LEVEL_UP_BONUS, SESSION_XP_PER_MIN, WEEKLY_BONUS_XP, coinsForXp, computeStreak, defaultProfile, hoursInWeek, levelFromXp, logFor, rankFor, topicXp, worldFor,
+  LEVEL_UP_BONUS, SESSION_XP_PER_MIN, WEEKLY_BONUS_XP, coinsForXp, computeStreak, defaultProfile, habitCreditXp, hoursInWeek, levelFromXp, logFor, rankFor, topicXp, worldFor,
 } from '@/core/game';
 import { canOpenChest, chestReward, dayBonusOf, habitBonus, habitsDoneOn } from '@/core/events';
 import { gradeReview, startReview, type Rating } from '@/core/review';
@@ -52,7 +52,8 @@ export interface DataState extends Data {
   setHabitValue: (habitId: ID, value: number) => void;
   /** Marca (o desmarca) un hábito en un día que ya pasó, por si se te olvidó marcarlo. */
   setHabitValueOn: (habitId: ID, date: ISODate, value: number) => void;
-  toggleHabitStep: (habitId: ID, stepId: ID) => void;
+  /** Marca un paso del hábito; sin fecha es el de hoy, con fecha es de un día que aún se puede rellenar. */
+  toggleHabitStep: (habitId: ID, stepId: ID, date?: ISODate) => void;
 
   /** Cadenas de hábitos: rutinas en orden. Guían y premian; nunca bloquean. */
   saveChain: (chain: HabitChain) => void;
@@ -473,11 +474,15 @@ export function createDataStore(repo: Repository) {
         run((s) => ({ habitLogs: upsertBy(s.habitLogs, log) }), () => repo.habitLogs.upsert(log));
         const was = (prev?.value ?? 0) >= h.target;
         const now = value >= h.target;
+        // El avance parcial también da XP (proporcional); al completar solo se cobra lo que faltaba.
+        const delta = habitCreditXp(h, log) - habitCreditXp(h, prev);
         if (now && !was) {
-          award(h.xp, 'habit', h.title);
+          if (delta !== 0) award(delta, 'habit', h.title);
           claimHabitBonuses(h, date);
           claimChainBonus(h, date);
-        } else if (was && !now) award(-h.xp, 'habit', `Deshacer: ${h.title}`);
+        } else if (was && !now) award(delta, 'habit', `Deshacer: ${h.title}`);
+        else if (delta > 0) award(delta, 'habit', `Avance: ${h.title} · ${value}/${h.target}`, '¡Sigues avanzando!');
+        else if (delta < 0) award(delta, 'habit', `Ajuste: ${h.title}`);
         else sfx.click();
       },
       setHabitValueOn(habitId, date, rawValue) {
@@ -496,21 +501,33 @@ export function createDataStore(repo: Repository) {
 
         const was = (prev?.value ?? 0) >= h.target;
         const nowDone = value >= h.target;
-        if (nowDone === was) return void sfx.click();
+        // El avance a medias también cuenta (6 de 10 vasos = 60 % del XP), igual que hoy.
+        const delta = habitCreditXp(h, log) - habitCreditXp(h, prev);
+        if (delta === 0) return void sfx.click();
         // El XP se fecha en SU día para que la racha se repare. Los bonos del día (finde,
         // combo, cadena) no se cobran hacia atrás: son mecánicas de «hoy».
-        award(nowDone ? h.xp : -h.xp, 'habit', `${nowDone ? 'Recuperado' : 'Deshacer'}: ${h.title} · ${date}`, nowDone ? '¡Te pusiste al día!' : 'Marca quitada', date);
-        if (nowDone) sfx.oneUp();
+        const label = nowDone ? 'Recuperado' : delta > 0 ? 'Avance' : 'Ajuste';
+        award(delta, 'habit', `${label}: ${h.title} · ${date} · ${value}/${h.target}`, nowDone && !was ? '¡Te pusiste al día!' : delta > 0 ? '¡Avance guardado!' : 'Marca quitada', date);
+        if (nowDone && !was) sfx.oneUp();
       },
-      toggleHabitStep(habitId, stepId) {
-        const date = today();
+      toggleHabitStep(habitId, stepId, on) {
+        const date = on ?? today();
+        const habit = get().habits.find((x) => x.id === habitId);
+        if (habit && date !== today() && !canCatchUp(habit, get().habitLogs, date, today())) {
+          return notifyError('Ese día no se puede marcar', `Solo puedes ponerte al día con los últimos ${CATCH_UP_DAYS} días, y solo en los días que tocaba.`);
+        }
         const prev = logFor(get().habitLogs, habitId, date);
         const done = new Set(prev?.stepsDone ?? []);
         if (done.has(stepId)) done.delete(stepId);
         else done.add(stepId);
         const log: HabitLog = { id: prev?.id ?? newId(), habitId, date, value: prev?.value ?? 0, stepsDone: [...done] };
         run((s) => ({ habitLogs: upsertBy(s.habitLogs, log) }), () => repo.habitLogs.upsert(log));
-        sfx.click();
+        const h = habit;
+        // Cada paso hecho también suma su parte de XP; deshacerlo la devuelve.
+        const delta = h ? habitCreditXp(h, log) - habitCreditXp(h, prev) : 0;
+        if (h && delta > 0) award(delta, 'habit', `Paso: ${h.title}`, '¡Sigues avanzando!', date);
+        else if (h && delta < 0) award(delta, 'habit', `Ajuste: ${h.title}`, 'Marca quitada', date);
+        else sfx.click();
       },
 
       /* ---------- Cursos ---------- */

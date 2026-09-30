@@ -137,3 +137,65 @@ export const courseStreak = (s: Snapshot, c: Course, now: ISODate = today()): nu
   }
   return n;
 };
+
+/* ---------- Datos para las gráficas del dashboard de Progreso ---------- */
+
+/** XP ganado por semana (solo lo que suma), de la más antigua a la actual. */
+export function weeklyXp(s: Snapshot, weeks: number, now: ISODate = today()) {
+  const start = weekStart(now);
+  return Array.from({ length: weeks }, (_, i) => {
+    const from = addDays(start, -7 * (weeks - 1 - i));
+    const to = addDays(from, 7);
+    const xp = s.xpEvents.filter((e) => e.amount > 0 && e.date >= from && e.date < to).reduce((a, e) => a + e.amount, 0);
+    return { from, xp };
+  });
+}
+
+const SOURCE_LABEL: Record<string, string> = {
+  task: 'Tareas',
+  habit: 'Hábitos',
+  topic: 'Temas de curso',
+  session: 'Sesiones de estudio',
+  milestone: 'Hitos',
+  checkpoint: 'Checkpoints',
+  bonus: 'Bonos',
+  review: 'Repasos',
+  combo: 'Combos',
+  certification: 'Certificaciones',
+  legacy: 'Anteriores',
+};
+
+/** De dónde viene el XP: total por fuente, de más a menos. */
+export function xpBySource(s: Snapshot, since: ISODate | null) {
+  const by = new Map<string, number>();
+  for (const e of s.xpEvents) {
+    if (e.amount <= 0 || (since && e.date < since)) continue;
+    by.set(e.source, (by.get(e.source) ?? 0) + e.amount);
+  }
+  const total = [...by.values()].reduce((a, b) => a + b, 0) || 1;
+  return [...by.entries()]
+    .map(([source, xp]) => ({ source, label: SOURCE_LABEL[source] ?? source, xp, pct: Math.round((xp / total) * 100) }))
+    .sort((a, b) => b.xp - a.xp);
+}
+
+/** XP medio por día de la semana (0 = lunes) dentro del rango: ¿qué días rindes más? */
+export function xpByWeekday(s: Snapshot, since: ISODate | null, now: ISODate = today()) {
+  const totals = Array.from({ length: 7 }, () => 0);
+  const counts = Array.from({ length: 7 }, () => 0);
+  const first = since ?? s.xpEvents.reduce<ISODate>((m, e) => (e.date < m ? e.date : m), now);
+  const perDay = xpByDay(s);
+  for (let d = first; d <= now; d = addDays(d, 1)) {
+    const w = (new Date(`${d}T00:00:00`).getDay() + 6) % 7;
+    totals[w] += Math.max(0, perDay.get(d) ?? 0);
+    counts[w] += 1;
+  }
+  return totals.map((t, day) => ({ day, avg: counts[day] ? Math.round(t / counts[day]) : 0 }));
+}
+
+/** Total de XP ganado entre dos fechas (inclusive `from`, exclusive `to`). */
+export const xpBetween = (s: Snapshot, from: ISODate, to: ISODate): number =>
+  s.xpEvents.filter((e) => e.amount > 0 && e.date >= from && e.date < to).reduce((a, e) => a + e.amount, 0);
+
+/** Horas estudiadas entre dos fechas (inclusive `from`, exclusive `to`). */
+export const hoursBetween = (s: Snapshot, from: ISODate, to: ISODate): number =>
+  s.sessions.filter((x) => x.date >= from && x.date < to).reduce((a, x) => a + x.minutes, 0) / 60;

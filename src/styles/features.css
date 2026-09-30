@@ -3761,3 +3761,582 @@ button.week__day--rich {
   font-weight: 800;
   font-size: 14px;
 }
+
+/* ---------- Calendario: semana, hábitos por día, bandeja ---------- */
+.tabs--sm {
+  padding: 2px;
+  gap: 2px;
+}
+.tabs--sm .tabs__tab {
+  padding: 5px 12px;
+  font-size: 13px;
+}
+.hdot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--line);
+  background: transparent;
+  vertical-align: middle;
+}
+.hdot--done {
+  background: var(--green);
+}
+.hdot--partial {
+  background: linear-gradient(to top, var(--partial) 60%, transparent 60%);
+}
+.hdot--due {
+  border-style: dashed;
+}
+.calday__dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 0 4px;
+}
+/* Mapa de calor del mes: cuanto más estudiaste, más se tiñe el día. */
+.calday--heat-1 {
+  background-image: linear-gradient(color-mix(in srgb, var(--green) 10%, transparent), color-mix(in srgb, var(--green) 10%, transparent));
+}
+.calday--heat-2 {
+  background-image: linear-gradient(color-mix(in srgb, var(--green) 20%, transparent), color-mix(in srgb, var(--green) 20%, transparent));
+}
+.calday--heat-3 {
+  background-image: linear-gradient(color-mix(in srgb, var(--green) 30%, transparent), color-mix(in srgb, var(--green) 30%, transparent));
+}
+.calday--heat-4 {
+  background-image: linear-gradient(color-mix(in srgb, var(--green) 42%, transparent), color-mix(in srgb, var(--green) 42%, transparent));
+}
+.calweek {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  align-items: start;
+}
+.calweek__day {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-height: 220px;
+  padding: 6px;
+  background: var(--panel);
+  border: 2px solid var(--line-soft);
+}
+.calweek__day.is-today {
+  border-color: var(--red);
+}
+.calweek__day.is-selected {
+  border-color: var(--line);
+  box-shadow: var(--sh-sm);
+}
+.calweek__day.is-over {
+  background: color-mix(in srgb, var(--yellow) 30%, var(--panel));
+}
+.calweek__day.is-past {
+  opacity: 0.92;
+}
+.calweek__head {
+  display: grid;
+  gap: 1px;
+  justify-items: start;
+  padding: 2px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.calweek__wd {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--muted);
+}
+.calweek__num {
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+}
+.calweek__min {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--green);
+}
+.calweek__items {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.calweek__habit {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 3px 5px;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--panel-2);
+  border: 2px dashed var(--line-soft);
+}
+.calweek__habit.is-done {
+  background: var(--green);
+  border: 2px solid var(--line);
+  color: #fff;
+}
+.calweek__habit.is-partial {
+  border: 2px solid var(--line);
+  background: linear-gradient(to right, var(--partial) var(--p, 50%), var(--panel-2) var(--p, 50%));
+  color: #1a1a2e;
+}
+.calweek__hname {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.calweek__hval {
+  flex: none;
+}
+@media (max-width: 760px) {
+  .calweek {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .calweek__day {
+    min-height: 0;
+  }
+}
+.dayminutes {
+  font-weight: 800;
+  color: var(--green);
+}
+.dayhabit {
+  gap: 10px;
+}
+.dayhabit__text {
+  min-width: 0;
+  flex: 1;
+}
+.tray {
+  display: grid;
+  gap: 6px;
+}
+.tray__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tray__list .chip-task {
+  width: auto;
+  max-width: 100%;
+}
+
+/* ---------- Dashboard de Progreso ----------
+ * Color de las gráficas: el azul del hábito (slot 1) validado con la herramienta de paletas contra la
+ * superficie clara (#fffdf3) y la oscura (#1b1b3a). Una sola serie por gráfica, así que basta un tono. */
+.dash {
+  --viz-1: #0f6fd6;
+  --viz-1-soft: color-mix(in srgb, #0f6fd6 45%, var(--panel));
+  --viz-grid: color-mix(in srgb, var(--line-soft) 70%, var(--panel));
+  --viz-axis: var(--line-soft);
+  --viz-up: #006300;
+  --viz-down: #b4231f;
+}
+:root[data-theme='dark'] .dash {
+  --viz-1: #3d8fe8;
+  --viz-1-soft: color-mix(in srgb, #3d8fe8 50%, var(--panel));
+  --viz-up: #4fd06a;
+  --viz-down: #ff8a85;
+}
+.dashhero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 24px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .dashhero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.dashhero__main {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+.dashhero__figure {
+  font-family: var(--font-body);
+  font-size: clamp(48px, 7vw, 64px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.kpi {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 12px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+  min-width: 0;
+}
+.kpi__label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.kpi__value {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+.kpi__delta {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.kpi__delta.is-up {
+  color: var(--viz-up);
+}
+.kpi__delta.is-down {
+  color: var(--viz-down);
+}
+.spark {
+  width: 96px;
+  height: 28px;
+  overflow: visible;
+}
+.spark__line {
+  fill: none;
+  stroke: var(--viz-1-soft);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.chartcard {
+  gap: 10px;
+}
+.chartcard__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.chartcard__title {
+  font-size: 16px;
+  font-weight: 900;
+}
+.chartcard__table {
+  overflow-x: auto;
+}
+.chartcard__table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.chartcard__table th,
+.chartcard__table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--viz-grid);
+}
+.chartcard__table td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.chartcard__table thead th {
+  font-size: 12px;
+  color: var(--muted);
+}
+.viz-wrap {
+  position: relative;
+}
+.viz-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.viz-svg:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+.viz-grid {
+  stroke: var(--viz-grid);
+  stroke-width: 1;
+}
+.viz-axis {
+  stroke: var(--viz-axis);
+  stroke-width: 1;
+}
+.viz-tick {
+  fill: var(--muted);
+  font-size: 11px;
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+.viz-line {
+  fill: none;
+  stroke: var(--viz-1);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.viz-area {
+  fill: var(--viz-1);
+  fill-opacity: 0.1;
+}
+.viz-dot {
+  fill: var(--viz-1);
+}
+.viz-ring {
+  fill: var(--panel);
+}
+.viz-cross {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+.viz-endlabel {
+  fill: var(--text);
+  font-size: 12px;
+  font-weight: 900;
+  font-family: var(--font-body);
+}
+.viz-col {
+  fill: var(--viz-1-soft);
+  transition: fill 0.12s;
+}
+.viz-col.is-last {
+  fill: var(--viz-1);
+}
+.viz-col.is-hover {
+  fill: var(--viz-1);
+}
+.viz-svg rect:focus-visible {
+  outline: 2px solid var(--yellow);
+}
+.viz-tip {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  gap: 1px;
+  transform: translate(-50%, calc(-100% - 12px));
+  padding: 6px 10px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.viz-tip strong {
+  font-size: 15px;
+  font-weight: 900;
+}
+.viz-tip span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.hbars {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.hbars__row {
+  display: grid;
+  grid-template-columns: minmax(70px, 30%) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+.hbars__label {
+  font-size: 13px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hbars__track {
+  display: block;
+  height: 24px;
+  background: color-mix(in srgb, var(--viz-1) 8%, transparent);
+}
+.hbars__bar {
+  display: block;
+  height: 100%;
+  background: var(--viz-1);
+  border-radius: 0 4px 4px 0;
+}
+.hbars__value {
+  font-size: 13px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+  text-align: right;
+}
+.hbars__note {
+  font-weight: 700;
+  color: var(--muted);
+}
+@media (max-width: 560px) {
+  .hbars__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .hbars__track {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .viz-col {
+    transition: none;
+  }
+}
+.kpis {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 560px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Dashboard con alma de videojuego ----------
+ * Los datos siguen leyéndose igual (una escala, marcas finas), pero el marco es del juego: fuente pixel
+ * en títulos y cifras, sombra dura, barras de vida, ladrillos en las columnas y estrella de récord. */
+.dashhero__figure {
+  font-family: var(--font-pixel);
+  font-size: clamp(26px, 4.4vw, 40px);
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+.kpi__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kpi {
+  border: 2px solid var(--line);
+  box-shadow: var(--sh-sm);
+}
+.kpi__value {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  line-height: 1.4;
+}
+.dashhero__level {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+}
+.dashhero__levelhead {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.chartcard {
+  box-shadow: var(--sh);
+}
+.chartcard__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.viz-star {
+  fill: var(--yellow);
+  stroke: var(--line);
+  stroke-width: 1.5;
+  stroke-linejoin: miter;
+}
+.viz-record {
+  fill: var(--text);
+  font-family: var(--font-pixel);
+  font-size: 9px;
+}
+.viz-seam {
+  fill: var(--panel);
+}
+.viz-col {
+  rx: 0;
+}
+/* Barras de vida: la barra y su riel se parten en segmentos de 10px con una costura de 2px. */
+.hbars__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hbars__label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hbars__track {
+  position: relative;
+  border: 2px solid var(--line);
+  height: 26px;
+}
+.hbars__track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 10px, var(--panel) 10px 12px);
+  pointer-events: none;
+}
+.hbars__bar {
+  border-radius: 0;
+}
+.hbars__value {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+}
+.hbars__note {
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+.medals {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.medal {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px 6px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  background: var(--panel-2);
+  border: 2px solid var(--line);
+  box-shadow: var(--sh-sm);
+  transition: transform 0.08s steps(2);
+}
+.medal:hover {
+  transform: translate(-2px, -2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .medal {
+    transition: none;
+  }
+}

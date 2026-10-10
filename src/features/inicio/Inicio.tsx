@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { addDays, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
+import { addDays, daysLeftLabel, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
 import { computeStreak, isCounter, isDueOn, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
-import { dailyMissions, isReadyToFinish, missionParts, missionUrgency, tips, type Mission } from '@/core/missions';
+import { dailyMissions, daySummary, isReadyToFinish, missionParts, missionUrgency, taskBucket, tips, type Mission, type TaskBucket } from '@/core/missions';
 import { dueReviews } from '@/core/review';
 import { isBoss } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
@@ -86,6 +86,9 @@ function MissionRow({ m }: { m: Mission }) {
           </button>
         )}
       </div>
+      {m.kind === 'task' && !m.done && m.task.dueDate && (
+        <Tag tone={m.task.dueDate < today() ? 'red' : m.task.dueDate === today() ? 'blue' : 'plain'}>{daysLeftLabel(m.task.dueDate)}</Tag>
+      )}
       <Tag tone={m.done ? 'plain' : 'xp'}>+{m.xp} XP</Tag>
       {ready && <span className="mission__ready">¡Todo listo! Pulsa ✔ para terminarla.</span>}
       {open && parts.length > 0 && (
@@ -114,6 +117,34 @@ const SORTS: { value: MissionSort; label: string }[] = [
 /** Cuántas misiones se enseñan de entrada; el resto queda tras «Ver más». */
 const SHOW_ALL_TAB = 3;
 const SHOW_ONE_TAB = 6;
+
+const BUCKETS: { id: TaskBucket; label: string }[] = [
+  { id: 'late', label: 'Vencidas · hazlas primero' },
+  { id: 'today', label: 'Tareas para hoy' },
+  { id: 'soon', label: 'Próximos 7 días' },
+  { id: 'later', label: 'Más adelante' },
+  { id: 'none', label: 'Sin fecha' },
+];
+
+/** Una frase que responde «¿qué hago hoy?» antes de ver la lista. */
+function TodayBrief({ missions }: { missions: Mission[] }) {
+  const s = daySummary(missions);
+  const parts: string[] = [];
+  if (s.late) parts.push(`${s.late} ${s.late === 1 ? 'tarea vencida' : 'tareas vencidas'}`);
+  if (s.dueToday) parts.push(`${s.dueToday} ${s.dueToday === 1 ? 'tarea vence hoy' : 'tareas vencen hoy'}`);
+  if (s.habits) parts.push(`${s.habits} ${s.habits === 1 ? 'hábito' : 'hábitos'}`);
+  const nothing = parts.length === 0;
+  return (
+    <div className={cx('brief', s.late > 0 && 'brief--late')}>
+      <p className="brief__main">{nothing ? '¡Hoy no tienes nada urgente!' : <>Hoy te toca: <b>{parts.join(' · ')}</b></>}</p>
+      {s.next && (
+        <p className="muted small">
+          Siguiente fecha: <b>{s.next.title}</b> · {daysLeftLabel(s.next.dueDate)?.toLowerCase()} ({shortDate(s.next.dueDate as string)})
+        </p>
+      )}
+    </div>
+  );
+}
 
 /** Ordena sin mover lo hecho de sitio: lo pendiente va primero y, dentro, el criterio elegido. */
 function sortMissions(items: Mission[], sort: MissionSort): Mission[] {
@@ -163,10 +194,16 @@ function MissionTabs({ missions }: { missions: Mission[] }) {
     { id: 'habit', label: 'Hábitos', sprite: 'flower', kind: 'habit' },
     { id: 'task', label: 'Tareas', sprite: 'qblock', kind: 'task' },
   ];
-  const groups = [
-    { kind: 'habit', label: 'Hábitos de hoy', sprite: 'flower' as const, items: habits },
-    { kind: 'task', label: 'Tareas', sprite: 'qblock' as const, items: tasks },
-  ].filter((g) => g.items.length > 0);
+  // Las tareas se agrupan por cuándo tocan, para ver de un vistazo qué es de hoy y qué puede esperar.
+  const taskGroups = BUCKETS.map((b) => ({
+    kind: 'task',
+    id: b.id,
+    label: b.label,
+    sprite: 'qblock' as const,
+    limit: b.id === 'late' || b.id === 'today' ? 8 : SHOW_ALL_TAB,
+    items: tasks.filter((m) => m.kind === 'task' && taskBucket(m.task) === b.id),
+  }));
+  const groups = [{ kind: 'habit', id: 'habit', label: 'Hábitos de hoy', sprite: 'flower' as const, limit: SHOW_ALL_TAB, items: habits }, ...taskGroups].filter((g) => g.items.length > 0);
   const current = tab === 'habit' ? habits : tab === 'task' ? tasks : [...habits, ...tasks];
   return (
     <>
@@ -199,11 +236,11 @@ function MissionTabs({ missions }: { missions: Mission[] }) {
           <p className="muted">{onlyPending ? '¡Todo lo de hoy está hecho!' : tab === 'habit' ? 'Hoy no te toca ningún hábito.' : 'No tienes tareas pendientes para hoy.'}</p>
         ) : tab === 'all' ? (
           groups.map((g) => (
-            <section key={g.kind} className={cx('mgroup', `mgroup--${g.kind}`)} aria-label={g.label}>
+            <section key={g.id} className={cx('mgroup', `mgroup--${g.kind}`)} aria-label={g.label}>
               <h3 className="mgroup__title">
                 <Sprite name={g.sprite} size={16} /> {g.label}
               </h3>
-              <MissionList key={`${g.kind}-${sort}-${onlyPending}`} items={g.items} limit={SHOW_ALL_TAB} />
+              <MissionList key={`${g.id}-${sort}-${onlyPending}`} items={g.items} limit={g.limit} />
             </section>
           ))
         ) : (
@@ -473,7 +510,10 @@ export default function Inicio() {
                   <p>No hay nada pendiente para hoy.</p>
                 </Empty>
               ) : (
-                <MissionTabs missions={missions} />
+                <>
+                  <TodayBrief missions={missions} />
+                  <MissionTabs missions={missions} />
+                </>
               )}
               <div className="row row--top">
                 <Link className="btn btn--ghost" to="/tareas">

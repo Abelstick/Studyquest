@@ -67,6 +67,44 @@ export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {
 /** Cuánto apremia una misión: los hábitos de hoy cuentan como «hoy» (0); las tareas, por los días que faltan. */
 export const missionUrgency = (m: Mission, now: ISODate = today()): number => (m.kind === 'habit' ? 0 : m.task.dueDate ? diffDays(m.task.dueDate, now) : 30);
 
+/** Cuándo toca una tarea: vencida, hoy, en los próximos 7 días, más adelante o sin fecha. Las hechas hoy cuentan como «hoy». */
+export type TaskBucket = 'late' | 'today' | 'soon' | 'later' | 'none';
+
+export function taskBucket(t: Task, now: ISODate = today()): TaskBucket {
+  if (t.status === 'done') return 'today';
+  if (!t.dueDate) return 'none';
+  const n = diffDays(t.dueDate, now);
+  return n < 0 ? 'late' : n === 0 ? 'today' : n <= 7 ? 'soon' : 'later';
+}
+
+export interface DaySummary {
+  late: number;
+  dueToday: number;
+  habits: number;
+  /** La tarea con fecha más cercana que aún no vence hoy, para saber qué viene después. */
+  next: Task | null;
+}
+
+/** Resumen de «qué hago hoy»: cuántas vencidas, cuántas vencen hoy y cuántos hábitos faltan. */
+export function daySummary(missions: Mission[], now: ISODate = today()): DaySummary {
+  let late = 0;
+  let dueToday = 0;
+  let habits = 0;
+  let next: Task | null = null;
+  for (const m of missions) {
+    if (m.done) continue;
+    if (m.kind === 'habit') {
+      habits++;
+      continue;
+    }
+    const b = taskBucket(m.task, now);
+    if (b === 'late') late++;
+    else if (b === 'today') dueToday++;
+    else if (m.task.dueDate && (!next || m.task.dueDate < (next.dueDate as string))) next = m.task;
+  }
+  return { late, dueToday, habits, next };
+}
+
 export interface Tip {
   title: string;
   body: string;

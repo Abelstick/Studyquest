@@ -3579,6 +3579,19 @@ select.input {
 .home .mission.is-done {
   opacity: 0.7;
 }
+.brief {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  background: var(--panel);
+}
+.brief--late {
+  border-color: var(--red, #dc2626);
+}
+.brief__main {
+  margin: 0 0 2px;
+  font-size: 15px;
+}
 .home .mgroup + .mgroup {
   margin-top: 16px;
 }

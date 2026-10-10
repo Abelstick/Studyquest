@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Habit, Snapshot, Task } from './domain';
-import { dailyMissions, missionUrgency } from './missions';
+import { dailyMissions, daySummary, missionUrgency, taskBucket } from './missions';
 
 const NOW = '2026-09-16';
 const task = (id: string, dueDate: string | null): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null });
@@ -17,5 +17,22 @@ describe('misiones de hoy', () => {
     const m = dailyMissions({ tasks: [task('a', '2026-09-20'), task('b', null)], habits: [habit], habitLogs: [], courses: [] } as unknown as Snapshot, NOW);
     expect(m[0].kind).toBe('habit');
     expect(missionUrgency(m[0], NOW)).toBe(0);
+  });
+});
+
+describe('qué hacer hoy', () => {
+  it('clasifica las tareas por cuándo tocan', () => {
+    expect(taskBucket(task('a', '2026-09-15'), NOW)).toBe('late');
+    expect(taskBucket(task('b', NOW), NOW)).toBe('today');
+    expect(taskBucket(task('c', '2026-09-23'), NOW)).toBe('soon');
+    expect(taskBucket(task('d', '2026-09-24'), NOW)).toBe('later');
+    expect(taskBucket(task('e', null), NOW)).toBe('none');
+  });
+
+  it('resume vencidas, las de hoy y la siguiente fecha', () => {
+    const s = { habits: [], habitLogs: [], courses: [], tasks: [task('a', '2026-09-14'), task('b', NOW), task('c', '2026-09-30'), task('d', '2026-09-20')] } as unknown as Snapshot; // solo hacen falta estos campos
+    const sum = daySummary(dailyMissions(s, NOW), NOW);
+    expect(sum).toMatchObject({ late: 1, dueToday: 1, habits: 0 });
+    expect(sum.next?.id).toBe('d');
   });
 });

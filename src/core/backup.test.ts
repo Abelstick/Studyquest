@@ -3,6 +3,7 @@ import { BACKUP_VERSION, buildBackup, parseBackup, summarize } from './backup';
 import { buildDemo } from './seed';
 import { defaultProfile } from './game';
 import { today } from './dates';
+import type { Difficulty } from './domain';
 
 const demo = () => buildDemo(defaultProfile('u1'), today());
 const roundtrip = (data = demo()) => parseBackup(JSON.stringify(buildBackup(data)), 'u2');
@@ -52,6 +53,32 @@ describe('copia de seguridad', () => {
     if (!res.ok) return;
     expect(res.snapshot.habits[0].reminderRepeatMin).toBe(15);
     expect(res.snapshot.habits[1].reminderRepeatMin).toBeUndefined();
+  });
+
+  it('un mal hábito a dejar conserva su tipo y sus recaídas, y descarta fechas inválidas', () => {
+    const file = buildBackup(demo());
+    file.data.habits[0].kind = 'quit';
+    file.data.habits[0].slips = ['2026-09-20', '2026-09-20', 'ayer', '2026-08-01'];
+    const res = parseBackup(JSON.stringify(file));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.snapshot.habits[0].kind).toBe('quit');
+    expect(res.snapshot.habits[0].slips).toEqual(['2026-08-01', '2026-09-20']);
+    expect(res.snapshot.habits[1].kind).toBeUndefined();
+    expect(res.snapshot.habits[1].slips).toBeUndefined();
+  });
+
+  it('la dificultad de tareas y hábitos viaja en la copia, y un valor inventado se descarta', () => {
+    const file = buildBackup(demo());
+    file.data.tasks[0].difficulty = 'epic';
+    file.data.tasks[1].difficulty = 'imposible' as unknown as Difficulty; // simula un archivo manipulado a mano
+    file.data.habits[0].difficulty = 'hard';
+    const res = parseBackup(JSON.stringify(file));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.snapshot.tasks[0].difficulty).toBe('epic');
+    expect(res.snapshot.tasks[1].difficulty).toBeUndefined();
+    expect(res.snapshot.habits[0].difficulty).toBe('hard');
   });
 
   it('rechaza lo que no es una copia de StudyQuest', () => {

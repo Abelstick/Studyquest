@@ -42,6 +42,8 @@ const num = (v: unknown, fallback = 0) => (typeof v === 'number' && Number.isFin
  * (elementos descartados, ids arreglados…). Todo id se convierte en UUID válido para que cualquier
  * base de datos lo acepte; las referencias (curso ↔ tarea, hábito ↔ registro) se reescriben a juego.
  */
+const DIFFICULTY_IDS = ['easy', 'normal', 'hard', 'epic'];
+
 export function parseBackup(text: string, userId = 'imported'): ParseResult {
   let raw: unknown;
   try {
@@ -116,6 +118,8 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     return {
       id: fixId(o.id), title: str(o.title), frequency: o.frequency, measure: str(o.measure, 'times'), target: Math.max(1, num(o.target, 1)), xp: num(o.xp, 10),
       ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
+      ...(DIFFICULTY_IDS.includes(str(o.difficulty)) ? { difficulty: str(o.difficulty) } : {}),
+      ...(o.kind === 'quit' ? { kind: 'quit', slips: [...new Set(asArray(o.slips).filter((d): d is string => typeof d === 'string' && DATE.test(d)))].sort() } : {}),
       reminder: /^\d{2}:\d{2}$/.test(str(o.reminder)) ? str(o.reminder) : null,
       ...(typeof o.reminderRepeatMin === 'number' && o.reminderRepeatMin >= 0 && o.reminderRepeatMin <= 240 ? { reminderRepeatMin: o.reminderRepeatMin } : {}),
       steps: subs(o.steps, (s) => ({ id: fixId(s.id), title: str(s.title, 'Paso'), minutes: num(s.minutes) })),
@@ -137,6 +141,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       tags: asArray(o.tags).filter((t): t is string => typeof t === 'string'), createdAt: str(o.createdAt, new Date().toISOString()),
       completedAt: DATE.test(str(o.completedAt)) ? str(o.completedAt) : null,
       ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
+      ...(DIFFICULTY_IDS.includes(str(o.difficulty)) ? { difficulty: str(o.difficulty) } : {}),
       ...(isObj(o.recurrence) && ['day', 'week', 'month'].includes(str(o.recurrence.unit)) ? { recurrence: { unit: str(o.recurrence.unit), interval: Math.min(365, Math.max(1, Math.floor(num(o.recurrence.interval, 1)))) } } : {}),
       spawnedRaw: str(o.spawnedId),
     };

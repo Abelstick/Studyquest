@@ -71,6 +71,7 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 | **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
 | **Pomodoro** | Temporizador de enfoque/descanso con **música 8-bit** y un personaje que **corre mientras estudias**. Sigue vivo al cambiar de pantalla. |
 | **Hábitos** | Frecuencia (diaria, días concretos, cada X días, semanal, mensual, **fechas concretas, anual y personalizada** «N veces por semana/mes»), recordatorio con **aviso repetido y sonido**, medición (minutos, páginas, veces, hecho/no hecho…), pasos de sesión, mapa de 12 semanas y aviso del día en que más fallas. Los días pasados de la tira semanal se pueden marcar, por si te olvidaste. |
+| **Dejar un mal hábito** | Al crear un hábito eliges **«Dejar un mal hábito»** (mirar el celular en la cama, picar entre comidas…). Cada día pulsas **«Hoy resistí»** y ganas su XP, igual que un hábito normal; si recaes, **«Recaí»** devuelve el XP de ese día y el contador de **días limpio** vuelve a 0 (con tu mejor racha y el siguiente hito). «Fue un error» deshace la recaída. Es siempre diario, tiene recordatorio y viaja en las copias de seguridad. |
 | **Cadenas de hábitos** | Encadena una rutina en orden (dormir temprano → levantarse → ejercicio → estudio → proyecto). Cada eslabón es la **señal** del siguiente: la app te dice cuál toca ahora y a cuál va después, en Hábitos y en la misión de Inicio. **Nunca bloquea** —puedes registrar cualquier hábito cuando quieras— y completar la cadena entera en un día da **+100 XP**. |
 | **Metas** | Árbol de hitos con habilidades y recompensa final. |
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
@@ -291,6 +292,8 @@ Pantalla **Planificador** (o el botón «Planificar con el asistente» en Metas)
 
 Al pulsar **Crear mi plan** se crean, de una vez: un **curso** con módulos y temas, una **meta** con un hito por módulo (y sus habilidades), **una tarea por módulo y semana** con fecha (aparecen en el calendario), el proyecto final como **jefe** con sus pasos como golpes, y un **hábito** «Estudiar …» en tus días libres.
 
+**¿Pasaron días sin usar la app?** Si tienes 2 o más tareas con la fecha vencida, Inicio y Tareas muestran «Retomar mi plan», que abre *Ajustar plazos* para todas tus tareas. Primero marcas **cuáles ya hiciste** (se completan y dan su XP como siempre; se pueden reabrir). Para cobrarlas hay que aceptar un **contrato de honor**: sin esa casilla no se completa ninguna. Con las que siguen atrasadas eliges: **mover todo el plan** para que empiece hoy conservando el espaciado entre tareas, o **repartir solo las atrasadas**, una por día, sin tocar lo que viene. También puedes cambiar el ritmo y ves cuántas tareas cambian y cuándo terminarías antes de aplicar. Lo ya hecho nunca se mueve. Por curso sigue disponible en su detalle.
+
 **De dónde sale el temario.** El *reparto en el tiempo* lo calcula siempre código propio (probado con tests, sin IA). El *temario* puede venir de:
 
 | Origen | Cuándo | Coste |
@@ -416,6 +419,7 @@ Los bonos se cobran **una sola vez** (se anotan en el perfil): deshacer y rehace
 | **Monedas** | 1 moneda por cada 4 XP. Subir de nivel da +500. Cada logro da su premio. |
 | **Tarea** | Da su XP al pasar a *Superada*. Reabrirla lo devuelve. Prioridad: baja 20 · media 35 · alta 50 · jefe final 120 (+50 de botín al derrotarlo). |
 | **Hábito** | Da su XP al alcanzar el objetivo del día, **una sola vez**. Bajar del objetivo lo devuelve. |
+| **Dificultad** | Tareas y hábitos tienen nivel **Fácil (×0,5) · Normal (×1) · Difícil (×1,5) · Épica (×2)**. No cambia las reglas: propone el XP (el de la prioridad en una tarea, 30 en un hábito) multiplicado por el nivel, redondeado a múltiplos de 5, y ese XP es el que se cobra y se devuelve al deshacer. Si ya personalizaste el XP a mano, cambiar la dificultad no lo pisa. |
 | **Tema de curso** | XP del módulo repartido entre sus temas. |
 | **Sesión de estudio** | 2 XP por minuto (también cada Pomodoro de enfoque). |
 | **Repaso** | +10 XP por repaso superado; +40 más al dominar el tema. |

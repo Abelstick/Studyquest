@@ -52,6 +52,25 @@ export function shiftTasks(tasks: Pick<Task, 'id' | 'dueDate' | 'status'>[], fac
   return shifts;
 }
 
+/**
+ * Mueve el plan entero para que empiece hoy, conservando el espaciado entre tareas (y escalándolo con `factor`).
+ * Sirve cuando se creó un plan y pasaron días sin usar la app: la forma del plan (una cosa por semana, un módulo
+ * tras otro) sigue igual y solo cambia el punto de partida. Si la primera pendiente no está vencida, no hay nada que mover.
+ * Las hechas y las que no tienen fecha no se tocan. Devuelve solo las que cambian de día.
+ */
+export function slidePlan(tasks: Pick<Task, 'id' | 'dueDate' | 'status'>[], factor: number, now: ISODate = today()): Shift[] {
+  const pending = tasks.filter((t) => t.status !== 'done' && t.dueDate);
+  if (!pending.length) return [];
+  const start = pending.reduce((m, t) => ((t.dueDate as ISODate) < m ? (t.dueDate as ISODate) : m), pending[0].dueDate as ISODate);
+  if (start >= now) return shiftTasks(tasks, factor, now);
+  const shifts: Shift[] = [];
+  for (const t of pending) {
+    const next = addDays(now, scaleDays(diffDays(t.dueDate as ISODate, start), factor));
+    if (next !== t.dueDate) shifts.push({ id: t.id, dueDate: next });
+  }
+  return shifts;
+}
+
 /** Tareas pendientes con la fecha ya vencida. */
 export const overdueOf = (tasks: Pick<Task, 'dueDate' | 'status'>[], now: ISODate = today()): number =>
   tasks.filter((t) => t.status !== 'done' && t.dueDate && t.dueDate < now).length;

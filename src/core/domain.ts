@@ -104,7 +104,11 @@ export interface Task {
   recurrence?: Recurrence;
   /** Tarea que nació al completar esta (si se reabre y sigue sin tocar, se elimina). */
   spawnedId?: ID;
+  /** Qué tan exigente es. Solo ajusta el XP que se propone al crearla; el XP que cuenta es `xp`. Sin definir = normal. */
+  difficulty?: Difficulty;
 }
+
+export type Difficulty = 'easy' | 'normal' | 'hard' | 'epic';
 
 /* ---------- Hábitos ---------- */
 export type Frequency =
@@ -144,6 +148,12 @@ export interface Habit {
   createdAt: ISODateTime;
   /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
   planId?: ID;
+  /** `quit` = un mal hábito que quieres dejar: «hecho» significa «hoy resistí». Sin definir = hábito normal. */
+  kind?: 'build' | 'quit';
+  /** Días (locales) en que recaíste, de un hábito `quit`. De ahí salen los días limpio. */
+  slips?: ISODate[];
+  /** Qué tan exigente es. Solo ajusta el XP que se propone al crearlo; el XP que cuenta es `xp`. Sin definir = normal. */
+  difficulty?: Difficulty;
 }
 
 /**

@@ -4,6 +4,7 @@ import { computeStreak, frequencyLabel, goalLabel, isDueOn, isHabitDone, logFor 
 import { lastActivityByCourse, weeklyReport } from './stats';
 import { dueReviews } from './review';
 import { quotaText } from './periods';
+import { isQuit } from './quit';
 
 export type Mission =
   | { kind: 'task'; id: string; title: string; subtitle: string; xp: number; done: boolean; task: Task }
@@ -42,7 +43,7 @@ export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {
       kind: 'habit' as const,
       id: `h:${h.id}`,
       title: h.title,
-      subtitle: `Hábito · ${quotaText(h, s.habitLogs, now) ?? frequencyLabel(h.frequency)} · ${goalLabel(h)}`,
+      subtitle: isQuit(h) ? 'Mal hábito a dejar · marca si hoy resististe' : `Hábito · ${quotaText(h, s.habitLogs, now) ?? frequencyLabel(h.frequency)} · ${goalLabel(h)}`,
       xp: h.xp,
       done: isHabitDone(h, logFor(s.habitLogs, h.id, now)),
       habit: h,

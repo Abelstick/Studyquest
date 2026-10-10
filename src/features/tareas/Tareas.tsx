@@ -7,7 +7,9 @@ import type { Priority, Task, TaskStatus } from '@/core/domain';
 import { bossHp, isBoss, recurrenceLabel } from '@/core/tasks';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
+import { difficultyInfo, difficultyOf } from '@/core/difficulty';
 import { Bar, Button, Empty, PageHead, cx } from '@/ui/kit';
+import { LateBanner } from './LateBanner';
 import { Sprite } from '@/ui/Sprite';
 
 const COLUMNS: { status: TaskStatus; title: string; sprite: 'qblock' | 'flower' | 'star' }[] = [
@@ -75,6 +77,7 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
         {task.status !== 'done' && daysLeft && <span className={cx('tag', overdue ? 'tag--red' : soon ? 'tag--xp' : 'tag--plain')}>{daysLeft}</span>}
         {task.estimateMin > 0 && <span className="tag tag--plain">{task.estimateMin >= 60 ? `${+(task.estimateMin / 60).toFixed(1)} h` : `${task.estimateMin} min`}</span>}
         <span className="tag tag--plain">{PRIORITY_LABEL[task.priority]}</span>
+        {difficultyOf(task) !== 'normal' && <span className="tag tag--xp" title={difficultyInfo(difficultyOf(task)).hint}>{difficultyInfo(difficultyOf(task)).label}</span>}
         {task.recurrence && <span className="tag tag--blue" title="Al completarla se crea la siguiente">↻ {recurrenceLabel(task.recurrence)}</span>}
         {task.subtasks.length > 0 && (
           <button type="button" className={cx('tag tag--btn', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open}>
@@ -157,6 +160,7 @@ export default function Tareas() {
           </>
         }
       />
+      <LateBanner />
       {tasks.length === 0 ? (
         <div className="panel">
           <Empty sprite="qblock" title="Bloque ? sin romper">

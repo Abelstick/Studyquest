@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { newId, shortDate, today, WEEKDAYS_SHORT } from '@/core/dates';
-import type { Frequency, Habit, Measure } from '@/core/domain';
+import type { Difficulty, Frequency, Habit, Measure } from '@/core/domain';
 import { Button, ChipGroup, Field, Modal, cx, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
+import { isQuit } from '@/core/quit';
+import { DIFFICULTIES, HABIT_BASE_XP, difficultyInfo, difficultyOf, xpForDifficulty } from '@/core/difficulty';
 
 const FREQS: { value: Frequency['type']; label: string }[] = [
   { value: 'daily', label: 'Todos los días' },
@@ -28,6 +30,11 @@ const MEASURES: { value: Measure; label: string }[] = [
 ];
 const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
+const KINDS = [
+  { value: 'build', label: 'Crear un hábito' },
+  { value: 'quit', label: 'Dejar un mal hábito' },
+];
+
 const REPEATS: { value: number; label: string }[] = [
   { value: 0, label: 'No repetir' },
   { value: 15, label: 'Cada 15 min' },
@@ -43,6 +50,8 @@ export function HabitModal({ id }: { id?: string }) {
   const { habits, createHabit, updateHabit, deleteHabit } = useData();
   const editing = habits.find((h) => h.id === id);
   const f0 = editing?.frequency;
+  // Hábito normal o mal hábito a dejar. No se cambia al editar: el historial de uno no tiene sentido en el otro.
+  const [quit, setQuit] = useState(editing ? isQuit(editing) : false);
 
   const [title, setTitle] = useState(editing?.title ?? '');
   const [freq, setFreq] = useState<Frequency['type']>(f0?.type ?? 'daily');
@@ -56,7 +65,14 @@ export function HabitModal({ id }: { id?: string }) {
   const [per, setPer] = useState<'week' | 'month'>(f0?.type === 'custom' ? f0.per : 'week');
   const [measure, setMeasure] = useState<Measure>(editing?.measure ?? 'minutes');
   const [target, setTarget] = useState(editing?.target ?? 30);
-  const [xp, setXp] = useState(editing?.xp ?? 30);
+  const [difficulty, setDifficulty] = useState<Difficulty>(editing ? difficultyOf(editing) : 'normal');
+  const [xp, setXp] = useState(editing?.xp ?? HABIT_BASE_XP);
+  // Si el XP ya no coincide con el que propone su dificultad, es que lo personalizaste: no se lo pisamos.
+  const [xpTouched, setXpTouched] = useState(!!editing && editing.xp !== xpForDifficulty(HABIT_BASE_XP, difficultyOf(editing)));
+  const pickDifficulty = (d: Difficulty) => {
+    setDifficulty(d);
+    if (!xpTouched) setXp(xpForDifficulty(HABIT_BASE_XP, d));
+  };
   const [reminder, setReminder] = useState(editing?.reminder ?? '');
   const [repeat, setRepeat] = useState(editing?.reminderRepeatMin ?? 30);
   const [steps, setSteps] = useState(editing?.steps.map(stepLine).join('\n') ?? '');
@@ -65,7 +81,7 @@ export function HabitModal({ id }: { id?: string }) {
   const addDate = () => {
     if (dateDraft && !dates.includes(dateDraft)) setDates([...dates, dateDraft].sort());
   };
-  const invalid = !title.trim() || (freq === 'days' && days.length === 0) || (freq === 'dates' && dates.length === 0);
+  const invalid = !title.trim() || (!quit && freq === 'days' && days.length === 0) || (!quit && freq === 'dates' && dates.length === 0);
 
   const buildFrequency = (): Frequency => {
     switch (freq) {
@@ -94,15 +110,18 @@ export function HabitModal({ id }: { id?: string }) {
       const prev = editing?.steps.find((s) => s.title === title);
       return prev ? { ...prev, minutes } : { id: newId(), title, minutes };
     });
+    // Dejar un mal hábito es siempre diario y de «hecho / no hecho» (hoy resistí): no hay nada más que configurar.
     const data = {
       title: title.trim(),
-      frequency: buildFrequency(),
-      measure,
-      target: measure === 'boolean' ? 1 : Math.max(1, target),
+      frequency: quit ? ({ type: 'daily' } as const) : buildFrequency(),
+      measure: quit ? ('boolean' as const) : measure,
+      target: quit || measure === 'boolean' ? 1 : Math.max(1, target),
       xp: Math.max(0, xp),
+      difficulty,
       reminder: reminder || null,
       reminderRepeatMin: repeat,
-      steps: parsedSteps,
+      steps: quit ? [] : parsedSteps,
+      ...(quit ? { kind: 'quit' as const } : {}),
     };
     if (editing) updateHabit(editing.id, data);
     else createHabit(data);
@@ -110,13 +129,19 @@ export function HabitModal({ id }: { id?: string }) {
   };
 
   return (
-    <Modal title={editing ? 'Editar hábito' : 'Nuevo hábito'} kicker="// Habilidad pasiva" onClose={close} wide>
+    <Modal title={editing ? (quit ? 'Editar mal hábito' : 'Editar hábito') : quit ? 'Dejar un mal hábito' : 'Nuevo hábito'} kicker={quit ? '// Romper la maldición' : '// Habilidad pasiva'} onClose={close} wide>
       <form onSubmit={submit} className="form">
         {!editing && <ConceptHint id="habito" />}
-        <Field label="Nombre">{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Estudiar Python" required maxLength={80} />}</Field>
-        <Field label="Frecuencia">{() => <ChipGroup label="Frecuencia" value={freq} options={FREQS} onChange={setFreq} />}</Field>
+        {!editing && (
+          <Field label="¿Qué quieres hacer?">
+            {() => <ChipGroup label="Tipo de hábito" value={quit ? 'quit' : 'build'} options={KINDS} onChange={(v) => setQuit(v === 'quit')} />}
+          </Field>
+        )}
+        {quit && <p className="muted small">Cada día que resistas, lo registras y ganas XP. Si recaes, pulsas «Recaí»: el día no cuenta, el contador de días limpio vuelve a 0 y mañana empiezas de nuevo. Sin culpas.</p>}
+        <Field label={quit ? 'Qué quieres dejar' : 'Nombre'}>{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={quit ? 'Mirar el celular en la cama' : 'Estudiar Python'} required maxLength={80} />}</Field>
+        {!quit && <Field label="Frecuencia">{() => <ChipGroup label="Frecuencia" value={freq} options={FREQS} onChange={setFreq} />}</Field>}
 
-        {freq === 'days' && (
+        {!quit && freq === 'days' && (
           <div className="weekdays" role="group" aria-label="Días de la semana">
             {WEEKDAYS_SHORT.map((d, i) => (
               <button key={d} type="button" aria-pressed={days.includes(i)} className={cx('weekdays__day', days.includes(i) && 'is-on')} onClick={() => toggleDay(i)}>
@@ -125,8 +150,8 @@ export function HabitModal({ id }: { id?: string }) {
             ))}
           </div>
         )}
-        {freq === 'every' && <Field label="Cada cuántos días">{(fid) => <NumberInput id={fid} className="input" min={1} max={60} value={every} onValue={(n) => setEvery(n)}/>}</Field>}
-        {freq === 'dates' && (
+        {!quit && freq === 'every' && <Field label="Cada cuántos días">{(fid) => <NumberInput id={fid} className="input" min={1} max={60} value={every} onValue={(n) => setEvery(n)}/>}</Field>}
+        {!quit && freq === 'dates' && (
           <Field label="Fechas concretas" hint="Añade cada fecha en la que quieras que toque (cumpleaños, exámenes, entregas…).">
             {(fid) => (
               <>
@@ -148,7 +173,7 @@ export function HabitModal({ id }: { id?: string }) {
             )}
           </Field>
         )}
-        {freq === 'yearly' && (
+        {!quit && freq === 'yearly' && (
           <div className="form__row">
             <Field label="Mes">
               {(fid) => (
@@ -164,7 +189,7 @@ export function HabitModal({ id }: { id?: string }) {
             <Field label="Día">{(fid) => <NumberInput id={fid} className="input" min={1} max={31} value={day} onValue={(n) => setDay(n)}/>}</Field>
           </div>
         )}
-        {freq === 'custom' && (
+        {!quit && freq === 'custom' && (
           <div className="form__row">
             <Field label="Veces" hint="Los días que quieras, hasta llegar a esta cifra.">
               {(fid) => <NumberInput id={fid} className="input" min={1} max={31} value={times} onValue={(n) => setTimes(n)}/>}
@@ -180,10 +205,13 @@ export function HabitModal({ id }: { id?: string }) {
           </div>
         )}
 
-        <Field label="Forma de medición">{() => <ChipGroup label="Forma de medición" value={measure} options={MEASURES} onChange={setMeasure} />}</Field>
+        {!quit && <Field label="Forma de medición">{() => <ChipGroup label="Forma de medición" value={measure} options={MEASURES} onChange={setMeasure} />}</Field>}
+        <Field label="Dificultad" hint={`${difficultyInfo(difficulty).hint} Ajusta el XP que propone el hábito; puedes cambiarlo abajo.`}>
+          {() => <ChipGroup label="Dificultad" value={difficulty} options={DIFFICULTIES.map((d) => ({ value: d.value, label: d.label }))} onChange={pickDifficulty} />}
+        </Field>
         <div className="form__row">
-          {measure !== 'boolean' && <Field label="Objetivo">{(fid) => <NumberInput id={fid} className="input" min={1} value={target} onValue={(n) => setTarget(n)}/>}</Field>}
-          <Field label="Recompensa (XP)">{(fid) => <NumberInput id={fid} className="input input--xp" min={0} step={5} value={xp} onValue={(n) => setXp(n)}/>}</Field>
+          {!quit && measure !== 'boolean' && <Field label="Objetivo">{(fid) => <NumberInput id={fid} className="input" min={1} value={target} onValue={(n) => setTarget(n)}/>}</Field>}
+          <Field label="Recompensa (XP)">{(fid) => <NumberInput id={fid} className="input input--xp" min={0} step={5} value={xp} onValue={(n) => { setXp(n); setXpTouched(true); }}/>}</Field>
           <Field label="Recordatorio" hint="Avisa dentro de la app (con sonido) y, si activas los push en Perfil, también con la app cerrada.">
             {(fid) => <input id={fid} className="input" type="time" value={reminder} onChange={(e) => setReminder(e.target.value)} />}
           </Field>

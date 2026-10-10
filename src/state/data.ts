@@ -12,6 +12,7 @@ import { isBoss, spawnNext, taskReward } from '@/core/tasks';
 import { CERT_XP } from '@/core/certifications';
 import { CHAIN_BONUS_XP, chainsToReward, cleanChains } from '@/core/chains';
 import { CATCH_UP_DAYS, canCatchUp } from '@/core/catchup';
+import { isQuit, slippedOn, withSlip, withoutSlip } from '@/core/quit';
 import type { PlanEntities } from '@/core/planner';
 import { describePack, type PackEntities } from '@/core/pack';
 import { planIdsToDelete, type PlanMembers } from '@/core/plans';
@@ -49,6 +50,10 @@ export interface DataState extends Data {
   createHabit: (draft: Omit<Habit, 'id' | 'createdAt' | 'startDate'>) => void;
   updateHabit: (id: ID, patch: Partial<Omit<Habit, 'id'>>) => void;
   deleteHabit: (id: ID) => void;
+  /** Hábito a dejar: anota que hoy recaíste (y devuelve el XP de hoy si ya lo habías registrado). */
+  recordSlip: (habitId: ID) => void;
+  /** Deshace la recaída de hoy (por si fue un error al pulsar). */
+  undoSlip: (habitId: ID) => void;
   setHabitValue: (habitId: ID, value: number) => void;
   /** Marca (o desmarca) un hábito en un día que ya pasó, por si se te olvidó marcarlo. */
   setHabitValueOn: (habitId: ID, date: ISODate, value: number) => void;
@@ -464,10 +469,29 @@ export function createDataStore(repo: Repository) {
         );
         sfx.stomp();
       },
+      recordSlip(habitId) {
+        const h = get().habits.find((x) => x.id === habitId);
+        const date = today();
+        if (!h || !isQuit(h) || slippedOn(h, date)) return;
+        // Si ya habías marcado «hoy resistí», primero se devuelve ese XP: el día no cuenta como logrado.
+        if ((logFor(get().habitLogs, habitId, date)?.value ?? 0) > 0) get().setHabitValue(habitId, 0);
+        get().updateHabit(habitId, { slips: withSlip(h.slips, date) });
+        useUi.getState().toast({ kind: 'info', title: 'Una recaída no borra lo que avanzaste', body: `Mañana empieza otro día limpio de "${h.title}".` });
+      },
+      undoSlip(habitId) {
+        const h = get().habits.find((x) => x.id === habitId);
+        const date = today();
+        if (!h || !isQuit(h) || !slippedOn(h, date)) return;
+        get().updateHabit(habitId, { slips: withoutSlip(h.slips, date) });
+      },
       setHabitValue(habitId, rawValue) {
         const h = get().habits.find((x) => x.id === habitId);
         if (!h) return;
         const date = today();
+        // El store no se fía de la pantalla: tras una recaída hoy no se puede registrar «resistí».
+        if (isQuit(h) && slippedOn(h, date) && rawValue > 0) {
+          return notifyError('Hoy anotaste una recaída', 'Si fue un error, deshaz la recaída y luego registra el día.');
+        }
         const prev = logFor(get().habitLogs, habitId, date);
         const value = Math.max(0, rawValue);
         const log: HabitLog = { id: prev?.id ?? newId(), habitId, date, value, stepsDone: prev?.stepsDone ?? [] };

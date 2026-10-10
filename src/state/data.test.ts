@@ -96,6 +96,67 @@ describe('store de datos', () => {
     expect(store.getState().profile.xp).toBe(0);
   });
 
+  describe('dejar un mal hábito', () => {
+    const quit = () => {
+      store.getState().createHabit({ title: 'Mirar el celular en la cama', kind: 'quit', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 30, reminder: null, steps: [] });
+      return store.getState().habits[0].id;
+    };
+
+    it('«hoy resistí» da el XP del hábito, como cualquier hábito', () => {
+      const id = quit();
+      store.getState().setHabitValue(id, 1);
+      expect(store.getState().profile.xp).toBe(30);
+    });
+
+    it('«recaí» anota el día, devuelve el XP de hoy y reinicia los días limpio', () => {
+      const id = quit();
+      store.getState().updateHabit(id, { startDate: addDays(today(), -5) });
+      store.getState().setHabitValue(id, 1);
+      store.getState().recordSlip(id);
+      const h = store.getState().habits[0];
+      expect(h.slips).toEqual([today()]);
+      expect(store.getState().habitLogs[0].value).toBe(0);
+      expect(store.getState().profile.xp).toBe(0);
+    });
+
+    it('recaer dos veces el mismo día no duplica nada', () => {
+      const id = quit();
+      store.getState().recordSlip(id);
+      store.getState().recordSlip(id);
+      expect(store.getState().habits[0].slips).toEqual([today()]);
+    });
+
+    it('tras una recaída hoy, el store no deja registrar «resistí» (aunque la pantalla lo permitiera)', () => {
+      const id = quit();
+      store.getState().recordSlip(id);
+      store.getState().setHabitValue(id, 1);
+      expect(store.getState().profile.xp).toBe(0);
+      expect(store.getState().habitLogs.every((l) => l.value === 0)).toBe(true);
+    });
+
+    it('«fue un error» quita la recaída y se puede registrar el día otra vez', () => {
+      const id = quit();
+      store.getState().recordSlip(id);
+      store.getState().undoSlip(id);
+      expect(store.getState().habits[0].slips).toEqual([]);
+      store.getState().setHabitValue(id, 1);
+      expect(store.getState().profile.xp).toBe(30);
+    });
+
+    it('las recaídas solo existen en hábitos a dejar', () => {
+      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 10, reminder: null, steps: [] });
+      store.getState().recordSlip(store.getState().habits[0].id);
+      expect(store.getState().habits[0].slips).toBeUndefined();
+    });
+
+    it('la recaída se guarda en el repositorio', async () => {
+      const id = quit();
+      store.getState().recordSlip(id);
+      await flush();
+      expect((await repo.habits.list())[0].slips).toEqual([today()]);
+    });
+  });
+
   it('un día pasado a medias (6 de 10) se guarda, da XP proporcional y se puede completar después', () => {
     store.getState().createHabit({ title: 'Agua', frequency: { type: 'daily' }, measure: 'times', target: 10, xp: 20, reminder: null, steps: [] });
     const id = store.getState().habits[0].id;

@@ -9,6 +9,7 @@ import { dueReviews } from '@/core/review';
 import { isBoss } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
 import { HabitAction } from '@/features/habitos/HabitAction';
+import { LateBanner } from '@/features/tareas/LateBanner';
 import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
 import { weeklyReport } from '@/core/stats';
 import type { HabitChain, Snapshot } from '@/core/domain';
@@ -464,6 +465,7 @@ export default function Inicio() {
       ) : (
         <div className="cols">
           <div className="stack">
+            <LateBanner />
             <Events events={events} />
             <Panel kicker="// Quest diaria" title="Tu misión de hoy" right={<span className="kicker">{done} / {missions.length} · {inPlay} XP en juego</span>}>
               {missions.length === 0 ? (

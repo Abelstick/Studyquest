@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { XP_BY_PRIORITY } from '@/core/game';
+import { DIFFICULTIES, difficultyInfo, difficultyOf, xpForDifficulty } from '@/core/difficulty';
 import { newId } from '@/core/dates';
-import type { Priority, Recurrence, TaskStatus } from '@/core/domain';
+import type { Difficulty, Priority, Recurrence, TaskStatus } from '@/core/domain';
 import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
 import { Button, Field, Modal, Segmented, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
@@ -32,15 +33,21 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
   const [repeat, setRepeat] = useState<Recurrence | null>(editing?.recurrence ?? null);
   const [priority, setPriority] = useState<Priority>(editing?.priority ?? 'mid');
   const [estimate, setEstimate] = useState(editing?.estimateMin ?? 30);
+  const [difficulty, setDifficulty] = useState<Difficulty>(editing ? difficultyOf(editing) : 'normal');
   const [xp, setXp] = useState(editing?.xp ?? XP_BY_PRIORITY.mid);
-  const [xpTouched, setXpTouched] = useState(!!editing);
+  // Si el XP ya no coincide con el que propone su prioridad y dificultad, es que lo personalizaste: no se lo pisamos.
+  const [xpTouched, setXpTouched] = useState(!!editing && editing.xp !== xpForDifficulty(XP_BY_PRIORITY[editing.priority], difficultyOf(editing)));
   const [subs, setSubs] = useState(editing?.subtasks.map((s) => s.title).join('\n') ?? '');
   const [tags, setTags] = useState(editing?.tags.join(', ') ?? '');
   const [status, setStatus] = useState<TaskStatus>(editing?.status ?? 'todo');
 
   const pickPriority = (p: Priority) => {
     setPriority(p);
-    if (!xpTouched) setXp(XP_BY_PRIORITY[p]);
+    if (!xpTouched) setXp(xpForDifficulty(XP_BY_PRIORITY[p], difficulty));
+  };
+  const pickDifficulty = (d: Difficulty) => {
+    setDifficulty(d);
+    if (!xpTouched) setXp(xpForDifficulty(XP_BY_PRIORITY[priority], d));
   };
 
   const submit = (e: React.FormEvent) => {
@@ -55,6 +62,7 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
       dueDate: due || null,
       estimateMin: Math.max(0, estimate),
       xp: Math.max(0, xp),
+      difficulty,
       subtasks,
       tags: tags.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean),
       recurrence: repeat ? { unit: repeat.unit, interval: Math.max(1, Math.min(365, Math.floor(repeat.interval) || 1)) } : undefined,
@@ -85,6 +93,9 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
           <Field label="Fecha límite">{(fid) => <input id={fid} className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} />}</Field>
         </div>
         <Field label="Prioridad">{() => <Segmented label="Prioridad" value={priority} options={PRIORITIES} onChange={pickPriority} />}</Field>
+        <Field label="Dificultad" hint={`${difficultyInfo(difficulty).hint} Ajusta el XP que propone la tarea; puedes cambiarlo abajo.`}>
+          {() => <Segmented label="Dificultad" value={difficulty} options={DIFFICULTIES.map((d) => ({ value: d.value, label: d.label }))} onChange={pickDifficulty} />}
+        </Field>
         {priority === 'boss' && (
           <p className="form__info">
             ☠ Un jefe final tiene una vida por subtarea: cada una que completes le quita una. Al caer el último golpe ganas su XP y un botín extra de <b>+{BOSS_BONUS_XP} XP</b>. Añade subtareas abajo para darle vida.

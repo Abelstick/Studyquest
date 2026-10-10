@@ -13,6 +13,9 @@ import { Chains } from './ChainPanel';
 import { HabitAction } from './HabitAction';
 import { HabitSteps, progressNote } from './HabitSteps';
 import { HabitWeek } from './HabitWeek';
+import { QuitStatus } from './QuitStatus';
+import { isQuit } from '@/core/quit';
+import { difficultyInfo, difficultyOf } from '@/core/difficulty';
 import { HabitPeriod } from './HabitPeriod';
 
 export default function Habitos() {
@@ -85,13 +88,15 @@ export default function Habitos() {
                     <Link to={`/habitos/${h.id}`}>{h.title}</Link>
                   </h2>
                   <p className="kicker">
-                    {frequencyLabel(h.frequency)} · {goalLabel(h)}
+                    {isQuit(h) ? 'Mal hábito a dejar' : `${frequencyLabel(h.frequency)} · ${goalLabel(h)}`}
+                    {difficultyOf(h) !== 'normal' && ` · ${difficultyInfo(difficultyOf(h)).label}`}
                   </p>
                 </div>
                 <Tag tone={done ? 'green' : 'xp'}>{!done && credit > 0 ? `+${credit} / ${h.xp} XP` : `+${h.xp} XP`}</Tag>
               </div>
               {/* Los días pasados se abren para registrar cuánto se hizo, aunque no se llegara a la meta. */}
               <HabitPeriod habit={h} logs={logs} now={now} />
+              {isQuit(h) && <QuitStatus habit={h} />}
               <HabitWeek habit={h} logs={logs} now={now} />
               {!done && progress > 0 && (
                 <div className="habit__today">

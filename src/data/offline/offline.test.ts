@@ -218,6 +218,49 @@ describe('cola de escritura offline', () => {
     expect(await real.tasks.list()).toHaveLength(1);
   });
 
+  it('otra pestaña con la misma cola no reenvía lo que la primera ya envió', async () => {
+    let creates = 0;
+    const create = real.tasks.create.bind(real.tasks);
+    real.tasks.create = async (t) => {
+      creates++;
+      return create(t);
+    };
+    net.offline = true;
+    await layer.repo.tasks.create(task('a'));
+    const tabA = layer;
+    const tabB = build(); // misma cola guardada: ya carga el cambio 'a' en memoria
+    net.offline = false;
+    await tabA.sync!.flush();
+    await tabB.sync!.flush();
+    expect(creates).toBe(1);
+    expect(tabB.sync!.pending()).toBe(0);
+  });
+
+  it('dos pestañas que encolan a la vez no pierden ningún cambio', async () => {
+    net.offline = true;
+    const tabA = layer;
+    const tabB = build();
+    await Promise.all([tabA.repo.tasks.create(task('a')), tabB.repo.tasks.create(task('b'))]);
+    expect(storage.ops.map((o) => o.path)).toEqual(['tasks.create', 'tasks.create']);
+    net.offline = false;
+    await tabB.sync!.flush();
+    await tabA.sync!.flush();
+    expect((await real.tasks.list()).map((t) => t.id).sort()).toEqual(['a', 'b']);
+    expect(tabA.sync!.pending()).toBe(0);
+    expect(storage.ops).toHaveLength(0);
+  });
+
+  it('los cambios se envían en el orden en que se encolaron aunque el reloj no avance', async () => {
+    net.offline = true;
+    await layer.repo.tasks.create(task('a', 'v1'));
+    await layer.repo.tasks.update('a', { title: 'v2' });
+    await layer.repo.tasks.update('a', { title: 'v3' });
+    expect(new Set(storage.ops.map((o) => o.at)).size).toBe(3);
+    net.offline = false;
+    await build().sync!.flush();
+    expect((await real.tasks.list())[0].title).toBe('v3');
+  });
+
   it('wipe vacía también la cola', async () => {
     net.offline = true;
     await layer.repo.tasks.create(task('a'));

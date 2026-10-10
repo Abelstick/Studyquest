@@ -132,6 +132,6 @@ variables de build.
 
 ## Límites conocidos (no son errores)
 
-- Sin conexión la app es de solo lectura; no hay cola de escritura offline.
+- La cola offline (`data/offline`) solo aplica con Supabase; usa *last write wins* entre dispositivos.
 - Las tareas se mueven con botones, no con arrastrar y soltar.
 - No existen las frecuencias de hábito "fechas concretas", "anual" ni "personalizado".

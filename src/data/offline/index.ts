@@ -61,7 +61,30 @@ export function withOfflineQueue(layer: DataLayer, options: OfflineOptions = {})
   const eventListeners = new Set<(e: SyncEvent) => void>();
   const notify = () => countListeners.forEach((cb) => cb(ops.length));
   const emit = (e: SyncEvent) => eventListeners.forEach((cb) => cb(e));
-  const persist = () => storage.save(ops).catch((e) => console.warn('[sync] no se pudo guardar la cola', e));
+  // Se incrementa en cada cambio local de `ops`: permite saber si algo cambió mientras se leía el almacén.
+  let version = 0;
+  let saving: Promise<void> = Promise.resolve();
+  /** Escrituras al almacén en orden, una por cambio: nunca se reescribe la lista completa. */
+  const persist = (write: () => Promise<void>) => {
+    version++;
+    saving = saving.then(write).catch((e) => console.warn('[sync] no se pudo guardar la cola', e));
+    return saving;
+  };
+  let lastAt = 0;
+
+  /** Una sola pestaña vacía la cola a la vez (Web Locks); sin esa API, se ejecuta directo. */
+  const withFlushLock = <T,>(fn: () => Promise<T>): Promise<T> =>
+    typeof navigator !== 'undefined' && navigator.locks ? navigator.locks.request('studyquest-sync-flush', fn) : fn();
+
+  /** Otra pestaña pudo enviar cambios mientras esperábamos el candado: adopta lo que quedó guardado. */
+  const refreshFromStorage = async () => {
+    await saving;
+    const seen = version;
+    const stored = await storage.load();
+    if (version !== seen) return; // hubo un cambio local durante la lectura: no pisarlo
+    ops = stored;
+    notify();
+  };
 
   const ready = storage
     .load()
@@ -90,25 +113,28 @@ export function withOfflineQueue(layer: DataLayer, options: OfflineOptions = {})
     flushing ??= (async () => {
       try {
         await ready;
-        const user = await auth.getUser();
-        if (!user || !online()) return;
-        let sent = 0;
-        for (;;) {
-          const op = ops.find((o) => o.uid === user.id);
-          if (!op) break;
-          try {
-            await run(op);
-            sent++;
-          } catch (e) {
-            if (isNetworkError(e)) break; // seguimos sin red: se queda todo para más tarde
-            console.warn('[sync] cambio rechazado por el servidor, se descarta', op.path, e);
-            emit({ type: 'dropped', target: op.path, error: e instanceof Error ? e.message : String(e) });
+        await withFlushLock(async () => {
+          const user = await auth.getUser();
+          if (!user || !online()) return;
+          await refreshFromStorage();
+          let sent = 0;
+          for (;;) {
+            const op = ops.find((o) => o.uid === user.id);
+            if (!op) break;
+            try {
+              await run(op);
+              sent++;
+            } catch (e) {
+              if (isNetworkError(e)) break; // seguimos sin red: se queda todo para más tarde
+              console.warn('[sync] cambio rechazado por el servidor, se descarta', op.path, e);
+              emit({ type: 'dropped', target: op.path, error: e instanceof Error ? e.message : String(e) });
+            }
+            ops = ops.filter((o) => o.id !== op.id);
+            await persist(() => storage.remove(op.id));
+            notify();
           }
-          ops = ops.filter((o) => o.id !== op.id);
-          await persist();
-          notify();
-        }
-        if (sent) emit({ type: 'synced', count: sent });
+          if (sent) emit({ type: 'synced', count: sent });
+        });
       } finally {
         flushing = null;
         scheduleRetry();
@@ -128,8 +154,10 @@ export function withOfflineQueue(layer: DataLayer, options: OfflineOptions = {})
   const enqueue = async (path: string, args: unknown[], cause: unknown) => {
     const user = await auth.getUser();
     if (!user) throw cause;
-    ops = [...ops, { id: newId(), uid: user.id, at: Date.now(), path, args: structuredClone(args) }];
-    await persist();
+    lastAt = Math.max(Date.now(), lastAt + 1); // estrictamente creciente: el orden de envío no depende del reloj
+    const op: QueuedOp = { id: newId(), uid: user.id, at: lastAt, path, args: structuredClone(args) };
+    ops = [...ops, op];
+    await persist(() => storage.add(op));
     notify();
     if (online()) void flush();
     else scheduleRetry();
@@ -171,7 +199,7 @@ export function withOfflineQueue(layer: DataLayer, options: OfflineOptions = {})
   wrapped.wipe = async () => {
     await ready;
     ops = [];
-    await persist();
+    await persist(() => storage.clear());
     notify();
     return (original.wipe as () => Promise<void>)();
   };

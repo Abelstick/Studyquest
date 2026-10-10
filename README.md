@@ -56,7 +56,7 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 | **Meta** | es lo que quieres **lograr a largo plazo**, dividido en hitos | Aprender análisis de datos |
 | **Proyecto** | vas a **construir y entregar** algo, hecho de partes | Mi portafolio web |
 
-Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *tareas* los pasos concretos y el *proyecto* lo que construyes por el camino. Una tarea que se repite (pagar el alquiler cada mes) sigue siendo una tarea; si lo que importa es la constancia y la racha, es un hábito. La app lo explica donde decides: una frase bajo el título de cada pantalla y el botón **❓ ¿Cuál uso?**, que abre una guía con **5 ejemplos de cada uno**, un apartado «Ojo: esto NO es…» (con qué es en realidad), **4 ejemplos completos** de cómo encajan (estudiar datos, sacar el B2 de inglés, ponerse en forma, lanzar un negocio), las dudas frecuentes y un **mini test** de 10 frases para practicar. También hay pistas dentro de los formularios y en el registro rápido. Si no quieres decidirlo tú, el **Planificador** lo arma todo a partir de un objetivo.
+Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *tareas* los pasos concretos y el *proyecto* lo que construyes por el camino. Si dudas, el botón **❓ ¿Cuál uso?** abre una guía con ejemplos y un mini test, y el **Planificador** lo arma todo a partir de un objetivo.
 
 | Pantalla | Qué hace |
 | --- | --- |
@@ -126,7 +126,7 @@ El `.env.example` viene con `VITE_DATA_PROVIDER=local`, así que la app funciona
 | `npm run typecheck` | Solo comprobación de tipos |
 | `npm run icons` | Regenera los iconos PNG de la PWA desde el sprite del bloque `?` |
 | `npm run worlds` | Regenera el decorado de los mundos (`src/styles/worlds.css`). |
-| `npm run vapid` | Genera un par de claves VAPID para los [recordatorios push](#recordatorios-push-opcional) |
+| `npm run vapid` | Genera un par de claves VAPID para los [recordatorios push](#recordatorios-con-repetición-y-sonido) |
 
 ## Configurar Supabase
 
@@ -145,7 +145,7 @@ El `.env.example` viene con `VITE_DATA_PROVIDER=local`, así que la app funciona
 
 ### Iniciar sesión con Google
 
-La pantalla de acceso ofrece **«Continuar con Google»** como opción principal (el correo y la contraseña quedan debajo, plegados). La pantalla es un pequeño nivel: sprites flotando, un corredor perseguido por un jefe sobre el suelo de ladrillos, marcador de jugador y barra de carga. En el campo de contraseña, el botón **VER / OCULTAR** muestra u oculta lo que escribes, avisa si tienes **Bloq Mayús** activado y, al crear cuenta, un medidor de **Poder** (Débil → Épica) orienta sobre la fuerza. Para activarlo, una sola vez:
+La pantalla de acceso ofrece **«Continuar con Google»** como opción principal (el correo y la contraseña quedan debajo, plegados). Para activarlo, una sola vez:
 
 1. En [Google Cloud Console](https://console.cloud.google.com/) crea (o elige) un proyecto → **APIs y servicios → Pantalla de consentimiento de OAuth** (tipo *Externo*; basta con nombre de la app y tu correo).
 2. **Credenciales → Crear credenciales → ID de cliente de OAuth → Aplicación web**. En **URI de redireccionamiento autorizados** pon exactamente la URL de callback de Supabase: `https://<tu-ref>.supabase.co/auth/v1/callback` (la ves en Supabase → Authentication → Providers → Google).
@@ -213,7 +213,6 @@ Marca hábitos, completa tareas o registra estudio **sin red** (metro, avión, w
 - Conflictos: gana el último cambio enviado (*last write wins*). Si editas lo mismo desde dos dispositivos a la vez, uno pisa al otro.
 - Los cambios de una cuenta solo se envían con esa cuenta iniciada.
 - Hay que haber abierto la app **al menos una vez con conexión** (para cachearla y haber iniciado sesión). Pasada la hora de vida del token, la app sigue abriendo offline con tu último usuario; al volver la red renueva la sesión y sincroniza.
-- Varias pestañas abiertas a la vez no se coordinan entre sí.
 
 ## Copias de seguridad
 
@@ -331,53 +330,17 @@ Las dos opciones de cuenta solo aparecen con Supabase y necesitan ejecutar [`000
 - La clave **nunca** entra en las copias de seguridad ni en la caché del perfil: la cuenta la guarda en su propia tabla (`user_secrets`), aparte de tus datos de juego.
 - Viaja únicamente en la cabecera `x-goog-api-key` de las peticiones a Google, nunca por un servidor de la app. Por eso no hay nada que configurar en Render ni en Edge Functions.
 - **Cerrar sesión borra la clave de ese dispositivo** (la copia de tu cuenta se conserva), para no dejarla en un ordenador compartido.
+- Como vive en el navegador, cualquier código malicioso en la página podría leerla: usa una clave **solo para esto**, restríngela en Google Cloud si puedes y bórrala en AI Studio si dejas de usarla.
 - A Google solo se envía lo que pides: el objetivo, el plazo, el nivel y las horas por semana (planificador), o el título del tema y del curso (tarjetas). **Nunca** tus tareas, hábitos ni datos personales.
 - En el nivel gratuito, Google puede usar esos textos para mejorar sus productos. Si eso te importa, usa una clave de un proyecto de pago (con facturación) o las plantillas.
-- **Sobre el aviso de Google.** Su documentación dice «no expongas claves en el cliente: quien abra tu web podría extraerlas». Eso se refiere a **poner tu propia clave dentro de la app**, cosa que aquí no ocurre: cada persona usa **su** clave en **su** navegador. Aun así, como vive en el navegador, cualquier código malicioso que se ejecutara en la página podría leerla. Usa una clave **solo para esto**, restríngela en Google Cloud si puedes y bórrala en AI Studio si dejas de usarla.
-- **Formato de la clave.** Desde el 28 de mayo de 2026 AI Studio crea las claves nuevas como «auth keys», con otro aspecto que las antiguas (`AIza…`). La app no exige ningún formato: solo descarta lo evidentemente mal pegado (vacío, espacios o saltos de línea) y deja que Google decida al pulsar «Probar y activar».
 
-**Cómo se llama a Gemini.** La app usa el SDK oficial [`@google/genai`](https://www.npmjs.com/package/@google/genai) (v2.3 o superior) con su **Interactions API**, con el modelo **`gemini-3.8-flash`** por defecto:
-
-```ts
-const ai = new GoogleGenAI({ apiKey });
-const interaction = await ai.interactions.create({
-  model: 'gemini-3.8-flash',
-  input: '…lo que pide el usuario…',
-  system_instruction: '…reglas del asistente…',
-  store: false, // Google no guarda la conversación
-  response_format: { type: 'text', mime_type: 'application/json', schema }, // JSON con forma garantizada
-});
-interaction.output_text; // el JSON, que la app valida antes de usarlo
-```
-
-- El SDK pesa unos 365 kB y **solo se descarga cuando se usa la IA** (no forma parte de la carga inicial ni de la caché sin conexión).
-- Se envía `store: false`, así que Google no retiene la petición en su almacén de interacciones (por defecto lo haría durante 1 día en el nivel gratuito). Sin reintentos automáticos, para no gastar cuota de más.
-- Todo lo que devuelve el modelo pasa por una validación estricta (textos recortados, horas acotadas, módulos vacíos descartados) antes de tocar tus datos.
+La app usa el SDK oficial [`@google/genai`](https://www.npmjs.com/package/@google/genai) con `store: false` (Google no guarda la conversación) y sin reintentos automáticos. El SDK solo se descarga cuando se usa la IA, y todo lo que devuelve el modelo se valida antes de tocar tus datos.
 
 ### Modelos gratuitos y cambio automático
 
-Según la [documentación de Google](https://ai.google.dev/gemini-api/docs/pricing) (revisada en septiembre de 2026), estos modelos de texto tienen **nivel gratuito**; los modelos Pro, no:
+Por defecto se usa `gemini-3.8-flash`. También hay `gemini-3.7-flash`, `3.6-flash`, `3.5-flash`, `3.5-flash-lite`, `2.5-flash` y `2.5-flash-lite`: todos con nivel gratuito según la [documentación de Google](https://ai.google.dev/gemini-api/docs/pricing); los Pro no. Los límites se aplican por proyecto y por modelo (tus cifras: [aistudio.google.com/rate-limit](https://aistudio.google.com/rate-limit)).
 
-| Modelo | Nota |
-| --- | --- |
-| `gemini-3.8-flash` | **Por defecto.** El más inteligente de la familia Flash |
-| `gemini-3.7-flash` · `gemini-3.6-flash` · `gemini-3.5-flash` | Generaciones anteriores, cada una con su propia cuota |
-| `gemini-3.5-flash-lite` | Versión ligera: la más rápida y económica de la serie 3.5 |
-| `gemini-2.5-flash` · `gemini-2.5-flash-lite` | Serie 2.5, estable |
-
-> `gemini-3.1-flash-lite` no figura como gratuito y tiene fecha de retirada (mayo de 2027), por eso no se ofrece.
-
-**Por qué cambiar de modelo ayuda.** Los límites (peticiones por minuto, tokens por minuto y peticiones por día) se aplican **por proyecto y por modelo**: cada modelo tiene su propia cuota. Crear otra clave *dentro del mismo proyecto* de Google no aporta nada. Al superar un límite Google responde `429 RESOURCE_EXHAUSTED`; el límite diario se renueva a medianoche (hora del Pacífico). Tus cifras exactas están en [aistudio.google.com/rate-limit](https://aistudio.google.com/rate-limit).
-
-**Cómo lo gestiona la app** (Perfil → Funciones inteligentes → *Modelos*, o el selector «Modelo» del Planificador):
-- **Modelo principal**: eliges uno de la lista (o escribes otro id).
-- **Cambio automático** (activado por defecto): si el principal agota su cuota (429), no existe para tu clave (404) o está saturado (503), la app prueba **el siguiente modelo de reserva** y te avisa («Cambié de modelo: Gemini 3.8 Flash agotó su cuota. Sigo con Gemini 3.7 Flash»). Eliges qué modelos de reserva usar; se prueban en el orden de la lista.
-- Un modelo que acaba de agotar su cuota se **aparta 5 minutos**: la siguiente petición ya no gasta un intento en él.
-- Los demás errores (clave inválida, cancelación, tiempo agotado…) **no** cambian de modelo.
-- Si todos agotan su cuota, el mensaje lista los que probó y cuándo se renuevan. Con el cambio automático apagado, al agotarse la cuota aparecen botones para **reintentar con otro modelo** con un clic.
-- La etiqueta de la ruta generada indica qué modelo respondió.
-
-Los límites y los nombres de modelo cambian con el tiempo: si Google retira uno, se puede escribir otro id en «Otro modelo».
+Con el **cambio automático** (activado por defecto), si el modelo agota su cuota (429), no existe para tu clave (404) o está saturado (503), la app prueba el siguiente modelo de reserva, te avisa y aparta el agotado 5 minutos. Otros errores no cambian de modelo. Se configura en Perfil → Funciones inteligentes → *Modelos*, o con el selector «Modelo» del Planificador.
 
 ## Tu ciudad
 
@@ -418,7 +381,7 @@ Son **fan art en bloques** hecho para este proyecto personal: los personajes per
 - **Tienda del héroe** (con las monedas de siempre): **8 armas** (espada, martillo, arco, bastón, cañón de plasma, garras, hoja de luz, lanza estelar), **6 poderes** con efecto visible (chispas, escarcha, escudo, llamas, rayos, alas de luz) y **8 skins** que recolorean a cualquier raza. Los objetos de etapas altas salen con candado. Al comprar algo se equipa solo, y **«Probar»** te lo pone en el modelo sin comprarlo y te enseña cómo cambiaría tu poder.
 - **Cambiar de raza o de nombre es gratis**: conservas etapa y objetos.
 - **4 logros nuevos**: Nace un héroe, Primera evolución, Leyenda viviente y Armería completa.
-- **Cómo está hecho**: el modelo es una lista de cajas que calcula `core/hero.ts` (código puro, probado sin navegador) (con alguna pieza propia de cada etapa: el rifle del Marine, el martillo del Hermano Martillo, las bolas de fuego de Mario) y el visor lo pinta con [three.js](https://threejs.org) a media resolución y sin suavizado, para que el 3D tenga los mismos píxeles gordos que el resto de la app. three.js (~120 KB comprimido) va en su propio archivo y **solo se descarga al abrir la pantalla**; se guarda para usarla sin conexión. El visor deja de pintar cuando no está a la vista y, con *reducir movimiento* activado, se queda quieto. Se gira arrastrando, con las flechas del teclado o con los botones ◀ ▶, y tiene una descripción en texto para lectores de pantalla. Sin WebGL, la pantalla lo explica en vez de romperse.
+- **Cómo está hecho**: el modelo lo calcula `core/hero.ts` (código puro, probado sin navegador) y el visor lo pinta con [three.js](https://threejs.org) a baja resolución. three.js va en su propio archivo y solo se descarga al abrir la pantalla. Sin WebGL, la pantalla lo explica en vez de romperse.
 - El héroe se guarda **dentro del perfil** (no hace falta migración en Supabase) y viaja en las copias de seguridad; al importar, un héroe solo puede llevar objetos que están en el inventario.
 
 ## Repaso espaciado, calendario, jefes y Pomodoro
@@ -429,25 +392,7 @@ Son **fan art en bloques** hecho para este proyecto personal: los personajes per
 
 **Tareas recurrentes.** En el formulario, *Repetir*: cada N días, semanas o meses. Al completarla **nace la siguiente**, con su nueva fecha y sin avance. La fecha sigue el calendario original pero nunca cae en el pasado (completar tarde no crea una cola de atrasadas; 31 ene + 1 mes = 28/29 feb). Si la reabres y nadie tocó la siguiente, esta se retira.
 
-**Apuntes.** El cuerpo se escribe en texto plano con un formato mínimo y **se analiza a una estructura de datos que la pantalla pinta con elementos de React, nunca convirtiéndolo a HTML**: así, por raro que sea lo que escribas, no puede inyectar nada en la app. Los apuntes viven en su propia tabla y no dentro del documento del curso, a propósito: los cursos se reescriben enteros cada vez que marcas un tema, y arrastrar todos los apuntes en cada marca sería tirar ancho de banda a la basura. Si borras un curso, sus apuntes **se conservan** y solo pierden el vínculo.
-
-**Fondos por capas.** El fondo de cada mundo no es un color plano: son cuatro capas a distinta profundidad, como el fondo de un juego de plataformas — **cielo** en degradado, **lo que flota en él** (nubes, estrellas, luna en cuarto creciente, burbujas, copos, sol), **silueta lejana** (colinas, montañas, dunas, almenas, árboles secos) y **detalle cercano** (arbustos, pinos, cactus, algas, lápidas, brillo de lava). Todo es pixel art dibujado con rectángulos, sin una sola imagen que descargar: se genera con `npm run worlds` en [`scripts/gen-worlds.mjs`](scripts/gen-worlds.mjs) y sale como data-URIs dentro del CSS. Comprimido, la hoja de estilos entera pesa unos 20 KB, y el scroll no se resiente (medido: 16,6 ms por fotograma con decorado frente a 16,5 sin él).
-
-**Mundos con material propio.** Cada mundo comprable no cambia solo el fondo: cambia el **suelo** (hierba, piedra, arena mojada, hielo, adobe, tablones), la **textura del muro** de la barra lateral y el **color de acento** que tiñe los detalles. Los siete mundos están comprobados en día y noche: el texto de la barra pasa el contraste mínimo en los catorce combinados.
-
-**Reproductor de música.** Ocho melodías chiptune con play/pausa, anterior/siguiente, orden aleatorio, volumen y lista, en la pantalla de Pomodoro. **Todas son composiciones originales hechas para StudyQuest**: no se usa ninguna banda sonora de ningún juego, porque esas están protegidas por derechos de autor y transcribirlas a notas sería reproducirlas igual que subir un MP3. Se sintetizan en el momento con Web Audio, así que no hay un solo archivo de audio y suenan también sin conexión. Durante una sesión de Pomodoro manda la música de la sesión y, al terminar, vuelve lo que estuvieras escuchando. La canción y el volumen se recuerdan; nunca arranca sola al abrir la app (los navegadores exigen un gesto tuyo).
-
-**Sonido.** 24 efectos 8-bit sintetizados con Web Audio, sin un solo archivo que descargar: moneda, salto, golpe al bloque, power-up, 1-UP, tubería, pisotón, estrella, pausa, cuenta atrás de los últimos 5 segundos del Pomodoro, victoria, game over… Todo se apaga con el interruptor de sonido del Perfil.
-
-**Borrar un plan sin dejar restos.** El planificador crea cuatro cosas a la vez —curso, meta, hábito y tareas— y ahora las marca con un mismo `planId`. Al borrar el curso, el aviso te dice **qué más vino con ese plan** y te ofrece borrarlo también, con una casilla marcada por defecto. Antes, la meta y el hábito se quedaban sueltos. Para los planes creados antes de esta marca, se reconocen por su forma (el planificador siempre pone el mismo nombre a la meta y llama al hábito «Estudiar X», y firma el curso como *Plan inteligente*); como es una suposición, **nunca se borra nada sin enseñártelo antes** en el aviso.
-
-**Ponerse al día con un hábito olvidado.** Si un día lo hiciste pero se te olvidó marcarlo, puedes rellenarlo: en la tira de la semana de cada hábito, los días pasados **se pueden pulsar** (los olvidados salen con borde discontinuo) y arriba se avisa de cuántos llevas sin marcar. Lo importante es que el XP **se fecha en el día al que corresponde**, no en hoy: como la racha se calcula con los días que tienen XP, marcar el día olvidado **repara la racha**, que es justo para lo que sirve.
-
-Los límites son a propósito: solo **los últimos 7 días**, nunca el futuro, nunca antes de crear el hábito, y solo los días que tocaban según su frecuencia. Sin límite, la racha y las estadísticas dejarían de significar nada. Los **bonos del día** (fin de semana, combo ×2, cadena) **no se cobran hacia atrás**: son mecánicas de «hoy». El store valida la fecha por su cuenta, sin fiarse de la pantalla.
-
-**Cadenas de hábitos.** Una cadena es una rutina en orden, la técnica de «apilar hábitos»: el anterior es la señal del siguiente. Se guía y se premia, **nunca se bloquea**, porque un día malo no debe impedirte apuntar lo que sí hiciste ni costarte la racha. Los hábitos que hoy no tocan (por su propia frecuencia) no cuentan ni estorban. Un hábito pertenece como mucho a una cadena, y si lo borras la cadena se queda sin ese eslabón (y desaparece si se queda en uno solo). Las cadenas viven en tu perfil, así que **no necesitan ninguna migración** y viajan en las copias de seguridad.
-
-**Desglose y «listo para completar».** Las tareas con subtareas y los hábitos con pasos de sesión se despliegan en Inicio y en Tareas, y se marcan sin abrir nada más. Cuando marcas el último, la tarea **no se cierra sola**: se resalta en verde con un aviso y su botón pasa a «✔ Completar», para que decidas tú cuándo darla por terminada (y cuándo cobrar el XP). La excepción son los jefes finales, que sí caen con el último golpe.
+**Ponerse al día con un hábito olvidado.** Puedes marcar los últimos 7 días de la tira semanal de cada hábito. El XP se fecha en el día que corresponde, así que repara la racha; los bonos del día no se cobran hacia atrás.
 
 **Jefes finales.** Una tarea con prioridad *Jefe final* y subtareas es una batalla: **cada subtarea es un golpe** y le quita un corazón. Al caer el último, el jefe se derrota solo: pantalla de **victoria**, su XP y un **botín extra de +50 XP**. Reabrir el jefe le devuelve toda la vida.
 
@@ -462,8 +407,6 @@ Los límites son a propósito: solo **los últimos 7 días**, nunca el futuro, n
 | **Cofre diario** | Una vez al día en Inicio | 20–60 monedas + 2 por cada día de racha (máx. +60) y, a veces, +25 XP |
 
 Los bonos se cobran **una sola vez** (se anotan en el perfil): deshacer y rehacer un hábito no los repite.
-
-**Mundos y logros.** Seis mundos visuales (subterráneo, castillo, **submarino, montaña nevada, desierto, casa encantada**), siete avatares nuevos (slime, invasor 8-bit, dino, gato, robot, caballero, mini jefe), marcos de fuego/hielo/real, insignias y **51 logros** (repaso, jefes, Pomodoro, combos, rachas largas, coleccionismo…).
 
 ## Reglas del juego
 
@@ -570,32 +513,14 @@ Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por háb
 
 Todas llevan `user_id` (por defecto `auth.uid()`) y una política RLS «solo el dueño».
 
-## Cargadores y esperas
-
-Todo lo que tarda se ve: el **cargador animado** (un personaje corriendo por el suelo de ladrillos, un mensaje que va cambiando —«Leyendo tu objetivo», «Eligiendo los módulos»…—, la barra de carga, los segundos transcurridos y cuánto suele tardar) aparece cuando la IA diseña una ruta o crea tarjetas, y mientras se cargan las pantallas. Los botones que trabajan muestran una **moneda girando** y se bloquean para que no se pulsen dos veces. Las llamadas a la IA se pueden **cancelar de verdad** (se aborta la petición a Google, sin mensaje de error) y se cortan solas a los 60 segundos. Si sales de la pantalla mientras la IA trabaja, se cancela.
-
 ## Pruebas
 
 ```bash
 npm test
 ```
 
-Cubren la lógica que más importa:
+Cubren la lógica que más importa: curva de niveles y rachas, frecuencias de hábito, el store completo (XP, monedas, deshacer, reversión si falla el guardado), la cola offline, las copias de seguridad, los planificadores de avisos y de rutas, el cliente de IA (con el SDK simulado), la ciudad, el repaso espaciado, los jefes, y la validez de sprites, catálogo y logros.
 
-- **Juego:** curva de niveles, rachas (huecos, días congelados, deshacer) y **todas** las frecuencias de hábito (incluido el 29 de febrero).
-- **Store completo** contra un repositorio en memoria: XP y monedas al completar/deshacer, subida de nivel, compras, reversión si falla el guardado, mundo de ejemplo y reinicio.
-- **Cola offline:** orden de envío, recuperación tras reiniciar, rechazos del servidor, lecturas con cambios pendientes, cuentas distintas.
-- **Copia de seguridad:** ida y vuelta sin pérdidas, archivos inválidos, ids regenerados y referencias huérfanas.
-- **Servidor de recordatorios:** paridad de «¿toca hoy?» con la app en más de 15 000 casos aleatorios, y la hora local por zona horaria.
-- **Planificador de avisos** (compartido por servidor y web): primer aviso, repeticiones, tope de 6, «no repetir», hábito hecho, zonas horarias y medianoche; y el reparto entre banner, notificación del sistema y silencio según la pestaña.
-- **IA con la clave del usuario:** el cliente de Gemini con el SDK simulado (la petición exacta: modelo, `store:false`, JSON con esquema, sin reintentos; errores con la forma real del SDK: clave inválida, 401/403/404/429, tiempo agotado, sin red; respuestas vacías o ilegibles; la clave nunca aparece en mensajes), el almacén de la clave (formato, corrupción, modo privado, que no entre en copias de seguridad), el cifrado (ida y vuelta, frase incorrecta, datos manipulados, la clave no aparece en el texto cifrado), la sincronización con la cuenta entre dispositivos y la limpieza de tarjetas generadas.
-- **Planificador:** validación de lo que devuelve la IA (basura, textos enormes, módulos vacíos), lectura de la respuesta de Gemini, reparto en el tiempo (orden, sin pasarse de tu disponibilidad diaria, recorte si no cabe, días bloqueados, agenda ocupada, cada tema una sola vez), plantillas y creación del plan.
-- **Modelos y cambio automático:** el catálogo son exactamente los modelos con nivel gratuito según la documentación (sin Pro ni `3.1-flash-lite`); pasar al siguiente modelo con 429, 404 y 503 y avisar; no cambiar con errores que no son de cuota; una sola tentativa si el cambio está apagado; mensaje cuando todos se agotan; cancelar en mitad de la cadena; apartar 5 minutos al modelo agotado; ajustes guardados y a prueba de valores manipulados.
-- **Cancelar y tiempo máximo de la IA:** la petición se aborta con «Cancelar» (y no se llega a enviar si ya estaba cancelada), se corta a los 60 s y no deja temporizadores pendientes.
-- **Guía de conceptos:** cada concepto con 5 ejemplos distintos, sus «esto NO es» apuntando a otro concepto, ejemplos completos y el mini test con respuestas repartidas.
-- **Ciudad:** niveles exactos de cada edificio (umbrales), puntos de cada área, rangos, adornos y habitantes; premios al mejorar (una sola vez, saltos de varios niveles, sin retroactivos, sin bajar al borrar datos); el arte de los 6 edificios × 6 niveles (cuadrícula regular, solo colores de la paleta, cada nivel distinto, sin recortes) y el flujo real: 5 hábitos suben la Casa.
-- **Novedades:** intervalos 1-3-7-14 y dominio del tema, repeticiones de tareas (meses cortos, completar tarde, reabrir), vida de los jefes y victoria, bonus de fin de semana y combo (una sola vez, reinicio diario), cofre, cuadrícula del calendario, fases del Pomodoro y validez de las partituras.
-- Validez de todos los sprites, del catálogo y de los logros, y del decodificador de la clave VAPID (con la clave normalizada y validada).
 
 ## Problemas frecuentes
 
@@ -611,32 +536,24 @@ Cubren la lógica que más importa:
 | Cambié las variables en Render y no pasa nada | Son variables de *build*: lanza un nuevo despliegue. |
 | La PWA no se actualiza | Cierra todas las pestañas o pulsa «Actualizar» en el aviso. Comprueba que `sw.js` no esté cacheado por un CDN. |
 | El planificador no muestra «Generar con IA» | Falta activar las funciones inteligentes: pulsa «🔑 Activar funciones inteligentes» (o ve a Perfil) y pega tu clave de Google AI Studio. |
-| «Eso no parece una clave: no puede estar vacía ni llevar espacios» | Se copió con espacios o saltos de línea en medio, o solo un trozo. Vuelve a copiarla entera desde Google AI Studio (el botón de copiar, sin seleccionar a mano). |
 | Al guardar la clave en mi cuenta sale un error | Falta ejecutar `0004_user_secrets.sql` en el SQL Editor de Supabase. La clave sí funciona en el dispositivo mientras tanto. |
 | Al guardar un apunte sale un error | Falta ejecutar `0006_notes.sql` en el SQL Editor de Supabase (crea la tabla `notes`). |
 | Al registrar una certificación sale un error al guardar | Falta ejecutar `0005_certifications.sql` en el SQL Editor de Supabase (crea la tabla `certifications`). |
-| Puse un enlace y la certificación se guardó sin él | Solo se aceptan enlaces `http(s)`. Pega la dirección completa, por ejemplo `https://coursera.org/verify/ABC123`. |
 | «Frase incorrecta» al desbloquear | La frase es la que elegiste al guardarla (distingue mayúsculas). Si la perdiste, pulsa «Olvidé mi frase», que borra la copia cifrada de tu cuenta, y pega la clave otra vez (la sigues viendo en Google AI Studio). |
 | «Google no aceptó tu clave» | La clave está mal copiada, borrada o restringida. Crea otra en [Google AI Studio](https://aistudio.google.com/apikey) y pégala de nuevo (Perfil → Funciones inteligentes). |
 | «Se agotó la cuota gratuita…» | El modelo llegó a su límite por minuto o por día (los límites son por proyecto y por modelo). Con el cambio automático activado la app prueba otros modelos gratuitos sola; si todos se agotaron, espera unos minutos (o a medianoche, hora del Pacífico, para el límite diario) o usa una plantilla. Puedes ver tus cifras en aistudio.google.com/rate-limit. |
-| «El modelo … no está disponible para tu clave» | Google retira o renombra modelos. Cambia el modelo en Perfil → Funciones inteligentes → Avanzado. |
 | Los recordatorios no llegan | Comprueba en orden: (1) Perfil → Recordatorios dice «Activados»; (2) el hábito tiene hora, **hoy le toca** y no está hecho; (3) migración 0002 ejecutada; (4) función desplegada con `--no-verify-jwt` y los 4 secretos; (5) el cron corre (`cron.job_run_details`); (6) en iPhone, la app está instalada y es iOS 16.4+. Prueba la función con el `curl` de la sección de recordatorios. |
-| Suena o avisa demasiado / no quiero repeticiones | Edita el hábito y elige **No repetir** en «Si no lo hago, avisar de nuevo». El máximo es 6 avisos al día por hábito. |
 | Los avisos repetidos no llegan (solo el primero) | Falta ejecutar `0003_reminder_repeats.sql` o **volver a desplegar la función** (`npx supabase functions deploy send-reminders …`). |
-| Con la pestaña abierta no suena | Pulsa cualquier botón de la app una vez (los navegadores bloquean el audio hasta que interactúas) y comprueba que el botón `♪` de la barra superior no esté silenciado. |
 | En Perfil → Recordatorios sale «Falta la clave pública VAPID» | Falta `VITE_VAPID_PUBLIC_KEY` en el build. Añádela (`.env` / Render) y **vuelve a desplegar**. |
 | En Perfil → Recordatorios sale «El service worker no está activo» | Estás en `npm run dev`. Usa `npm run build && npm run preview`. |
 | Muestra `⏳ N pendientes` y no baja | Sigues sin conexión o la sesión caducó. Con red, púlsalo para reintentar; si la sesión caducó, vuelve a iniciar sesión (los cambios pendientes se conservan). |
 | Al importar dice «No parece una copia de StudyQuest» | Solo se admiten archivos exportados desde Perfil → Exportar copia. |
 | «Continuar con Google» da error `provider is not enabled` o `redirect_uri_mismatch` | Falta activar Google en Supabase → Authentication → Providers, o el *URI de redireccionamiento* de Google Cloud no es exactamente `https://<ref>.supabase.co/auth/v1/callback`. Ver [Iniciar sesión con Google](#iniciar-sesión-con-google). |
 | Al entrar con Google sale `{"error":"requested path is invalid"}` | Es Supabase rechazando la URL de retorno. En **Authentication → URL Configuration**: pon como **Site URL** la de tu app (`https://tu-app.onrender.com`, sin barra final ni rutas) y en **Redirect URLs** añade `https://tu-app.onrender.com/**` y `http://localhost:5173/**`. Comprueba también que `VITE_SUPABASE_URL` sea solo `https://<ref>.supabase.co`. |
-| Tras elegir la cuenta de Google vuelvo a la pantalla de acceso o a otra URL | Tu URL no está en Supabase → Authentication → URL Configuration (Site URL y Redirect URLs). |
-| Perfil → Recordatorios dice «La clave VITE_VAPID_PUBLIC_KEY no es válida» (o el navegador da `applicationServerKey is not valid`) | La variable de Render está mal: debe ser la clave **pública** (87 caracteres, sin comillas ni espacios; la privada tiene 43). Corrígela, y en Render usa *Manual Deploy → Clear build cache & deploy*. El mensaje indica cuántos caracteres detecta. |
-| No suena la música del Pomodoro | Pulsa **Empezar** (el navegador exige un clic antes de reproducir audio) y revisa «Música 8-bit» y el botón `♪` de la barra superior. |
 | Supabase limita los correos | El plan gratuito envía pocos correos por hora. Para pruebas, desactiva *Confirm email* o usa contraseña en vez de enlace mágico. |
 
 ## Límites conocidos
-- **Cola offline sin coordinación entre pestañas** y con *last write wins* ante conflictos entre dispositivos.
+- **Cola offline:** ante conflictos entre dispositivos gana la última escritura (*last write wins*).
 - **El héroe 3D necesita WebGL** (cualquier navegador actual lo tiene). Sin él se ve la ficha y la tienda, pero no el modelo.
 - **Arrastrar y soltar solo con ratón/trackpad.** En pantallas táctiles y con teclado se usan los botones *Empezar / Completar / Reabrir*.
 - **Recordatorios con precisión de minuto**: el primer aviso admite hasta 10 minutos de retraso (si el cron falla más, ese día no llega), el intervalo mínimo entre repeticiones es 15 min y la zona horaria es la del último dispositivo activado.

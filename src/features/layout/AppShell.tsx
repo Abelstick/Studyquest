@@ -129,7 +129,7 @@ function Sidebar() {
           <Sprite name="coin" size={26} className="brand__coin" />
           <div>
             <p className="brand__build">
-              // build 0.5 <span className="brand__beta">β</span>
+              // v{__APP_VERSION__} <span className="brand__beta">β</span>
             </p>
             <p className="brand__name">
               STUDY<span>QUEST</span>

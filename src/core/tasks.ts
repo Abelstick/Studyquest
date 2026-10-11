@@ -1,6 +1,33 @@
 /** Reglas de tareas: repetición y jefes finales. Funciones puras. */
 import type { ID, ISODate, Recurrence, Task } from './domain';
-import { addDays, addMonths, isoNow, today } from './dates';
+import { addDays, addMonths, clockToMinutes, daysLeftLabel, diffDays, isClockTime, isoNow, minutesOfDay, today } from './dates';
+
+/* ---------- Hora límite ---------- */
+
+/** La hora límite de la tarea, si tiene fecha y una hora válida. */
+export const dueTimeOf = (t: Pick<Task, 'dueDate' | 'dueTime'>): string | null => (t.dueDate && isClockTime(t.dueTime) ? t.dueTime : null);
+
+/** Minutos que faltan para que venza (negativo si ya venció), o null sin fecha. Sin hora vence al terminar el día. */
+export function minutesToDue(t: Pick<Task, 'dueDate' | 'dueTime'>, now: ISODate = today(), nowMin: number = minutesOfDay()): number | null {
+  if (!t.dueDate) return null;
+  const time = dueTimeOf(t);
+  return diffDays(t.dueDate, now) * 1440 + (time ? clockToMinutes(time) : 1440) - nowMin;
+}
+
+/** Abierta y con el plazo ya pasado (con hora, en cuanto pasa esa hora; sin hora, desde el día siguiente). */
+export const isOverdue = (t: Pick<Task, 'dueDate' | 'dueTime' | 'status'>, now: ISODate = today(), nowMin: number = minutesOfDay()): boolean =>
+  t.status !== 'done' && (minutesToDue(t, now, nowMin) ?? 1) <= 0;
+
+/** Cuánto falta: si vence hoy y tiene hora, en horas o minutos («Quedan 3 h», «Venció a las 18:00»); si no, en días. */
+export function timeLeftLabel(t: Pick<Task, 'dueDate' | 'dueTime'>, now: ISODate = today(), nowMin: number = minutesOfDay()): string | null {
+  const time = dueTimeOf(t);
+  if (!t.dueDate || !time || t.dueDate !== now) return daysLeftLabel(t.dueDate, now);
+  const left = clockToMinutes(time) - nowMin;
+  if (left <= 0) return `Venció a las ${time}`;
+  if (left < 60) return `Quedan ${left} min`;
+  const h = Math.floor(left / 60);
+  return `Quedan ${h} h`;
+}
 
 /* ---------- Tareas recurrentes ---------- */
 

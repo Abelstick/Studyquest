@@ -62,12 +62,12 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 | --- | --- |
 | **Inicio** | Misión del día (hábitos que tocan + tareas más urgentes), **con su desglose desplegable**: marca ahí mismo las subtareas de una tarea o los pasos de un hábito. Además nivel y XP, calendario de racha, informe semanal, consejos y repasos pendientes. |
 | **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Marca temas como «necesito repasar». |
-| **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha límite, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
+| **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha y **hora límite**, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
 | **Planificador** | Le dices «quiero aprender análisis de datos en 3 meses» y genera la ruta (Excel → SQL → Python → Pandas → Power BI → proyecto final) y **un plan con fechas** según tu disponibilidad, tus tareas y tus hábitos. Con **IA (Gemini, gratis)** o con plantillas. |
 | **Certificaciones** | Vitrina de tus credenciales: título, quién la emite, fecha, **enlace al certificado** (se abre en una pestaña nueva), ID de credencial, caducidad con aviso y, si quieres, el curso con el que se relaciona. Cada una da XP y suma una pieza a tu museo. |
 | **Apuntes** | Tu cuaderno: escribe lo que aprendes con un formato mínimo (`# título`, `- punto`, `**negrita**`, `` `código` ``). Cada apunte puede colgar de un curso y de un tema concreto, o ir suelto. Búsqueda sin tildes, etiquetas, fijar arriba y **exportar todo a Markdown** para llevártelo a Obsidian. Cada apunte suma un punto a tu biblioteca. |
 | **Ciudad** | Seis edificios que **crecen con tu progreso real** (casa, biblioteca, academia, laboratorio, arena y museo), de 0 a 5 niveles, con recompensas en monedas al mejorar. También aparece resumida en Inicio. |
-| **Calendario** | Vista mensual con tus tareas por fecha límite, las repeticiones futuras y los repasos de flashcards. Arrastra una tarea a otro día para reprogramarla. |
+| **Calendario** | Vista mensual con tus tareas por fecha límite, las repeticiones futuras y los repasos de flashcards. Arrastra una tarea a otro día para reprogramarla. **Exportar .ics** las lleva a Google Calendar, Outlook o Apple. |
 | **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
 | **Pomodoro** | Temporizador de enfoque/descanso con **música 8-bit** y un personaje que **corre mientras estudias**. Sigue vivo al cambiar de pantalla. |
 | **Hábitos** | Frecuencia (diaria, días concretos, cada X días, semanal, mensual, **fechas concretas, anual y personalizada** «N veces por semana/mes»), recordatorio con **aviso repetido y sonido**, medición (minutos, páginas, veces, hecho/no hecho…), pasos de sesión, mapa de 12 semanas y aviso del día en que más fallas. Los días pasados de la tira semanal se pueden marcar, por si te olvidaste. |
@@ -193,7 +193,7 @@ La app es una **SPA estática**: Render solo sirve archivos y el backend es Supa
 - **iPhone / iPad:** Safari → *Compartir* → *Añadir a pantalla de inicio*.
 - **Sin conexión:** todo el código se precachea, así que la app abre sin red, y con Supabase **también puedes guardar cambios sin conexión** (ver [Trabajar sin conexión](#trabajar-sin-conexión)).
 - **Actualizaciones:** cuando hay versión nueva aparece un aviso «Actualizar».
-- **Accesos directos:** mantén pulsado el icono para *Nueva tarea* o *Hábitos de hoy*.
+- **Accesos directos:** mantén pulsado el icono para *Nueva tarea*, *Hábitos de hoy*, *Pomodoro* o *Repasar flashcards* (Android, Windows y macOS; iOS no los admite).
 - Las peticiones a `*.supabase.co` **nunca** se cachean: los datos siempre son los reales.
 
 Para probar la PWA en local usa `npm run build && npm run preview` (el service worker no está activo en `npm run dev`).
@@ -226,6 +226,8 @@ Marca hábitos, completa tareas o registra estudio **sin red** (metro, avión, w
 
 ## Recordatorios (con repetición y sonido)
 
+Avisan de tres cosas: los **hábitos** a su hora (abajo), las **tareas con hora límite** una hora antes y, por push, un **resumen semanal** el domingo.
+
 Cada hábito puede tener una hora de recordatorio (p. ej. 19:00) y un intervalo de repetición: **No repetir · cada 15 min · cada 30 min (por defecto) · cada hora**. A esa hora avisa **solo si ese día toca y aún no lo has hecho**, y **insiste cada N minutos hasta que lo marques como hecho** (máximo **6 avisos al día**; nunca cruza la medianoche). Al marcarlo hecho, deja de avisar.
 
 Hay dos canales que funcionan a la vez y **no se duplican**:
@@ -241,12 +243,16 @@ Hay dos canales que funcionan a la vez y **no se duplican**:
 
 > ⚙️ Los **push** requieren **Supabase** (un servidor que envíe los avisos) y un dispositivo compatible: Chrome/Edge/Firefox en escritorio y Android, e **iPhone/iPad con iOS 16.4+ con la app instalada** en la pantalla de inicio (en Safari normal no funciona).
 
-**Cómo funcionan los push:** un cron de Supabase llama cada minuto a la Edge Function [`send-reminders`](supabase/functions/send-reminders/index.ts). Esta le pide al planificador ([`_shared/reminders.ts`](supabase/functions/_shared/reminders.ts), **el mismo código que usa la web**, así nunca discrepan) qué avisos tocan ahora para cada usuario con dispositivos suscritos, según su hora local (la zona horaria de su dispositivo). Cada aviso se reserva en `reminder_log` de forma atómica (contador y hora del último), así que **nunca se envía dos veces** aunque la función se ejecute a la vez dos veces. El servidor usa además las mismas reglas de «¿toca hoy?» que la app: una prueba compara ambas con miles de casos.
+**Tareas con hora límite.** Una tarea abierta que vence **hoy** a una hora avisa **una vez**, en la última hora antes de que venza (si la creas con menos margen, avisa igual mientras no haya vencido). Usa los mismos dos canales sin duplicarse; el planificador es [`_shared/taskReminders.ts`](supabase/functions/_shared/taskReminders.ts), compartido por la web y el servidor.
+
+**Resumen semanal (solo push).** El **domingo desde las 19:00** (hora local) llega «📊 Tu semana en StudyQuest»: XP de los últimos 7 días, cuántos días estuviste activo (XP neto positivo), tareas vencidas (nombrando la más antigua) y cuántas vencen la semana que viene. Uno por semana; se desactiva en **Perfil → Recordatorios**. Lógica en [`_shared/weekly.ts`](supabase/functions/_shared/weekly.ts).
+
+**Cómo funcionan los push:** un cron de Supabase llama cada minuto a la Edge Function [`send-reminders`](supabase/functions/send-reminders/index.ts). Esta le pide al planificador ([`_shared/reminders.ts`](supabase/functions/_shared/reminders.ts), **el mismo código que usa la web**, así nunca discrepan) qué avisos tocan ahora para cada usuario con dispositivos suscritos, según su hora local (la zona horaria de su dispositivo). Cada aviso se reserva en `reminder_log` (hábitos), `task_reminder_log` (tareas) o `weekly_digest_log` (resumen) de forma atómica (contador y hora del último), así que **nunca se envía dos veces** aunque la función se ejecute a la vez dos veces. El servidor usa además las mismas reglas de «¿toca hoy?» que la app: una prueba compara ambas con miles de casos.
 
 **Puesta en marcha (una vez):**
 
 1. **Claves VAPID:** `npm run vapid`. Copia la *pública* en `VITE_VAPID_PUBLIC_KEY` (tu `.env` y las variables de Render, y vuelve a desplegar). La *privada* solo va a Supabase, nunca al frontend ni a git. Si cambias las claves, todos los dispositivos deben volver a activar los recordatorios.
-2. **Migraciones:** ejecuta en el SQL Editor, por orden, [`0002_push_reminders.sql`](supabase/migrations/0002_push_reminders.sql) y [`0003_reminder_repeats.sql`](supabase/migrations/0003_reminder_repeats.sql) (esta última añade el contador de avisos para poder repetirlos).
+2. **Migraciones:** ejecuta en el SQL Editor, por orden, [`0002_push_reminders.sql`](supabase/migrations/0002_push_reminders.sql), [`0003_reminder_repeats.sql`](supabase/migrations/0003_reminder_repeats.sql) (añade el contador de avisos para poder repetirlos) y [`0007_task_reminders_weekly.sql`](supabase/migrations/0007_task_reminders_weekly.sql) (avisos de tareas y resumen semanal). Si ya tenías los recordatorios funcionando, basta con ejecutar la `0007` y **volver a desplegar la función** (paso 3).
 3. **Secretos y función** con la [CLI de Supabase](https://supabase.com/docs/guides/cli). No hace falta instalarla (se usa con `npx`), ni Docker, ni `supabase link`. Tu `<ref>` es la parte `xxxx` de `https://xxxx.supabase.co`.
 
    ```bash
@@ -391,7 +397,11 @@ Son **fan art en bloques** hecho para este proyecto personal: los personajes per
 
 **Repaso espaciado (Repaso).** Marca un tema como *«Necesito repasar»* dentro de un curso: reaparece **al día siguiente** y, cada vez que lo recuerdas, a los **3, 7 y 14 días**. Fallar reinicia la escalera; superar los cuatro escalones deja el tema **dominado** (+40 XP). Cada repaso superado da +10 XP. Las tarjetas son tuyas: botón **♪ Tarjetas** en cada tema, una por línea con el formato `pregunta :: respuesta` (si no hay ninguna, se te pregunta si recuerdas el tema). Atajos: `espacio` gira la tarjeta, `1` `2` `3` califican. La agenda se ve también en el calendario y en el menú (insignia con lo que toca hoy).
 
-**Calendario.** Tareas por fecha límite (color por prioridad, ↻ las repetidas, tachadas las hechas), repeticiones futuras proyectadas y repasos. Pulsa un día para ver su detalle y crear una tarea con esa fecha; arrastra una tarea a otro día para moverla.
+**Calendario.** Tareas por fecha límite (color por prioridad, ↻ las repetidas, tachadas las hechas), repeticiones futuras proyectadas y repasos. Pulsa un día para ver su detalle y crear una tarea con esa fecha; arrastra una tarea a otro día para moverla. Las tareas con hora la muestran delante del título.
+
+**Exportar al calendario (.ics).** El botón *📅 Exportar .ics* del calendario descarga tus tareas **abiertas con fecha** en formato iCalendar. Una tarea sin hora es un evento de día completo; con hora límite, un evento de 30 min que **termina a esa hora**, con una alarma una hora antes. La descripción lleva el curso, el XP y las subtareas pendientes. Cada evento usa el id de la tarea, así que **importar de nuevo actualiza** los eventos en vez de duplicarlos (en Google Calendar: *Configuración → Importar*). Es una foto del momento: los cambios posteriores no se sincronizan solos.
+
+**Hora límite.** Además de la fecha, una tarea puede tener **hora límite** (opcional). Sin hora vale todo el día; con hora, vence en cuanto pasa esa hora: la etiqueta pasa a «Quedan 3 h», «Quedan 25 min» o «Venció a las 18:00», la misión de Inicio dice «Hasta hoy a las 18:00» y, dentro del mismo día, va antes la que vence más temprano. **Una hora antes** llega un aviso (dentro de la app y por push).
 
 **Tareas recurrentes.** En el formulario, *Repetir*: cada N días, semanas o meses. Al completarla **nace la siguiente**, con su nueva fecha y sin avance. La fecha sigue el calendario original pero nunca cae en el pasado (completar tarde no crea una cola de atrasadas; 31 ene + 1 mes = 28/29 feb). Si la reabres y nadie tocó la siguiente, esta se retira.
 

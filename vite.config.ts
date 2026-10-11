@@ -31,9 +31,12 @@ export default defineConfig({
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        // Al mantener pulsado el icono (Android, Windows, macOS). Android enseña como mucho 4.
         shortcuts: [
           { name: 'Nueva tarea', url: '/tareas?nuevo=1', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
           { name: 'Hábitos de hoy', url: '/habitos', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Pomodoro', short_name: 'Pomodoro', description: 'Abre el temporizador Pomodoro', url: '/pomodoro', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Repasar flashcards', short_name: 'Repasar', description: 'Repaso espaciado de hoy', url: '/repaso', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
         ],
       },
       workbox: {

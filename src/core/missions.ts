@@ -1,10 +1,11 @@
 import type { Habit, HabitLog, ISODate, Snapshot, Task } from './domain';
-import { diffDays, shortDate, today } from './dates';
+import { clockToMinutes, diffDays, shortDate, today } from './dates';
 import { computeStreak, frequencyLabel, goalLabel, isDueOn, isHabitDone, logFor } from './game';
 import { lastActivityByCourse, weeklyReport } from './stats';
 import { dueReviews } from './review';
 import { quotaText } from './periods';
 import { isQuit } from './quit';
+import { dueTimeOf } from './tasks';
 
 export type Mission =
   | { kind: 'task'; id: string; title: string; subtitle: string; xp: number; done: boolean; task: Task }
@@ -64,17 +65,28 @@ export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {
   return [...habits, ...tasks].sort((a, b) => Number(a.done) - Number(b.done) || missionUrgency(a, now) - missionUrgency(b, now) || b.xp - a.xp);
 }
 
-/** Hasta cuándo se puede hacer una tarea abierta: «Hasta el 13 oct», «Hasta hoy (10 oct)», «Venció el 8 oct» o «Sin fecha límite». */
+/**
+ * Hasta cuándo se puede hacer una tarea abierta: «Hasta el 13 oct», «Hasta hoy (10 oct)», «Venció el 8 oct» o
+ * «Sin fecha límite». Con hora límite se añade: «Hasta hoy a las 18:00», «Hasta el 13 oct a las 18:00».
+ */
 export function deadlineText(t: Task, now: ISODate = today()): string {
   if (!t.dueDate) return 'Sin fecha límite';
   const n = diffDays(t.dueDate, now);
-  if (n < 0) return `Venció el ${shortDate(t.dueDate)}`;
-  if (n === 0) return `Hasta hoy (${shortDate(t.dueDate)})`;
-  return `Hasta el ${shortDate(t.dueDate)}`;
+  const time = dueTimeOf(t);
+  const at = time ? ` a las ${time}` : '';
+  if (n < 0) return `Venció el ${shortDate(t.dueDate)}${at}`;
+  if (n === 0) return time ? `Hasta hoy a las ${time}` : `Hasta hoy (${shortDate(t.dueDate)})`;
+  return `Hasta el ${shortDate(t.dueDate)}${at}`;
 }
 
 /** Cuánto apremia una misión: los hábitos de hoy cuentan como «hoy» (0); las tareas, por los días que faltan. */
-export const missionUrgency = (m: Mission, now: ISODate = today()): number => (m.kind === 'habit' ? 0 : m.task.dueDate ? diffDays(m.task.dueDate, now) : 30);
+export const missionUrgency = (m: Mission, now: ISODate = today()): number => {
+  if (m.kind === 'habit') return 0;
+  if (!m.task.dueDate) return 30;
+  // Dentro del mismo día va antes la que vence más temprano; sin hora cuenta como al final del día.
+  const time = dueTimeOf(m.task);
+  return diffDays(m.task.dueDate, now) + (time ? clockToMinutes(time) / 1440 : 0.999);
+};
 
 /** Cuándo toca una tarea: vencida, hoy, en los próximos 7 días, más adelante o sin fecha. Las hechas hoy cuentan como «hoy». */
 export type TaskBucket = 'late' | 'today' | 'soon' | 'later' | 'none';

@@ -26,11 +26,13 @@ const PUSH_HELP: Record<Exclude<PushState, 'off' | 'on'>, string> = {
   denied: 'Bloqueaste las notificaciones de este sitio. Actívalas desde los ajustes del navegador y recarga.',
 };
 
-/** Recordatorios de hábitos con notificaciones push. */
+/** Recordatorios de hábitos, aviso de hora límite de tareas y resumen semanal con notificaciones push. */
 function PushPanel() {
   const push = dataLayer.repo.push;
   const toast = useUi((s) => s.toast);
   const withReminder = useData((s) => s.habits.filter((h) => h.reminder).length);
+  const weeklyDigest = useData((s) => s.profile.weeklyDigest !== false);
+  const updateProfile = useData((s) => s.updateProfile);
   const [state, setState] = useState<PushState | 'loading'>('loading');
   const [busy, setBusy] = useState(false);
 
@@ -58,8 +60,13 @@ function PushPanel() {
   return (
     <>
       <p className="muted small">
-        {withReminder > 0 ? <>Tienes <b>{withReminder}</b> {withReminder === 1 ? 'hábito' : 'hábitos'} con hora de recordatorio.</> : 'Ponle una hora a un hábito (al crearlo o editarlo) y recibirás un aviso ese día si aún no lo has hecho.'}
+        {withReminder > 0 ? <>Tienes <b>{withReminder}</b> {withReminder === 1 ? 'hábito' : 'hábitos'} con hora de recordatorio.</> : 'Ponle una hora a un hábito (al crearlo o editarlo) y recibirás un aviso ese día si aún no lo has hecho.'}{' '}
+        Las tareas con hora límite te avisan una hora antes.
       </p>
+      <label className="stepcheck">
+        <input type="checkbox" checked={weeklyDigest} onChange={(e) => updateProfile({ weeklyDigest: e.target.checked })} />
+        <span>Resumen semanal el domingo a las 19:00 (XP de la semana, días activos y tareas pendientes)</span>
+      </label>
       {state === 'loading' && <p className="muted small">Comprobando…</p>}
       {state !== 'loading' && state !== 'off' && state !== 'on' && <p className="form__info">{PUSH_HELP[state]}{state === 'invalid-key' && ` ${describeInvalidVapidKey()}`}</p>}
       <div className="row">

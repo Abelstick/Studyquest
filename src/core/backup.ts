@@ -5,7 +5,7 @@
  */
 import type { Habit, HabitChain, Snapshot } from './domain';
 import { defaultProfile } from './game';
-import { newId } from './dates';
+import { isClockTime, newId } from './dates';
 import { safeUrl } from './certifications';
 import { cleanChains } from './chains';
 import { sanitizeHero } from './hero';
@@ -142,6 +142,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       completedAt: DATE.test(str(o.completedAt)) ? str(o.completedAt) : null,
       ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       ...(DIFFICULTY_IDS.includes(str(o.difficulty)) ? { difficulty: str(o.difficulty) } : {}),
+      ...(DATE.test(str(o.dueDate)) && isClockTime(o.dueTime) ? { dueTime: o.dueTime } : {}),
       ...(isObj(o.recurrence) && ['day', 'week', 'month'].includes(str(o.recurrence.unit)) ? { recurrence: { unit: str(o.recurrence.unit), interval: Math.min(365, Math.max(1, Math.floor(num(o.recurrence.interval, 1)))) } } : {}),
       spawnedRaw: str(o.spawnedId),
     };
@@ -237,6 +238,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     ...(DATE.test(str(p.lastChest)) ? { lastChest: str(p.lastChest) } : {}),
     ...(isObj(p.city) ? { city: Object.fromEntries(Object.entries(p.city).filter(([k, v]) => ['casa', 'biblioteca', 'academia', 'laboratorio', 'arena', 'museo'].includes(k) && typeof v === 'number').map(([k, v]) => [k, Math.max(0, Math.min(5, Math.floor(v as number)))])) } : {}),
     ...(typeof p.chests === 'number' && p.chests > 0 ? { chests: Math.floor(p.chests) } : {}),
+    ...(p.weeklyDigest === false ? { weeklyDigest: false } : {}),
     // Las cadenas apuntan a hábitos: se reescriben las referencias y se descartan las que quedan sueltas.
     ...(asArray(p.chains).length
       ? {

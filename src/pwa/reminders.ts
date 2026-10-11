@@ -1,12 +1,13 @@
 /**
- * Recordatorios DENTRO de la web: mientras la app está abierta avisa con un banner y un sonido.
+ * Recordatorios DENTRO de la web (hábitos y hora límite de tareas): mientras la app está abierta avisa con un banner y un sonido.
  * No necesita servidor ni push, así que también funciona en modo local.
  *
  * Usa el mismo planificador que la Edge Function (`supabase/functions/_shared/reminders.ts`), de modo que
  * la web y el push coinciden siempre en cuándo avisar y cuándo repetir.
  */
-import type { Habit, HabitLog } from '@/core/domain';
+import type { Habit, HabitLog, Task } from '@/core/domain';
 import { planReminders, type HabitRow, type PlannedReminder, type SentState } from '../../supabase/functions/_shared/reminders';
+import { planTaskReminders, taskReminderKey, type TaskRow } from '../../supabase/functions/_shared/taskReminders';
 import { localParts } from '../../supabase/functions/_shared/due';
 
 export interface ReminderFile {
@@ -59,11 +60,20 @@ export interface TickInput {
   /** Hay permiso de notificaciones y service worker para mostrar una del sistema. */
   canNotify: boolean;
   state: ReminderFile;
+  /** Tareas para el aviso de hora límite. Opcional: sin ellas solo se avisan hábitos. */
+  tasks?: Task[];
 }
 
-export function tickReminders(i: TickInput): { effects: { reminder: PlannedReminder; effect: Effect }[]; state: ReminderFile } {
+export const taskRows = (tasks: Task[]): TaskRow[] =>
+  tasks.filter((t) => t.dueDate && t.dueTime).map((t) => ({ id: t.id, data: { title: t.title, status: t.status, dueDate: t.dueDate, dueTime: t.dueTime, xp: t.xp } }));
+
+/** Lo que se le enseña al usuario, venga de un hábito o de una tarea. */
+export type Notice = Pick<PlannedReminder, 'title' | 'body' | 'url' | 'tag'>;
+
+export function tickReminders(i: TickInput): { effects: { reminder: Notice; effect: Effect }[]; state: ReminderFile } {
   const day = localParts(i.now, i.timeZone).date;
   const state: ReminderFile = i.state.day === day ? { day, items: { ...i.state.items } } : { day, items: {} };
+  const effectNow = (): Effect => (i.visible ? 'inapp' : i.pushActive ? 'silent' : i.canNotify ? 'system' : 'inapp');
 
   const plan = planReminders({
     habits: habitRows(i.habits),
@@ -73,12 +83,17 @@ export function tickReminders(i: TickInput): { effects: { reminder: PlannedRemin
     timeZone: i.timeZone,
   });
 
-  const effects = plan.map((reminder) => {
+  const effects: { reminder: Notice; effect: Effect }[] = plan.map((reminder) => {
     state.items[reminder.habitId] = { count: reminder.count, lastSentAt: i.now.getTime() };
-    let effect: Effect = 'inapp';
-    if (!i.visible) effect = i.pushActive ? 'silent' : i.canNotify ? 'system' : 'inapp';
-    return { reminder, effect };
+    return { reminder, effect: effectNow() };
   });
+
+  // Tareas con hora límite: un aviso una hora antes. Se guardan con la clave `task:<id>` en el mismo estado.
+  const sentTasks = new Set((i.tasks ?? []).map((t) => t.id).filter((id) => state.items[taskReminderKey(id)]));
+  for (const reminder of planTaskReminders({ tasks: taskRows(i.tasks ?? []), sent: sentTasks, now: i.now, timeZone: i.timeZone })) {
+    state.items[reminder.key] = { count: 1, lastSentAt: i.now.getTime() };
+    effects.push({ reminder, effect: effectNow() });
+  }
   return { effects, state };
 }
 
@@ -87,13 +102,17 @@ export interface PushMessage {
   body: string;
   url: string;
   tag: string;
-  habitId: string;
+  /** Identifica el aviso: id del hábito o `task:<id>`. Los push antiguos solo traen `habitId`. */
+  key?: string;
+  habitId?: string;
   count?: number;
 }
 
 /** El service worker avisa de un push mientras la app está visible: decide si hay que mostrarlo o ya se mostró. */
 export function acceptPushMessage(msg: PushMessage, state: ReminderFile, nowMs: number): { show: boolean; state: ReminderFile } {
-  const prev = state.items[msg.habitId];
+  const key = msg.key ?? msg.habitId;
+  if (!key) return { show: true, state };
+  const prev = state.items[key];
   if (prev && nowMs - prev.lastSentAt < DEDUPE_MS) return { show: false, state };
-  return { show: true, state: { ...state, items: { ...state.items, [msg.habitId]: { count: msg.count ?? (prev?.count ?? 0) + 1, lastSentAt: nowMs } } } };
+  return { show: true, state: { ...state, items: { ...state.items, [key]: { count: msg.count ?? (prev?.count ?? 0) + 1, lastSentAt: nowMs } } } };
 }

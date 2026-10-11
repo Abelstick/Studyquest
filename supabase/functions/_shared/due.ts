@@ -38,7 +38,7 @@ const fromUtc = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 export const addDays = (s: string, n: number) => fromUtc(toUtc(s) + n * 86_400_000);
 const diffDays = (a: string, b: string) => Math.round((toUtc(a) - toUtc(b)) / 86_400_000);
 /** 0 = lunes … 6 = domingo. */
-const weekdayIndex = (s: string) => (new Date(toUtc(s)).getUTCDay() + 6) % 7;
+export const weekdayIndex = (s: string) => (new Date(toUtc(s)).getUTCDay() + 6) % 7;
 const weekStart = (s: string) => addDays(s, -weekdayIndex(s));
 const monthKey = (s: string) => s.slice(0, 7);
 const isLeap = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;

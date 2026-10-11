@@ -6,7 +6,7 @@ import { addDays, daysLeftLabel, today, weekStart, WEEKDAYS_SHORT, shortDate } f
 import { computeStreak, isCounter, isDueOn, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
 import { dailyMissions, daySummary, isReadyToFinish, missionParts, missionUrgency, taskBucket, tips, type Mission, type TaskBucket } from '@/core/missions';
 import { dueReviews } from '@/core/review';
-import { isBoss } from '@/core/tasks';
+import { isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
 import { HabitAction } from '@/features/habitos/HabitAction';
 import { LateBanner } from '@/features/tareas/LateBanner';
@@ -87,7 +87,7 @@ function MissionRow({ m }: { m: Mission }) {
         )}
       </div>
       {m.kind === 'task' && !m.done && (
-        <Tag tone={!m.task.dueDate ? 'plain' : m.task.dueDate < today() ? 'red' : m.task.dueDate === today() ? 'blue' : 'plain'}>{daysLeftLabel(m.task.dueDate) ?? 'Sin fecha'}</Tag>
+        <Tag tone={!m.task.dueDate ? 'plain' : isOverdue(m.task) ? 'red' : m.task.dueDate === today() ? 'blue' : 'plain'}>{timeLeftLabel(m.task) ?? 'Sin fecha'}</Tag>
       )}
       <Tag tone={m.done ? 'plain' : 'xp'}>+{m.xp} XP</Tag>
       {ready && <span className="mission__ready">¡Todo listo! Pulsa ✔ para terminarla.</span>}

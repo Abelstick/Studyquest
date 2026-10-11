@@ -22,7 +22,7 @@ function deliver(r: Pick<PlannedReminder, 'title' | 'body' | 'url' | 'tag'>, eff
 }
 
 /**
- * Recordatorios dentro de la app: cada 15 s comprueba qué hábitos toca avisar y muestra un banner con sonido.
+ * Recordatorios dentro de la app: cada 15 s comprueba qué hábitos (y tareas a punto de vencer) toca avisar y muestra un banner con sonido.
  * Se monta una sola vez, en el layout.
  */
 export function useHabitReminders() {
@@ -34,12 +34,13 @@ export function useHabitReminders() {
     const timeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
     const run = () => {
-      const { habits, habitLogs } = useData.getState();
-      if (!habits.some((h) => h.reminder)) return;
+      const { habits, habitLogs, tasks } = useData.getState();
+      if (!habits.some((h) => h.reminder) && !tasks.some((t) => t.dueTime && t.status !== 'done')) return;
       const now = new Date();
       const tz = timeZone();
       const { effects, state } = tickReminders({
         habits,
+        tasks,
         logs: habitLogs,
         now,
         timeZone: tz,
@@ -62,7 +63,7 @@ export function useHabitReminders() {
     // Un push llegó con la app visible: el service worker no muestra la notificación del sistema y nos avisa a nosotros.
     const onMessage = (e: MessageEvent) => {
       const msg = e.data as (PushMessage & { type?: string }) | undefined;
-      if (msg?.type !== 'reminder' || !msg.habitId) return;
+      if (msg?.type !== 'reminder' || !(msg.key ?? msg.habitId)) return;
       const now = new Date();
       const res = acceptPushMessage(msg, loadReminderState(localParts(now, timeZone()).date), now.getTime());
       if (!res.show) return;

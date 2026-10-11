@@ -41,6 +41,8 @@ export interface Profile {
   city?: Partial<Record<string, number>>;
   /** Cadenas de hábitos (rutinas en orden). Son configuración, no registros: viven con el perfil. */
   chains?: HabitChain[];
+  /** Resumen semanal por push el domingo a las 19:00. Sin definir = activado; solo `false` lo apaga. */
+  weeklyDigest?: boolean;
   /** Tu héroe 3D. Opcional: no existe hasta que eliges raza. */
   hero?: Hero;
 }
@@ -92,6 +94,8 @@ export interface Task {
   priority: Priority;
   status: TaskStatus;
   dueDate: ISODate | null;
+  /** Hora local límite («18:00») del día `dueDate`. Sin definir = vale todo el día. Solo tiene sentido con fecha. */
+  dueTime?: string;
   estimateMin: number;
   xp: number;
   subtasks: Subtask[];

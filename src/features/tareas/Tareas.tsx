@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { daysLeftLabel, diffDays, dueLabel, today } from '@/core/dates';
+import { diffDays, dueLabel, today } from '@/core/dates';
 import type { Priority, Task, TaskStatus } from '@/core/domain';
-import { bossHp, isBoss, recurrenceLabel } from '@/core/tasks';
+import { bossHp, dueTimeOf, isBoss, isOverdue, recurrenceLabel, timeLeftLabel } from '@/core/tasks';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { difficultyInfo, difficultyOf } from '@/core/difficulty';
@@ -22,14 +22,17 @@ const NEXT: Record<TaskStatus, { to: TaskStatus; label: string }> = {
   doing: { to: 'done', label: '✔ Completar' },
   done: { to: 'todo', label: '↩ Reabrir' },
 };
+/** Orden por vencimiento: fecha y, dentro del día, hora (las de sin hora al final del día; sin fecha, al final). */
+const dueKey = (t: Task) => `${t.dueDate ?? '9999'} ${dueTimeOf(t) ?? '99'}`;
 const PRIORITY_LABEL: Record<Priority, string> = { low: 'Baja', mid: 'Media', high: 'Alta', boss: 'Jefe final' };
 
 function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const toggleSubtask = useData((s) => s.toggleSubtask);
   const openModal = useUi((s) => s.openModal);
-  const overdue = task.status !== 'done' && !!task.dueDate && task.dueDate < today();
-  const daysLeft = daysLeftLabel(task.dueDate);
+  const overdue = isOverdue(task);
+  const daysLeft = timeLeftLabel(task);
+  const dueTime = dueTimeOf(task);
   const soon = !overdue && !!task.dueDate && diffDays(task.dueDate, today()) <= 2;
   const doneSubs = task.subtasks.filter((s) => s.done).length;
   const boss = isBoss(task) && task.subtasks.length > 0;
@@ -73,7 +76,7 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
         </div>
       )}
       <div className="tags">
-        <span className={cx('tag', overdue ? 'tag--red' : 'tag--plain')}>{dueLabel(task.dueDate)}</span>
+        <span className={cx('tag', overdue ? 'tag--red' : 'tag--plain')}>{dueLabel(task.dueDate)}{dueTime && ` · ${dueTime}`}</span>
         {task.status !== 'done' && daysLeft && <span className={cx('tag', overdue ? 'tag--red' : soon ? 'tag--xp' : 'tag--plain')}>{daysLeft}</span>}
         {task.estimateMin > 0 && <span className="tag tag--plain">{task.estimateMin >= 60 ? `${+(task.estimateMin / 60).toFixed(1)} h` : `${task.estimateMin} min`}</span>}
         <span className="tag tag--plain">{PRIORITY_LABEL[task.priority]}</span>
@@ -133,7 +136,7 @@ export default function Tareas() {
   const byStatus = (st: TaskStatus) =>
     visible
       .filter((t) => t.status === st)
-      .sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999') || b.xp - a.xp);
+      .sort((a, b) => dueKey(a).localeCompare(dueKey(b)) || b.xp - a.xp);
 
   return (
     <div className="stack">

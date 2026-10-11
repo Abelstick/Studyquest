@@ -17,6 +17,11 @@ export const fromISODate = (s: ISODate): Date => {
   return new Date(y, m - 1, d);
 };
 export const today = (): ISODate => toISODate(new Date());
+/** Minutos desde la medianoche local (0-1439). */
+export const minutesOfDay = (d: Date = new Date()): number => d.getHours() * 60 + d.getMinutes();
+/** ¿Es una hora «HH:MM» válida (00:00-23:59)? */
+export const isClockTime = (s: unknown): s is string => typeof s === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+export const clockToMinutes = (s: string): number => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
 export const addDays = (s: ISODate, n: number): ISODate => {
   const d = fromISODate(s);
   d.setDate(d.getDate() + n);

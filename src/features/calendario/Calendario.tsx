@@ -7,9 +7,11 @@ import { catchUpDay } from '@/core/catchup';
 import { longDate, monthName, shortDate, today, toISODate, WEEKDAYS_SHORT } from '@/core/dates';
 import { isCounter, stepForCounter } from '@/core/game';
 import type { ISODate, Task } from '@/core/domain';
-import { recurrenceLabel } from '@/core/tasks';
+import { dueTimeOf, isOverdue, recurrenceLabel } from '@/core/tasks';
 import { Button, PageHead, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { downloadText } from '@/ui/download';
+import { buildIcs, exportableTasks } from '@/core/ics';
 
 const MAX_CHIPS = 3;
 type View = 'week' | 'month';
@@ -33,7 +35,7 @@ function TaskChip({ t, now, onOpen, onSelect }: { t: Task; now: ISODate; onOpen:
         ev.dataTransfer.setData('text/plain', t.id);
         ev.dataTransfer.effectAllowed = 'move';
       }}
-      className={cx('chip-task', `chip-task--${t.priority}`, t.status === 'done' && 'is-done', t.status !== 'done' && !!t.dueDate && t.dueDate < now && 'is-late')}
+      className={cx('chip-task', `chip-task--${t.priority}`, t.status === 'done' && 'is-done', isOverdue(t, now) && 'is-late')}
       onClick={() => {
         onSelect?.();
         onOpen(t.id);
@@ -41,6 +43,7 @@ function TaskChip({ t, now, onOpen, onSelect }: { t: Task; now: ISODate; onOpen:
       title={t.title}
     >
       {t.recurrence && <span aria-hidden="true">↻ </span>}
+      {dueTimeOf(t) && <b>{dueTimeOf(t)} </b>}
       {t.title}
     </button>
   );
@@ -103,6 +106,7 @@ export default function Calendario() {
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const updateTask = useData((s) => s.updateTask);
   const openModal = useUi((s) => s.openModal);
+  const toast = useUi((s) => s.toast);
   const now = today();
 
   const [view, setView] = useState<View>('week');
@@ -133,6 +137,12 @@ export default function Calendario() {
     if (t && t.dueDate !== date) updateTask(id, { dueDate: date });
   };
   const openTask = (id: string) => openModal({ type: 'task', id });
+  const exportIcs = () => {
+    const count = exportableTasks(tasks).length;
+    if (!count) return toast({ kind: 'info', title: 'No hay tareas con fecha', body: 'Ponle fecha límite a una tarea abierta para llevarla a tu calendario.' });
+    downloadText(`studyquest-tareas-${now}.ics`, buildIcs(tasks, courses), 'text/calendar;charset=utf-8');
+    toast({ kind: 'info', title: `${count} ${count === 1 ? 'tarea exportada' : 'tareas exportadas'}`, body: 'Ábrelo o impórtalo en tu calendario. Si lo importas otra vez, se actualizan en vez de duplicarse.' });
+  };
   // Toda la casilla elige el día (no solo el número); el botón del número queda para el teclado.
   const dropProps = (d: ISODate) => ({
     onClick: () => setSelected(d),
@@ -185,6 +195,9 @@ export default function Calendario() {
             </Button>
             <Button small onClick={goToday}>
               Hoy
+            </Button>
+            <Button small onClick={exportIcs} title="Descarga un .ics con tus tareas con fecha para importarlo en Google Calendar, Outlook o Apple">
+              📅 Exportar .ics
             </Button>
           </>
         }

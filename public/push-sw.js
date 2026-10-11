@@ -14,7 +14,8 @@ self.addEventListener('push', (event) => {
     (async () => {
       // Si la app está abierta y visible, no molestamos con una notificación del sistema:
       // se lo decimos a la propia web, que avisa dentro de la app (banner + sonido) sin duplicados.
-      if (data.habitId) {
+      // `key` identifica el aviso (hábito o tarea); los push antiguos solo traían `habitId`.
+      if (data.key || data.habitId) {
         const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
         const visible = windows.filter((w) => w.visibilityState === 'visible');
         if (visible.length) {

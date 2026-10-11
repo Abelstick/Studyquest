@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Habit } from '@/core/domain';
+import type { Habit, Task } from '@/core/domain';
 import { acceptPushMessage, loadReminderState, saveReminderState, tickReminders, type ReminderFile, type TickInput } from './reminders';
 
 // 2026-09-21 00:00Z = domingo 20 a las 19:00 en Lima
@@ -70,7 +70,25 @@ describe('tickReminders (recordatorios dentro de la web)', () => {
   });
 });
 
+describe('tickReminders con tareas de hora límite', () => {
+  const task: Task = { id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-09-20', dueTime: '19:30', estimateMin: 0, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null };
+  it('avisa una hora antes y una sola vez', () => {
+    const first = tick({ min: 0, habits: [], tasks: [task] });
+    expect(first.effects).toHaveLength(1);
+    expect(first.effects[0].reminder.title).toBe('⏰ Informe');
+    expect(first.state.items['task:t1'].count).toBe(1);
+    expect(tick({ min: 10, habits: [], tasks: [task], state: first.state }).effects).toEqual([]);
+  });
+  it('no confunde la tarea con el hábito del mismo minuto', () => {
+    expect(tick({ min: 0, tasks: [task] }).effects).toHaveLength(2);
+  });
+});
+
 describe('acceptPushMessage (push recibido con la app visible)', () => {
+  it('deduplica también los avisos de tareas por su clave', () => {
+    const state: ReminderFile = { day: 'x', items: { 'task:t1': { count: 1, lastSentAt: 1_000_000 } } };
+    expect(acceptPushMessage({ title: '⏰ X', body: 'b', url: '/tareas', tag: 'task-t1', key: 'task:t1' }, state, 1_000_000 + 30_000).show).toBe(false);
+  });
   const msg = { title: '🔥 X', body: 'b', url: '/habitos/h1', tag: 'habit-h1', habitId: 'h1', count: 2 };
   it('muestra el aviso si aún no se había mostrado', () => {
     const r = acceptPushMessage(msg, empty, 1_000_000);

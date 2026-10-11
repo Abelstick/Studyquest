@@ -133,5 +133,9 @@ variables de build.
 ## Límites conocidos (no son errores)
 
 - La cola offline (`data/offline`) solo aplica con Supabase; usa *last write wins* entre dispositivos.
-- Las tareas se mueven con botones, no con arrastrar y soltar.
-- No existen las frecuencias de hábito "fechas concretas", "anual" ni "personalizado".
+- Arrastrar y soltar tareas solo funciona con ratón o trackpad; en táctil y
+  teclado se usan los botones.
+- Los push (recordatorios de hábitos, hora límite de tareas y resumen semanal)
+  necesitan Supabase. La lógica de cuándo avisar vive en
+  `supabase/functions/_shared/` y la comparten la web y la Edge Function.
+- El `.ics` exportado es una foto del momento: no se sincroniza solo.

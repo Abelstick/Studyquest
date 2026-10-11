@@ -3,7 +3,7 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { XP_BY_PRIORITY } from '@/core/game';
 import { DIFFICULTIES, difficultyInfo, difficultyOf, xpForDifficulty } from '@/core/difficulty';
-import { newId } from '@/core/dates';
+import { isClockTime, newId } from '@/core/dates';
 import type { Difficulty, Priority, Recurrence, TaskStatus } from '@/core/domain';
 import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
 import { Button, Field, Modal, Segmented, linesToList, TextInput, NumberInput } from '@/ui/kit';
@@ -30,6 +30,7 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
   const [title, setTitle] = useState(editing?.title ?? '');
   const [courseId, setCourseId] = useState(editing?.courseId ?? '');
   const [due, setDue] = useState(editing?.dueDate ?? dueDate ?? '');
+  const [dueTime, setDueTime] = useState(editing?.dueTime ?? '');
   const [repeat, setRepeat] = useState<Recurrence | null>(editing?.recurrence ?? null);
   const [priority, setPriority] = useState<Priority>(editing?.priority ?? 'mid');
   const [estimate, setEstimate] = useState(editing?.estimateMin ?? 30);
@@ -60,6 +61,8 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
       courseId: courseId || null,
       priority,
       dueDate: due || null,
+      // La hora solo vale con fecha; sin ella la tarea vence al terminar el día.
+      dueTime: due && isClockTime(dueTime) ? dueTime : undefined,
       estimateMin: Math.max(0, estimate),
       xp: Math.max(0, xp),
       difficulty,
@@ -91,6 +94,9 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
             )}
           </Field>
           <Field label="Fecha límite">{(fid) => <input id={fid} className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} />}</Field>
+          <Field label="Hora límite" hint={!due ? 'Elige primero una fecha.' : dueTime ? 'Te avisamos una hora antes.' : 'Opcional. Sin hora, vale todo el día.'}>
+            {(fid) => <input id={fid} className="input" type="time" value={due ? dueTime : ''} disabled={!due} onChange={(e) => setDueTime(e.target.value)} />}
+          </Field>
         </div>
         <Field label="Prioridad">{() => <Segmented label="Prioridad" value={priority} options={PRIORITIES} onChange={pickPriority} />}</Field>
         <Field label="Dificultad" hint={`${difficultyInfo(difficulty).hint} Ajusta el XP que propone la tarea; puedes cambiarlo abajo.`}>

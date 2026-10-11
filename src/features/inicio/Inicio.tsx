@@ -86,8 +86,8 @@ function MissionRow({ m }: { m: Mission }) {
           </button>
         )}
       </div>
-      {m.kind === 'task' && !m.done && m.task.dueDate && (
-        <Tag tone={m.task.dueDate < today() ? 'red' : m.task.dueDate === today() ? 'blue' : 'plain'}>{daysLeftLabel(m.task.dueDate)}</Tag>
+      {m.kind === 'task' && !m.done && (
+        <Tag tone={!m.task.dueDate ? 'plain' : m.task.dueDate < today() ? 'red' : m.task.dueDate === today() ? 'blue' : 'plain'}>{daysLeftLabel(m.task.dueDate) ?? 'Sin fecha'}</Tag>
       )}
       <Tag tone={m.done ? 'plain' : 'xp'}>+{m.xp} XP</Tag>
       {ready && <span className="mission__ready">¡Todo listo! Pulsa ✔ para terminarla.</span>}

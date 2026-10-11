@@ -1,5 +1,5 @@
 import type { Habit, HabitLog, ISODate, Snapshot, Task } from './domain';
-import { diffDays, today } from './dates';
+import { diffDays, shortDate, today } from './dates';
 import { computeStreak, frequencyLabel, goalLabel, isDueOn, isHabitDone, logFor } from './game';
 import { lastActivityByCourse, weeklyReport } from './stats';
 import { dueReviews } from './review';
@@ -55,13 +55,22 @@ export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {
       kind: 'task' as const,
       id: `t:${t.id}`,
       title: t.title,
-      subtitle: `${courseName(t.courseId) ?? 'Side quest'}${t.estimateMin ? ` · ${t.estimateMin} min` : ''}`,
+      subtitle: [courseName(t.courseId) ?? 'Side quest', t.estimateMin ? `${t.estimateMin} min` : '', t.status === 'done' ? '' : deadlineText(t, now)].filter(Boolean).join(' · '),
       xp: t.xp,
       done: t.status === 'done',
       task: t,
     }));
 
   return [...habits, ...tasks].sort((a, b) => Number(a.done) - Number(b.done) || missionUrgency(a, now) - missionUrgency(b, now) || b.xp - a.xp);
+}
+
+/** Hasta cuándo se puede hacer una tarea abierta: «Hasta el 13 oct», «Hasta hoy (10 oct)», «Venció el 8 oct» o «Sin fecha límite». */
+export function deadlineText(t: Task, now: ISODate = today()): string {
+  if (!t.dueDate) return 'Sin fecha límite';
+  const n = diffDays(t.dueDate, now);
+  if (n < 0) return `Venció el ${shortDate(t.dueDate)}`;
+  if (n === 0) return `Hasta hoy (${shortDate(t.dueDate)})`;
+  return `Hasta el ${shortDate(t.dueDate)}`;
 }
 
 /** Cuánto apremia una misión: los hábitos de hoy cuentan como «hoy» (0); las tareas, por los días que faltan. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Habit, Snapshot, Task } from './domain';
-import { dailyMissions, daySummary, missionUrgency, taskBucket } from './missions';
+import { dailyMissions, daySummary, deadlineText, missionUrgency, taskBucket } from './missions';
 
 const NOW = '2026-09-16';
 const task = (id: string, dueDate: string | null): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null });
@@ -34,5 +34,19 @@ describe('qué hacer hoy', () => {
     const sum = daySummary(dailyMissions(s, NOW), NOW);
     expect(sum).toMatchObject({ late: 1, dueToday: 1, habits: 0 });
     expect(sum.next?.id).toBe('d');
+  });
+});
+
+describe('fecha límite de una tarea', () => {
+  it('dice hasta cuándo se puede hacer', () => {
+    expect(deadlineText(task('a', '2026-09-20'), NOW)).toBe('Hasta el 20 sep');
+    expect(deadlineText(task('a', NOW), NOW)).toBe('Hasta hoy (16 sep)');
+    expect(deadlineText(task('a', '2026-09-14'), NOW)).toBe('Venció el 14 sep');
+    expect(deadlineText(task('a', null), NOW)).toBe('Sin fecha límite');
+  });
+
+  it('aparece en el subtítulo de la misión mientras está abierta', () => {
+    const m = dailyMissions({ tasks: [task('a', '2026-09-20')], habits: [], habitLogs: [], courses: [] } as unknown as Snapshot, NOW); // solo hacen falta estos campos
+    expect(m[0].subtitle).toBe('Side quest · Hasta el 20 sep');
   });
 });

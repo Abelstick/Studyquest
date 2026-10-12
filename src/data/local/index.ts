@@ -1,4 +1,4 @@
-import type { AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent } from '@/core/domain';
+import type { AgendaEvent, AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent } from '@/core/domain';
 import type { AuthPort, AuthUser, Collection, DataLayer, Repository } from '../ports';
 import { defaultProfile } from '@/core/game';
 
@@ -76,7 +76,8 @@ export function createLocalRepository(storage: KeyValueStorage): Repository {
   const sessions = c<StudySession>('study_sessions');
   const xpEvents = c<XpEvent>('xp_events');
   const notifications = c<AppNotification>('notifications');
-  const all = [tasks, habits, logs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications];
+  const events = c<AgendaEvent>('calendar_events');
+  const all = [tasks, habits, logs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events];
   const profileKey = `${PREFIX}profile`;
 
   const readProfile = () => {
@@ -136,6 +137,7 @@ export function createLocalRepository(storage: KeyValueStorage): Repository {
         await notifications.createMany(items.map((n) => ({ ...n, read: true })));
       },
     },
+    events,
     async wipe() {
       all.forEach((col) => col.clear());
       storage.removeItem(profileKey);

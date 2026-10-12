@@ -21,7 +21,7 @@ const flush = () => new Promise((r) => setTimeout(r, 20));
 const snapshotOf = () => {
   const s = store.getState();
   return { profile: s.profile, tasks: s.tasks, habits: s.habits, habitLogs: s.habitLogs, courses: s.courses, goals: s.goals, projects: s.projects,
-    notes: s.notes, certifications: s.certifications, personalRewards: s.personalRewards, sessions: s.sessions, xpEvents: s.xpEvents, notifications: s.notifications };
+    notes: s.notes, certifications: s.certifications, personalRewards: s.personalRewards, sessions: s.sessions, xpEvents: s.xpEvents, notifications: s.notifications, events: s.events };
 };
 
 const draft = (over = {}) => ({
@@ -986,5 +986,67 @@ describe('store de datos', () => {
       expect(levelFromXp(store.getState().profile.xp)).toBe(5);
       expect(store.getState().notifications.some((n) => n.title === 'Kai puede evolucionar')).toBe(true);
     });
+  });
+});
+
+describe('agenda', () => {
+  const block = (over = {}) => ({ title: 'Desayuno', category: 'meal' as const, date: '2026-09-16', start: '08:00', minutes: 30, repeat: { type: 'daily' as const, every: 1 }, ...over });
+
+  it('crear una actividad la guarda una sola vez, aunque se repita', async () => {
+    const id = store.getState().createEvent(block());
+    expect(store.getState().events).toHaveLength(1);
+    await flush();
+    const saved = await repo.events.list();
+    expect(saved.map((e) => e.id)).toEqual([id]);
+    expect(saved[0].rev).toBe(0);
+  });
+
+  it('cambiar solo una ocurrencia guarda una excepción; «esta y las siguientes» parte la serie', async () => {
+    const id = store.getState().createEvent(block());
+    store.getState().changeEventOccurrence(id, '2026-09-17', { start: '09:00' }, 'one');
+    expect(store.getState().events[0].exceptions).toEqual({ '2026-09-17': { start: '09:00' } });
+    store.getState().changeEventOccurrence(id, '2026-09-20', { minutes: 45 }, 'following');
+    const [head, tail] = store.getState().events;
+    expect(head.until).toBe('2026-09-19');
+    expect(tail).toMatchObject({ date: '2026-09-20', minutes: 45 });
+    await flush();
+    expect(await repo.events.list()).toHaveLength(2);
+  });
+
+  it('marcar el bloque de un hábito como hecho no registra el hábito', () => {
+    store.getState().createHabit({ title: 'Agua', frequency: { type: 'daily' }, measure: 'times', target: 8, xp: 10, reminder: null, steps: [] });
+    const habitId = store.getState().habits[0].id;
+    const id = store.getState().createEvent(block({ title: '', habitId, repeat: { type: 'habit' as const } }));
+    store.getState().setEventStatus(id, '2026-09-16', 'done');
+    expect(store.getState().habitLogs).toHaveLength(0);
+    expect(store.getState().profile.xp).toBe(0);
+  });
+
+  it('borrar un hábito deja sus bloques como actividades sueltas', async () => {
+    store.getState().createHabit({ title: 'Ejercicio', frequency: { type: 'daily' }, measure: 'minutes', target: 10, xp: 10, reminder: null, steps: [] });
+    const habitId = store.getState().habits[0].id;
+    store.getState().createEvent(block({ title: '', habitId, repeat: { type: 'habit' as const } }));
+    store.getState().deleteHabit(habitId);
+    expect(store.getState().events[0]).toMatchObject({ title: 'Ejercicio', habitId: null, repeat: { type: 'daily', every: 1 } });
+    await flush();
+    expect((await repo.events.list())[0].habitId).toBeNull();
+  });
+
+  it('borrar una sola ocurrencia o la serie entera', async () => {
+    const id = store.getState().createEvent(block());
+    store.getState().removeEvent(id, '2026-09-18', 'one');
+    expect(store.getState().events[0].exceptions?.['2026-09-18']).toEqual({ deleted: true });
+    store.getState().removeEvent(id, '2026-09-18', 'all');
+    expect(store.getState().events).toHaveLength(0);
+    await flush();
+    expect(await repo.events.list()).toHaveLength(0);
+  });
+
+  it('reiniciar la partida borra también la agenda', async () => {
+    store.getState().createEvent(block());
+    await flush();
+    await store.getState().resetAll();
+    expect(store.getState().events).toHaveLength(0);
+    expect(await repo.events.list()).toHaveLength(0);
   });
 });

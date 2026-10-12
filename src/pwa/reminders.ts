@@ -5,7 +5,9 @@
  * Usa el mismo planificador que la Edge Function (`supabase/functions/_shared/reminders.ts`), de modo que
  * la web y el push coinciden siempre en cuándo avisar y cuándo repetir.
  */
-import type { Habit, HabitLog, Task } from '@/core/domain';
+import type { AgendaEvent, Habit, HabitLog, Task } from '@/core/domain';
+import { addDays } from '@/core/dates';
+import { agendaNotices, occurrencesBetween } from '@/core/agenda';
 import { planReminders, type HabitRow, type PlannedReminder, type SentState } from '../../supabase/functions/_shared/reminders';
 import { planTaskReminders, taskReminderKey, type TaskRow } from '../../supabase/functions/_shared/taskReminders';
 import { localParts } from '../../supabase/functions/_shared/due';
@@ -62,6 +64,8 @@ export interface TickInput {
   state: ReminderFile;
   /** Tareas para el aviso de hora límite. Opcional: sin ellas solo se avisan hábitos. */
   tasks?: Task[];
+  /** Actividades del calendario con aviso. Solo dentro de la web (el servidor de push aún no las conoce). */
+  events?: AgendaEvent[];
 }
 
 export const taskRows = (tasks: Task[]): TaskRow[] =>
@@ -93,6 +97,16 @@ export function tickReminders(i: TickInput): { effects: { reminder: Notice; effe
   for (const reminder of planTaskReminders({ tasks: taskRows(i.tasks ?? []), sent: sentTasks, now: i.now, timeZone: i.timeZone })) {
     state.items[reminder.key] = { count: 1, lastSentAt: i.now.getTime() };
     effects.push({ reminder, effect: effectNow() });
+  }
+  // Actividades del calendario: aviso antes de empezar y avisos periódicos dentro del bloque.
+  const withAlerts = (i.events ?? []).filter((e) => e.reminderMin != null || e.pulseMin);
+  if (withAlerts.length) {
+    const { minutes } = localParts(i.now, i.timeZone);
+    const occs = occurrencesBetween(withAlerts, day, addDays(day, 1), { habits: i.habits, tasks: i.tasks ?? [], logs: i.logs });
+    for (const n of agendaNotices(occs, day, minutes, new Set(Object.keys(state.items)))) {
+      state.items[n.key] = { count: 1, lastSentAt: i.now.getTime() };
+      effects.push({ reminder: { title: n.title, body: n.body, url: '/calendario', tag: n.key }, effect: i.visible ? 'inapp' : i.canNotify ? 'system' : 'inapp' });
+    }
   }
   return { effects, state };
 }

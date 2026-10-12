@@ -9,6 +9,7 @@ import { isClockTime, newId } from './dates';
 import { safeUrl } from './certifications';
 import { cleanChains } from './chains';
 import { sanitizeHero } from './hero';
+import { parseAgendaEvent } from './agenda';
 
 export const BACKUP_APP = 'studyquest';
 export const BACKUP_VERSION = 1;
@@ -218,6 +219,9 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     str(o.title) ? { id: fixId(o.id), category: str(o.category, 'alert'), title: str(o.title), body: str(o.body), createdAt: str(o.createdAt, new Date().toISOString()), read: o.read === true } : null,
   );
 
+  // Actividades del calendario: sus vínculos con hábitos y tareas se reescriben o se sueltan si ya no existen.
+  const events = list('events', 'actividades del calendario', (o) => parseAgendaEvent(o, { id: fixId, ref }, { habits: habitIds, tasks: taskIds }));
+
   const p = isObj(d.profile) ? d.profile : {};
   const base = defaultProfile(userId);
   const inventory = asArray(p.inventory).filter((x): x is string => typeof x === 'string');
@@ -259,11 +263,11 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
   if (fixedIds) warnings.push(`${fixedIds} identificadores se regeneraron.`);
 
   // Los tipos exactos ya se validaron arriba; el cast evita repetirlos en cada colección.
-  const snapshot = { profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications } as unknown as Snapshot;
+  const snapshot = { profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events } as unknown as Snapshot;
   return { ok: true, snapshot, warnings };
 }
 
 export const summarize = (s: Snapshot) => ({
-  tareas: s.tasks.length, hábitos: s.habits.length, cursos: s.courses.length, metas: s.goals.length, proyectos: s.projects.length, apuntes: s.notes.length, certificaciones: s.certifications.length,
+  tareas: s.tasks.length, hábitos: s.habits.length, cursos: s.courses.length, metas: s.goals.length, proyectos: s.projects.length, apuntes: s.notes.length, certificaciones: s.certifications.length, 'actividades del calendario': (s.events ?? []).length,
   'sesiones de estudio': s.sessions.length, 'registros de XP': s.xpEvents.length,
 });

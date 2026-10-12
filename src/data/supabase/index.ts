@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type {
-  AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent,
+  AgendaEvent, AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent,
 } from '@/core/domain';
 import type { AuthPort, AuthUser, Collection, DataLayer, Repository } from '../ports';
 
@@ -125,6 +125,7 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
   const sessions = new SupabaseTable<StudySession>(db, 'study_sessions', sessionMapper);
   const xpEvents = new SupabaseTable<XpEvent>(db, 'xp_events', xpMapper);
   const notifications = new SupabaseTable<AppNotification>(db, 'notifications', notifMapper);
+  const events = new SupabaseTable<AgendaEvent>(db, 'calendar_events', docMapper());
 
   const getProfile = async (): Promise<Profile | null> => {
     const { data, error } = await db.from('profiles').select('id,data').eq('id', await uid()).maybeSingle();
@@ -191,6 +192,7 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
         fail(error);
       },
     },
+    events,
     push: {
       async save(sub) {
         const { error } = await db
@@ -220,7 +222,7 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
     },
     async wipe() {
       // Orden: primero lo que referencia a otras tablas.
-      for (const t of ['habit_logs', 'study_sessions', 'xp_events', 'notifications', 'tasks', 'habits', 'courses', 'goals', 'projects', 'notes', 'certifications', 'personal_rewards', 'profiles']) {
+      for (const t of ['calendar_events', 'habit_logs', 'study_sessions', 'xp_events', 'notifications', 'tasks', 'habits', 'courses', 'goals', 'projects', 'notes', 'certifications', 'personal_rewards', 'profiles']) {
         const { error } = await db.from(t).delete().not('id', 'is', null);
         fail(error);
       }

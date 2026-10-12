@@ -336,6 +336,76 @@ export interface PersonalReward {
   claimed: boolean;
 }
 
+/* ---------- Agenda (actividades con horario) ---------- */
+export type AgendaCategory = 'study' | 'work' | 'meeting' | 'health' | 'meal' | 'rest' | 'personal' | 'other';
+
+/**
+ * Regla de repetición. Se guarda la regla, no cada repetición.
+ * `habit` sigue el calendario del hábito vinculado (sin copiar su frecuencia).
+ */
+export type AgendaRepeat =
+  | { type: 'daily'; every: number }
+  /** Cada `every` semanas, los días indicados (0 = lunes … 6 = domingo). */
+  | { type: 'weekly'; every: number; days: number[] }
+  | { type: 'habit' };
+
+/** Cambios de UNA ocurrencia de una serie, guardados por su fecha original. */
+export interface AgendaException {
+  /** La ocurrencia se quitó del calendario. */
+  deleted?: boolean;
+  status?: 'done' | 'cancelled';
+  /** Se movió a otro día u hora, o cambió su duración o título. */
+  date?: ISODate;
+  start?: string | null;
+  minutes?: number;
+  title?: string;
+}
+
+/** Vínculo con un calendario externo (reservado para una futura sincronización con Google Calendar). */
+export interface ExternalCalendarRef {
+  provider: 'google';
+  calendarId: string;
+  eventId: string;
+  etag?: string;
+  syncedAt: ISODateTime;
+}
+
+/**
+ * Actividad programada en el calendario: un bloque de tiempo (desayuno, jornada, reunión…),
+ * un recordatorio puntual (`minutes` = 0) o un bloque vinculado a un hábito o a una tarea.
+ * Los hábitos y las tareas siguen siendo la fuente de su propio progreso: aquí solo se guarda el horario.
+ */
+export interface AgendaEvent {
+  id: ID;
+  title: string;
+  category: AgendaCategory;
+  /** Día local de la primera ocurrencia. */
+  date: ISODate;
+  /** Hora local de inicio «HH:MM»; null = todo el día. */
+  start: string | null;
+  /** Duración en minutos (0 = recordatorio sin bloque). Puede pasar de medianoche. */
+  minutes: number;
+  repeat?: AgendaRepeat;
+  /** Último día (local, inclusive) en que puede ocurrir la serie. */
+  until?: ISODate | null;
+  /** Excepciones por fecha original de la ocurrencia. */
+  exceptions?: Record<ISODate, AgendaException>;
+  habitId?: ID | null;
+  taskId?: ID | null;
+  color?: string;
+  description?: string;
+  location?: string;
+  /** Aviso N minutos antes del inicio (null = sin aviso). */
+  reminderMin?: number | null;
+  /** Aviso cada N minutos dentro del bloque (p. ej. beber agua). No registra nada por sí solo. */
+  pulseMin?: number | null;
+  /** Versión, sube con cada cambio (SEQUENCE del .ics). */
+  rev: number;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+  external?: ExternalCalendarRef[];
+}
+
 /* ---------- Registros de actividad ---------- */
 export interface StudySession {
   id: ID;
@@ -379,4 +449,6 @@ export interface Snapshot {
   sessions: StudySession[];
   xpEvents: XpEvent[];
   notifications: AppNotification[];
+  /** Actividades programadas del calendario. */
+  events: AgendaEvent[];
 }

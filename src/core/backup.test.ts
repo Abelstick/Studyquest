@@ -197,3 +197,29 @@ describe('copia de seguridad', () => {
     expect(res.ok && res.snapshot.tasks).toEqual([]);
   });
 });
+
+describe('copia de seguridad · agenda', () => {
+  it('las actividades del calendario viajan con su serie, excepciones y vínculo al hábito', () => {
+    const original = demo();
+    const habit = original.habits[0];
+    const now = new Date().toISOString();
+    original.events = [
+      {
+        id: crypto.randomUUID(), title: '', category: 'health', date: today(), start: '07:00', minutes: 20, repeat: { type: 'habit' }, habitId: habit.id, taskId: null,
+        exceptions: { [today()]: { status: 'cancelled' } }, reminderMin: 10, pulseMin: null, rev: 2, createdAt: now, updatedAt: now,
+      },
+    ];
+    const res = roundtrip(original);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.snapshot.events).toHaveLength(1);
+    expect(res.snapshot.events[0]).toMatchObject({ habitId: habit.id, repeat: { type: 'habit' }, exceptions: { [today()]: { status: 'cancelled' } }, rev: 2 });
+  });
+
+  it('una copia antigua sin agenda se importa con la agenda vacía', () => {
+    const data: Record<string, unknown> = { ...demo() };
+    delete data.events;
+    const res = parseBackup(JSON.stringify({ app: 'studyquest', version: BACKUP_VERSION, exportedAt: '', data }), 'u2');
+    expect(res.ok && res.snapshot.events).toEqual([]);
+  });
+});

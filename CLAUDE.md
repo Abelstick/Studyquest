@@ -68,6 +68,11 @@ Las dependencias van en un solo sentido: `features/` y `ui/` → `state/` →
   `toISOString().slice(0, 10)` para "hoy", rachas, hábitos ni `xp_events`.
 - Tienda y logros viven en código (`core/catalog.ts`, `core/achievements.ts`),
   no en la base de datos.
+- Agenda (`core/agenda.ts`): una fila por actividad o serie, nunca una por
+  repetición; los cambios de una ocurrencia van en `exceptions`. Los bloques
+  vinculados guardan solo el id del hábito o la tarea y nunca registran
+  progreso ni dan XP por su cuenta. Las horas son de reloj local; la zona
+  horaria solo entra al exportar el `.ics`.
 
 ## Reglas de juego
 

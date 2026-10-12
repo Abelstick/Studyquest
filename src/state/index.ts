@@ -34,9 +34,9 @@ if (dataLayer.kind !== 'local') {
     if (s.status !== 'ready' || s.profile.id === 'pending') return;
     clearTimeout(timer);
     timer = setTimeout(() => {
-      const { profile, tasks, habits, habitLogs, courses, goals, projects, personalRewards, sessions, xpEvents, notifications } = s;
+      const { profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events } = s;
       try {
-        localStorage.setItem(cacheKey(profile.id), JSON.stringify({ profile, tasks, habits, habitLogs, courses, goals, projects, personalRewards, sessions, xpEvents, notifications }));
+        localStorage.setItem(cacheKey(profile.id), JSON.stringify({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events }));
       } catch {
         /* cuota llena: se ignora */
       }

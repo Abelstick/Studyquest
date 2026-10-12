@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type {
-  AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
+  AgendaEvent, AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
@@ -22,6 +22,7 @@ import { shopItem } from '@/core/catalog';
 import { canEvolve, cleanHeroName, heroItem, newHero, raceOf, stageForLevel, stageName } from '@/core/hero';
 import { buildDemo } from '@/core/seed';
 import { computeStats } from '@/core/stats';
+import { changeOccurrence, removeOccurrence, replaceFrom, setOccurrenceStatus, unlinkEvents, type EditScope, type EventDraft, type OccurrenceChange, type SeriesResult } from '@/core/agenda';
 import type { Repository } from '@/data/ports';
 import { sfx } from '@/audio/sfx';
 import { notifyError, useUi } from './ui';
@@ -90,6 +91,15 @@ export interface DataState extends Data {
   updateNote: (id: ID, patch: Partial<Omit<Note, 'id' | 'createdAt'>>) => void;
   deleteNote: (id: ID) => void;
 
+  /** Agenda: actividades con horario. Las series se editan por alcance (solo esta, esta y las siguientes, todas). */
+  createEvent: (draft: EventDraft) => string;
+  /** Sustituye los datos de una actividad: toda la serie (`all`), desde una ocurrencia (`following`) o solo esa (`one`: solo día, horas y título). */
+  saveEvent: (id: ID, draft: EventDraft, scope?: EditScope, original?: ISODate) => void;
+  /** Mueve o cambia la duración de una ocurrencia (arrastrar en la cuadrícula). */
+  changeEventOccurrence: (id: ID, original: ISODate, change: OccurrenceChange, scope: EditScope) => void;
+  removeEvent: (id: ID, original?: ISODate, scope?: EditScope) => void;
+  setEventStatus: (id: ID, original: ISODate, status: 'done' | 'cancelled' | null) => void;
+
   createCertification: (draft: Omit<Certification, 'id' | 'createdAt'>) => void;
   updateCertification: (id: ID, patch: Partial<Omit<Certification, 'id'>>) => void;
   deleteCertification: (id: ID) => void;
@@ -131,12 +141,12 @@ export interface DataState extends Data {
 
 const EMPTY: Data = {
   profile: defaultProfile('pending'),
-  tasks: [], habits: [], habitLogs: [], courses: [], goals: [], projects: [], notes: [], certifications: [], personalRewards: [], sessions: [], xpEvents: [], notifications: [],
+  tasks: [], habits: [], habitLogs: [], courses: [], goals: [], projects: [], notes: [], certifications: [], personalRewards: [], sessions: [], xpEvents: [], notifications: [], events: [],
 };
 
 const pickData = (s: DataState): Data => ({
   profile: s.profile, tasks: s.tasks, habits: s.habits, habitLogs: s.habitLogs, courses: s.courses, goals: s.goals, projects: s.projects,
-  notes: s.notes, certifications: s.certifications, personalRewards: s.personalRewards, sessions: s.sessions, xpEvents: s.xpEvents, notifications: s.notifications,
+  notes: s.notes, certifications: s.certifications, personalRewards: s.personalRewards, sessions: s.sessions, xpEvents: s.xpEvents, notifications: s.notifications, events: s.events,
 });
 
 const upsertBy = <T extends { id: ID }>(list: T[], item: T): T[] => (list.some((x) => x.id === item.id) ? list.map((x) => (x.id === item.id ? item : x)) : [...list, item]);
@@ -291,6 +301,34 @@ export function createDataStore(repo: Repository) {
       ...c, modules: c.modules.map((m) => ({ ...m, topics: m.topics.map((t) => (t.id === topicId ? fn(t) : t)) })),
     });
 
+    /** Aplica el resultado de editar una serie: actualizar, partir (crear la nueva) o borrar. */
+    const applySeries = (id: ID, res: SeriesResult) => {
+      const { update, create: created, remove } = res;
+      run(
+        (s) => {
+          let events = remove ? s.events.filter((e) => e.id !== id) : update ? s.events.map((e) => (e.id === id ? update : e)) : s.events;
+          if (created) events = [...events, created];
+          return { events };
+        },
+        async () => {
+          if (remove) await repo.events.remove(id);
+          else if (update) await repo.events.create(update);
+          if (created) await repo.events.create(created);
+        },
+      );
+    };
+
+    /** Al borrar un hábito o una tarea, sus bloques del calendario se quedan como actividades sueltas. */
+    const unlinkAgenda = (ref: { habitId?: ID; taskId?: ID }) => {
+      const s = get();
+      const changed = unlinkEvents(s.events, ref, s, isoNow());
+      if (!changed.length) return;
+      run(
+        (st) => ({ events: st.events.map((e) => changed.find((c) => c.id === e.id) ?? e) }),
+        () => repo.events.createMany(changed),
+      );
+    };
+
     return {
       ...EMPTY,
       status: 'idle',
@@ -300,12 +338,12 @@ export function createDataStore(repo: Repository) {
         if (hydrate) set({ ...hydrate, status: 'ready', error: null });
         else set({ status: 'loading', error: null });
         try {
-          const [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications] = await Promise.all([
+          const [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events] = await Promise.all([
             repo.profile.get(), repo.tasks.list(), repo.habits.list(), repo.habitLogs.list(), repo.courses.list(), repo.goals.list(),
-            repo.projects.list(), repo.notes.list(), repo.certifications.list(), repo.personalRewards.list(), repo.sessions.list(), repo.xpEvents.list(), repo.notifications.list(),
+            repo.projects.list(), repo.notes.list(), repo.certifications.list(), repo.personalRewards.list(), repo.sessions.list(), repo.xpEvents.list(), repo.notifications.list(), repo.events.list(),
           ]);
           const ensured = profile ?? (await repo.profile.save(defaultProfile(userId)));
-          set({ profile: ensured, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, status: 'ready', error: null });
+          set({ profile: ensured, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events, status: 'ready', error: null });
           useUi.getState().setWorld(worldOf(ensured.equipped.world));
           if (!ensured.onboarded) useUi.getState().openModal({ type: 'welcome' });
         } catch (e) {
@@ -337,8 +375,9 @@ export function createDataStore(repo: Repository) {
           await repo.sessions.createMany(snapshot.sessions);
           await repo.xpEvents.createMany(snapshot.xpEvents);
           await repo.notifications.createMany(snapshot.notifications);
+          await repo.events.createMany(snapshot.events ?? []);
           const profile = await repo.profile.save({ ...snapshot.profile, id });
-          set({ ...snapshot, profile, status: 'ready' });
+          set({ ...snapshot, events: snapshot.events ?? [], profile, status: 'ready' });
           useUi.getState().setWorld(worldOf(profile.equipped.world));
           return true;
         } catch (e) {
@@ -392,6 +431,7 @@ export function createDataStore(repo: Repository) {
         if (status && status !== cur.status) get().setTaskStatus(id, status);
       },
       deleteTask(id) {
+        unlinkAgenda({ taskId: id });
         run((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }), () => repo.tasks.remove(id));
         sfx.stomp();
       },
@@ -460,6 +500,7 @@ export function createDataStore(repo: Repository) {
         if (chains.some((c) => c.habitIds.includes(id))) {
           patchProfile({ chains: cleanChains(chains, get().habits.filter((h) => h.id !== id)) });
         }
+        unlinkAgenda({ habitId: id });
         run(
           (s) => ({ habits: s.habits.filter((h) => h.id !== id), habitLogs: s.habitLogs.filter((l) => l.habitId !== id) }),
           async () => {
@@ -709,6 +750,41 @@ export function createDataStore(repo: Repository) {
         run((s) => ({ notes: s.notes.filter((n) => n.id !== id) }), () => repo.notes.remove(id));
         sfx.stomp();
         checkCity();
+      },
+
+      /* ---------- Agenda ---------- */
+      createEvent(draft) {
+        const now = isoNow();
+        const ev: AgendaEvent = { ...draft, id: newId(), rev: 0, createdAt: now, updatedAt: now };
+        run((s) => ({ events: [...s.events, ev] }), () => repo.events.create(ev));
+        sfx.jump();
+        return ev.id;
+      },
+      saveEvent(id, draft, scope = 'all', original) {
+        const ev = get().events.find((e) => e.id === id);
+        if (!ev) return;
+        const now = isoNow();
+        if (scope === 'one' && original && ev.repeat) {
+          applySeries(id, changeOccurrence(ev, original, { date: draft.date, start: draft.start, minutes: draft.minutes, title: draft.title }, 'one', now, newId));
+        } else if (scope === 'following' && original) {
+          applySeries(id, replaceFrom(ev, original, draft, now, newId));
+        } else {
+          applySeries(id, { update: { ...ev, ...draft, rev: ev.rev + 1, updatedAt: now } });
+        }
+      },
+      changeEventOccurrence(id, original, change, scope) {
+        const ev = get().events.find((e) => e.id === id);
+        if (ev) applySeries(id, changeOccurrence(ev, original, change, scope, isoNow(), newId));
+      },
+      removeEvent(id, original, scope = 'all') {
+        const ev = get().events.find((e) => e.id === id);
+        if (!ev) return;
+        applySeries(id, original ? removeOccurrence(ev, original, scope, isoNow()) : { remove: true });
+        sfx.stomp();
+      },
+      setEventStatus(id, original, status) {
+        const ev = get().events.find((e) => e.id === id);
+        if (ev) applySeries(id, { update: setOccurrenceStatus(ev, original, status, isoNow()) });
       },
 
       /* ---------- Certificaciones ---------- */

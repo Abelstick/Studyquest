@@ -18,11 +18,12 @@ export function useCity() {
   const sessions = useData((s) => s.sessions);
   const xpEvents = useData((s) => s.xpEvents);
   const notifications = useData((s) => s.notifications);
+  const events = useData((s) => s.events);
 
   return useMemo(() => {
-    const stats = computeStats({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications });
+    const stats = computeStats({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events });
     const states = cityStates(stats);
     const total = cityTotal(stats);
     return { stats, states, total, title: cityTitle(total), decor: cityDecor(total), people: population(profile.xp, total), closest: closestUpgrade(states) };
-  }, [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications]);
+  }, [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events]);
 }

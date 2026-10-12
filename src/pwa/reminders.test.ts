@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Habit, Task } from '@/core/domain';
+import type { AgendaEvent, Habit, Task } from '@/core/domain';
 import { acceptPushMessage, loadReminderState, saveReminderState, tickReminders, type ReminderFile, type TickInput } from './reminders';
 
 // 2026-09-21 00:00Z = domingo 20 a las 19:00 en Lima
@@ -111,5 +111,24 @@ describe('estado guardado', () => {
     expect(loadReminderState('2026-09-21', store).items).toEqual({});
     mem.set('sq:reminder-state', '{no es json');
     expect(loadReminderState('2026-09-20', store)).toEqual({ day: '2026-09-20', items: {} });
+  });
+});
+
+describe('tickReminders · actividades del calendario', () => {
+  const now = new Date().toISOString();
+  const agua: AgendaEvent = {
+    id: 'ev1', title: 'Beber agua', category: 'health', date: '2026-09-20', start: '19:10', minutes: 60, repeat: { type: 'daily', every: 1 }, reminderMin: 10, pulseMin: 20, rev: 0, createdAt: now, updatedAt: now,
+  };
+  it('avisa antes de empezar y luego cada N minutos, una vez cada aviso', () => {
+    const first = tick({ min: 0, habits: [], events: [agua] });
+    expect(first.effects.map((e) => e.reminder.tag)).toEqual(['agenda:ev1:2026-09-20']);
+    expect(tick({ min: 0.25, habits: [], events: [agua], state: first.state }).effects).toEqual([]);
+    const pulse = tick({ min: 30, habits: [], events: [agua], state: first.state });
+    expect(pulse.effects.map((e) => e.reminder.tag)).toEqual(['agenda:ev1:2026-09-20:1']);
+    expect(pulse.effects[0].reminder.url).toBe('/calendario');
+  });
+  it('no avisa de un día cancelado', () => {
+    const cancelled = { ...agua, exceptions: { '2026-09-20': { status: 'cancelled' as const } } };
+    expect(tick({ min: 0, habits: [], events: [cancelled] }).effects).toEqual([]);
   });
 });

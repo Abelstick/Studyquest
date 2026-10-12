@@ -19,6 +19,9 @@ import { AiKeyModal } from '../modals/AiKeyModal';
 import { PackModal } from '../modals/PackModal';
 import { PaceModal } from '../modals/PaceModal';
 import { ConceptGuide } from '../help/ConceptGuide';
+import { EventModal } from '../calendario/EventModal';
+import { ExportModal } from '../calendario/ExportModal';
+import { ScopeModal } from '../calendario/ScopeChoice';
 
 const CATEGORY: Record<AppNotification['category'], { sprite: SpriteName; label: string }> = {
   mentor: { sprite: 'cap', label: 'Mentor' },
@@ -65,6 +68,12 @@ function ModalHost() {
       return <QuickSheet />;
     case 'welcome':
       return <WelcomeModal />;
+    case 'event':
+      return <EventModal key={`${modal.id ?? 'new'}${modal.original ?? ''}${modal.date ?? ''}${modal.start ?? ''}`} {...modal} />;
+    case 'scope':
+      return <ScopeModal title={modal.title} verb={modal.verb} onPick={modal.onPick} />;
+    case 'export':
+      return <ExportModal from={modal.from} to={modal.to} ids={modal.ids} />;
     case 'confirm':
       return <ConfirmModal title={modal.title} body={modal.body} confirmLabel={modal.confirmLabel} onConfirm={modal.onConfirm} extra={modal.extra} />;
     default:

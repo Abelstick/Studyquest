@@ -6,7 +6,7 @@
  * implemente `Repository` y `AuthPort`, y registrarlo en `data/index.ts`. Nada más cambia.
  */
 import type {
-  AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent,
+  AgendaEvent, AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent,
 } from '@/core/domain';
 
 /** Colección genérica. Los ids los genera el cliente, así que crear es idempotente y funciona offline. */
@@ -43,6 +43,8 @@ export interface Repository {
   sessions: Pick<Collection<StudySession>, 'list' | 'create' | 'createMany' | 'remove'>;
   xpEvents: Pick<Collection<XpEvent>, 'list' | 'create' | 'createMany'>;
   notifications: Pick<Collection<AppNotification>, 'list' | 'create' | 'createMany' | 'update'> & { markAllRead(): Promise<void> };
+  /** Actividades programadas del calendario (una fila por serie, no por repetición). */
+  events: Collection<AgendaEvent>;
   /** Borra todos los datos del usuario (reiniciar partida). */
   wipe(): Promise<void>;
   /** Suscripciones Web Push de este usuario. Opcional: solo los backends con servidor de recordatorios lo implementan. */

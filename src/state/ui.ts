@@ -3,6 +3,7 @@ import { newId } from '@/core/dates';
 import { setSoundEnabled, sfx } from '@/audio/sfx';
 
 import type { ConfirmExtra } from '@/ui/kit';
+import type { EditScope } from '@/core/agenda';
 
 export type ModalState =
   | null
@@ -23,6 +24,11 @@ export type ModalState =
   | { type: 'pace'; courseId?: string }
   | { type: 'guide' }
   | { type: 'settings' }
+  /** Actividad del calendario: nueva (con día, hora o vínculo propuestos) o una ocurrencia existente (`original`). */
+  | { type: 'event'; id?: string; original?: string; date?: string; start?: string | null; minutes?: number; habitId?: string; taskId?: string }
+  /** ¿A qué ocurrencias de la serie se aplica un cambio? */
+  | { type: 'scope'; title: string; verb: string; onPick: (scope: EditScope) => void }
+  | { type: 'export'; from: string; to: string; ids?: string[] }
   | { type: 'confirm'; title: string; body: string; confirmLabel: string; onConfirm: (extra: boolean) => void; extra?: ConfirmExtra };
 
 export interface Toast {

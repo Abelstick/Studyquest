@@ -70,6 +70,7 @@ const PORT_METHODS: { [K in keyof Namespaces]: Record<keyof Namespaces[K], true>
   sessions: { list: true, create: true, createMany: true, remove: true },
   xpEvents: { list: true, create: true, createMany: true },
   notifications: { list: true, create: true, createMany: true, update: true, markAllRead: true },
+  events: { list: true, create: true, createMany: true, update: true, remove: true },
 };
 
 let net: Net;

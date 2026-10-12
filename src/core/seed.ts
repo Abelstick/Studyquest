@@ -227,7 +227,7 @@ export function buildDemo(profile: Profile, now: ISODate): Snapshot {
       inventory: [...profile.inventory, 'hero-w-espada', 'hero-p-chispas'],
       hero: { race: 'saiyajin', name: 'Goku', stage: 1, weapon: 'hero-w-espada', power: 'hero-p-chispas', skin: null },
     },
-    tasks, habits, habitLogs, courses, goals: [goal], projects, notes, certifications, personalRewards, sessions, xpEvents, notifications,
+    tasks, habits, habitLogs, courses, goals: [goal], projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events: [],
   };
   // Logros ya conseguidos con lo que traen los datos (sin monedas extra).
   const stats = computeStats(snapshot, now);

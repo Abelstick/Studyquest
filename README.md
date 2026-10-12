@@ -67,7 +67,7 @@ Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *ta
 | **Certificaciones** | Vitrina de tus credenciales: título, quién la emite, fecha, **enlace al certificado** (se abre en una pestaña nueva), ID de credencial, caducidad con aviso y, si quieres, el curso con el que se relaciona. Cada una da XP y suma una pieza a tu museo. |
 | **Apuntes** | Tu cuaderno: escribe lo que aprendes con un formato mínimo (`# título`, `- punto`, `**negrita**`, `` `código` ``). Cada apunte puede colgar de un curso y de un tema concreto, o ir suelto. Búsqueda sin tildes, etiquetas, fijar arriba y **exportar todo a Markdown** para llevártelo a Obsidian. Cada apunte suma un punto a tu biblioteca. |
 | **Ciudad** | Seis edificios que **crecen con tu progreso real** (casa, biblioteca, academia, laboratorio, arena y museo), de 0 a 5 niveles, con recompensas en monedas al mejorar. También aparece resumida en Inicio. |
-| **Calendario** | Vista mensual con tus tareas por fecha límite, las repeticiones futuras y los repasos de flashcards. Arrastra una tarea a otro día para reprogramarla. **Exportar .ics** las lleva a Google Calendar, Outlook o Apple. |
+| **Calendario** | Vistas **Mes, Semana, Día y Agenda**. En Semana y Día, una cuadrícula de 00:00 a 24:00 con tus **actividades por horas** (desayuno, jornada laboral, reuniones, bloques de estudio, hábitos y tareas agendadas), la hora actual y el tiempo libre del día. Fechas límite, hábitos del día y repasos en la franja *Sin hora*. **Exportar** genera un `.ics` para Google Calendar, Outlook o Apple. |
 | **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
 | **Pomodoro** | Temporizador de enfoque/descanso con **música 8-bit** y un personaje que **corre mientras estudias**. Sigue vivo al cambiar de pantalla. |
 | **Hábitos** | Frecuencia (diaria, días concretos, cada X días, semanal, mensual, **fechas concretas, anual y personalizada** «N veces por semana/mes»), recordatorio con **aviso repetido y sonido**, medición (minutos, páginas, veces, hecho/no hecho…), pasos de sesión, mapa de 12 semanas y aviso del día en que más fallas. Los días pasados de la tira semanal se pueden marcar, por si te olvidaste. |
@@ -132,7 +132,7 @@ El `.env.example` viene con `VITE_DATA_PROVIDER=local`, así que la app funciona
 ## Configurar Supabase
 
 1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. Ve a **SQL Editor**, pega el contenido de [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) y ejecútalo. Crea las tablas y activa **Row Level Security**: cada usuario solo puede ver y modificar sus propias filas. Ejecuta después [`0005_certifications.sql`](supabase/migrations/0005_certifications.sql) y [`0006_notes.sql`](supabase/migrations/0006_notes.sql), que añaden las tablas de certificaciones y apuntes. **Si ya tenías la base creada antes**, te basta con ejecutar esa última.
+2. Ve a **SQL Editor**, pega el contenido de [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) y ejecútalo. Crea las tablas y activa **Row Level Security**: cada usuario solo puede ver y modificar sus propias filas. Ejecuta después, en orden, las demás migraciones de [`supabase/migrations/`](supabase/migrations/) (de la `0002` a la [`0008_calendar_events.sql`](supabase/migrations/0008_calendar_events.sql), que añade la agenda del calendario). Todas se pueden ejecutar más de una vez: **si ya tenías la base creada**, basta con lanzar las que te falten.
 3. En **Project Settings → API** copia la *Project URL* y la clave *anon public* en tu `.env`:
 
    ```ini
@@ -397,9 +397,42 @@ Son **fan art en bloques** hecho para este proyecto personal: los personajes per
 
 **Repaso espaciado (Repaso).** Marca un tema como *«Necesito repasar»* dentro de un curso: reaparece **al día siguiente** y, cada vez que lo recuerdas, a los **3, 7 y 14 días**. Fallar reinicia la escalera; superar los cuatro escalones deja el tema **dominado** (+40 XP). Cada repaso superado da +10 XP. Las tarjetas son tuyas: botón **♪ Tarjetas** en cada tema, una por línea con el formato `pregunta :: respuesta` (si no hay ninguna, se te pregunta si recuerdas el tema). Atajos: `espacio` gira la tarjeta, `1` `2` `3` califican. La agenda se ve también en el calendario y en el menú (insignia con lo que toca hoy).
 
-**Calendario.** Tareas por fecha límite (color por prioridad, ↻ las repetidas, tachadas las hechas), repeticiones futuras proyectadas y repasos. Pulsa un día para ver su detalle y crear una tarea con esa fecha; arrastra una tarea a otro día para moverla. Las tareas con hora la muestran delante del título.
+**Calendario.** Cuatro vistas: **Mes** (días con sus actividades, tareas por fecha límite, puntos de hábitos y repasos; doble clic abre el día), **Semana** y **Día** (cuadrícula horaria de 00:00 a 24:00 con desplazamiento vertical) y **Agenda** (los próximos 30 días en lista). El panel del día responde a *¿qué tengo que hacer?, ¿a qué hora?, ¿cuánto tiempo libre me queda?* y *¿qué hábitos me tocan?*. Arrastra una tarea a otro día para cambiar su fecha límite.
 
-**Exportar al calendario (.ics).** El botón *📅 Exportar .ics* del calendario descarga tus tareas **abiertas con fecha** en formato iCalendar. Una tarea sin hora es un evento de día completo; con hora límite, un evento de 30 min que **termina a esa hora**, con una alarma una hora antes. La descripción lleva el curso, el XP y las subtareas pendientes. Cada evento usa el id de la tarea, así que **importar de nuevo actualiza** los eventos en vez de duplicarlos (en Google Calendar: *Configuración → Importar*). Es una foto del momento: los cambios posteriores no se sincronizan solos.
+**Actividades por horas (agenda).** Pulsa una hora libre (o *＋ Actividad*) y elige el tipo; el formulario solo enseña los campos de ese tipo:
+
+| Tipo | Para qué | Qué guarda |
+| --- | --- | --- |
+| **Actividad** | Desayuno, jornada laboral, reunión, descanso, tiempo libre… | Un bloque de tiempo con categoría. **No da XP ni pide meta ni frecuencia.** Hay plantillas rápidas (jornada L-V 09:00-18:00, comidas, pausa, dormir…). |
+| **Hábito** | Programar *cuándo* haces un hábito que ya existe | Solo el horario y el id del hábito. Puede repetirse **según la frecuencia del hábito** (si la cambias, el calendario la sigue). Si el hábito se mide en minutos u horas, propone esa duración. |
+| **Tarea** | Reservar tiempo para avanzar una tarea | El horario y el id de la tarea; su fecha límite no cambia. Duración propuesta: la estimación de la tarea. |
+| **Recordatorio** | Un aviso a una hora, sin ocupar tiempo | Una hora sin duración. |
+
+- **Duración** de 5 minutos a 24 horas; si termina después de medianoche, marca *Termina al día siguiente* (se dibuja en los dos días). La hora de fin debe ser posterior al inicio.
+- **Repetición:** una vez, todos los días, de lunes a viernes, días concretos cada N semanas, cada N días o según el hábito; con fecha de fin opcional. Se guarda **la regla, no cada repetición**.
+- **Editar una serie:** al guardar, mover o borrar una ocurrencia eliges *solo este día* (se guarda como excepción), *este y los siguientes* (la serie se parte en dos) o *todos*.
+- **Mover y cambiar la duración:** con ratón, arrastra el bloque (también a otro día de la semana) o su borde inferior; en táctil, desde el formulario.
+- **Solapes:** los bloques que coinciden se colocan en columnas, sin taparse; el formulario avisa del solape pero no lo impide.
+- **Estado:** cada ocurrencia puede quedar *pendiente*, *hecha* o *cancelada*. El bloque de un hábito se ve hecho cuando el hábito llegó a su objetivo ese día, y el de una tarea cuando la tarea está superada: **la agenda nunca registra hábitos ni cierra tareas por su cuenta** (el formulario tiene un botón para hacerlo tú).
+- **Avisos:** a la hora o N minutos antes, y **avisos periódicos** dentro del bloque (por ejemplo, beber agua cada 30 min entre las 09:00 y las 18:00). Llegan dentro de la app mientras está abierta.
+- **Colores** por categoría (o uno propio); los hábitos se ven rayados y las tareas con borde discontinuo. Las fechas límite con hora son una marca ⚑, no un bloque.
+
+Al borrar un hábito o una tarea, sus bloques se quedan como actividades sueltas con su nombre.
+
+**Exportar al calendario (.ics).** *📅 Exportar* descarga un archivo iCalendar (RFC 5545) con lo que elijas: un día, la semana o el mes visibles, un rango con fechas, o solo los elementos que marques; y desde el formulario de una actividad, esa actividad sola. Incluye:
+
+- **Actividades** con título, descripción, categoría, ubicación, aviso y **zona horaria real** (`TZID` + `VTIMEZONE` calculado con sus cambios de horario de verano). Las series van con `RRULE`; los días quitados como `EXDATE` y los cambiados como eventos con `RECURRENCE-ID`. Una serie que sigue a un hábito mensual o de fechas sueltas se exporta con sus fechas una a una (`RDATE`).
+- **Tareas abiertas con fecha límite**, sin inventarles duración: sin hora, un evento de día completo; con hora, un evento puntual a esa hora con aviso una hora antes. La descripción lleva el curso, el XP y las subtareas pendientes.
+- **Identificadores estables** (`UID` = id de la actividad o tarea) y `SEQUENCE` que sube con cada cambio.
+
+Es una **exportación, no una sincronización**: el archivo es una foto del momento y los cambios posteriores no viajan solos. Apple Calendar y Outlook suelen actualizar los eventos ya importados por su `UID`; Google Calendar puede saltárselos, así que conviene importar en un calendario dedicado (*Configuración → Importar*).
+
+**Integración directa con Google Calendar (pendiente).** La exportación ya está separada en dos pasos: `selectExport` / `eventToExport` (en `core/ics.ts`) convierten las actividades a una representación neutra, y `buildCalendarIcs` la escribe como `.ics`. Para sincronizar con la API de Google haría falta:
+
+1. Pedir el permiso `https://www.googleapis.com/auth/calendar.events` con OAuth de Google. El login actual de Supabase no lo concede por sí solo, y el token debe guardarse en el servidor, nunca en una variable `VITE_*`.
+2. Una Edge Function que traduzca la representación neutra a eventos de la API (`RRULE`, `EXDATE` y excepciones se corresponden casi 1:1) y haga `insert`/`patch` usando el `UID` estable como `iCalUID`.
+3. Guardar en `AgendaEvent.external` (ya reservado en el modelo y en el `jsonb`, sin migración) el id remoto, el `etag` y la fecha de sincronización, para detectar cambios y no duplicar.
+4. Para recibir cambios desde Google: `events.watch` (webhook) o sincronización incremental con `syncToken`, resolviendo conflictos con `updatedAt`/`rev` frente al `etag`.
 
 **Hora límite.** Además de la fecha, una tarea puede tener **hora límite** (opcional). Sin hora vale todo el día; con hora, vence en cuanto pasa esa hora: la etiqueta pasa a «Quedan 3 h», «Quedan 25 min» o «Venció a las 18:00», la misión de Inicio dice «Hasta hoy a las 18:00» y, dentro del mismo día, va antes la que vence más temprano. **Una hora antes** llega un aviso (dentro de la app y por push).
 
@@ -522,6 +555,7 @@ Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por háb
 | `study_sessions` | relacional | `day`, `minutes`, `course_id` |
 | `xp_events` | relacional | `day`, `amount`, `source`, `label` — fuente de la racha y del mapa de actividad |
 | `notifications` | relacional | `category`, `title`, `body`, `read` |
+| `calendar_events` | `data jsonb` | Actividades del calendario: una fila por serie (regla de repetición + excepciones por fecha), vínculo opcional a un hábito o tarea, avisos y metadatos para una futura sincronización externa *(migración 0008)* |
 | `push_subscriptions` | relacional | Dispositivos suscritos a push: `endpoint`, claves, `timezone` — único por `(user_id, endpoint)` *(migración 0002)* |
 | `reminder_log` | relacional | Avisos ya enviados, `(user_id, habit_id, day)`. Solo accesible por la Edge Function *(migración 0002)* |
 
@@ -573,6 +607,11 @@ Cubren la lógica que más importa: curva de niveles y rachas, frecuencias de h�
 - **Recordatorios con precisión de minuto**: el primer aviso admite hasta 10 minutos de retraso (si el cron falla más, ese día no llega), el intervalo mínimo entre repeticiones es 15 min y la zona horaria es la del último dispositivo activado.
 - **El aviso dentro de la app solo funciona con la app abierta** (una pestaña en segundo plano puede ralentizar sus temporizadores hasta ~1 min). Con la app cerrada solo avisa el push.
 - Si marcas un hábito como hecho **sin conexión**, el servidor no lo sabe hasta que sincronice y puede llegar algún aviso de más.
+- **Los avisos de actividades del calendario solo llegan dentro de la app** (con la app abierta): el servidor de push todavía no los envía.
+- **Mover o alargar bloques arrastrando solo con ratón, trackpad o lápiz.** En táctil se cambian desde el formulario de la actividad.
+- **«Solo este día»** cambia el día, las horas y el nombre de esa ocurrencia; los demás campos (ubicación, descripción, aviso…) son de toda la serie.
+- **Las horas de la agenda son de reloj local**: si viajas a otra zona horaria, tu desayuno de las 07:30 sigue a las 07:30 locales. Al exportar se usa la zona del dispositivo.
+- **Los hábitos de cuota** («N veces por semana») no tienen días fijos: para programarlos, elige tú los días.
 
 
 ## Créditos y marcas

@@ -34,13 +34,14 @@ export function useHabitReminders() {
     const timeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
     const run = () => {
-      const { habits, habitLogs, tasks } = useData.getState();
-      if (!habits.some((h) => h.reminder) && !tasks.some((t) => t.dueTime && t.status !== 'done')) return;
+      const { habits, habitLogs, tasks, events } = useData.getState();
+      if (!habits.some((h) => h.reminder) && !tasks.some((t) => t.dueTime && t.status !== 'done') && !events.some((e) => e.reminderMin != null || e.pulseMin)) return;
       const now = new Date();
       const tz = timeZone();
       const { effects, state } = tickReminders({
         habits,
         tasks,
+        events,
         logs: habitLogs,
         now,
         timeZone: tz,

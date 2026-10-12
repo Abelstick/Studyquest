@@ -1,0 +1,517 @@
+/* ---------- Agenda por horas: vistas Día, Semana y Agenda, y el formulario de actividad ---------- */
+
+/* Color por categoría (o por el color elegido): un solo token, --ag, que usan todos los formatos. */
+.agev {
+  --ag: var(--muted);
+}
+.agev--study {
+  --ag: var(--blue);
+}
+.agev--work {
+  --ag: var(--violet);
+}
+.agev--meeting {
+  --ag: var(--orange);
+}
+.agev--health {
+  --ag: var(--green);
+}
+.agev--meal {
+  --ag: #e0a800;
+}
+.agev--rest {
+  --ag: var(--ink-soft);
+}
+.agev--personal {
+  --ag: #d6458f;
+}
+.agev--other {
+  --ag: var(--muted);
+}
+.agev--c-red {
+  --ag: var(--red);
+}
+.agev--c-orange {
+  --ag: var(--orange);
+}
+.agev--c-yellow {
+  --ag: #e0a800;
+}
+.agev--c-green {
+  --ag: var(--green);
+}
+.agev--c-blue {
+  --ag: var(--blue);
+}
+.agev--c-purple {
+  --ag: var(--violet);
+}
+.agev--c-pink {
+  --ag: #d6458f;
+}
+.agev--c-gray {
+  --ag: var(--ink-soft);
+}
+
+.agev--slot,
+.agev--chip,
+.agev--mini,
+.agev--row,
+.agev--legend {
+  min-width: 0;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background-color: color-mix(in srgb, var(--ag) 20%, var(--panel));
+  border: 0;
+  border-left: 4px solid var(--ag);
+  cursor: pointer;
+}
+/* Hábito: rayado. Tarea: borde discontinuo. Así se distinguen aunque compartan color. */
+.agev--k-habit {
+  background-image: repeating-linear-gradient(135deg, transparent 0 8px, color-mix(in srgb, var(--ag) 16%, transparent) 8px 16px);
+}
+.agev--k-task {
+  outline: 2px dashed color-mix(in srgb, var(--ag) 70%, transparent);
+  outline-offset: -2px;
+}
+.agev.is-done {
+  opacity: 0.62;
+}
+.agev.is-done .agev__title::after {
+  content: ' ✔';
+  color: var(--green-text);
+}
+.agev.is-cancelled {
+  opacity: 0.5;
+  background-image: repeating-linear-gradient(135deg, var(--panel) 0 6px, var(--panel-2) 6px 12px);
+}
+.agev.is-cancelled .agev__title {
+  text-decoration: line-through;
+}
+.agev--legend {
+  display: inline-block;
+  padding: 0 6px;
+  font-weight: 800;
+  cursor: default;
+}
+.agev--chip,
+.agev--mini {
+  display: block;
+  width: 100%;
+  padding: 2px 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 800;
+}
+.agev--row {
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 6px 8px;
+}
+.agev__time {
+  font-size: 11px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.agev__title {
+  min-width: 0;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+/* ===== Cuadrícula horaria ===== */
+.tgrid {
+  --gutter: 52px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--panel);
+  border: 2px solid var(--line-soft);
+}
+.tgrid__frame {
+  /* Reserva el hueco de la barra de desplazamiento para que las cabeceras cuadren con las columnas. */
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
+  border-bottom: 2px solid var(--line-soft);
+}
+.tgrid__row {
+  display: grid;
+  grid-template-columns: var(--gutter) repeat(var(--days), minmax(0, 1fr));
+}
+.tgrid__gutter {
+  min-width: 0;
+}
+.tgrid__gutter--label {
+  align-self: center;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted);
+  text-align: right;
+}
+.tgrid__dayname {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 2px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--line-soft);
+  cursor: pointer;
+}
+.tgrid__wd {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.tgrid__num {
+  font-size: 18px;
+  font-weight: 900;
+}
+.tgrid__dayname.is-today .tgrid__num {
+  padding: 0 6px;
+  color: #fff;
+  background: var(--red);
+}
+.tgrid__dayname.is-selected {
+  background: color-mix(in srgb, var(--yellow) 26%, transparent);
+}
+.tgrid__allday {
+  border-top: 1px solid var(--line-soft);
+}
+.tgrid__alldaycell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  min-height: 30px;
+  max-height: 104px;
+  overflow-y: auto;
+  padding: 3px;
+  border-left: 1px solid var(--line-soft);
+}
+.tgrid__alldaycell.is-over {
+  background: color-mix(in srgb, var(--yellow) 30%, var(--panel));
+}
+.chip-task--habits {
+  --chip: var(--green);
+  border-left-style: dotted;
+}
+.chip-task--habits.is-complete {
+  background: color-mix(in srgb, var(--green) 25%, var(--panel));
+}
+.tgrid__scroll {
+  height: min(68vh, 680px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.tgrid__body {
+  position: relative;
+}
+.tgrid__hours {
+  position: relative;
+}
+.tgrid__hours span {
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.tgrid__hours span:first-child {
+  transform: none;
+}
+.tgrid__cols {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: repeat(var(--days), minmax(0, 1fr));
+}
+.tgrid__col {
+  position: relative;
+  min-width: 0;
+  border-left: 1px solid var(--line-soft);
+  /* Una línea por hora y otra más suave a la media hora. */
+  background-image: linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, transparent calc(var(--hour) / 2 - 1px), color-mix(in srgb, var(--line-soft) 50%, transparent) calc(var(--hour) / 2 - 1px), color-mix(in srgb, var(--line-soft) 50%, transparent) calc(var(--hour) / 2), transparent calc(var(--hour) / 2));
+  background-size: 100% var(--hour);
+  cursor: copy;
+}
+.tgrid__col.is-today {
+  background-color: color-mix(in srgb, var(--yellow) 8%, transparent);
+}
+.tgrid__col.is-past {
+  background-color: color-mix(in srgb, var(--panel-2) 45%, transparent);
+}
+.agev--slot {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px 5px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.2;
+  box-shadow: 1px 1px 0 color-mix(in srgb, var(--shadow) 35%, transparent);
+  user-select: none;
+  touch-action: manipulation;
+}
+.agev--slot:hover,
+.agev--slot:focus-visible {
+  z-index: 3;
+}
+.agev--slot.is-dragging {
+  z-index: 4;
+  opacity: 0.85;
+  box-shadow: var(--sh);
+  cursor: grabbing;
+}
+.agev--slot .agev__title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.agev--slot.is-tiny {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+.agev--slot.is-tiny .agev__title {
+  -webkit-line-clamp: 1;
+}
+.agev--slot.is-continued {
+  border-top: 2px dashed var(--ag);
+}
+.agev--slot.is-continues {
+  border-bottom: 2px dashed var(--ag);
+}
+/* Recordatorio: una pastilla centrada en su hora, sin ocupar tiempo. */
+.agev--point {
+  background-color: var(--panel);
+  border-left-width: 0;
+  outline: 2px solid var(--ag);
+  outline-offset: -2px;
+  transform: translateY(-50%);
+}
+.agev__resize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  cursor: ns-resize;
+}
+.agev__resize::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 18px;
+  height: 2px;
+  margin-left: -9px;
+  background: color-mix(in srgb, var(--ag) 70%, var(--text));
+  opacity: 0;
+}
+.agev--slot:hover .agev__resize::after {
+  opacity: 1;
+}
+/* Fecha límite con hora: una marca, no un bloque (no se le inventa duración). */
+.tgrid__deadline {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  display: block;
+  padding: 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--red-text);
+  background: transparent;
+  border: 0;
+  border-top: 2px solid var(--red);
+  cursor: pointer;
+}
+.tgrid__deadline.is-done {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.tgrid__now {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--red);
+  pointer-events: none;
+}
+.tgrid__now::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+}
+@media (max-width: 700px) {
+  .tgrid {
+    --gutter: 40px;
+  }
+  /* La semana en el móvil se desplaza en horizontal: siete columnas legibles en vez de siete rayas. */
+  .tgrid--week {
+    overflow-x: auto;
+  }
+  .tgrid--week .tgrid__frame,
+  .tgrid--week .tgrid__scroll {
+    min-width: calc(var(--gutter) + var(--days) * 86px);
+  }
+  .tgrid__scroll {
+    height: 62vh;
+  }
+  .tgrid__dayname {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+}
+
+/* ===== Panel del día y vista Agenda ===== */
+.dayfree {
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--green) 14%, var(--panel));
+  border-left: 4px solid var(--green);
+}
+.dayev {
+  gap: 8px;
+}
+.agenda {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.agenda__day.is-past {
+  opacity: 0.7;
+}
+.agenda__date {
+  display: block;
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 4px 0;
+  text-align: left;
+  font: inherit;
+  font-weight: 900;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px dashed var(--line-soft);
+  cursor: pointer;
+}
+.agenda__day.is-today .agenda__date {
+  color: var(--red-text);
+}
+.agenda__items {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.agenda__items .agev--row {
+  width: 100%;
+}
+.agenda__deadline {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 6px 8px;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-left: 4px solid var(--red);
+  cursor: pointer;
+}
+
+/* ===== Formulario de actividad y exportación ===== */
+.scope {
+  display: grid;
+  gap: 8px;
+}
+.more summary {
+  padding: 4px 0;
+  font-weight: 800;
+  cursor: pointer;
+}
+.more[open] summary {
+  margin-bottom: 10px;
+}
+.input--num {
+  width: 72px;
+}
+.swatch {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+.swatch--red {
+  background: var(--red);
+}
+.swatch--orange {
+  background: var(--orange);
+}
+.swatch--yellow {
+  background: #e0a800;
+}
+.swatch--green {
+  background: var(--green);
+}
+.swatch--blue {
+  background: var(--blue);
+}
+.swatch--purple {
+  background: var(--violet);
+}
+.swatch--pink {
+  background: #d6458f;
+}
+.swatch--gray {
+  background: var(--ink-soft);
+}
+.swatch.is-on {
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
+}
+.exportlist {
+  display: grid;
+  gap: 4px;
+  max-height: 40dvh;
+  margin: 0;
+  padding: 8px;
+  overflow-y: auto;
+  list-style: none;
+  border: 2px dashed var(--line-soft);
+}

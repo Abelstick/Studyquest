@@ -471,12 +471,13 @@ export default function Inicio() {
   const sessions = useData((s) => s.sessions);
   const xpEvents = useData((s) => s.xpEvents);
   const notifications = useData((s) => s.notifications);
+  const agenda = useData((s) => s.events);
   const logSession = useData((s) => s.logSession);
   const openModal = useUi((s) => s.openModal);
 
   const snap: Snapshot = useMemo(
-    () => ({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications }),
-    [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications],
+    () => ({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events: agenda }),
+    [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, agenda],
   );
   const missions = useMemo(() => dailyMissions(snap), [snap]);
   const review = useMemo(() => dueReviews(snap), [snap]);

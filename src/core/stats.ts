@@ -138,6 +138,21 @@ export const courseStreak = (s: Snapshot, c: Course, now: ISODate = today()): nu
   return n;
 };
 
+/** Último día en que estudiaste el curso (o null si nunca). */
+export const courseLastStudied = (s: Pick<Snapshot, 'sessions'>, c: Course): ISODate | null =>
+  s.sessions.reduce<ISODate | null>((last, x) => (x.courseId === c.id && (!last || x.date > last) ? x.date : last), null);
+
+/**
+ * Cursos para el Inicio: los que no has terminado, el último que estudiaste primero
+ * (los nunca estudiados, del más nuevo al más viejo). Los terminados van al final.
+ */
+export function coursesInPlay(s: Pick<Snapshot, 'sessions' | 'courses'>): Course[] {
+  const key = (c: Course) => courseLastStudied(s, c) ?? '';
+  return [...s.courses].sort(
+    (a, b) => Number(isCourseComplete(a)) - Number(isCourseComplete(b)) || key(b).localeCompare(key(a)) || b.createdAt.localeCompare(a.createdAt),
+  );
+}
+
 /* ---------- Datos para las gráficas del dashboard de Progreso ---------- */
 
 /** XP ganado por semana (solo lo que suma), de la más antigua a la actual. */

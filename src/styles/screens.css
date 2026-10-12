@@ -169,6 +169,10 @@
 }
 .list__title {
   font-weight: 900;
+  overflow-wrap: anywhere;
+}
+.list__row > div {
+  min-width: 0;
 }
 .tips {
   display: grid;
@@ -305,6 +309,7 @@
   gap: 10px;
 }
 .card__title {
+  overflow-wrap: anywhere;
   font-family: var(--font-pixel);
   font-size: 13px;
   line-height: 1.5;
@@ -332,6 +337,7 @@
 }
 .card__facts dd {
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 .card__actions {
   display: flex;
@@ -383,6 +389,7 @@
 .module__text {
   flex: 1;
   min-width: 0;
+  overflow-wrap: anywhere;
   padding: 12px 14px;
   display: grid;
   gap: 4px;
@@ -413,13 +420,25 @@
   display: flex;
   flex-direction: column;
 }
+/* Punto · (título + acciones debajo) · quitar: un título largo crece hacia abajo, no empuja los botones. */
 .topic {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: start;
   gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid var(--line-soft);
+}
+.topic__main {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+.topic__actions {
+  display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
 }
 .topic__dot {
   flex: none;
@@ -442,9 +461,10 @@
   color: #1a1a2e;
 }
 .topic__title {
-  flex: 1;
-  min-width: 140px;
+  padding-top: 4px;
   font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 .topic--done .topic__title {
   color: var(--muted);
@@ -1177,5 +1197,90 @@
   }
   .form__row {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Editor de flashcards ===== */
+.fcards {
+  display: grid;
+  gap: 12px;
+  max-height: min(52dvh, 460px);
+  overflow-y: auto;
+  padding: 2px 8px 8px 2px;
+}
+.fcard {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 12px 12px;
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  box-shadow: var(--sh);
+}
+.fcard__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.fcard__side {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.fcard__side--back .input {
+  background: color-mix(in srgb, var(--yellow) 16%, var(--field));
+}
+.fcard__label {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ===== Inicio: tus cursos ===== */
+.hcourses {
+  display: flex;
+  flex-direction: column;
+}
+.hcourse {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.hcourse:last-child {
+  border-bottom: 0;
+}
+.hcourse__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.hcourse__title {
+  font-weight: 900;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.hcourse__title:hover {
+  color: var(--red-text);
+}
+.hcourse__bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.card__top > div {
+  min-width: 0;
+}
+@media (max-width: 480px) {
+  .hcourse {
+    flex-wrap: wrap;
+  }
+  .hcourse > .btn {
+    width: 100%;
   }
 }

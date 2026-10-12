@@ -2,14 +2,13 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { courseProgress, courseRank } from '@/core/game';
+import { courseProgress, courseRank, nextTopic } from '@/core/game';
 import { courseHours } from '@/core/stats';
 import type { Course, Snapshot } from '@/core/domain';
 import { Bar, Button, Empty, PageHead, Tag } from '@/ui/kit';
 
 const TONES = ['red', 'green', 'blue', 'yellow'] as const;
 
-export const nextTopic = (c: Course) => c.modules.flatMap((m) => m.topics).find((t) => t.status !== 'done');
 export const lastTopic = (c: Course) => [...c.modules.flatMap((m) => m.topics)].reverse().find((t) => t.status === 'done');
 
 export default function Cursos() {

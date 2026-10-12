@@ -287,6 +287,9 @@ export function courseRank(pct: number): string {
   return 'D';
 }
 
+/** Primer tema del curso que aún no está completado. */
+export const nextTopic = (c: Course) => c.modules.flatMap((m) => m.topics).find((t) => t.status !== 'done');
+
 export const isCourseComplete = (c: Course): boolean => {
   const p = courseProgress(c);
   return p.total > 0 && p.done === p.total;

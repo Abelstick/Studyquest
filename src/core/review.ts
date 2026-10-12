@@ -85,6 +85,23 @@ export const scheduledReviews = (s: Pick<Snapshot, 'courses'>, now: ISODate = to
 /** Texto de tarjetas: una por línea, «pregunta :: respuesta». */
 export const cardsToText = (cards: Flashcard[] | undefined) => (cards ?? []).map((c) => `${c.q} :: ${c.a}`).join('\n');
 
+/**
+ * Tarjetas listas para guardar desde el editor: texto en una línea, sin preguntas vacías ni repetidas,
+ * recortadas a su largo máximo y con id (se conserva el que traían).
+ */
+export function cleanCards(drafts: { id?: string; q: string; a: string }[]): Flashcard[] {
+  const seen = new Set<string>();
+  const out: Flashcard[] = [];
+  for (const d of drafts) {
+    const q = d.q.replace(/\s+/g, ' ').trim().slice(0, 300);
+    const a = d.a.replace(/\s+/g, ' ').trim().slice(0, 600);
+    if (!q || seen.has(q.toLowerCase())) continue;
+    seen.add(q.toLowerCase());
+    out.push({ id: d.id || newId(), q, a });
+  }
+  return out;
+}
+
 export function parseCards(text: string, previous: Flashcard[] = []): Flashcard[] {
   return text
     .split('\n')

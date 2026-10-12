@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { addMonths } from './dates';
 import type { Course, Habit, Task, Topic } from './domain';
-import { REVIEW_INTERVALS, cardsFor, cardsToText, dueReviews, gradeReview, parseCards, reviewDueDate, startReview } from './review';
+import { REVIEW_INTERVALS, cardsFor, cardsToText, cleanCards, dueReviews, gradeReview, parseCards, reviewDueDate, startReview } from './review';
 import { BOSS_BONUS_XP, bossHp, nextOccurrence, projectOccurrences, recurrenceLabel, spawnNext, taskReward } from './tasks';
 import { COMBO_CAP, activeEvents, chestReward, comboBonus, freshDayBonus, habitBonus, weekendBonus } from './events';
 import { calendarDays, monthGrid } from './calendar';
@@ -75,6 +75,18 @@ describe('repaso espaciado', () => {
     expect(cards.map((c) => [c.q, c.a])).toEqual([['¿A?', 'Uno'], ['¿B?', 'Dos :: con más'], ['Solo pregunta', '']]);
     const again = parseCards(cardsToText(cards), cards);
     expect(again.map((c) => c.id)).toEqual(cards.map((c) => c.id));
+  });
+
+  it('el editor guarda tarjetas limpias: en una línea, sin vacías ni repetidas y con id', () => {
+    const cards = cleanCards([
+      { id: 'a', q: '  ¿Qué es\nun JOIN?  ', a: 'Une\n\ntablas' },
+      { q: '', a: 'sin pregunta' },
+      { q: '¿qué es un join?', a: 'repetida' },
+      { q: '¿Y un índice?', a: '' },
+    ]);
+    expect(cards.map((c) => [c.q, c.a])).toEqual([['¿Qué es un JOIN?', 'Une tablas'], ['¿Y un índice?', '']]);
+    expect(cards[0].id).toBe('a');
+    expect(cards[1].id).toBeTruthy();
   });
 });
 

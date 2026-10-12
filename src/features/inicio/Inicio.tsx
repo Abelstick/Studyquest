@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, daysLeftLabel, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
-import { computeStreak, isCounter, isDueOn, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
+import { computeStreak, courseProgress, isCounter, nextTopic, isDueOn, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
 import { dailyMissions, daySummary, isReadyToFinish, missionParts, missionUrgency, taskBucket, tips, type Mission, type TaskBucket } from '@/core/missions';
 import { dueReviews } from '@/core/review';
 import { isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
@@ -11,7 +11,7 @@ import { chainOf, chainState } from '@/core/chains';
 import { HabitAction } from '@/features/habitos/HabitAction';
 import { LateBanner } from '@/features/tareas/LateBanner';
 import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
-import { weeklyReport } from '@/core/stats';
+import { coursesInPlay, weeklyReport } from '@/core/stats';
 import type { HabitChain, Snapshot } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Empty, Panel, Tag, cx } from '@/ui/kit';
@@ -372,6 +372,60 @@ function DailyChest({ streak }: { streak: number }) {
   );
 }
 
+/** Cuántos cursos se ven en el Inicio; el resto, en la pantalla de Cursos. */
+const HOME_COURSES = 3;
+
+/** Tus cursos en marcha: progreso, próximo tema y un botón para ponerte a estudiar. */
+function CoursesHome({ snap }: { snap: Snapshot }) {
+  const openModal = useUi((s) => s.openModal);
+  const list = useMemo(() => coursesInPlay(snap), [snap]);
+  const shown = list.slice(0, HOME_COURSES);
+  return (
+    <Panel
+      kicker="// Campañas"
+      title="Tus cursos"
+      right={
+        <Link className="btn btn--ghost btn--sm" to="/cursos">
+          {list.length > HOME_COURSES ? `Ver los ${list.length}` : 'Ver cursos'}
+        </Link>
+      }
+    >
+      {shown.length === 0 ? (
+        <div className="row">
+          <p className="muted grow">Aún no tienes cursos. Cada curso es un mundo con módulos y temas que dan XP.</p>
+          <Button onClick={() => openModal({ type: 'course' })}>＋ Nuevo curso</Button>
+        </div>
+      ) : (
+        <ul className="hcourses">
+          {shown.map((c) => {
+            const p = courseProgress(c);
+            const next = nextTopic(c);
+            return (
+              <li key={c.id} className="hcourse">
+                <div className="hcourse__text">
+                  <Link className="hcourse__title" to={`/cursos/${c.id}`}>
+                    {c.title}
+                  </Link>
+                  <p className="muted small">{next ? <>Próximo: <b>{next.title}</b></> : '¡Curso completado!'}</p>
+                  <div className="hcourse__bar">
+                    <Bar pct={p.pct} tone={p.pct >= 100 ? 'green' : 'yellow'} label={`Progreso de ${c.title}`} />
+                    <span className="kicker">{p.pct}%</span>
+                  </div>
+                </div>
+                {next && (
+                  <Button small onClick={() => openModal({ type: 'session', courseId: c.id })}>
+                    ▶ Estudiar
+                  </Button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
 function WeeklyReport({ snap }: { snap: Snapshot }) {
   const r = useMemo(() => weeklyReport(snap), [snap]);
   const habitsDue = useMemo(() => {
@@ -525,6 +579,8 @@ export default function Inicio() {
                 </Link>
               </div>
             </Panel>
+
+            <CoursesHome snap={snap} />
 
             <Panel
               kicker="// Repaso espaciado"

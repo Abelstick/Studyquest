@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { courseProgress, courseRank, moduleStates, topicXp, type ModuleState } from '@/core/game';
+import { courseProgress, courseRank, moduleStates, nextTopic, topicXp, type ModuleState } from '@/core/game';
 import { courseHours, courseStreak } from '@/core/stats';
 import { agoDays, diffDays, today } from '@/core/dates';
 import { reviewDueDate } from '@/core/review';
@@ -13,7 +13,6 @@ import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Panel, Tag, cx, TextInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
-import { nextTopic } from './Cursos';
 
 /** «hoy», «mañana», «en 3 d» para el próximo repaso de un tema. */
 const when = (due: string | null) => {
@@ -151,27 +150,31 @@ export default function CursoDetalle() {
                     <button type="button" className="topic__dot" onClick={() => setTopicStatus(course.id, t.id, TOPIC_NEXT[t.status])} aria-label={`${t.title}: ${TOPIC_LABEL[t.status]}. Cambiar estado`} title={`${TOPIC_LABEL[t.status]} (clic para avanzar)`}>
                       {t.status === 'done' ? '✔' : t.status === 'doing' ? '▶' : ''}
                     </button>
-                    <p className="topic__title">{t.title}</p>
-                    <span className="topic__state">+{topicXp(mod)} XP</span>
-                    <button type="button" className={cx('chip chip--sm', t.review && 'is-on')} aria-pressed={t.review} onClick={() => toggleTopicReview(course.id, t.id)} title={t.review ? 'Repasos a 1, 3, 7 y 14 días' : 'Agenda repasos a 1, 3, 7 y 14 días'}>
-                      {t.review ? `⚑ Repaso ${when(reviewDueDate(t))}` : 'Necesito repasar'}
-                    </button>
-                    <button type="button" className="chip chip--sm" onClick={() => openModal({ type: 'cards', courseId: course.id, topicId: t.id })} aria-label={`Tarjetas de ${t.title}`}>
-                      ♪ Tarjetas{t.cards?.length ? ` (${t.cards.length})` : ''}
-                    </button>
-                    {/* Apuntes del tema: si no hay, lo crea ya colgado de este tema y te lleva a escribirlo. */}
-                    <button
-                      type="button"
-                      className={cx('chip chip--sm', notesOfTopic(allNotes, t.id).length > 0 && 'is-on')}
-                      onClick={() => {
-                        const mios = notesOfTopic(allNotes, t.id);
-                        if (!mios.length) createNote(blankNote({ title: t.title, courseId: course.id, topicId: t.id }));
-                        navigate('/apuntes');
-                      }}
-                      aria-label={`Apuntes de ${t.title}`}
-                    >
-                      ✎ Apuntes{notesOfTopic(allNotes, t.id).length ? ` (${notesOfTopic(allNotes, t.id).length})` : ''}
-                    </button>
+                    <div className="topic__main">
+                      <p className="topic__title">{t.title}</p>
+                      <div className="topic__actions">
+                        <span className="topic__state">+{topicXp(mod)} XP</span>
+                        <button type="button" className={cx('chip chip--sm', t.review && 'is-on')} aria-pressed={t.review} onClick={() => toggleTopicReview(course.id, t.id)} title={t.review ? 'Repasos a 1, 3, 7 y 14 días' : 'Agenda repasos a 1, 3, 7 y 14 días'}>
+                          {t.review ? `⚑ Repaso ${when(reviewDueDate(t))}` : 'Necesito repasar'}
+                        </button>
+                        <button type="button" className={cx('chip chip--sm', !!t.cards?.length && 'is-on')} onClick={() => openModal({ type: 'cards', courseId: course.id, topicId: t.id })} aria-label={`Tarjetas de ${t.title}`}>
+                          ♪ Tarjetas{t.cards?.length ? ` (${t.cards.length})` : ''}
+                        </button>
+                        {/* Apuntes del tema: si no hay, lo crea ya colgado de este tema y te lleva a escribirlo. */}
+                        <button
+                          type="button"
+                          className={cx('chip chip--sm', notesOfTopic(allNotes, t.id).length > 0 && 'is-on')}
+                          onClick={() => {
+                            const mios = notesOfTopic(allNotes, t.id);
+                            if (!mios.length) createNote(blankNote({ title: t.title, courseId: course.id, topicId: t.id }));
+                            navigate('/apuntes');
+                          }}
+                          aria-label={`Apuntes de ${t.title}`}
+                        >
+                          ✎ Apuntes{notesOfTopic(allNotes, t.id).length ? ` (${notesOfTopic(allNotes, t.id).length})` : ''}
+                        </button>
+                      </div>
+                    </div>
                     <button type="button" className="icon-btn icon-btn--sm" aria-label={`Quitar ${t.title}`} onClick={() => removeTopic(course.id, t.id)}>
                       ✕
                     </button>

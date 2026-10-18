@@ -472,11 +472,6 @@
 .input--num {
   width: 72px;
 }
-.swatch {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-}
 .swatch--red {
   background: var(--red);
 }

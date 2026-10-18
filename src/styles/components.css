@@ -61,7 +61,6 @@
   color: #fff;
   border: var(--bw) solid var(--line);
   font-family: var(--font-pixel);
-  font-size: 9px;
   text-transform: uppercase;
 }
 .back:hover {
@@ -184,6 +183,8 @@
   min-width: 0;
   display: grid;
   gap: 8px;
+  /* Las columnas de una rejilla no se ensanchan por una palabra larga. */
+  grid-template-columns: minmax(0, 1fr);
 }
 .page-head__right {
   display: flex;
@@ -287,12 +288,10 @@ a.btn {
 .btn--ink {
   --bg: #1a1a2e;
   --fg: #ffd23f;
-  font-size: 11px;
   padding: 14px 20px;
 }
 .btn--sm {
   padding: 7px 10px;
-  font-size: 9px;
 }
 .btn--block {
   width: 100%;
@@ -338,7 +337,6 @@ a.btn {
   gap: 4px;
   padding: 4px 7px;
   font-family: var(--font-pixel);
-  font-size: 8px;
   line-height: 1.3;
   text-transform: uppercase;
   border: 2px solid var(--line);
@@ -395,8 +393,6 @@ a.btn {
   color: var(--muted);
   font-weight: 800;
   font-size: 13px;
-}
-.chip {
   transition: transform 0.07s steps(2), border-color 0.07s steps(2), color 0.07s steps(2), box-shadow 0.07s steps(2);
 }
 .chip:hover {
@@ -417,7 +413,6 @@ a.btn {
 }
 .chip--sm {
   padding: 4px 8px;
-  font-size: 11px;
 }
 .seg {
   display: flex;
@@ -430,16 +425,13 @@ a.btn {
   background: transparent;
   border: 0;
   font-family: var(--font-pixel);
-  font-size: 9px;
   text-transform: uppercase;
   color: var(--muted);
   white-space: nowrap;
+  transition: background-color 0.07s steps(2), color 0.07s steps(2);
 }
 .seg__opt + .seg__opt {
   border-left: 2px solid var(--line-soft);
-}
-.seg__opt {
-  transition: background-color 0.07s steps(2), color 0.07s steps(2);
 }
 .seg__opt:hover:not(.is-on) {
   background: var(--panel-3);
@@ -489,7 +481,6 @@ a.btn {
 }
 .field__label {
   font-family: var(--font-pixel);
-  font-size: 9px;
   text-transform: uppercase;
   color: var(--muted);
   line-height: 1.5;
@@ -765,7 +756,6 @@ textarea.input {
 }
 .toast__title {
   font-family: var(--font-pixel);
-  font-size: 9px;
   text-transform: uppercase;
   line-height: 1.5;
 }
@@ -779,7 +769,6 @@ textarea.input {
   align-items: center;
   gap: 4px;
   font-family: var(--font-pixel);
-  font-size: 9px;
   color: var(--yellow);
   margin-left: auto;
 }
@@ -986,7 +975,6 @@ textarea.input {
   border: var(--bw) solid var(--yellow);
   box-shadow: var(--sh);
   font-family: var(--font-pixel);
-  font-size: 9px;
   white-space: nowrap;
 }
 .login {
@@ -1005,6 +993,8 @@ textarea.input {
   width: 420px;
   max-width: 100%;
   padding: 0;
+  border: 4px solid var(--line);
+  box-shadow: 8px 8px 0 var(--shadow), 0 0 0 4px color-mix(in srgb, var(--yellow) 70%, transparent);
 }
 .login__body {
   display: grid;
@@ -1019,7 +1009,8 @@ textarea.input {
 .login__title {
   text-align: center;
   font-family: var(--font-pixel);
-  font-size: 22px;
+  font-size: 26px;
+  text-shadow: 3px 3px 0 var(--line-soft);
 }
 .login__title span {
   color: var(--red-text);
@@ -1045,7 +1036,6 @@ textarea.input {
   border: var(--bw) solid var(--line);
   box-shadow: 0 4px 0 var(--shadow);
   font-family: var(--font-pixel);
-  font-size: 9px;
   text-transform: uppercase;
   text-align: center;
   line-height: 1.5;

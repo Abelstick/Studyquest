@@ -177,6 +177,8 @@ svg {
   max-width: 1320px;
   width: 100%;
   margin: 0 auto;
+  /* Red de seguridad: cualquier texto del contenido (títulos de tareas, hábitos, cursos…) parte en vez de desbordar. */
+  overflow-wrap: anywhere;
 }
 /* El césped del suelo cambia con el mundo: hierba, arena, hielo, piedra… */
 .ground {
@@ -198,26 +200,27 @@ svg {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 18px 14px 16px;
   color: var(--side-text);
-  border-right: var(--bw) solid var(--line);
-  background: var(--side-texture), var(--side);
+  gap: 14px;
+  padding: 16px 12px 14px;
+  border-right: 2px solid var(--line);
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+  /* Siempre oscuro, sea cual sea el mundo: así el contraste del texto no depende del tema. */
+  background:
+    radial-gradient(120% 40% at 0% 0%, color-mix(in srgb, var(--accent, var(--violet)) 26%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--side) 30%, #0b0b1c), color-mix(in srgb, var(--side-2) 26%, #05050f));
 }
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: var(--hud);
-  border: var(--bw) solid var(--line);
-  box-shadow: var(--sh-sm);
 }
 .brand__build {
-  font-family: var(--font-pixel);
-  font-size: 8px;
-  color: #b8b8d0;
   margin-bottom: 4px;
+  color: #d4d4ec;
 }
 .brand__name {
   font-family: var(--font-pixel);
@@ -226,7 +229,9 @@ svg {
   letter-spacing: -0.02em;
 }
 .brand__name span {
-  color: var(--yellow);
+  /* Solo el logotipo se tiñe con el acento del mundo: va sobre el HUD casi negro y ahí contrasta.
+   El rango del jugador se queda amarillo, que es el único que aguanta los siete mundos. */
+  color: color-mix(in srgb, var(--accent) 45%, var(--yellow));
 }
 .brand__coin {
   animation: spin-coin 2.4s steps(6) infinite;
@@ -245,8 +250,6 @@ svg {
   align-items: center;
   gap: 10px;
   padding: 10px;
-  background: rgba(0, 0, 0, 0.28);
-  border: var(--bw) solid var(--line);
 }
 .player__text {
   min-width: 0;
@@ -259,8 +262,6 @@ svg {
   white-space: nowrap;
 }
 .player__rank {
-  font-family: var(--font-pixel);
-  font-size: 8px;
   margin-top: 5px;
   color: var(--yellow);
 }
@@ -284,48 +285,36 @@ svg {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 9px 11px;
-  color: var(--side-text);
-  font-family: var(--font-pixel);
-  font-size: 10px;
   line-height: 1.4;
-  text-transform: uppercase;
-  background: var(--side-plate);
+  /* Cinco secciones: nombre real en grande y, debajo, las pantallas que contiene. Filas táctiles de 44px o más. */
+  gap: 11px;
+  min-height: 52px;
+  padding: 8px 10px;
   border: 2px solid transparent;
-  /* Cara biselada de bloque: luz arriba, sombra abajo. Es el relieve del mundo, no una pestaña de color. */
-  box-shadow: inset 0 2px 0 var(--side-edge), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
-  transition: transform 0.08s steps(2), background-color 0.08s steps(2), box-shadow 0.08s steps(2);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.86);
+  transition: background-color 0.08s steps(2), transform 0.08s steps(2);
 }
 .nav__link .sprite {
   transition: transform 0.12s steps(3);
-}
-.nav__link:hover {
-  background: var(--side-plate-hi);
-  border-color: var(--line);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.28), var(--sh-sm);
-  transform: translate(2px, -2px);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5));
 }
 .nav__link:hover .sprite {
   transform: translateY(-2px);
 }
 .nav__link:active {
-  transform: translate(2px, 1px);
   box-shadow: none;
-}
-.nav__link.is-active {
-  background: var(--yellow);
-  color: #1a1a2e;
-  border-color: var(--line);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), var(--sh-sm);
-  transform: translateX(4px);
 }
 /* El bloque activo se golpea una vez al llegar, como un bloque «?». */
 .nav__link.is-active .sprite {
   animation: block-hit 0.28s steps(4) 1;
-}
-.nav__link.is-active:hover {
-  transform: translate(4px, -2px);
 }
 @keyframes block-hit {
   0% {
@@ -341,8 +330,6 @@ svg {
 .challenge {
   margin-top: auto;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.32);
-  border: var(--bw) solid var(--line);
   display: grid;
   gap: 8px;
 }
@@ -354,10 +341,12 @@ svg {
   color: var(--yellow);
 }
 .challenge__meta {
-  font-family: var(--font-pixel);
-  font-size: 8px;
   color: #e8e0ff;
   line-height: 1.6;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 .scrim {
   display: none;
@@ -376,7 +365,8 @@ svg {
   background: var(--hud);
   color: var(--hud-text);
   border-bottom: var(--bw) solid var(--line);
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+  border-bottom-color: var(--line);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25), inset 0 -3px 0 color-mix(in srgb, var(--accent) 45%, transparent);
 }
 .hud__title {
   flex: 1 1 200px;
@@ -409,7 +399,6 @@ svg {
 }
 .stat__k {
   color: #9a9ac0;
-  font-size: 8px;
 }
 .stat--fire .stat__v {
   color: #ff8a3c;
@@ -516,11 +505,9 @@ svg {
   color: #fff;
   border: 2px solid var(--line);
   font-family: var(--font-pixel);
-  font-size: 8px;
 }
 .kicker {
   font-family: var(--font-pixel);
-  font-size: 9px;
   line-height: 1.5;
   text-transform: uppercase;
   color: var(--red-text);
@@ -580,8 +567,9 @@ svg {
   }
   .hud {
     padding: 8px 12px;
-    flex-wrap: wrap;
     gap: 8px;
+  /* Una sola fila: ☰, título, racha y accesos. XP y monedas siguen en el menú y en Hoy; tema y sonido, en el menú. */
+  flex-wrap: nowrap;
   }
   .icon-btn.hud__menu {
     display: inline-flex;
@@ -597,10 +585,6 @@ svg {
   }
   .btn.hud__new {
     display: none;
-  }
-  /* Una sola fila: ☰, título, racha y accesos. XP y monedas siguen en el menú y en Hoy; tema y sonido, en el menú. */
-  .hud {
-    flex-wrap: nowrap;
   }
   .hud .kicker {
     display: none;

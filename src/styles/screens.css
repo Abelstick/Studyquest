@@ -73,7 +73,6 @@
 }
 .scoreboard dt {
   font-family: var(--font-pixel);
-  font-size: 8px;
   color: #a8a8c8;
   text-transform: uppercase;
 }
@@ -99,13 +98,11 @@
   gap: 12px;
   padding: 12px 6px;
   border-bottom: 2px dashed var(--line-soft);
+  flex-wrap: wrap;
+  transition: background-color 0.08s steps(2);
 }
 .mission:last-child {
   border-bottom: 0;
-}
-.mission__text {
-  flex: 1;
-  min-width: 0;
 }
 .mission__title {
   font-weight: 900;
@@ -134,11 +131,15 @@
   font-weight: 900;
   font-size: 16px;
   position: relative;
+  /* La casilla de misión es un bloque «?» esperando el golpe. */
+  transition: transform 0.07s steps(2), box-shadow 0.07s steps(2), filter 0.07s steps(2);
 }
 .check:not(:empty) {
   background: var(--green);
   box-shadow: none;
   transform: translateY(3px);
+  /* Al completarla, el sello cae de golpe una sola vez. */
+  animation: stamp 0.18s steps(3) 1;
 }
 .check:empty::after {
   content: '?';
@@ -202,7 +203,6 @@
 }
 .stat-grid dt {
   font-family: var(--font-pixel);
-  font-size: 7px;
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -249,7 +249,6 @@
 .cal__head {
   text-align: center;
   font-family: var(--font-pixel);
-  font-size: 8px;
   color: var(--muted);
 }
 .cal__cell {
@@ -330,7 +329,6 @@
 }
 .card__facts dt {
   font-family: var(--font-pixel);
-  font-size: 8px;
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 3px;
@@ -408,7 +406,6 @@
   align-self: center;
   padding-right: 14px;
   font-family: var(--font-pixel);
-  font-size: 9px;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -471,7 +468,6 @@
 }
 .topic__state {
   font-family: var(--font-pixel);
-  font-size: 8px;
   color: var(--xp-text);
 }
 .mentor {
@@ -551,6 +547,8 @@
   border: var(--bw) solid var(--line);
   border-left-width: 10px;
   box-shadow: var(--sh-sm);
+  /* Filas de tarea y misión: un realce sobrio, que se leen más que se pulsan. */
+  transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
 }
 .task--low {
   border-left-color: var(--green);
@@ -563,6 +561,7 @@
 }
 .task--boss {
   border-left-color: var(--red);
+  background-image: repeating-linear-gradient(135deg, transparent 0 10px, color-mix(in srgb, var(--red) 7%, transparent) 10px 20px);
 }
 .task__title {
   font-size: 15px;
@@ -654,7 +653,6 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-pixel);
-  font-size: 8px;
   color: var(--muted);
   border: 2px solid var(--line-soft);
 }
@@ -858,14 +856,12 @@
 }
 .track__title {
   font-family: var(--font-pixel);
-  font-size: 9px;
   line-height: 1.6;
   text-transform: uppercase;
   margin-top: 6px;
 }
 .track__xp {
   font-family: var(--font-pixel);
-  font-size: 8px;
   color: var(--xp-text);
 }
 .track__item--locked .track__title {
@@ -889,7 +885,6 @@
 }
 .bigstats dt {
   font-family: var(--font-pixel);
-  font-size: 8px;
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -899,7 +894,6 @@
 }
 .bigstats__delta {
   font-family: var(--font-pixel);
-  font-size: 8px;
   color: var(--muted);
   text-transform: uppercase;
 }
@@ -926,7 +920,6 @@
 .bars__v {
   text-align: center;
   font-family: var(--font-pixel);
-  font-size: 7px;
   color: var(--muted);
   margin-bottom: 4px;
 }
@@ -944,7 +937,6 @@
   justify-content: space-between;
   margin-top: 8px;
   font-family: var(--font-pixel);
-  font-size: 8px;
   color: var(--muted);
   text-transform: uppercase;
 }
@@ -962,9 +954,10 @@
 }
 .swatch {
   flex: none;
-  width: 14px;
-  height: 14px;
   border: 2px solid var(--line);
+  width: 30px;
+  height: 30px;
+  padding: 0;
 }
 .dist__h {
   width: 44px;
@@ -1057,7 +1050,6 @@
 }
 .badge-card__title {
   font-family: var(--font-pixel);
-  font-size: 9px;
   line-height: 1.5;
   text-transform: uppercase;
 }
@@ -1095,7 +1087,6 @@
 }
 .timeline__when {
   font-family: var(--font-pixel);
-  font-size: 8px;
   text-align: right;
   padding-top: 4px;
   text-transform: uppercase;
@@ -1146,7 +1137,6 @@
 }
 .vitrina__item span {
   font-family: var(--font-pixel);
-  font-size: 6px;
   line-height: 1.5;
   text-transform: uppercase;
 }
@@ -1173,10 +1163,14 @@
   }
   .scoreboard {
     width: 100%;
+  /* Marcador del Perfil: sus celdas bajan de línea en vez de salirse del panel. */
+  flex-wrap: wrap;
   }
   .scoreboard > div {
-    flex: 1;
     padding: 10px;
+  flex: 1 1 96px;
+  min-width: 0;
+  box-shadow: inset 1px 0 0 #3a3a5c, inset 0 1px 0 #3a3a5c;
   }
   .scoreboard dd {
     font-size: 12px;
@@ -1233,7 +1227,6 @@
 }
 .fcard__label {
   font-family: var(--font-pixel);
-  font-size: 8px;
   text-transform: uppercase;
   color: var(--muted);
 }

@@ -61,7 +61,8 @@ describe('paridad servidor ↔ cliente de "¿toca hoy?"', () => {
       }
     }
     expect(checked).toBeGreaterThan(15_000);
-  });
+    // Son ~15 000 comprobaciones: con toda la suite en paralelo supera a veces los 5 s por defecto.
+  }, 20_000);
 
   it('isDoneOn respeta el objetivo del día', () => {
     const h = { id: 'h', frequency: { type: 'daily' } as Frequency, target: 20, startDate: '2026-01-01' };

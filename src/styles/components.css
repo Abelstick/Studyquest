@@ -944,6 +944,7 @@ textarea.input {
 }
 .splash {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -990,6 +991,7 @@ textarea.input {
 .login {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;

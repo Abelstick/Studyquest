@@ -1,17 +1,16 @@
-import { Fragment, Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { sfx } from '@/audio/sfx';
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { dataLayer, useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { today, longDate, weekStart } from '@/core/dates';
 import { WEEKLY_BONUS_XP, computeStreak, hoursInWeek, isDueOn, isHabitDone, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
-import { CITY_MAX } from '@/core/city';
-import { useCity } from '@/features/ciudad/useCity';
 import { Avatar } from '@/ui/Avatar';
 import { Loader } from '@/ui/Loader';
 import { Bar, Button, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
-import { NAV, NAV_GROUPS, navFor } from './nav';
+import { SectionTabs, sectionTabId } from '@/ui/SectionTabs';
+import { SECTIONS, navFor, rememberTab, sectionHref, tabsOf, type SectionId } from './nav';
 import { Overlays } from './Overlays';
 import { useOnline, useSyncPending } from '@/pwa/hooks';
 import { useHabitReminders } from '@/pwa/useHabitReminders';
@@ -57,6 +56,48 @@ function useRouteTitle(): string {
   }
 }
 
+interface SectionBadge {
+  count: number;
+  /** Qué cuenta, para el lector de pantalla y el `title`. */
+  label: string;
+  tone: 'plain' | 'warn';
+}
+
+/**
+ * Insignias de las secciones: solo aparecen si hay algo que hacer hoy (tareas vencidas o de hoy,
+ * hábitos pendientes, flashcards que tocan). Nada de contadores decorativos.
+ */
+function useSectionBadges(): Partial<Record<SectionId, SectionBadge>> {
+  const courses = useData((s) => s.courses);
+  const tasks = useData((s) => s.tasks);
+  const habits = useData((s) => s.habits);
+  const habitLogs = useData((s) => s.habitLogs);
+  return useMemo(() => {
+    const day = today();
+    const open = tasks.filter((t) => t.status !== 'done' && t.dueDate !== null && t.dueDate <= day);
+    const late = open.some((t) => (t.dueDate as string) < day);
+    const pendingHabits = habits.filter((h) => isDueOn(h, day, habitLogs) && !isHabitDone(h, logFor(habitLogs, h.id, day))).length;
+    const reviews = dueReviews({ courses }).length;
+    const out: Partial<Record<SectionId, SectionBadge>> = {};
+    if (reviews > 0) out.estudiar = { count: reviews, label: `${reviews} ${reviews === 1 ? 'repaso para hoy' : 'repasos para hoy'}`, tone: 'plain' };
+    if (open.length > 0) out.planear = { count: open.length, label: `${open.length} ${open.length === 1 ? 'tarea vencida o para hoy' : 'tareas vencidas o para hoy'}`, tone: late ? 'warn' : 'plain' };
+    if (pendingHabits > 0) out.lograr = { count: pendingHabits, label: `${pendingHabits} ${pendingHabits === 1 ? 'hábito pendiente hoy' : 'hábitos pendientes hoy'}`, tone: 'plain' };
+    return out;
+  }, [courses, tasks, habits, habitLogs]);
+}
+
+/** Adónde lleva una sección: la pestaña actual si ya estás en ella, si no, la última visitada. */
+function useSectionLinks() {
+  const { pathname } = useLocation();
+  const item = navFor(pathname);
+  return {
+    active: item.section,
+    hrefFor: (id: SectionId) => (id === item.section && !item.hidden ? item.to : sectionHref(id)),
+  };
+}
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
 function Sidebar() {
   const profile = useData((s) => s.profile);
   const sessions = useData((s) => s.sessions);
@@ -64,56 +105,44 @@ function Sidebar() {
   const navOpen = useUi((s) => s.navOpen);
   const setNavOpen = useUi((s) => s.setNavOpen);
   const { level, into, needed, pct } = levelProgress(profile.xp);
-  const courses = useData((s) => s.courses);
-  const tasks = useData((s) => s.tasks);
-  const habits = useData((s) => s.habits);
-  const habitLogs = useData((s) => s.habitLogs);
   const sound = useUi((s) => s.sound);
   const toggleSound = useUi((s) => s.toggleSound);
-  const pomoStatus = usePomodoro((s) => s.status);
-  const pomoEndsAt = usePomodoro((s) => s.endsAt);
-  const pomoRemaining = usePomodoro((s) => s.remainingMs);
-  const [now, setNow] = useState(Date.now());
+  const badges = useSectionBadges();
+  const { active, hrefFor } = useSectionLinks();
+  const asideRef = useRef<HTMLElement>(null);
+
+  // Drawer móvil: Escape lo cierra, el foco no se escapa mientras está abierto y vuelve al botón ☰ al cerrarse.
   useEffect(() => {
-    if (pomoStatus !== 'running') return;
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, [pomoStatus]);
-  const city = useCity();
-  const dueCount = useMemo(() => dueReviews({ courses }).length, [courses]);
-
-  // Contadores en vivo de cada destino (solo se muestran si hay algo que contar).
-  const counts = useMemo(() => {
-    const day = today();
-    const openToday = tasks.filter((t) => t.status !== 'done' && t.dueDate !== null && t.dueDate <= day).length;
-    const dueHabits = habits.filter((h) => isDueOn(h, day, habitLogs));
-    const doneHabits = dueHabits.filter((h) => isHabitDone(h, logFor(habitLogs, h.id, day))).length;
-    return { openToday, dueHabits: dueHabits.length, doneHabits };
-  }, [tasks, habits, habitLogs]);
-  const pomoLeft = pomoStatus === 'running' && pomoEndsAt ? Math.max(0, pomoEndsAt - now) : pomoRemaining;
-
-  const badgeFor = (to: string): { text: string; tone: string } | null => {
-    switch (to) {
-      case '/':
-        return { text: 'LIVE', tone: 'live' };
-      case '/tareas':
-        return counts.openToday > 0 ? { text: `${counts.openToday} hoy`, tone: 'plain' } : null;
-      case '/pomodoro':
-        return pomoStatus !== 'idle' ? { text: `${formatClock(pomoLeft)}${pomoStatus === 'paused' ? ' ⏸' : ''}`, tone: 'live' } : null;
-      case '/cursos':
-        return courses.length > 0 ? { text: `${courses.length} activo${courses.length === 1 ? '' : 's'}`, tone: 'plain' } : null;
-      case '/repaso':
-        return dueCount > 0 ? { text: `${dueCount} due`, tone: 'warn' } : null;
-      case '/habitos':
-        return counts.dueHabits > 0 ? { text: `${counts.doneHabits}/${counts.dueHabits}`, tone: counts.doneHabits === counts.dueHabits ? 'live' : 'plain' } : null;
-      case '/heroe':
-        return profile.hero ? null : { text: 'NEW', tone: 'new' };
-      case '/ciudad':
-        return { text: `${Math.round((city.total / CITY_MAX) * 100)}%`, tone: 'plain' };
-      default:
-        return null;
-    }
-  };
+    const aside = asideRef.current;
+    if (!navOpen || !aside) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusables = () => Array.from(aside.querySelectorAll<HTMLElement>(FOCUSABLE));
+    focusables()[0]?.focus();
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setNavOpen(false);
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const list = focusables();
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (!first || !last) return;
+      if (e.shiftKey && (document.activeElement === first || !aside.contains(document.activeElement))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !aside.contains(document.activeElement))) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      opener?.focus();
+    };
+  }, [navOpen, setNavOpen]);
 
   const from = weekStart(today());
   const hours = hoursInWeek(sessions, from);
@@ -124,7 +153,7 @@ function Sidebar() {
   return (
     <>
       <div className={cx('scrim', navOpen && 'is-on')} onClick={() => setNavOpen(false)} />
-      <aside className={cx('sidebar', navOpen && 'is-open')} aria-label="Menú principal">
+      <aside ref={asideRef} className={cx('sidebar', navOpen && 'is-open')} aria-label="Menú principal" role={navOpen ? 'dialog' : undefined} aria-modal={navOpen || undefined}>
         <div className="brand">
           <Sprite name="coin" size={26} className="brand__coin" />
           <div>
@@ -154,22 +183,35 @@ function Sidebar() {
           </div>
         </div>
 
-        <nav className="nav">
-          {NAV_GROUPS.map((group) => (
-            <Fragment key={group}>
-              <p className="nav__group">{group}</p>
-              {NAV.filter((n) => n.group === group).map((n) => (
-                <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => cx('nav__link', isActive && 'is-active')} onClick={() => { sfx.select(); setNavOpen(false); }}>
-                  <Sprite name={n.sprite} size={20} />
-                  <span>{n.label}</span>
-                  {(() => {
-                    const b = badgeFor(n.to);
-                    return b && <span className={cx('nav__badge', `nav__badge--${b.tone}`)}>{b.text}</span>;
-                  })()}
-                </NavLink>
-              ))}
-            </Fragment>
-          ))}
+        <nav className="nav" aria-label="Secciones">
+          {SECTIONS.map((s) => {
+            const b = badges[s.id];
+            const on = s.id === active;
+            return (
+              <Link
+                key={s.id}
+                to={hrefFor(s.id)}
+                className={cx('nav__link', on && 'is-active')}
+                aria-current={on ? 'true' : undefined}
+                onClick={() => {
+                  sfx.select();
+                  setNavOpen(false);
+                }}
+              >
+                <Sprite name={s.sprite} size={20} />
+                <span className="nav__text">
+                  <span className="nav__label">{s.label}</span>
+                  <span className="nav__sub">{tabsOf(s.id).map((t) => t.label).join(' · ')}</span>
+                </span>
+                {b && (
+                  <span className={cx('nav__badge', `nav__badge--${b.tone}`)} title={b.label}>
+                    <span aria-hidden="true">{b.count}</span>
+                    <span className="sr-only">{b.label}</span>
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="challenge">
@@ -249,7 +291,7 @@ function SearchBox() {
   );
 }
 
-/** Mini reloj del Pomodoro en la barra superior, visible desde cualquier pantalla. */
+/** Acceso rápido al Pomodoro en la barra superior: un tomate en reposo, el reloj cuando está en marcha. */
 function PomodoroChip() {
   const status = usePomodoro((s) => s.status);
   const phase = usePomodoro((s) => s.phase);
@@ -261,7 +303,12 @@ function PomodoroChip() {
     const t = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(t);
   }, [status]);
-  if (status === 'idle') return null;
+  if (status === 'idle')
+    return (
+      <Link to="/pomodoro" className="icon-btn" aria-label="Pomodoro: modo enfoque" title="Pomodoro">
+        <Sprite name="tomato" size={18} />
+      </Link>
+    );
   const left = status === 'running' && endsAt ? Math.max(0, endsAt - now) : remaining;
   return (
     <Link to="/pomodoro" className="tag tag--xp pomo-chip" title={`${PHASE_LABEL[phase]}${status === 'paused' ? ' (en pausa)' : ''}`}>
@@ -342,42 +389,73 @@ function Hud() {
 
 function MobileNav() {
   const openModal = useUi((s) => s.openModal);
+  const badges = useSectionBadges();
+  const { active, hrefFor } = useSectionLinks();
   return (
     <>
       <button type="button" className="fab" aria-label="Crear o registrar" onClick={() => openModal({ type: 'quick' })}>
         <Sprite name="qblock" size={30} />
       </button>
-      <nav className="bottom-nav" aria-label="Navegación rápida">
-        {NAV.filter((n) => n.mobile).map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => cx('bottom-nav__link', isActive && 'is-active')}>
-            <Sprite name={n.sprite} size={22} />
-            <span>{n.label}</span>
-          </NavLink>
-        ))}
+      <nav className="bottom-nav" aria-label="Secciones">
+        {SECTIONS.map((s) => {
+          const b = badges[s.id];
+          const on = s.id === active;
+          return (
+            <Link key={s.id} to={hrefFor(s.id)} className={cx('bottom-nav__link', on && 'is-active')} aria-current={on ? 'true' : undefined}>
+              <span className="bottom-nav__icon">
+                <Sprite name={s.sprite} size={22} />
+                {b && (
+                  <span className={cx('bottom-nav__badge', `bottom-nav__badge--${b.tone}`)} aria-hidden="true">
+                    {b.count > 9 ? '9+' : b.count}
+                  </span>
+                )}
+              </span>
+              <span>{s.label}</span>
+              {b && <span className="sr-only">, {b.label}</span>}
+            </Link>
+          );
+        })}
       </nav>
     </>
   );
+}
+
+/** Pestañas de la sección actual, encima de cada pantalla. */
+function useSectionTabs() {
+  const { pathname } = useLocation();
+  const courses = useData((s) => s.courses);
+  const reviews = useMemo(() => dueReviews({ courses }).length, [courses]);
+  const item = navFor(pathname);
+  const section = SECTIONS.find((s) => s.id === item.section) ?? SECTIONS[0];
+  const tabs = tabsOf(section.id).map((t) => (t.to === '/repaso' ? { to: t.to, label: t.label, count: reviews, countLabel: reviews === 1 ? 'tema para repasar hoy' : 'temas para repasar hoy' } : { to: t.to, label: t.label }));
+  const showTabs = !item.hidden && tabs.length > 1;
+  return { pathname, item, section, tabs, showTabs };
 }
 
 export function AppShell() {
   useHabitReminders();
   usePomodoroEngine();
   useAiAccountSync();
+  const { pathname, item, section, tabs, showTabs } = useSectionTabs();
+  useEffect(() => rememberTab(pathname), [pathname]);
   return (
     <div className="shell">
       <Sidebar />
       <div className="shell__main">
         <Hud />
         <main className="page" id="contenido">
-          <Suspense
-            fallback={
-              <div className="page-loader">
-                <Loader title="Cargando la pantalla" steps={['Preparando el nivel']} />
-              </div>
-            }
-          >
-            <Outlet />
-          </Suspense>
+          {showTabs && <SectionTabs tabs={tabs} current={item.to} label={`Pestañas de ${section.label}`} panelId="contenido-panel" />}
+          <div id="contenido-panel" role={showTabs ? 'tabpanel' : undefined} aria-labelledby={showTabs ? sectionTabId(item.to) : undefined}>
+            <Suspense
+              fallback={
+                <div className="page-loader">
+                  <Loader title="Cargando la pantalla" steps={['Preparando el nivel']} />
+                </div>
+              }
+            >
+              <Outlet />
+            </Suspense>
+          </div>
         </main>
         <footer className="ground" aria-hidden="true" />
       </div>

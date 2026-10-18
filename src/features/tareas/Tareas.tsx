@@ -3,8 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { diffDays, dueLabel, today } from '@/core/dates';
-import type { Priority, Task, TaskStatus } from '@/core/domain';
-import { bossHp, dueTimeOf, isBoss, isOverdue, recurrenceLabel, timeLeftLabel } from '@/core/tasks';
+import type { Task, TaskStatus } from '@/core/domain';
+import { NEXT_STATUS, PRIORITY_LABEL, bossHp, dueTimeOf, isBoss, isOverdue, recurrenceLabel, timeLeftLabel } from '@/core/tasks';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { difficultyInfo, difficultyOf } from '@/core/difficulty';
@@ -17,14 +17,8 @@ const COLUMNS: { status: TaskStatus; title: string; sprite: 'qblock' | 'flower' 
   { status: 'doing', title: 'En juego', sprite: 'flower' },
   { status: 'done', title: 'Superada', sprite: 'star' },
 ];
-const NEXT: Record<TaskStatus, { to: TaskStatus; label: string }> = {
-  todo: { to: 'doing', label: '▶ Empezar' },
-  doing: { to: 'done', label: '✔ Completar' },
-  done: { to: 'todo', label: '↩ Reabrir' },
-};
 /** Orden por vencimiento: fecha y, dentro del día, hora (las de sin hora al final del día; sin fecha, al final). */
 const dueKey = (t: Task) => `${t.dueDate ?? '9999'} ${dueTimeOf(t) ?? '99'}`;
-const PRIORITY_LABEL: Record<Priority, string> = { low: 'Baja', mid: 'Media', high: 'Alta', boss: 'Jefe final' };
 
 function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: string; highlighted?: boolean }) {
   const setTaskStatus = useData((s) => s.setTaskStatus);
@@ -38,7 +32,7 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
   const boss = isBoss(task) && task.subtasks.length > 0;
   // Los jefes muestran sus subtareas (sus «puntos débiles») desde el principio.
   const [open, setOpen] = useState(boss && task.status !== 'done');
-  const next = NEXT[task.status];
+  const next = NEXT_STATUS[task.status];
   const hp = bossHp(task);
   // Subtareas todas hechas: no se cierra sola, pero se nota que solo falta pulsar «Completar».
   const ready = task.subtasks.length > 0 && doneSubs === task.subtasks.length && task.status !== 'done';

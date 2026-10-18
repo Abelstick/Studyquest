@@ -8,6 +8,7 @@ import './styles/components.css';
 import './styles/screens.css';
 import './styles/features.css';
 import './styles/agenda.css';
+import './styles/today.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

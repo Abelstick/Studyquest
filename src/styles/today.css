@@ -1,0 +1,611 @@
+/* ===== Hoy: panel de control del día =====
+ * Cada color tiene una función: verde = hábitos (constancia), azul = tareas (plazos), rojo = vencido,
+ * amarillo = XP y progreso. Lo hecho se marca con ✔ y verde. Los tonos salen de tokens.css (--habit, --task, --late). */
+
+.home__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.home__rail {
+  max-width: 420px;
+}
+@media (min-width: 1440px) {
+  .home__grid {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .home__rail {
+    max-width: none;
+  }
+}
+
+/* ---------- Resumen del día ---------- */
+.daysum {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.daysum__tile {
+  --tone: var(--yellow);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 10px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-top: 5px solid var(--tone);
+  box-shadow: var(--sh-sm);
+}
+.daysum__tile--habit {
+  --tone: var(--habit);
+}
+.daysum__tile--task {
+  --tone: var(--task);
+}
+.daysum__tile--streak {
+  --tone: var(--orange);
+}
+.daysum__tile.is-alert.daysum__tile--task {
+  --tone: var(--late);
+}
+.daysum__tile.is-clear {
+  background: color-mix(in srgb, var(--tone) 14%, var(--panel));
+}
+.daysum__text {
+  min-width: 0;
+}
+.daysum__k {
+  margin: 0;
+  font-family: var(--font-pixel);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.daysum__v {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+.daysum__note {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.daysum__tile.is-alert .daysum__note {
+  color: var(--late);
+}
+.daysum__bar {
+  grid-column: 1 / -1;
+  height: 14px;
+  margin-top: 6px;
+}
+@media (max-width: 700px) {
+  .daysum {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .daysum__tile {
+    grid-column: span 2;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 8px 10px;
+  }
+  .daysum__tile--main {
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .daysum__tile:not(.daysum__tile--main) .daysum__sprite {
+    display: none;
+  }
+  .daysum__v {
+    font-size: 18px;
+  }
+}
+
+/* ---------- Tablero de misiones ---------- */
+.today-board {
+  display: grid;
+  gap: 12px;
+}
+.today-board__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.today-board__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+.today-board__ctl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.btn.mtools__toggle {
+  display: none;
+}
+.mtools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.mtools__sort,
+.mtools__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.mtools__sort .input {
+  width: auto;
+  min-width: 130px;
+}
+.lane-switch {
+  display: none;
+}
+.tabs__alert {
+  min-width: 22px;
+  padding: 0 6px;
+  border: 2px solid var(--line);
+  background: var(--alert);
+  color: var(--hud-text);
+  font-size: 12px;
+  text-align: center;
+}
+
+.lanes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.lane {
+  --tone: var(--habit);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding-bottom: 12px;
+  background: color-mix(in srgb, var(--tone) 7%, var(--panel));
+  border: var(--bw) solid var(--line);
+  box-shadow: var(--sh);
+}
+.lane--task {
+  --tone: var(--task);
+}
+.lane > :not(.lane__head) {
+  margin-inline: 12px;
+}
+.lane__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--tone) 55%, var(--ink));
+  color: var(--hud-text);
+  border-bottom: 2px solid var(--line);
+}
+.lane__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-pixel);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.lane__count {
+  padding: 2px 6px;
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+.lane__add {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--yellow);
+  color: var(--on-yellow);
+  border: 2px solid var(--line);
+  box-shadow: 0 2px 0 var(--shadow);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.07s steps(2), box-shadow 0.07s steps(2);
+}
+.lane__add:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 var(--shadow);
+}
+.lane__add:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+.lane__bar {
+  grid-column: 1 / -1;
+  height: 14px;
+}
+.lane__sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 -2px;
+  font-family: var(--font-pixel);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lane__group--late .lane__sub {
+  color: var(--late);
+}
+.lane__subn {
+  padding: 1px 6px;
+  border: 2px solid currentColor;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 900;
+}
+.lane__empty {
+  margin-block: 4px;
+}
+
+.missions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.missions__more {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+/* ---------- Tarjeta de misión ---------- */
+.mission {
+  --tone: var(--habit);
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 2px solid var(--line-soft);
+  border-left: 6px solid var(--tone);
+  cursor: pointer;
+  transition: transform 0.08s steps(2), box-shadow 0.08s steps(2), background-color 0.08s steps(2), border-color 0.08s steps(2);
+}
+.mission--task {
+  --tone: var(--task);
+}
+.mission.is-late {
+  --tone: var(--late);
+}
+.mission:hover {
+  background: var(--panel-2);
+  border-color: var(--line);
+  border-left-color: var(--tone);
+  box-shadow: var(--sh-sm);
+  transform: translate(-1px, -1px);
+}
+.mission:active {
+  box-shadow: none;
+  transform: none;
+}
+/* Hecha: verde y tachada, pero con el mismo contraste (no se apaga con opacidad). */
+.mission.is-done {
+  --tone: var(--green);
+  background: color-mix(in srgb, var(--green) 10%, var(--panel));
+}
+.mission.is-done:hover {
+  border-color: var(--line);
+  border-left-color: var(--tone);
+}
+.mission.is-ready {
+  border-color: var(--green);
+}
+.mission.is-fx {
+  animation: mission-clear 0.7s steps(7) 1;
+}
+.mission__body {
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+  min-width: 0;
+}
+/* Botón «estirado»: su ::after cubre toda la tarjeta, así que un clic en cualquier hueco abre la ficha.
+   Los controles de dentro llevan z-index 1 y quedan por encima, sin activar la tarjeta. */
+.mission__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mission__open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.mission__open:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.mission__open:focus-visible::after {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--focus-ink);
+}
+.mission__title {
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.mission.is-done .mission__title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.mission__sub,
+.mission__chain {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.mission__sub {
+  color: var(--muted);
+}
+.mission__chain {
+  font-weight: 800;
+  color: var(--xp-text);
+}
+.mission__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.mission__xp {
+  margin-top: 2px;
+}
+.mission__meter {
+  width: 100%;
+  height: 6px;
+  background: var(--bar-bg);
+  border: 1px solid var(--line-soft);
+}
+.mission__meter > i {
+  display: block;
+  height: 100%;
+  background: var(--tone);
+}
+.mission__ready {
+  grid-column: 2 / -1;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--green-text);
+}
+.mission__subs {
+  grid-column: 1 / -1;
+  margin: 4px 0 2px 48px;
+}
+.mission__counter {
+  max-width: 100%;
+  cursor: default;
+}
+.mission__counter .counter {
+  flex: none;
+  max-width: 100%;
+}
+.mission__counter .counter__value {
+  flex: none;
+  min-width: 7em;
+}
+.mission__check,
+.mission__counter,
+.mission__more,
+.mission__subs {
+  position: relative;
+  z-index: 1;
+}
+
+/* La casilla es un bloque «?» esperando el golpe; en los hábitos es redonda (se repite), en las tareas cuadrada (se cierra). */
+.mission__check {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: var(--yellow);
+  border: var(--bw) solid var(--line);
+  box-shadow: 0 3px 0 var(--shadow);
+  color: var(--on-green);
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.07s steps(2), box-shadow 0.07s steps(2), filter 0.07s steps(2);
+}
+.mission--habit .mission__check {
+  border-radius: 50%;
+}
+.mission__check:empty::after {
+  content: '?';
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  color: var(--ink);
+}
+.mission__check:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--shadow);
+}
+.mission__check:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+.mission__check:not(:empty) {
+  background: var(--green);
+  box-shadow: none;
+  transform: translateY(3px);
+}
+:root[data-theme='dark'] .mission__check:not(:empty) {
+  color: var(--ink);
+}
+.mission.is-fx .mission__check {
+  animation: stamp 0.18s steps(3) 1;
+}
+.mission.is-ready .mission__check {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 30%, transparent);
+}
+
+/* Prioridad como señal de cobertura: 1, 2 o 3 barras; el jefe final lleva calavera. */
+.prio {
+  --p: var(--ink-soft);
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.prio > i {
+  width: 4px;
+  background: var(--line-soft);
+}
+.prio > i:nth-child(1) {
+  height: 6px;
+}
+.prio > i:nth-child(2) {
+  height: 10px;
+}
+.prio > i:nth-child(3) {
+  height: 14px;
+}
+.prio > i.is-on {
+  background: var(--p);
+}
+.prio--mid {
+  --p: var(--blue);
+}
+.prio--high {
+  --p: var(--orange);
+}
+.prio--boss {
+  --p: var(--red);
+}
+
+@keyframes mission-clear {
+  from {
+    box-shadow: 0 0 0 5px var(--yellow);
+  }
+  to {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* ---------- Fichas de detalle (hábito y tarea) ---------- */
+.detail__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+:root[data-theme='dark'] .detail__status .tag--green,
+:root[data-theme='dark'] .detail__status .tag--blue {
+  color: var(--ink);
+}
+.detail__today {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: var(--panel-2);
+  border: 2px solid var(--line-soft);
+}
+.detail__today.is-done {
+  background: color-mix(in srgb, var(--green) 12%, var(--panel));
+  border-color: var(--green);
+}
+
+/* ---------- Pantallas pequeñas: una columna a la vez y controles táctiles ---------- */
+@media (max-width: 700px) {
+  /* Lo importante sube: menos aire entre bloques y los eventos del día pasan al final. */
+  .home,
+  .home__main {
+    gap: 14px;
+  }
+  .home__main > .events-line {
+    order: 1;
+  }
+  /* El XP en juego ya está en el resumen de arriba. */
+  .today-board__xp {
+    display: none;
+  }
+  .btn.mtools__toggle {
+    display: inline-flex;
+  }
+  .mtools {
+    display: none;
+  }
+  .mtools.is-open {
+    display: flex;
+  }
+  .lane-switch {
+    display: flex;
+  }
+  .lane-switch .tabs__tab {
+    min-height: 44px;
+  }
+  .lanes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lane:not(.is-shown) {
+    display: none;
+  }
+  .lane__add {
+    width: 44px;
+    height: 44px;
+  }
+  .mission__check {
+    width: 44px;
+    height: 44px;
+  }
+  .mission__subs {
+    margin-left: 0;
+  }
+  .mission__subs label {
+    min-height: 36px;
+  }
+  .mission__ready {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mission,
+  .mission__check,
+  .lane__add {
+    transition: none;
+  }
+  .mission.is-fx,
+  .mission.is-fx .mission__check {
+    animation: none;
+  }
+}

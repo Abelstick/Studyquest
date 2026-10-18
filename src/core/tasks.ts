@@ -1,6 +1,16 @@
 /** Reglas de tareas: repetición y jefes finales. Funciones puras. */
-import type { ID, ISODate, Recurrence, Task } from './domain';
+import type { ID, ISODate, Priority, Recurrence, Task, TaskStatus } from './domain';
 import { addDays, addMonths, clockToMinutes, daysLeftLabel, diffDays, isClockTime, isoNow, minutesOfDay, today } from './dates';
+
+/** Cómo se nombran la prioridad y el estado de una tarea en toda la app. */
+export const PRIORITY_LABEL: Record<Priority, string> = { low: 'Baja', mid: 'Media', high: 'Alta', boss: 'Jefe final' };
+export const STATUS_LABEL: Record<TaskStatus, string> = { todo: 'Por jugar', doing: 'En juego', done: 'Superada' };
+/** Qué hace el botón principal de una tarea en cada estado. */
+export const NEXT_STATUS: Record<TaskStatus, { to: TaskStatus; label: string }> = {
+  todo: { to: 'doing', label: '▶ Empezar' },
+  doing: { to: 'done', label: '✔ Completar' },
+  done: { to: 'todo', label: '↩ Reabrir' },
+};
 
 /* ---------- Hora límite ---------- */
 

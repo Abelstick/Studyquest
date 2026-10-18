@@ -9,6 +9,9 @@ export type ModalState =
   | null
   | { type: 'task'; id?: string; dueDate?: string }
   | { type: 'habit'; id?: string }
+  /** Ficha de solo lectura (con acciones) de un hábito o una tarea, abierta desde Hoy. */
+  | { type: 'habit-detail'; id: string }
+  | { type: 'task-detail'; id: string }
   | { type: 'course'; id?: string }
   | { type: 'goal' }
   | { type: 'project' }

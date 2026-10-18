@@ -44,7 +44,7 @@ export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {
       kind: 'habit' as const,
       id: `h:${h.id}`,
       title: h.title,
-      subtitle: isQuit(h) ? 'Mal hábito a dejar · marca si hoy resististe' : `Hábito · ${quotaText(h, s.habitLogs, now) ?? frequencyLabel(h.frequency)} · ${goalLabel(h)}`,
+      subtitle: isQuit(h) ? 'Mal hábito a dejar · marca si hoy resististe' : `${quotaText(h, s.habitLogs, now) ?? frequencyLabel(h.frequency)} · ${goalLabel(h)}`,
       xp: h.xp,
       done: isHabitDone(h, logFor(s.habitLogs, h.id, now)),
       habit: h,
@@ -124,6 +124,49 @@ export function daySummary(missions: Mission[], now: ISODate = today()): DaySumm
     else if (m.task.dueDate && (!next || m.task.dueDate < (next.dueDate as string))) next = m.task;
   }
   return { late, dueToday, habits, next };
+}
+
+/** En qué punto va un hábito hoy: hecho, a medias (algo de avance sin llegar al objetivo), pendiente o fuera de calendario. */
+export type HabitDayState = 'done' | 'partial' | 'pending' | 'off';
+
+export function habitDayState(done: boolean, progress: number, due: boolean): HabitDayState {
+  if (done) return 'done';
+  if (progress > 0) return 'partial';
+  return due ? 'pending' : 'off';
+}
+
+export interface DayProgress {
+  habitsDone: number;
+  habitsTotal: number;
+  tasksDone: number;
+  tasksTotal: number;
+  done: number;
+  total: number;
+  /** Porcentaje 0-100 de misiones hechas; sin misiones, 0. */
+  pct: number;
+  /** XP de lo que aún está pendiente. */
+  xpLeft: number;
+  /** Tareas abiertas con la fecha ya vencida. */
+  late: number;
+}
+
+/** Avance del día para el resumen de Hoy: cuántos hábitos y tareas van hechos, cuánto XP queda y cuántas tareas vencieron. */
+export function dayProgress(missions: Mission[], now: ISODate = today()): DayProgress {
+  const p: DayProgress = { habitsDone: 0, habitsTotal: 0, tasksDone: 0, tasksTotal: 0, done: 0, total: missions.length, pct: 0, xpLeft: 0, late: 0 };
+  for (const m of missions) {
+    if (m.kind === 'habit') p.habitsTotal++;
+    else p.tasksTotal++;
+    if (m.done) {
+      if (m.kind === 'habit') p.habitsDone++;
+      else p.tasksDone++;
+      p.done++;
+      continue;
+    }
+    p.xpLeft += m.xp;
+    if (m.kind === 'task' && taskBucket(m.task, now) === 'late') p.late++;
+  }
+  p.pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+  return p;
 }
 
 export interface Tip {

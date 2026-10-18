@@ -39,6 +39,10 @@
   --violet: #7b3fc4;
   --orange: #f08a1c;
   --ink-soft: #7a7690;
+  /* Identidad de Hoy: cada color tiene una función. Siguen al tema porque apuntan a los de arriba. */
+  --habit: var(--green); /* hábitos: constancia y cumplimiento */
+  --task: var(--blue); /* tareas: plazos y pendientes */
+  --late: var(--red-text); /* vencido o en peligro */
 
   --on-red: #ffffff;
   --on-yellow: #1a1a2e;

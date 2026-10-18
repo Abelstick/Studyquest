@@ -1940,68 +1940,15 @@ select.input {
   }
 }
 
-/* ---------- Desglose de una misión en Inicio (subtareas de la tarea o pasos del hábito) ---------- */
-.mission__text {
-  display: grid;
-  justify-items: start;
-  gap: 2px;
-  /* Base mínima: en móvil las etiquetas (fecha, XP) bajan de línea en vez de aplastar el título. */
-  flex: 1 1 170px;
-  min-width: 0;
-}
-.mission__more {
-  margin-top: 2px;
-}
-/* Contador de un hábito por cantidad (agua, páginas…), directo desde Inicio, sin entrar al detalle. */
-.mission__counter {
-  margin-top: 2px;
-  max-width: 100%;
-}
-.mission__counter .counter {
-  flex: none;
-  max-width: 100%;
-}
-.mission__counter .counter__value {
-  flex: none;
-  min-width: 7em;
-}
-/* El desglose ocupa una fila propia, alineado bajo el texto de la misión. */
-.mission__subs {
-  flex-basis: 100%;
-  margin: 2px 0 4px 44px;
-}
-@media (max-width: 560px) {
-  .mission__subs {
-    margin-left: 0;
-  }
-}
-
 /* ---------- «Listo para completar»: todo el desglose hecho, falta cerrarla ---------- */
-.mission__ready,
 .task__ready {
+  margin: 2px 0 0;
   font-size: 12px;
   font-weight: 800;
   color: var(--green-text);
 }
-.mission__ready {
-  flex-basis: 100%;
-  margin-left: 44px;
-}
-.task__ready {
-  margin: 2px 0 0;
-}
-/* La casilla de la misión pide que la pulses. */
-.check.is-ready {
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 30%, transparent);
-}
 .task.is-ready {
   border-color: var(--green);
-}
-@media (max-width: 560px) {
-  .mission__ready {
-    margin-left: 0;
-  }
 }
 
 /* ---------- Certificaciones ---------- */
@@ -2083,15 +2030,6 @@ select.input {
 }
 
 /* ---------- Micro-interacciones: todo lo pulsable responde con el mismo gesto ---------- */
-.check:hover:not(:disabled) {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 0 var(--shadow);
-}
-.check:not(:empty):hover {
-  transform: translateY(3px);
-  box-shadow: none;
-}
 @keyframes stamp {
   0% {
     transform: translateY(-6px) scale(1.15);
@@ -2132,9 +2070,6 @@ select.input {
 .task:hover {
   transform: translate(-2px, -2px);
   box-shadow: 6px 6px 0 var(--shadow);
-}
-.mission:hover {
-  background: var(--panel-2);
 }
 .cert:hover {
   transform: translate(-2px, -2px);
@@ -2228,12 +2163,6 @@ select.input {
 .chlink.is-next {
   background: color-mix(in srgb, var(--yellow) 18%, transparent);
   box-shadow: inset 3px 0 0 var(--yellow);
-}
-/* Aviso de cadena dentro de una misión del inicio. */
-.mission__chain {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--xp-text);
 }
 /* Lista ordenable dentro del modal. */
 .chainpick {
@@ -3245,39 +3174,6 @@ select.input {
   filter: none;
 }
 
-/* ---------- Inicio: hábitos y tareas en grupos con identidad propia ---------- */
-.mgroup + .mgroup {
-  margin-top: 18px;
-}
-.mgroup__title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  font-family: var(--font-pixel);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #fff;
-  border: 2px solid var(--line);
-}
-.mgroup--habit .mgroup__title {
-  background: color-mix(in srgb, var(--green) 70%, #000);
-}
-.mgroup--task .mgroup__title {
-  background: color-mix(in srgb, var(--blue) 70%, #000);
-}
-.mgroup__count {
-  margin-left: auto;
-  display: none;
-}
-/* El casillero también cambia de forma: los hábitos son redondos (se repiten), las tareas cuadradas (se cierran). */
-.mission--habit .check {
-  border-radius: 50%;
-}
-.mission--habit .check:not(:empty) {
-  background: var(--green);
-}
-
 /* ---------- Inicio moderno: pestañas, tarjetas de misión y cabecera limpia ---------- */
 .tabs {
   display: flex;
@@ -3358,28 +3254,6 @@ select.input {
   border-bottom: 0;
   padding-bottom: 0;
 }
-.home .missions {
-  gap: 8px;
-  margin-top: 8px;
-}
-.home .mission {
-  padding: 12px 14px;
-  border: 2px solid var(--line-soft);
-  background: var(--panel);
-}
-.home .mission:hover {
-  background: var(--panel-2);
-  border-color: var(--line);
-}
-.home .mission:last-child {
-  border-bottom: 2px solid var(--line-soft);
-}
-.home .mission:hover:last-child {
-  border-bottom-color: var(--line);
-}
-.home .mission.is-done {
-  opacity: 0.7;
-}
 .brief {
   margin-bottom: 12px;
   padding: 10px 12px;
@@ -3393,21 +3267,6 @@ select.input {
   margin: 0 0 2px;
   font-size: 15px;
 }
-.home .mgroup + .mgroup {
-  margin-top: 16px;
-}
-.home .mgroup__title {
-  margin-bottom: 2px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-}
-.home .mgroup--habit .mgroup__title,
-.home .mgroup--task .mgroup__title {
-  background: transparent;
-}
-
 /* ---------- Hábitos: semana con avance por día ---------- */
 .week__day--rich {
   flex-direction: column;
@@ -4010,33 +3869,6 @@ button.week__day--rich {
   background-color: var(--panel-2);
 }
 
-/* ---------- Inicio: orden de misiones y «Ver más» ---------- */
-.mtools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  margin: 10px 0 4px;
-}
-.mtools__sort,
-.mtools__check {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.mtools__sort .input {
-  width: auto;
-  min-width: 130px;
-}
-.missions__more {
-  margin-top: 8px;
-  justify-self: start;
-}
-.home .missions + .missions__more {
-  margin-top: 10px;
-}
-
 /* Contrato de honor al marcar como hechas tareas vencidas. */
 .honor {
   display: flex;
@@ -4128,7 +3960,7 @@ button.week__day--rich {
 /* ---------- Hoy: saludo compacto, siguiente paso y plegable «Más» ---------- */
 .today-head {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) minmax(160px, 320px);
   align-items: center;
   gap: 6px 14px;
 }
@@ -4138,8 +3970,13 @@ button.week__day--rich {
   font-weight: 900;
   line-height: 1.2;
 }
-.today-head__bar {
-  grid-column: 1 / -1;
+@media (max-width: 700px) {
+  .today-head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .today-head__bar {
+    grid-column: 1 / -1;
+  }
 }
 .nextstep {
   display: grid;
@@ -4200,13 +4037,21 @@ button.week__day--rich {
   .nextstep,
   .nextstep--clear {
     grid-template-columns: minmax(0, 1fr);
-    padding: 18px 16px;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  /* Las dos acciones caben en una fila si «Empezar enfoque» se queda en «Enfoque». */
+  .nextstep__long {
+    display: none;
   }
   .nextstep--clear > .sprite {
     display: none;
   }
   .nextstep__title {
-    font-size: 21px;
+    font-size: 19px;
+  }
+  .nextstep__actions {
+    flex-wrap: nowrap;
   }
   .nextstep__actions > * {
     flex: 1 1 auto;
@@ -4288,8 +4133,9 @@ a.chip {
 /* ---------- Fase 2: eventos de hoy en una línea ---------- */
 .events-line {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 6px;
-  margin: 0 0 12px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -4308,33 +4154,13 @@ a.chip {
 }
 .events-line__text {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
 }
 .events-line__bar {
   width: 72px;
 }
 
-/* ---------- Fase 2: ordenar y filtrar plegados en móvil ---------- */
-.btn.mtools__toggle {
-  display: none;
-}
 @media (max-width: 700px) {
-  .btn.mtools__toggle {
-    display: inline-flex;
-    margin-top: 10px;
-  }
-  .mtools {
-    display: none;
-  }
-  .mtools.is-open {
-    display: flex;
-  }
-  /* En móvil la explicación del evento puede pasar a una segunda línea en vez de cortarse. */
-  .events-line__text {
-    white-space: normal;
-  }
   .events-line__item {
     grid-template-columns: auto minmax(0, 1fr);
   }
@@ -4407,8 +4233,9 @@ a.chip {
 .fcard__label,
 .login__hud,
 .login__features li,
-.mgroup__title,
-.home .mgroup__title {
+.lane__title,
+.lane__sub,
+.daysum__k {
   font-size: 10px;
 }
 .chip--sm,

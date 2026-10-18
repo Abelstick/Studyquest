@@ -9,6 +9,8 @@ import { Sprite } from '@/ui/Sprite';
 import type { SpriteName } from '@/ui/sprites';
 import { TaskModal } from '../modals/TaskModal';
 import { HabitModal } from '../modals/HabitModal';
+import { HabitDetailModal } from '../modals/HabitDetailModal';
+import { TaskDetailModal } from '../modals/TaskDetailModal';
 import { CourseModal, GoalModal, ProjectModal, RewardModal } from '../modals/EntityModals';
 import { SessionModal } from '../modals/SessionModal';
 import { QuickSheet, WelcomeModal } from '../modals/QuickAndWelcome';
@@ -52,6 +54,10 @@ function ModalHost() {
       return <CardsModal key={modal.topicId} courseId={modal.courseId} topicId={modal.topicId} />;
     case 'habit':
       return <HabitModal key={modal.id ?? 'new'} id={modal.id} />;
+    case 'habit-detail':
+      return <HabitDetailModal key={modal.id} id={modal.id} />;
+    case 'task-detail':
+      return <TaskDetailModal key={modal.id} id={modal.id} />;
     case 'course':
       return <CourseModal key={modal.id ?? 'new'} id={modal.id} />;
     case 'goal':

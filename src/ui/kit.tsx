@@ -36,10 +36,20 @@ export function Button({ variant = 'ghost', small, block, loading, className, on
 }
 
 /* ---------- Barras de progreso ---------- */
-export function Bar({ pct, tone = 'green', label, tall, className }: { pct: number; tone?: 'green' | 'yellow' | 'red' | 'blue'; label?: string; tall?: boolean; className?: string }) {
+/** Con `segments` la barra se divide en tantos bloques como misiones: se lee como «3 de 5», no como un porcentaje. */
+export function Bar({ pct, tone = 'green', label, tall, segments, className }: { pct: number; tone?: 'green' | 'yellow' | 'red' | 'blue'; label?: string; tall?: boolean; segments?: number; className?: string }) {
   const v = Math.max(0, Math.min(100, pct));
+  const split = segments && segments > 1 && segments <= 24 ? segments : 0;
   return (
-    <div className={cx('bar', tall && 'bar--tall', className)} role="progressbar" aria-valuenow={Math.round(v)} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
+    <div
+      className={cx('bar', tall && 'bar--tall', split > 0 && 'bar--seg', className)}
+      style={split ? ({ '--segs': split } as React.CSSProperties) : undefined}
+      role="progressbar"
+      aria-valuenow={Math.round(v)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={label}
+    >
       <div className={`bar__fill bar__fill--${tone}`} style={{ width: `${v}%` }} />
     </div>
   );

@@ -4,232 +4,17 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
 import { computeStreak, goalLabel, isCounter, levelProgress, logFor, rankFor } from '@/core/game';
-import { dailyMissions, deadlineText, isReadyToFinish, missionParts, missionUrgency, taskBucket, tips, type Mission, type TaskBucket } from '@/core/missions';
+import { dailyMissions, dayProgress, deadlineText, tips } from '@/core/missions';
 import { nextStep, type NextStep } from '@/core/nextStep';
-import { isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
-import { chainOf, chainState } from '@/core/chains';
 import { HabitAction } from '@/features/habitos/HabitAction';
 import { LateBanner } from '@/features/tareas/LateBanner';
 import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
-import type { HabitChain, Snapshot } from '@/core/domain';
+import type { Snapshot } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
-import { Bar, Button, Empty, Panel, Tag, cx } from '@/ui/kit';
+import { Bar, Button, Empty, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
-
-/** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
-const NO_CHAINS: HabitChain[] = [];
-
-function MissionRow({ m }: { m: Mission }) {
-  const setTaskStatus = useData((s) => s.setTaskStatus);
-  const setHabitValue = useData((s) => s.setHabitValue);
-  const toggleSubtask = useData((s) => s.toggleSubtask);
-  const toggleHabitStep = useData((s) => s.toggleHabitStep);
-  const logs = useData((s) => s.habitLogs);
-  const habits = useData((s) => s.habits);
-  const chains = useData((s) => s.profile.chains) ?? NO_CHAINS;
-  const toggle = () => {
-    if (m.kind === 'task') setTaskStatus(m.task.id, m.done ? 'todo' : 'done');
-    else setHabitValue(m.habit.id, m.done ? 0 : m.habit.target);
-  };
-
-  // Desglose de la misión: las subtareas de la tarea o los pasos de hoy del hábito.
-  const parts = missionParts(m, logs);
-  const boss = m.kind === 'task' && isBoss(m.task) && parts.length > 0;
-  const noun = boss ? 'golpes' : m.kind === 'task' ? 'subtareas' : 'pasos';
-  const doneParts = parts.filter((p) => p.done).length;
-  // Los jefes enseñan sus puntos débiles desde el principio, como en Tareas.
-  const [open, setOpen] = useState(boss && !m.done);
-  const togglePart = (id: string) => (m.kind === 'task' ? toggleSubtask(m.task.id, id) : toggleHabitStep(m.habit.id, id));
-  // Con todo el desglose hecho no la damos por terminada sola: se resalta para que la cierres tú.
-  const ready = isReadyToFinish(m, parts);
-  // Si el hábito es un eslabón de una cadena, se dice de qué rutina viene y a qué sigue.
-  const chain = m.kind === 'habit' ? chainOf(chains, m.habit.id) : undefined;
-  const chainNow = chain ? chainState(chain, habits, logs) : null;
-  const linkNow = chainNow?.links.find((l) => l.habit.id === (m.kind === 'habit' ? m.habit.id : ''));
-
-  return (
-    <li className={cx('mission', `mission--${m.kind}`, m.done && 'is-done', ready && 'is-ready')}>
-      <button
-        type="button"
-        className={cx('check', ready && 'is-ready')}
-        role="checkbox"
-        aria-checked={m.done}
-        aria-label={`${m.done ? 'Deshacer' : 'Completar'}: ${m.title}${ready ? ' (ya tienes todo el desglose hecho)' : ''}`}
-        title={ready ? '¡Todo listo! Pulsa para darla por terminada' : undefined}
-        onClick={toggle}
-      >
-        {m.done ? '✔' : ''}
-      </button>
-      <div className="mission__text">
-        <p className="mission__title">{m.title}</p>
-        <p className="mission__sub">{m.subtitle}</p>
-        {chain && chainNow && (
-          <p className="mission__chain">
-            🔗 {chain.name} · {chainNow.doneCount}/{chainNow.dueCount}
-            {linkNow?.after && <> · sigue a {linkNow.after.title}</>}
-          </p>
-        )}
-        {/* Hábitos por cantidad (agua, páginas, repeticiones…): se registra una repetición sin entrar al detalle. */}
-        {m.kind === 'habit' && isCounter(m.habit) && (
-          <div className="mission__counter">
-            <HabitAction habit={m.habit} log={logFor(logs, m.habit.id, today())} />
-          </div>
-        )}
-        {parts.length > 0 && (
-          <button type="button" className={cx('tag tag--btn mission__more', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${open ? 'Ocultar' : 'Ver'} ${noun} de ${m.title}`}>
-            {doneParts}/{parts.length} {noun} {open ? '−' : '+'}
-          </button>
-        )}
-      </div>
-      {m.kind === 'task' && !m.done && (
-        <Tag tone={!m.task.dueDate ? 'plain' : isOverdue(m.task) ? 'red' : m.task.dueDate === today() ? 'blue' : 'plain'}>{timeLeftLabel(m.task) ?? 'Sin fecha'}</Tag>
-      )}
-      <Tag tone={m.done ? 'plain' : 'xp'}>+{m.xp} XP</Tag>
-      {ready && <span className="mission__ready">¡Todo listo! Pulsa ✔ para terminarla.</span>}
-      {open && parts.length > 0 && (
-        <ul className="subtasks mission__subs">
-          {parts.map((p) => (
-            <li key={p.id}>
-              <label>
-                <input type="checkbox" checked={p.done} onChange={() => togglePart(p.id)} disabled={m.kind === 'task' && m.done} />
-                <span className={cx(p.done && 'is-struck')}>{p.title}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
-      )}
-    </li>
-  );
-}
-
-type MissionTab = 'all' | 'habit' | 'task';
-type MissionSort = 'urgency' | 'xp' | 'name';
-const SORTS: { value: MissionSort; label: string }[] = [
-  { value: 'urgency', label: 'Más urgente' },
-  { value: 'xp', label: 'Más XP' },
-  { value: 'name', label: 'A–Z' },
-];
-/** Cuántas misiones se enseñan de entrada; el resto queda tras «Ver más». */
-const SHOW_ALL_TAB = 3;
-const SHOW_ONE_TAB = 6;
-
-const BUCKETS: { id: TaskBucket; label: string }[] = [
-  { id: 'late', label: 'Vencidas · hazlas primero' },
-  { id: 'today', label: 'Tareas para hoy' },
-  { id: 'soon', label: 'Próximos 7 días' },
-  { id: 'later', label: 'Más adelante' },
-  { id: 'none', label: 'Sin fecha' },
-];
-
-/** Ordena sin mover lo hecho de sitio: lo pendiente va primero y, dentro, el criterio elegido. */
-function sortMissions(items: Mission[], sort: MissionSort): Mission[] {
-  const by = (a: Mission, b: Mission) => {
-    if (sort === 'xp') return b.xp - a.xp;
-    if (sort === 'name') return a.title.localeCompare(b.title, 'es');
-    return missionUrgency(a) - missionUrgency(b) || b.xp - a.xp;
-  };
-  return [...items].sort((a, b) => Number(a.done) - Number(b.done) || by(a, b));
-}
-
-/** Lista con «Ver más / Ver menos»: enseña las primeras y esconde el resto sin perderlas. */
-function MissionList({ items, limit }: { items: Mission[]; limit: number }) {
-  const [expanded, setExpanded] = useState(false);
-  const shown = expanded ? items : items.slice(0, limit);
-  const hidden = items.length - shown.length;
-  return (
-    <>
-      <ul className="missions">
-        {shown.map((m) => (
-          <MissionRow key={m.id} m={m} />
-        ))}
-      </ul>
-      {items.length > limit && (
-        <button type="button" className="btn btn--ghost btn--sm missions__more" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>
-          {expanded ? 'Ver menos' : `Ver ${hidden} más`}
-        </button>
-      )}
-    </>
-  );
-}
-
-/** Hábitos y tareas se separan con pestañas; se pueden ordenar y ocultar las ya hechas. */
-function MissionTabs({ missions }: { missions: Mission[] }) {
-  const [tab, setTab] = useState<MissionTab>('all');
-  const [sort, setSort] = useState<MissionSort>('urgency');
-  const [onlyPending, setOnlyPending] = useState(false);
-  // En móvil, ordenar y filtrar quedan plegados: casi nunca se tocan y empujan la lista hacia abajo.
-  const [toolsOpen, setToolsOpen] = useState(false);
-  const pick = (kind?: Mission['kind']) => sortMissions(missions.filter((m) => (!kind || m.kind === kind) && (!onlyPending || !m.done)), sort);
-  const habits = pick('habit');
-  const tasks = pick('task');
-  const count = (kind?: Mission['kind']) => {
-    const all = missions.filter((m) => !kind || m.kind === kind);
-    return `${all.filter((m) => m.done).length}/${all.length}`;
-  };
-  const tabs: { id: MissionTab; label: string; sprite: 'star' | 'flower' | 'qblock'; kind?: Mission['kind'] }[] = [
-    { id: 'all', label: 'Todo', sprite: 'star' },
-    { id: 'habit', label: 'Hábitos', sprite: 'flower', kind: 'habit' },
-    { id: 'task', label: 'Tareas', sprite: 'qblock', kind: 'task' },
-  ];
-  // Las tareas se agrupan por cuándo tocan, para ver de un vistazo qué es de hoy y qué puede esperar.
-  const taskGroups = BUCKETS.map((b) => ({
-    kind: 'task',
-    id: b.id,
-    label: b.label,
-    sprite: 'qblock' as const,
-    limit: b.id === 'late' || b.id === 'today' ? 8 : SHOW_ALL_TAB,
-    items: tasks.filter((m) => m.kind === 'task' && taskBucket(m.task) === b.id),
-  }));
-  const groups = [{ kind: 'habit', id: 'habit', label: 'Hábitos de hoy', sprite: 'flower' as const, limit: SHOW_ALL_TAB, items: habits }, ...taskGroups].filter((g) => g.items.length > 0);
-  const current = tab === 'habit' ? habits : tab === 'task' ? tasks : [...habits, ...tasks];
-  return (
-    <>
-      <div className="tabs" role="tablist" aria-label="Filtrar misiones">
-        {tabs.map((t) => (
-          <button key={t.id} type="button" role="tab" id={`mtab-${t.id}`} aria-selected={t.id === tab} aria-controls="mpanel" className={cx('tabs__tab', `tabs__tab--${t.id}`, t.id === tab && 'is-on')} onClick={() => setTab(t.id)}>
-            <Sprite name={t.sprite} size={16} />
-            {t.label}
-            <span className="tabs__count">{count(t.kind)}</span>
-          </button>
-        ))}
-      </div>
-      <button type="button" className="btn btn--ghost btn--sm mtools__toggle" aria-expanded={toolsOpen} aria-controls="mtools" onClick={() => setToolsOpen(!toolsOpen)}>
-        {toolsOpen ? 'Ocultar orden y filtros' : `Ordenar y filtrar${onlyPending || sort !== 'urgency' ? ' (activos)' : ''}`}
-      </button>
-      <div className={cx('mtools', toolsOpen && 'is-open')} id="mtools">
-        <label className="mtools__sort">
-          <span className="muted small">Ordenar</span>
-          <select className="input input--inline" value={sort} onChange={(e) => setSort(e.target.value as MissionSort)} aria-label="Ordenar misiones">
-            {SORTS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="mtools__check">
-          <input type="checkbox" checked={onlyPending} onChange={(e) => setOnlyPending(e.target.checked)} /> <span className="small">Solo pendientes</span>
-        </label>
-      </div>
-      <div id="mpanel" role="tabpanel" aria-labelledby={`mtab-${tab}`}>
-        {current.length === 0 ? (
-          <p className="muted">{onlyPending ? '¡Todo lo de hoy está hecho!' : tab === 'habit' ? 'Hoy no te toca ningún hábito.' : 'No tienes tareas pendientes para hoy.'}</p>
-        ) : tab === 'all' ? (
-          groups.map((g) => (
-            <section key={g.id} className={cx('mgroup', `mgroup--${g.kind}`)} aria-label={g.label}>
-              <h3 className="mgroup__title">
-                <Sprite name={g.sprite} size={16} /> {g.label}
-              </h3>
-              <MissionList key={`${g.id}-${sort}-${onlyPending}`} items={g.items} limit={g.limit} />
-            </section>
-          ))
-        ) : (
-          <MissionList key={`${tab}-${sort}-${onlyPending}`} items={current} limit={SHOW_ONE_TAB} />
-        )}
-      </div>
-    </>
-  );
-}
+import { DaySummary } from './DaySummary';
+import { MissionBoard } from './MissionBoard';
 
 function StreakCalendar() {
   const events = useData((s) => s.xpEvents);
@@ -393,7 +178,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
         </div>
         <div className="nextstep__actions">
           <Link className="btn btn--primary" to="/pomodoro">
-            <Sprite name="tomato" size={16} /> Empezar enfoque
+            <Sprite name="tomato" size={16} /> <span className="nextstep__long">Empezar </span>enfoque
           </Link>
           <Button onClick={() => openModal({ type: 'task' })}>＋ Nueva tarea</Button>
         </div>
@@ -480,7 +265,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
       <div className="nextstep__actions">
         {action}
         <Link className="btn btn--ghost" to={focusHref(step.courseId)}>
-          <Sprite name="tomato" size={16} /> Empezar enfoque
+          <Sprite name="tomato" size={16} /> <span className="nextstep__long">Empezar </span>enfoque
         </Link>
       </div>
     </section>
@@ -510,14 +295,13 @@ export default function Inicio() {
     [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, agenda],
   );
   const missions = useMemo(() => dailyMissions(snap), [snap]);
+  const progress = useMemo(() => dayProgress(missions), [missions]);
   const step = useMemo(() => nextStep(snap), [snap]);
   const events = useMemo(() => activeEvents(habits, habitLogs, profile), [habits, habitLogs, profile]);
   const advice = useMemo(() => tips(snap), [snap]);
-  const streak = useMemo(() => computeStreak(xpEvents, profile.frozenDates).current, [xpEvents, profile.frozenDates]);
+  const streak = useMemo(() => computeStreak(xpEvents, profile.frozenDates), [xpEvents, profile.frozenDates]);
 
   const lp = levelProgress(profile.xp);
-  const done = missions.filter((m) => m.done).length;
-  const inPlay = missions.filter((m) => !m.done).reduce((a, m) => a + m.xp, 0);
   const isEmpty = !tasks.length && !habits.length && !courses.length;
 
   return (
@@ -548,26 +332,29 @@ export default function Inicio() {
         </Panel>
       ) : (
         <>
-          <NextStepCard step={step} />
-          <div className="cols cols--side">
-            <div className="stack">
+          <DaySummary progress={progress} streak={streak.current} streakAlive={streak.activeToday} />
+          <div className="home__grid">
+            <div className="stack home__main">
+              <NextStepCard step={step} />
               <LateBanner />
-              <Panel kicker="// Quest diaria" title="Tu misión de hoy" right={<span className="kicker">{done} / {missions.length} · {inPlay} XP en juego</span>}>
-                <Events events={events} />
-                {missions.length === 0 ? (
+              <Events events={events} />
+              {missions.length === 0 ? (
+                <Panel kicker="// Quest diaria" title="Tu misión de hoy">
                   <Empty sprite="star" title="¡Nivel despejado!">
                     <p>No hay nada pendiente para hoy.</p>
                   </Empty>
-                ) : (
-                  <MissionTabs missions={missions} />
-                )}
-                <div className="row row--top">
+                </Panel>
+              ) : (
+                <MissionBoard missions={missions} hasHabits={habits.length > 0} hasTasks={tasks.length > 0} />
+              )}
+              <Panel className="today-actions">
+                <div className="row">
+                  <Button onClick={() => openModal({ type: 'session' })}>▶ Iniciar sesión de estudio</Button>
                   <Link className="btn btn--ghost" to="/tareas">
                     Ver todas las tareas
                   </Link>
-                  <Button onClick={() => openModal({ type: 'session' })}>▶ Iniciar sesión de estudio</Button>
                 </div>
-                <div className="row row--top">
+                <div className="row">
                   <span className="kicker">¿Ya estudiaste? Márcalo</span>
                   {[5, 10, 20, 30].map((m) => (
                     <button key={m} type="button" className="chip" onClick={() => logSession({ minutes: m, courseId: null })} title={`Registrar ${m} min de estudio ya hecho, sin abrir nada más`}>
@@ -577,9 +364,9 @@ export default function Inicio() {
                 </div>
               </Panel>
             </div>
-            <div className="stack">
+            <aside className="stack home__rail" aria-label="Racha">
               <StreakCalendar />
-            </div>
+            </aside>
           </div>
         </>
       )}
@@ -588,7 +375,7 @@ export default function Inicio() {
       <details className="panel more">
         <summary className="more__summary">Más: cofre diario y consejos</summary>
         <div className="cols more__body">
-          <DailyChest streak={streak} />
+          <DailyChest streak={streak.current} />
           <Panel kicker="// Inteligencia táctica" title="Consejos del Toad">
             <ul className="tips">
               {advice.map((t) => (

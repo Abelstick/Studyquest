@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Habit, Snapshot, Task } from './domain';
-import { dailyMissions, daySummary, deadlineText, missionUrgency, taskBucket } from './missions';
+import { dailyMissions, dayProgress, daySummary, deadlineText, habitDayState, missionUrgency, taskBucket } from './missions';
 
 const NOW = '2026-09-16';
 const task = (id: string, dueDate: string | null): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null });
@@ -34,6 +34,27 @@ describe('qué hacer hoy', () => {
     const sum = daySummary(dailyMissions(s, NOW), NOW);
     expect(sum).toMatchObject({ late: 1, dueToday: 1, habits: 0 });
     expect(sum.next?.id).toBe('d');
+  });
+});
+
+describe('avance del día', () => {
+  it('cuenta hábitos y tareas hechos, el XP pendiente y las vencidas', () => {
+    const done = { ...task('d', NOW), status: 'done' as const, completedAt: NOW, xp: 30 };
+    const s = { habits: [habit], habitLogs: [], courses: [], tasks: [task('a', '2026-09-14'), task('b', NOW), done] } as unknown as Snapshot; // solo hacen falta estos campos
+    expect(dayProgress(dailyMissions(s, NOW), NOW)).toEqual({ habitsDone: 0, habitsTotal: 1, tasksDone: 1, tasksTotal: 3, done: 1, total: 4, pct: 25, xpLeft: 40, late: 1 });
+  });
+
+  it('sin misiones el avance es 0, no NaN', () => {
+    expect(dayProgress([], NOW)).toMatchObject({ total: 0, pct: 0, xpLeft: 0 });
+  });
+});
+
+describe('estado de un hábito hoy', () => {
+  it('distingue hecho, a medias, pendiente y fuera de calendario', () => {
+    expect(habitDayState(true, 1, true)).toBe('done');
+    expect(habitDayState(false, 0.4, true)).toBe('partial');
+    expect(habitDayState(false, 0, true)).toBe('pending');
+    expect(habitDayState(false, 0, false)).toBe('off');
   });
 });
 

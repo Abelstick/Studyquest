@@ -1,0 +1,162 @@
+import { useEffect, useRef, useState } from 'react';
+import { useData } from '@/state';
+import { useUi } from '@/state/ui';
+import { today } from '@/core/dates';
+import { habitProgress, isCounter, logFor } from '@/core/game';
+import { isReadyToFinish, missionParts, type Mission } from '@/core/missions';
+import { PRIORITY_LABEL, isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
+import { chainOf, chainState } from '@/core/chains';
+import type { HabitChain, Priority } from '@/core/domain';
+import { HabitAction } from '@/features/habitos/HabitAction';
+import { Tag, cx } from '@/ui/kit';
+import { Sprite } from '@/ui/Sprite';
+
+/** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
+const NO_CHAINS: HabitChain[] = [];
+
+/** Cuántas barras se encienden en el indicador de prioridad (el jefe final lleva calavera). */
+const PIPS: Record<Priority, number> = { low: 1, mid: 2, high: 3, boss: 3 };
+
+/** Prioridad como indicador de señal: se reconoce sin leer, y el texto va en el atributo para lectores de pantalla. */
+function PriorityMark({ priority }: { priority: Priority }) {
+  return (
+    <span className={cx('prio', `prio--${priority}`)} role="img" aria-label={`Prioridad: ${PRIORITY_LABEL[priority].toLowerCase()}`} title={`Prioridad ${PRIORITY_LABEL[priority].toLowerCase()}`}>
+      {priority === 'boss' ? (
+        <Sprite name="skull" size={14} />
+      ) : (
+        [1, 2, 3].map((i) => <i key={i} className={cx(i <= PIPS[priority] && 'is-on')} />)
+      )}
+    </span>
+  );
+}
+
+/** Si el hábito es un eslabón de una cadena, se dice de qué rutina viene y a qué sigue. */
+function ChainLine({ habitId }: { habitId: string }) {
+  const logs = useData((s) => s.habitLogs);
+  const habits = useData((s) => s.habits);
+  const chains = useData((s) => s.profile.chains) ?? NO_CHAINS;
+  const chain = chainOf(chains, habitId);
+  if (!chain) return null;
+  const now = chainState(chain, habits, logs);
+  const link = now.links.find((l) => l.habit.id === habitId);
+  return (
+    <p className="mission__chain">
+      🔗 {chain.name} · {now.doneCount}/{now.dueCount}
+      {link?.after && <> · sigue a {link.after.title}</>}
+    </p>
+  );
+}
+
+/** Verdadero unos instantes cuando la misión pasa de pendiente a hecha: da pie al destello de «completada». */
+function useJustDone(done: boolean): boolean {
+  const prev = useRef(done);
+  const [fx, setFx] = useState(false);
+  useEffect(() => {
+    const was = prev.current;
+    prev.current = done;
+    if (!done || was) return;
+    setFx(true);
+    const t = setTimeout(() => setFx(false), 700);
+    return () => clearTimeout(t);
+  }, [done]);
+  return fx;
+}
+
+/**
+ * Una misión de Hoy (hábito o tarea). El título abre su ficha y, con un botón «estirado», toda la tarjeta
+ * es clicable; los controles de dentro (casilla, contador, desglose) quedan por encima y no la activan.
+ */
+export function MissionCard({ m }: { m: Mission }) {
+  const setTaskStatus = useData((s) => s.setTaskStatus);
+  const setHabitValue = useData((s) => s.setHabitValue);
+  const toggleSubtask = useData((s) => s.toggleSubtask);
+  const toggleHabitStep = useData((s) => s.toggleHabitStep);
+  const logs = useData((s) => s.habitLogs);
+  const openModal = useUi((s) => s.openModal);
+  const fx = useJustDone(m.done);
+
+  const toggle = () => {
+    if (m.kind === 'task') setTaskStatus(m.task.id, m.done ? 'todo' : 'done');
+    else setHabitValue(m.habit.id, m.done ? 0 : m.habit.target);
+  };
+  const openDetail = () => openModal(m.kind === 'task' ? { type: 'task-detail', id: m.task.id } : { type: 'habit-detail', id: m.habit.id });
+
+  // Desglose de la misión: las subtareas de la tarea o los pasos de hoy del hábito.
+  const parts = missionParts(m, logs);
+  const boss = m.kind === 'task' && isBoss(m.task) && parts.length > 0;
+  const noun = boss ? 'golpes' : m.kind === 'task' ? 'subtareas' : 'pasos';
+  const doneParts = parts.filter((p) => p.done).length;
+  // Los jefes enseñan sus puntos débiles desde el principio, como en Tareas.
+  const [open, setOpen] = useState(boss && !m.done);
+  const togglePart = (id: string) => (m.kind === 'task' ? toggleSubtask(m.task.id, id) : toggleHabitStep(m.habit.id, id));
+  // Con todo el desglose hecho no la damos por terminada sola: se resalta para que la cierres tú.
+  const ready = isReadyToFinish(m, parts);
+  const late = m.kind === 'task' && !m.done && isOverdue(m.task);
+  const habitLog = m.kind === 'habit' ? logFor(logs, m.habit.id, today()) : undefined;
+  // Avance a medias: de las subtareas/pasos o, en un hábito por cantidad, del contador.
+  const progress = parts.length > 0 ? doneParts / parts.length : m.kind === 'habit' ? habitProgress(m.habit, habitLog) : 0;
+  // Vencida en rojo, para hoy en oscuro (destaca sin competir con el amarillo del XP), el resto discreto.
+  const dueTone = m.kind === 'task' && m.task.dueDate === today() ? 'dark' : 'plain';
+
+  return (
+    <li className={cx('mission', `mission--${m.kind}`, m.done && 'is-done', late && 'is-late', ready && 'is-ready', fx && 'is-fx')}>
+      <button
+        type="button"
+        className="mission__check"
+        role="checkbox"
+        aria-checked={m.done}
+        aria-label={`${m.done ? 'Deshacer' : 'Completar'}: ${m.title}${ready ? ' (ya tienes todo el desglose hecho)' : ''}`}
+        title={ready ? '¡Todo listo! Pulsa para darla por terminada' : undefined}
+        onClick={toggle}
+      >
+        {m.done ? '✔' : ''}
+      </button>
+      <div className="mission__body">
+        <button type="button" className="mission__open" onClick={openDetail} aria-haspopup="dialog" aria-label={`Ver detalle: ${m.title}`}>
+          {boss && <Sprite name="skull" size={16} />}
+          <span className="mission__title">{m.title}</span>
+        </button>
+        <p className="mission__sub">{m.subtitle}</p>
+        {m.kind === 'habit' && <ChainLine habitId={m.habit.id} />}
+        {m.kind === 'task' && (
+          <div className="mission__meta">
+            {!m.done && <Tag tone={late ? 'red' : dueTone}>{timeLeftLabel(m.task) ?? 'Sin fecha'}</Tag>}
+            <PriorityMark priority={m.task.priority} />
+          </div>
+        )}
+        {/* Hábitos por cantidad (agua, páginas, repeticiones…): se registra una repetición sin entrar al detalle. */}
+        {m.kind === 'habit' && isCounter(m.habit) && (
+          <div className="mission__counter">
+            <HabitAction habit={m.habit} log={habitLog} />
+          </div>
+        )}
+        {parts.length > 0 && (
+          <button type="button" className={cx('tag tag--btn mission__more', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${open ? 'Ocultar' : 'Ver'} ${noun} de ${m.title}`}>
+            {doneParts}/{parts.length} {noun} {open ? '−' : '+'}
+          </button>
+        )}
+        {!m.done && progress > 0 && progress < 1 && (
+          <div className="mission__meter" aria-hidden="true">
+            <i style={{ width: `${Math.round(progress * 100)}%` }} />
+          </div>
+        )}
+      </div>
+      <Tag className="mission__xp" tone={m.done ? 'plain' : 'xp'}>
+        +{m.xp} XP
+      </Tag>
+      {ready && <span className="mission__ready">¡Todo listo! Pulsa ✔ para terminarla.</span>}
+      {open && parts.length > 0 && (
+        <ul className="subtasks mission__subs">
+          {parts.map((p) => (
+            <li key={p.id}>
+              <label>
+                <input type="checkbox" checked={p.done} onChange={() => togglePart(p.id)} disabled={m.kind === 'task' && m.done} />
+                <span className={cx(p.done && 'is-struck')}>{p.title}</span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}

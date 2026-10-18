@@ -329,6 +329,17 @@ a.btn {
 .bar__fill--blue {
   background-color: var(--blue);
 }
+/* Barra por bloques: una muesca por misión (--segs), para leer «3 de 5» sin contar porcentajes. */
+.bar--seg .bar__fill {
+  background-image: none;
+}
+.bar--seg::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--segs) - 2px), var(--bar-bg) calc(100% / var(--segs) - 2px) calc(100% / var(--segs)));
+}
 
 /* ===== Etiquetas y chips ===== */
 .tag {

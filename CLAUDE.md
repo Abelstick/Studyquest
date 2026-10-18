@@ -13,7 +13,7 @@ estático. Los textos de la interfaz y la documentación van en español.
 | --- | --- |
 | `npm run dev` | Servidor de desarrollo en http://localhost:5173 (sin service worker) |
 | `npm run typecheck` | Comprobación de tipos (`tsc --noEmit`) |
-| `npm test` | Pruebas unitarias (`vitest run`) |
+| `npm test` | Pruebas unitarias y de componentes (`vitest run`) |
 | `npm run build` | Typecheck + build de producción; genera el service worker |
 | `npm run preview` | Sirve el build; única forma de probar la PWA en local |
 | `npm run icons` | Regenera los iconos PNG de la PWA |
@@ -130,6 +130,8 @@ variables de build.
 - TypeScript estricto: sin `any`, `@ts-ignore` ni `as unknown as` salvo con la
   razón escrita al lado.
 - Sin `catch` vacíos ni promesas sin esperar en escrituras.
+- Pruebas: la lógica en `*.test.ts` (entorno Node); los componentes en `*.test.tsx`
+  con `// @vitest-environment jsdom` en la primera línea y Testing Library.
 - Los sprites son cuadrículas de texto en `ui/sprites.ts`, con todas las filas
   del mismo ancho; una prueba lo valida.
 - No agregues imágenes ni audio de terceros: los sprites son dibujos propios y

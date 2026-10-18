@@ -68,5 +68,6 @@ export default defineConfig({
       },
     },
   },
-  test: { environment: 'node', include: ['src/**/*.test.ts'] },
+  // Lógica en Node; los componentes (*.test.tsx) piden jsdom con un comentario al principio del archivo.
+  test: { environment: 'node', include: ['src/**/*.test.{ts,tsx}'] },
 });

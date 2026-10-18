@@ -103,7 +103,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .agev--row {
@@ -115,7 +115,7 @@
   padding: 6px 8px;
 }
 .agev__time {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -158,9 +158,11 @@
 }
 .tgrid__dayname {
   display: flex;
+  /* Si la columna es estrecha (hoy lleva el número resaltado), día y número pasan a dos líneas en vez de partirse. */
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: center;
-  gap: 6px;
+  gap: 2px 6px;
   padding: 6px 2px;
   color: inherit;
   background: transparent;
@@ -171,10 +173,13 @@
 .tgrid__wd {
   font-family: var(--font-pixel);
   font-size: 10px;
+  /* «DOM» no se parte aunque la columna de hoy lleve el número resaltado. */
+  white-space: nowrap;
   color: var(--muted);
   text-transform: uppercase;
 }
 .tgrid__num {
+  white-space: nowrap;
   font-size: 18px;
   font-weight: 900;
 }
@@ -226,7 +231,7 @@
   position: absolute;
   right: 6px;
   transform: translateY(-50%);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
@@ -342,7 +347,7 @@
   white-space: nowrap;
   text-align: right;
   font: inherit;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   color: var(--red-text);
   background: transparent;

@@ -453,7 +453,7 @@
     padding: 2px;
   }
   .calday__num {
-    font-size: 9px;
+    font-size: 10px;
   }
   /* En el móvil, las tareas son barritas de color: el detalle está en el panel del día. */
   .calday__items .chip-task {
@@ -4420,10 +4420,6 @@ a.chip {
 .pick__opt code,
 .quick__hint,
 .viz-tick,
-.agev--mini,
-.agev__time,
-.tgrid__hours span,
-.tgrid__deadline,
 .btn--ink {
   font-size: 12px;
 }

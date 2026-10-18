@@ -17,6 +17,8 @@ export type ModalState =
   | { type: 'chain'; id?: string }
   | { type: 'session'; courseId?: string; minutes?: number }
   | { type: 'quick' }
+  | { type: 'shortcuts' }
+  | { type: 'tour' }
   | { type: 'welcome' }
   | { type: 'cards'; courseId: string; topicId: string }
   | { type: 'ai' }

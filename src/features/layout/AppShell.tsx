@@ -1,6 +1,6 @@
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { sfx } from '@/audio/sfx';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { dataLayer, useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { today, longDate, weekStart } from '@/core/dates';
@@ -10,15 +10,17 @@ import { Loader } from '@/ui/Loader';
 import { Bar, Button, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { SectionTabs, sectionTabId } from '@/ui/SectionTabs';
-import { SECTIONS, navFor, rememberTab, sectionHref, tabsOf, type SectionId } from './nav';
+import { SECTIONS, navFor, newKindFor, rememberTab, sectionHref, tabsOf, type SectionId } from './nav';
+import { useShortcuts } from './useShortcuts';
+import { useTour } from '@/features/modals/TourModal';
 import { Overlays } from './Overlays';
+import { SearchBox } from './SearchBox';
 import { useOnline, useSyncPending } from '@/pwa/hooks';
 import { useHabitReminders } from '@/pwa/useHabitReminders';
 import { usePomodoro } from '@/state/pomodoro';
 import { useAiAccountSync } from '@/ai/useAiAccountSync';
 import { usePomodoroEngine } from '@/features/pomodoro/usePomodoroEngine';
 import { dueReviews } from '@/core/review';
-import { SEARCH_MIN, searchAll } from '@/core/search';
 import { PHASE_LABEL, formatClock } from '@/core/pomodoro';
 
 function useRouteTitle(): string {
@@ -110,6 +112,7 @@ function Sidebar() {
   const toggleSound = useUi((s) => s.toggleSound);
   const theme = useUi((s) => s.theme);
   const toggleTheme = useUi((s) => s.toggleTheme);
+  const openModal = useUi((s) => s.openModal);
   const badges = useSectionBadges();
   const { active, hrefFor } = useSectionLinks();
   const asideRef = useRef<HTMLElement>(null);
@@ -235,7 +238,10 @@ function Sidebar() {
         </div>
 
         <div className="sysbar">
-          <span className="sysbar__label">Sonido y tema</span>
+          <span className="sysbar__label">Ajustes</span>
+          <button type="button" className="icon-btn sysbar__keys" onClick={() => openModal({ type: 'shortcuts' })} aria-label="Atajos de teclado" title="Atajos de teclado (?)">
+            <span aria-hidden="true">⌨</span>
+          </button>
           <button type="button" className="icon-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Silenciar efectos' : 'Activar efectos de sonido'} title="Efectos de sonido">
             <span aria-hidden="true">{sound ? '♪' : '✕'}</span>
           </button>
@@ -245,72 +251,6 @@ function Sidebar() {
         </div>
       </aside>
     </>
-  );
-}
-
-function SearchBox() {
-  const [q, setQ] = useState('');
-  const navigate = useNavigate();
-  const courses = useData((s) => s.courses);
-  const tasks = useData((s) => s.tasks);
-  const habits = useData((s) => s.habits);
-  const notes = useData((s) => s.notes);
-  const goals = useData((s) => s.goals);
-  const projects = useData((s) => s.projects);
-  const results = useMemo(() => searchAll({ courses, tasks, habits, notes, goals, projects }, q), [q, courses, tasks, habits, notes, goals, projects]);
-  const listRef = useRef<HTMLUListElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const open = q.trim().length >= SEARCH_MIN;
-
-  const go = (to: string) => {
-    setQ('');
-    navigate(to);
-  };
-  /** Flechas: del campo al primer resultado y entre resultados; Escape vuelve al campo y limpia. */
-  const moveFocus = (e: KeyboardEvent<HTMLElement>, from: number) => {
-    const items = Array.from(listRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? []);
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      const next = e.key === 'ArrowDown' ? Math.min(items.length - 1, from + 1) : from - 1;
-      if (next < 0) inputRef.current?.focus();
-      else items[next]?.focus();
-    } else if (e.key === 'Escape') {
-      setQ('');
-      inputRef.current?.focus();
-    }
-  };
-
-  return (
-    <div className="search">
-      <Sprite name="ring" size={16} />
-      <input
-        ref={inputRef}
-        className="search__input"
-        type="search"
-        placeholder="Buscar tareas, cursos…"
-        aria-label="Buscar"
-        aria-expanded={open}
-        aria-controls="search-results"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && results[0]) go(results[0].to);
-          else moveFocus(e, -1);
-        }}
-      />
-      {open && (
-        <ul className="search__results" id="search-results" ref={listRef}>
-          {results.length === 0 && <li className="search__empty">Nada por aquí… ¡el bloque estaba vacío!</li>}
-          {results.map((r, i) => (
-            <li key={r.key}>
-              <button type="button" onClick={() => go(r.to)} onKeyDown={(e) => moveFocus(e, i)}>
-                <span className="tag tag--plain">{r.kind}</span> {r.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   );
 }
 
@@ -353,14 +293,7 @@ function Hud() {
   const online = useOnline();
   const pending = useSyncPending(dataLayer.sync);
 
-  const openNew = () => {
-    const base = '/' + (pathname.split('/')[1] ?? '');
-    if (base === '/habitos') openModal({ type: 'habit' });
-    else if (base === '/cursos') openModal({ type: 'course' });
-    else if (base === '/metas') openModal({ type: 'goal' });
-    else if (base === '/proyectos') openModal({ type: 'project' });
-    else openModal({ type: 'task' });
-  };
+  const openNew = () => openModal({ type: newKindFor(pathname) });
 
   return (
     <header className="hud">
@@ -371,7 +304,7 @@ function Hud() {
         <p className="kicker kicker--light">// {item.kicker}</p>
         <p className="hud__h">{title}</p>
       </div>
-      <SearchBox />
+      <SearchBox id="busqueda" />
       <div className="hud__stats" aria-label="Marcadores">
         <span className="stat stat--desk" title="Puntos de experiencia totales">
           <span className="stat__k">XP</span>
@@ -459,6 +392,8 @@ export function AppShell() {
   useHabitReminders();
   usePomodoroEngine();
   useAiAccountSync();
+  useShortcuts();
+  useTour();
   const { pathname, item, section, tabs, showTabs } = useSectionTabs();
   useEffect(() => {
     rememberTab(pathname);

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { NAV, SECTIONS, navFor, rememberTab, sectionFor, sectionHref, tabsOf } from './nav';
+import { NAV, SECTIONS, navFor, newKindFor, rememberTab, sectionFor, sectionHref, tabsOf } from './nav';
 
 /** localStorage mínimo en memoria: el entorno de pruebas es Node y no lo trae. */
 function fakeStorage() {
@@ -69,5 +69,23 @@ describe('navegación en secciones', () => {
     storage.setItem('sq.nav.last', '{no es json');
     vi.stubGlobal('localStorage', storage);
     expect(sectionHref('juego')).toBe('/progreso');
+  });
+
+  it('cada sección tiene una tecla de atajo distinta (una letra)', () => {
+    const keys = SECTIONS.map((s) => s.key);
+    expect(new Set(keys).size).toBe(SECTIONS.length);
+    expect(keys.every((k) => /^[a-z]$/.test(k))).toBe(true);
+    // «g» abre el atajo y «n» crea: no pueden ser letra de sección.
+    expect(keys).not.toContain('g');
+    expect(keys).not.toContain('n');
+  });
+
+  it('«＋ Nuevo» crea lo propio de cada pantalla', () => {
+    expect(newKindFor('/habitos/abc')).toBe('habit');
+    expect(newKindFor('/cursos')).toBe('course');
+    expect(newKindFor('/metas')).toBe('goal');
+    expect(newKindFor('/proyectos')).toBe('project');
+    expect(newKindFor('/')).toBe('task');
+    expect(newKindFor('/calendario')).toBe('task');
   });
 });

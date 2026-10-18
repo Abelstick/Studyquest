@@ -22,6 +22,8 @@ import { ConceptGuide } from '../help/ConceptGuide';
 import { EventModal } from '../calendario/EventModal';
 import { ExportModal } from '../calendario/ExportModal';
 import { ScopeModal } from '../calendario/ScopeChoice';
+import { ShortcutsModal } from '../modals/ShortcutsModal';
+import { TourModal } from '../modals/TourModal';
 
 const CATEGORY: Record<AppNotification['category'], { sprite: SpriteName; label: string }> = {
   mentor: { sprite: 'cap', label: 'Mentor' },
@@ -66,6 +68,10 @@ function ModalHost() {
       return <SessionModal courseId={modal.courseId} minutes={modal.minutes} />;
     case 'quick':
       return <QuickSheet />;
+    case 'shortcuts':
+      return <ShortcutsModal />;
+    case 'tour':
+      return <TourModal />;
     case 'welcome':
       return <WelcomeModal />;
     case 'event':

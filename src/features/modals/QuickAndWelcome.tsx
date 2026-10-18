@@ -5,6 +5,7 @@ import { Button, Modal, TextInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { CONCEPTS } from '@/core/concepts';
 import type { SpriteName } from '@/ui/sprites';
+import { SearchBox } from '@/features/layout/SearchBox';
 
 const ACTIONS: { label: string; sprite: SpriteName; modal: Exclude<ModalState, null>; primary?: boolean; hint: string }[] = [
   { label: 'Nueva tarea', sprite: 'qblock', modal: { type: 'task' }, primary: true, hint: 'Algo que haces una vez' },
@@ -16,11 +17,12 @@ const ACTIONS: { label: string; sprite: SpriteName; modal: Exclude<ModalState, n
   { label: 'Importar con IA', sprite: 'star', modal: { type: 'pack' }, hint: 'Pega un pack de la IA' },
 ];
 
-/** Hoja de acciones rápidas (botón "?" flotante en móvil). */
+/** Buscar o crear: el «＋» de la barra superior en móvil. La búsqueda va arriba porque en móvil no cabe en la barra. */
 export function QuickSheet() {
   const { closeModal, openModal } = useUi();
   return (
-    <Modal title="Registro rápido" kicker="// ¿Qué hacemos?" onClose={closeModal}>
+    <Modal title="Buscar o crear" kicker="// ¿Qué hacemos?" onClose={closeModal}>
+      <SearchBox inline onNavigate={closeModal} />
       <div className="quick">
         {ACTIONS.map((a) => (
           <button key={a.label} type="button" className={a.primary ? 'quick__btn is-primary' : 'quick__btn'} onClick={() => openModal(a.modal)}>

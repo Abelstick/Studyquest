@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
@@ -186,13 +186,6 @@ export default function Apuntes() {
     return sortNotes(searchNotes(base, q));
   }, [notes, q, tag, filterCourse, filterTopic]);
   const open = notes.find((n) => n.id === openId);
-  // En móvil el apunte va debajo de la lista: al abrir uno (también desde un enlace) lo traemos a la vista.
-  const detailRef = useRef<HTMLDivElement>(null);
-  const hasOpen = !!open;
-  useEffect(() => {
-    if (!hasOpen || !openId) return;
-    if (window.matchMedia('(max-width: 900px)').matches) detailRef.current?.scrollIntoView({ block: 'start' });
-  }, [openId, hasOpen]);
 
   // Con filtro activo, el apunte nuevo ya nace colgado de ese curso y tema.
   const nuevo = () => setOpenId(createNote(blankNote({ title: filterTopic?.title ?? '', courseId: filterCourse?.id ?? null, topicId: filterTopic?.id ?? null })));
@@ -230,7 +223,8 @@ export default function Apuntes() {
         </div>
       ) : (
         <>
-          <section className="panel">
+          {/* En móvil se ve una cosa a la vez: la lista (con su búsqueda) o el apunte abierto. */}
+          <section className={cx('panel notes-search', open && 'is-hidden-mobile')}>
             <div className="split">
               <p className="kicker">
                 {notes.length} {notes.length === 1 ? 'apunte' : 'apuntes'}
@@ -266,7 +260,7 @@ export default function Apuntes() {
             )}
           </section>
 
-          <div className="cols cols--wide">
+          <div className={cx('cols cols--wide notes-split', open && 'has-open')}>
             <ul className="notes">
               {shown.map((n) => (
                 <li key={n.id}>
@@ -323,7 +317,10 @@ export default function Apuntes() {
             {open ? (
               // `key` obliga a montar de nuevo al cambiar de apunte: si no, el editor se
               // quedaría con el texto del anterior (useState solo lee su valor inicial al montar).
-              <div ref={detailRef}>
+              <div className="notes-detail">
+                <button type="button" className="btn btn--ghost btn--sm notes-back" onClick={() => setOpenId(null)}>
+                  ‹ Todos los apuntes{filterCourse ? ` de ${filterCourse.title}` : ''}
+                </button>
                 <Detail key={open.id} note={open} onClose={() => setOpenId(null)} />
               </div>
             ) : (

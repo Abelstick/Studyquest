@@ -18,14 +18,16 @@ export interface Section {
   id: SectionId;
   label: string;
   sprite: SpriteName;
+  /** Tecla del atajo «g + letra» para ir a la sección. */
+  key: string;
 }
 
 export const SECTIONS: Section[] = [
-  { id: 'hoy', label: 'Hoy', sprite: 'castle' },
-  { id: 'estudiar', label: 'Estudiar', sprite: 'pipe' },
-  { id: 'planear', label: 'Planear', sprite: 'qblock' },
-  { id: 'lograr', label: 'Lograr', sprite: 'flower' },
-  { id: 'juego', label: 'Mi juego', sprite: 'star' },
+  { id: 'hoy', label: 'Hoy', sprite: 'castle', key: 'h' },
+  { id: 'estudiar', label: 'Estudiar', sprite: 'pipe', key: 'e' },
+  { id: 'planear', label: 'Planear', sprite: 'qblock', key: 'p' },
+  { id: 'lograr', label: 'Lograr', sprite: 'flower', key: 'l' },
+  { id: 'juego', label: 'Mi juego', sprite: 'star', key: 'j' },
 ];
 
 /** Todas las pantallas, en el orden en que aparecen como pestañas dentro de su sección. */
@@ -49,6 +51,17 @@ export const NAV: NavItem[] = [
   { to: '/arsenal', label: 'Arsenal', sprite: 'mushroom', kicker: 'Tienda de Toad', section: 'juego' },
   { to: '/perfil', label: 'Perfil', sprite: 'cap', kicker: 'Personaje', section: 'juego' },
 ];
+
+/** Qué se crea con «＋ Nuevo» (o la tecla N) según la pantalla en la que estás. */
+export type NewKind = 'task' | 'habit' | 'course' | 'goal' | 'project';
+export function newKindFor(pathname: string): NewKind {
+  const base = '/' + (pathname.split('/')[1] ?? '');
+  if (base === '/habitos') return 'habit';
+  if (base === '/cursos') return 'course';
+  if (base === '/metas') return 'goal';
+  if (base === '/proyectos') return 'project';
+  return 'task';
+}
 
 /** La pantalla de una ruta (`/cursos/abc` → Cursos). Rutas desconocidas caen en Inicio. */
 export const navFor = (pathname: string): NavItem => {

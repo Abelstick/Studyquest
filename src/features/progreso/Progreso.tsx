@@ -9,6 +9,7 @@ import { Sprite } from '@/ui/Sprite';
 import { computeStats, hoursBetween, timeDistribution, weeklyHours, weeklyXp, xpBetween, xpBySource, xpByDay, xpByWeekday } from '@/core/stats';
 import { Bar, PageHead, Panel, Segmented, cx } from '@/ui/kit';
 import { ChartCard, ColumnChart, HBars, LineChart, Sparkline } from './charts';
+import { CityMini, WeeklyReport } from './WeekPanels';
 
 type Range = '30' | '90' | '180' | 'all';
 const RANGES: { value: Range; label: string }[] = [
@@ -130,6 +131,10 @@ export default function Progreso() {
   return (
     <div className="stack dash">
       <PageHead kicker="// Hoja de personaje" title="Progreso" sprite="star" right={<Segmented label="Rango de fechas" value={range} options={RANGES} onChange={setRange} />} />
+      <div className="cols">
+        <WeeklyReport snap={snap} />
+        <CityMini />
+      </div>
 
       <section className="dashhero panel" aria-label="Resumen">
         <div className="dashhero__main">

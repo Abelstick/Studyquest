@@ -6,6 +6,7 @@ import { courseProgress, courseRank, nextTopic } from '@/core/game';
 import { courseHours } from '@/core/stats';
 import type { Course, Snapshot } from '@/core/domain';
 import { Bar, Button, Empty, PageHead, Tag } from '@/ui/kit';
+import { CoursesInPlay } from './CoursesInPlay';
 
 const TONES = ['red', 'green', 'blue', 'yellow'] as const;
 
@@ -58,54 +59,57 @@ export default function Cursos() {
           </Empty>
         </div>
       ) : (
-        <div className="grid grid--cards">
-          {rows.map(({ c, p, hours, tone }) => {
-            const next = nextTopic(c);
-            const last = lastTopic(c);
-            return (
-              <article key={c.id} className={`card card--${tone}`}>
-                <div className="card__bar" />
-                <div className="card__body">
-                  <div className="card__top">
-                    <div>
-                      <p className="kicker">{c.professor || c.field || 'Autodidacta'}</p>
-                      <h2 className="card__title">
-                        <Link to={`/cursos/${c.id}`}>{c.title}</Link>
-                      </h2>
+        <>
+          <CoursesInPlay />
+          <div className="grid grid--cards">
+            {rows.map(({ c, p, hours, tone }) => {
+              const next = nextTopic(c);
+              const last = lastTopic(c);
+              return (
+                <article key={c.id} className={`card card--${tone}`}>
+                  <div className="card__bar" />
+                  <div className="card__body">
+                    <div className="card__top">
+                      <div>
+                        <p className="kicker">{c.professor || c.field || 'Autodidacta'}</p>
+                        <h2 className="card__title">
+                          <Link to={`/cursos/${c.id}`}>{c.title}</Link>
+                        </h2>
+                      </div>
+                      <Tag tone="dark" className="tag--rank">
+                        RANGO {courseRank(p.pct)}
+                      </Tag>
                     </div>
-                    <Tag tone="dark" className="tag--rank">
-                      RANGO {courseRank(p.pct)}
-                    </Tag>
+                    <div className="split">
+                      <span className="kicker">{p.pct}% completado</span>
+                      <span className="xp-text">{p.xp.toLocaleString('en-US')} XP</span>
+                    </div>
+                    <Bar pct={p.pct} tone={tone} label={`Progreso de ${c.title}`} />
                   </div>
-                  <div className="split">
-                    <span className="kicker">{p.pct}% completado</span>
-                    <span className="xp-text">{p.xp.toLocaleString('en-US')} XP</span>
+                  <dl className="card__facts">
+                    <div>
+                      <dt>Último tema</dt>
+                      <dd>{last?.title ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>Próximo tema</dt>
+                      <dd className="xp-text">{next?.title ?? '¡Mundo completado!'}</dd>
+                    </div>
+                    <p className="muted small">
+                      {hours.toFixed(0)} h invertidas · {c.modules.length} {c.modules.length === 1 ? 'módulo' : 'módulos'}
+                    </p>
+                  </dl>
+                  <div className="card__actions">
+                    <Link className="btn btn--primary" to={`/cursos/${c.id}`}>
+                      Continuar
+                    </Link>
+                    <Button onClick={() => openModal({ type: 'session', courseId: c.id })}>Estudiar</Button>
                   </div>
-                  <Bar pct={p.pct} tone={tone} label={`Progreso de ${c.title}`} />
-                </div>
-                <dl className="card__facts">
-                  <div>
-                    <dt>Último tema</dt>
-                    <dd>{last?.title ?? '—'}</dd>
-                  </div>
-                  <div>
-                    <dt>Próximo tema</dt>
-                    <dd className="xp-text">{next?.title ?? '¡Mundo completado!'}</dd>
-                  </div>
-                  <p className="muted small">
-                    {hours.toFixed(0)} h invertidas · {c.modules.length} {c.modules.length === 1 ? 'módulo' : 'módulos'}
-                  </p>
-                </dl>
-                <div className="card__actions">
-                  <Link className="btn btn--primary" to={`/cursos/${c.id}`}>
-                    Continuar
-                  </Link>
-                  <Button onClick={() => openModal({ type: 'session', courseId: c.id })}>Estudiar</Button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

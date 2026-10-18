@@ -1,25 +1,20 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, daysLeftLabel, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
-import { computeStreak, courseProgress, isCounter, nextTopic, isDueOn, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
-import { dailyMissions, daySummary, isReadyToFinish, missionParts, missionUrgency, taskBucket, tips, type Mission, type TaskBucket } from '@/core/missions';
-import { dueReviews } from '@/core/review';
+import { computeStreak, goalLabel, isCounter, levelProgress, logFor, rankFor } from '@/core/game';
+import { dailyMissions, daySummary, deadlineText, isReadyToFinish, missionParts, missionUrgency, taskBucket, tips, type Mission, type TaskBucket } from '@/core/missions';
+import { nextStep, type NextStep } from '@/core/nextStep';
 import { isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
 import { HabitAction } from '@/features/habitos/HabitAction';
 import { LateBanner } from '@/features/tareas/LateBanner';
 import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
-import { coursesInPlay, weeklyReport } from '@/core/stats';
 import type { HabitChain, Snapshot } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Empty, Panel, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
-import { PixelArt } from '@/ui/PixelArt';
-import { buildingRows } from '@/ui/city-art';
-import { CITY_MAX } from '@/core/city';
-import { useCity } from '@/features/ciudad/useCity';
 
 /** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
 const NO_CHAINS: HabitChain[] = [];
@@ -317,30 +312,6 @@ function Events({ events }: { events: GameEvent[] }) {
   );
 }
 
-/** Resumen de tu ciudad: los seis edificios y cuál está más cerca de mejorar. */
-function CityMini() {
-  const city = useCity();
-  return (
-    <Panel kicker="// Tu ciudad" title={city.title.name} right={<span className="kicker">{city.total} / {CITY_MAX}</span>}>
-      <Link to="/ciudad" className="citymini" aria-label="Ver mi ciudad">
-        {city.states.map((s) => (
-          <span key={s.building.id} className="citymini__b" title={`${s.building.name}: nivel ${s.level}`}>
-            <PixelArt rows={buildingRows(s.building.id, s.level)} size={64} />
-            <span className="citymini__lv">{s.level === 0 ? '—' : `Nv ${s.level}`}</span>
-          </span>
-        ))}
-      </Link>
-      {city.closest ? (
-        <p className="muted small">
-          Tu <b>{city.closest.building.name.toLowerCase()}</b> está al <b>{city.closest.pct}%</b> de mejorar: te {city.closest.left === 1 ? 'falta' : 'faltan'} {city.closest.left} {city.closest.building.unit}.
-        </p>
-      ) : (
-        <p className="muted small">¡Todos tus edificios están al máximo!</p>
-      )}
-    </Panel>
-  );
-}
-
 /** Cofre diario: un botín distinto cada día, mejor cuanto más larga es la racha. */
 function DailyChest({ streak }: { streak: number }) {
   const profile = useData((s) => s.profile);
@@ -372,88 +343,115 @@ function DailyChest({ streak }: { streak: number }) {
   );
 }
 
-/** Cuántos cursos se ven en el Inicio; el resto, en la pantalla de Cursos. */
-const HOME_COURSES = 3;
+const STEP_KICKER: Record<NonNullable<NextStep>['kind'], string> = {
+  'task-late': 'Tarea vencida · hazla primero',
+  'task-today': 'Vence hoy',
+  habit: 'Hábito de hoy',
+  review: 'Repaso pendiente',
+  topic: 'Tema en curso',
+};
 
-/** Tus cursos en marcha: progreso, próximo tema y un botón para ponerte a estudiar. */
-function CoursesHome({ snap }: { snap: Snapshot }) {
+/** Enlace a Pomodoro con el curso del paso ya elegido. */
+const focusHref = (courseId: string | null) => (courseId ? `/pomodoro?curso=${encodeURIComponent(courseId)}` : '/pomodoro');
+
+/** Bloque principal de Hoy: una sola cosa que hacer ahora, con su acción a un toque. */
+function NextStepCard({ step }: { step: NextStep | null }) {
+  const courses = useData((s) => s.courses);
+  const logs = useData((s) => s.habitLogs);
+  const setTaskStatus = useData((s) => s.setTaskStatus);
+  const setHabitValue = useData((s) => s.setHabitValue);
   const openModal = useUi((s) => s.openModal);
-  const list = useMemo(() => coursesInPlay(snap), [snap]);
-  const shown = list.slice(0, HOME_COURSES);
-  return (
-    <Panel
-      kicker="// Campañas"
-      title="Tus cursos"
-      right={
-        <Link className="btn btn--ghost btn--sm" to="/cursos">
-          {list.length > HOME_COURSES ? `Ver los ${list.length}` : 'Ver cursos'}
-        </Link>
-      }
-    >
-      {shown.length === 0 ? (
-        <div className="row">
-          <p className="muted grow">Aún no tienes cursos. Cada curso es un mundo con módulos y temas que dan XP.</p>
-          <Button onClick={() => openModal({ type: 'course' })}>＋ Nuevo curso</Button>
-        </div>
-      ) : (
-        <ul className="hcourses">
-          {shown.map((c) => {
-            const p = courseProgress(c);
-            const next = nextTopic(c);
-            return (
-              <li key={c.id} className="hcourse">
-                <div className="hcourse__text">
-                  <Link className="hcourse__title" to={`/cursos/${c.id}`}>
-                    {c.title}
-                  </Link>
-                  <p className="muted small">{next ? <>Próximo: <b>{next.title}</b></> : '¡Curso completado!'}</p>
-                  <div className="hcourse__bar">
-                    <Bar pct={p.pct} tone={p.pct >= 100 ? 'green' : 'yellow'} label={`Progreso de ${c.title}`} />
-                    <span className="kicker">{p.pct}%</span>
-                  </div>
-                </div>
-                {next && (
-                  <Button small onClick={() => openModal({ type: 'session', courseId: c.id })}>
-                    ▶ Estudiar
-                  </Button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </Panel>
-  );
-}
+  const courseName = (id: string | null) => (id ? courses.find((c) => c.id === id)?.title : undefined);
 
-function WeeklyReport({ snap }: { snap: Snapshot }) {
-  const r = useMemo(() => weeklyReport(snap), [snap]);
-  const habitsDue = useMemo(() => {
-    const now = today();
-    let n = 0;
-    for (let d = weekStart(now); d <= now; d = addDays(d, 1)) n += snap.habits.filter((h) => isDueOn(h, d, snap.habitLogs)).length;
-    return n;
-  }, [snap.habits, snap.habitLogs]);
-  const compliance = habitsDue ? Math.min(100, Math.round((r.habitsDone / habitsDue) * 100)) : 0;
-  const cells: [string, string, boolean?][] = [
-    ['Horas', r.hours.toFixed(1)],
-    ['Tareas', String(r.tasks)],
-    ['Hábitos', String(r.habitsDone)],
-    ['XP ganado', r.xp.toLocaleString('en-US'), true],
-    ['Días activos', `${r.days}/7`],
-    ['Cumplimiento', `${compliance}%`, true],
-  ];
+  if (!step) {
+    return (
+      <section className="panel nextstep nextstep--clear" aria-labelledby="nextstep-title">
+        <Sprite name="star" size={48} />
+        <div className="nextstep__body">
+          <p className="kicker">Siguiente paso</p>
+          <h2 id="nextstep-title" className="nextstep__title">
+            ¡Todo al día!
+          </h2>
+          <p className="muted">No hay tareas, hábitos ni repasos pendientes para hoy. Si te apetece, adelanta algo con una sesión de enfoque.</p>
+        </div>
+        <div className="nextstep__actions">
+          <Link className="btn btn--primary" to="/pomodoro">
+            <Sprite name="tomato" size={16} /> Empezar enfoque
+          </Link>
+          <Button onClick={() => openModal({ type: 'task' })}>＋ Nueva tarea</Button>
+        </div>
+      </section>
+    );
+  }
+
+  let title: string;
+  let detail: string;
+  let action: ReactNode;
+  switch (step.kind) {
+    case 'task-late':
+    case 'task-today': {
+      const t = step.task;
+      title = t.title;
+      detail = [courseName(t.courseId), deadlineText(t), `+${t.xp} XP`].filter(Boolean).join(' · ');
+      action = (
+        <Button variant="primary" onClick={() => setTaskStatus(t.id, 'done')}>
+          ✔ Completar
+        </Button>
+      );
+      break;
+    }
+    case 'habit': {
+      const h = step.habit;
+      title = h.title;
+      detail = `Hábito · ${goalLabel(h)} · +${h.xp} XP`;
+      action = isCounter(h) ? (
+        <HabitAction habit={h} log={logFor(logs, h.id, today())} />
+      ) : (
+        <Button variant="primary" onClick={() => setHabitValue(h.id, h.target)}>
+          ✔ Registrar
+        </Button>
+      );
+      break;
+    }
+    case 'review': {
+      const r = step.review;
+      title = r.title;
+      detail = `${r.course} · ${r.late > 0 ? `atrasado ${r.late} ${r.late === 1 ? 'día' : 'días'}` : 'toca hoy'}${step.pending > 1 ? ` · ${step.pending} temas por repasar` : ''}`;
+      action = (
+        <Link className="btn btn--primary" to={`/repaso?curso=${encodeURIComponent(r.courseId)}&tema=${encodeURIComponent(r.topicId)}`}>
+          ▶ Repasar
+        </Link>
+      );
+      break;
+    }
+    case 'topic': {
+      title = step.topic.title;
+      detail = `${step.course.title} · lo dejaste a medias`;
+      action = (
+        <Link className="btn btn--primary" to={`/cursos/${step.course.id}`}>
+          ▶ Continuar tema
+        </Link>
+      );
+      break;
+    }
+  }
+
   return (
-    <Panel title="Informe semanal" kicker={`Semana del ${shortDate(r.from)}`}>
-      <dl className="stat-grid">
-        {cells.map(([k, v, hot]) => (
-          <div key={k}>
-            <dt>{k}</dt>
-            <dd className={cx(hot && 'is-hot')}>{v}</dd>
-          </div>
-        ))}
-      </dl>
-    </Panel>
+    <section className={cx('panel nextstep', `nextstep--${step.kind}`)} aria-labelledby="nextstep-title">
+      <div className="nextstep__body">
+        <p className="kicker">Siguiente paso · {STEP_KICKER[step.kind]}</p>
+        <h2 id="nextstep-title" className="nextstep__title">
+          {title}
+        </h2>
+        <p className="muted">{detail}</p>
+      </div>
+      <div className="nextstep__actions">
+        {action}
+        <Link className="btn btn--ghost" to={focusHref(step.courseId)}>
+          <Sprite name="tomato" size={16} /> Empezar enfoque
+        </Link>
+      </div>
+    </section>
   );
 }
 
@@ -480,7 +478,7 @@ export default function Inicio() {
     [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, agenda],
   );
   const missions = useMemo(() => dailyMissions(snap), [snap]);
-  const review = useMemo(() => dueReviews(snap), [snap]);
+  const step = useMemo(() => nextStep(snap), [snap]);
   const events = useMemo(() => activeEvents(habits, habitLogs, profile), [habits, habitLogs, profile]);
   const advice = useMemo(() => tips(snap), [snap]);
   const streak = useMemo(() => computeStreak(xpEvents, profile.frozenDates).current, [xpEvents, profile.frozenDates]);
@@ -488,58 +486,20 @@ export default function Inicio() {
   const lp = levelProgress(profile.xp);
   const done = missions.filter((m) => m.done).length;
   const inPlay = missions.filter((m) => !m.done).reduce((a, m) => a + m.xp, 0);
-  const time = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
   const isEmpty = !tasks.length && !habits.length && !courses.length;
 
   return (
     <div className="stack home">
-      <section className="hero panel">
-        <div className="hero__stripe" aria-hidden="true" />
-        <div className="hero__body">
-          <div className="hero__who">
-            <Avatar profile={profile} size={76} />
-            <div>
-              <p className="kicker">Sesión activa · {time}</p>
-              <h1 className="hero__hi">Buenas, {profile.displayName}</h1>
-              <p className="hero__rank">
-                Nivel {lp.level} — <b>{rankFor(lp.level)}</b> · Mundo {worldFor(lp.level)}
-              </p>
-            </div>
-          </div>
-          <dl className="scoreboard">
-            <div>
-              <dt>XP total</dt>
-              <dd>{profile.xp.toLocaleString('en-US')}</dd>
-            </div>
-            <div>
-              <dt>Racha</dt>
-              <dd className="is-hot">
-                <Sprite name="fire" size={20} /> {streak}
-              </dd>
-            </div>
-            <div>
-              <dt>Monedas</dt>
-              <dd>
-                <Sprite name="coin" size={18} /> {profile.credits.toLocaleString('en-US')}
-              </dd>
-            </div>
-          </dl>
-        </div>
-        <div className="hero__progress">
-          <div className="hero__progress-head">
-            <p className="kicker">
-              Siguiente mundo — Nvl {lp.level + 1} · {rankFor(lp.level + 1)}
-            </p>
-            <p className="hero__xp">
-              <b>{lp.into.toLocaleString('en-US')}</b> / {lp.needed.toLocaleString('en-US')} XP
-            </p>
-          </div>
-          <Bar pct={lp.pct} tone="yellow" tall label="Progreso al siguiente nivel" />
+      <header className="today-head">
+        <Avatar profile={profile} size={48} />
+        <div className="today-head__text">
+          <h1 className="today-head__hi">Buenas, {profile.displayName}</h1>
           <p className="muted small">
-            Faltan {lp.left.toLocaleString('en-US')} XP — {inPlay >= lp.left ? 'tus misiones de hoy alcanzan' : 'dos misiones y un café'}.
+            Nivel {lp.level} — <b>{rankFor(lp.level)}</b> · faltan {lp.left.toLocaleString('en-US')} XP para el nivel {lp.level + 1}
           </p>
         </div>
-      </section>
+        <Bar pct={lp.pct} tone="yellow" className="today-head__bar" label="Progreso al siguiente nivel" />
+      </header>
 
       {isEmpty ? (
         <Panel>
@@ -555,93 +515,63 @@ export default function Inicio() {
           </Empty>
         </Panel>
       ) : (
-        <div className="cols">
-          <div className="stack">
-            <LateBanner />
-            <Events events={events} />
-            <Panel kicker="// Quest diaria" title="Tu misión de hoy" right={<span className="kicker">{done} / {missions.length} · {inPlay} XP en juego</span>}>
-              {missions.length === 0 ? (
-                <Empty sprite="star" title="¡Nivel despejado!">
-                  <p>No hay nada pendiente para hoy.</p>
-                </Empty>
-              ) : (
-                <>
-                  <TodayBrief missions={missions} />
-                  <MissionTabs missions={missions} />
-                </>
-              )}
-              <div className="row row--top">
-                <Link className="btn btn--ghost" to="/tareas">
-                  Ver todas las tareas
-                </Link>
-                <Button onClick={() => openModal({ type: 'session' })}>▶ Iniciar sesión de estudio</Button>
-                <Link className="btn btn--ghost" to="/pomodoro">
-                  <Sprite name="tomato" size={16} /> Pomodoro
-                </Link>
-              </div>
-            </Panel>
-
-            <CoursesHome snap={snap} />
-
-            <Panel
-              kicker="// Repaso espaciado"
-              title="Flashcards de hoy"
-              right={
-                review.length > 0 ? (
-                  <Link className="btn btn--primary btn--sm" to="/repaso">
-                    Repasar ahora ({review.length})
+        <>
+          <NextStepCard step={step} />
+          <div className="cols cols--side">
+            <div className="stack">
+              <LateBanner />
+              <Events events={events} />
+              <Panel kicker="// Quest diaria" title="Tu misión de hoy" right={<span className="kicker">{done} / {missions.length} · {inPlay} XP en juego</span>}>
+                {missions.length === 0 ? (
+                  <Empty sprite="star" title="¡Nivel despejado!">
+                    <p>No hay nada pendiente para hoy.</p>
+                  </Empty>
+                ) : (
+                  <>
+                    <TodayBrief missions={missions} />
+                    <MissionTabs missions={missions} />
+                  </>
+                )}
+                <div className="row row--top">
+                  <Link className="btn btn--ghost" to="/tareas">
+                    Ver todas las tareas
                   </Link>
-                ) : undefined
-              }
-            >
-              {review.length === 0 ? (
-                <p className="muted">Nada que repasar hoy. Marca un tema con «Necesito repasar» dentro de un curso y volverá a los 1, 3, 7 y 14 días.</p>
-              ) : (
-                <ul className="list">
-                  {review.slice(0, 4).map((r) => (
-                    <li key={r.topicId} className="list__row">
-                      <div>
-                        <p className="list__title">{r.title}</p>
-                        <p className="muted small">
-                          {r.late > 0 ? `Atrasado ${r.late} ${r.late === 1 ? 'día' : 'días'}` : 'Toca hoy'} · {r.course}
-                        </p>
-                      </div>
-                      <Link className="btn btn--ghost btn--sm" to={`/cursos/${r.courseId}`}>
-                        Ver curso
-                      </Link>
-                    </li>
+                  <Button onClick={() => openModal({ type: 'session' })}>▶ Iniciar sesión de estudio</Button>
+                </div>
+                <div className="row row--top">
+                  <span className="kicker">¿Ya estudiaste? Márcalo</span>
+                  {[5, 10, 20, 30].map((m) => (
+                    <button key={m} type="button" className="chip" onClick={() => logSession({ minutes: m, courseId: null })} title={`Registrar ${m} min de estudio ya hecho, sin abrir nada más`}>
+                      ✔ {m} min
+                    </button>
                   ))}
-                </ul>
-              )}
-              <div className="row row--top">
-                <span className="kicker">¿Ya estudiaste? Márcalo</span>
-                {[5, 10, 20, 30].map((m) => (
-                  <button key={m} type="button" className="chip" onClick={() => logSession({ minutes: m, courseId: null })} title={`Registrar ${m} min de estudio ya hecho, sin abrir nada más`}>
-                    ✔ {m} min
-                  </button>
-                ))}
-              </div>
-            </Panel>
+                </div>
+              </Panel>
+            </div>
+            <div className="stack">
+              <StreakCalendar />
+            </div>
           </div>
-
-          <div className="stack">
-            <DailyChest streak={streak} />
-            <CityMini />
-            <StreakCalendar />
-            <WeeklyReport snap={snap} />
-            <Panel kicker="// Inteligencia táctica" title="Consejos del Toad">
-              <ul className="tips">
-                {advice.map((t) => (
-                  <li key={t.title} className="tip">
-                    <p className="tip__title">{t.title}</p>
-                    <p className="muted small">{t.body}</p>
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          </div>
-        </div>
+        </>
       )}
+
+      {/* Lo que no es urgente queda plegado al final: sigue a mano sin competir con el siguiente paso. */}
+      <details className="panel more">
+        <summary className="more__summary">Más: cofre diario y consejos</summary>
+        <div className="cols more__body">
+          <DailyChest streak={streak} />
+          <Panel kicker="// Inteligencia táctica" title="Consejos del Toad">
+            <ul className="tips">
+              {advice.map((t) => (
+                <li key={t.title} className="tip">
+                  <p className="tip__title">{t.title}</p>
+                  <p className="muted small">{t.body}</p>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
+      </details>
     </div>
   );
 }

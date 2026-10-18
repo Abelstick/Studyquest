@@ -4388,3 +4388,92 @@ button.week__day--rich {
     padding: 8px 12px;
   }
 }
+
+
+/* ---------- Hoy: saludo compacto, siguiente paso y plegable «Más» ---------- */
+.today-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 14px;
+}
+.today-head__hi {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+.today-head__bar {
+  grid-column: 1 / -1;
+}
+.nextstep {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px 24px;
+  padding: 22px 24px;
+  border-left: 8px solid var(--yellow);
+}
+.nextstep--task-late {
+  border-left-color: var(--red-text);
+}
+.nextstep--task-today {
+  border-left-color: var(--blue);
+}
+.nextstep--habit {
+  border-left-color: var(--green);
+}
+.nextstep--clear {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+.nextstep__body {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.nextstep__title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.nextstep__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.more {
+  padding: 0;
+}
+.more__summary {
+  min-height: 44px;
+  padding: 12px 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.more__summary:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: -3px;
+}
+.more__body {
+  padding: 0 18px 18px;
+}
+@media (max-width: 700px) {
+  .nextstep,
+  .nextstep--clear {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px 16px;
+  }
+  .nextstep--clear > .sprite {
+    display: none;
+  }
+  .nextstep__title {
+    font-size: 21px;
+  }
+  .nextstep__actions > * {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}

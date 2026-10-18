@@ -1,7 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WrongPassphraseError, decryptSecret, encryptSecret, isEncryptedBlob } from './crypto';
 import { createAiStore, type KeyStorage } from './store';
 import { parseAccountSecret, refreshFromAccount, removeFromAccount, saveToAccount, unlockFromAccount, type SecretsPort } from './sync';
+
+// Cada cifrado deriva la clave con PBKDF2 (250 000 iteraciones): con toda la suite en paralelo
+// puede superar los 5 s por defecto sin que nada esté mal.
+vi.setConfig({ testTimeout: 20_000 });
 
 const KEY = 'AIzaSyA-1234567890abcdefghijklmnopqrstu';
 const PASS = 'mi frase secreta 2026';

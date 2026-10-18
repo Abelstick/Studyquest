@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { usePomodoro } from '@/state/pomodoro';
@@ -45,6 +46,21 @@ export default function Pomodoro() {
   const { music, sound, toggleMusic, toggleSound } = useUi();
   const p = usePomodoro();
   const [now, setNow] = useState(Date.now());
+
+  // «Empezar enfoque» desde Hoy llega con ?curso=<id>: lo preseleccionamos si no hay una sesión en marcha.
+  const [params, setParams] = useSearchParams();
+  const wanted = params.get('curso');
+  useEffect(() => {
+    // Con Supabase los cursos pueden llegar después del primer render: esperamos a tenerlos.
+    if (!wanted || courses.length === 0) return;
+    const { status, setCourse } = usePomodoro.getState();
+    if (status === 'idle' && courses.some((c) => c.id === wanted)) setCourse(wanted);
+    // Se quita de la URL para que recargar no pise lo que elijas después.
+    setParams((prev) => {
+      prev.delete('curso');
+      return prev;
+    }, { replace: true });
+  }, [wanted, courses, setParams]);
 
   useEffect(() => {
     if (p.status !== 'running') return;

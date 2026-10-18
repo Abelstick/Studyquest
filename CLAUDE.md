@@ -132,6 +132,11 @@ variables de build.
 - Sin `catch` vacíos ni promesas sin esperar en escrituras.
 - Pruebas: la lógica en `*.test.ts` (entorno Node); los componentes en `*.test.tsx`
   con `// @vitest-environment jsdom` en la primera línea y Testing Library.
+- CSS: una sola definición por selector. Para cambiar un componente, edita su bloque
+  existente; no añadas otro igual al final de `features.css`. Los colores salen de
+  `styles/tokens.css`; si un valor fijo se repite, conviértelo en token (constante
+  si no cambia con el tema ni con el mundo).
+- Texto mínimo: 12px con la fuente normal y 10px con la fuente pixel.
 - Los sprites son cuadrículas de texto en `ui/sprites.ts`, con todas las filas
   del mismo ancho; una prueba lo valida.
 - No agregues imágenes ni audio de terceros: los sprites son dibujos propios y

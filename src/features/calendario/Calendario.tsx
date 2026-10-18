@@ -360,15 +360,25 @@ export default function Calendario() {
                           </span>
                           <span className="muted small">
                             {t.dueTime ? `Vence a las ${t.dueTime} · ` : ''}
-                            {courses.find((c) => c.id === t.courseId)?.title ?? 'Side quest'} · +{t.xp} XP{t.recurrence ? ` · ${recurrenceLabel(t.recurrence)}` : ''}
+                            {t.courseId && courses.some((c) => c.id === t.courseId) ? (
+                              <Link to={`/cursos/${t.courseId}`}>{courses.find((c) => c.id === t.courseId)?.title}</Link>
+                            ) : (
+                              'Side quest'
+                            )}{' '}
+                            · +{t.xp} XP{t.recurrence ? ` · ${recurrenceLabel(t.recurrence)}` : ''}
                           </span>
                         </span>
                       </label>
-                      {t.status !== 'done' && (
-                        <Button small onClick={() => openModal({ type: 'event', taskId: t.id, date: selected })} title="Reservar tiempo en el calendario para hacerla">
-                          ⏱ Agendar
-                        </Button>
-                      )}
+                      <div className="row">
+                        <Link className="btn btn--ghost btn--sm" to={`/tareas?tarea=${encodeURIComponent(t.id)}`} aria-label={`Ver ${t.title} en Tareas`}>
+                          Ver
+                        </Link>
+                        {t.status !== 'done' && (
+                          <Button small onClick={() => openModal({ type: 'event', taskId: t.id, date: selected })} title="Reservar tiempo en el calendario para hacerla">
+                            ⏱ Agendar
+                          </Button>
+                        )}
+                      </div>
                     </li>
                   ))}
                   {entry.upcoming.map((t) => (
@@ -383,7 +393,14 @@ export default function Calendario() {
                     <li className="list__row">
                       <div>
                         <p className="list__title">♪ {entry.reviews.length} {entry.reviews.length === 1 ? 'repaso' : 'repasos'} de flashcards</p>
-                        <p className="muted small">{entry.reviews.map((r) => r.title).join(' · ')}</p>
+                        <p className="muted small">
+                          {entry.reviews.map((r, i) => (
+                            <span key={r.topicId}>
+                              {i > 0 && ' · '}
+                              {selected <= now ? <Link to={`/repaso?curso=${encodeURIComponent(r.courseId)}&tema=${encodeURIComponent(r.topicId)}`}>{r.title}</Link> : r.title}
+                            </span>
+                          ))}
+                        </p>
                       </div>
                       {selected <= now && (
                         <Link className="btn btn--ghost btn--sm" to="/repaso">

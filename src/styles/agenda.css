@@ -151,7 +151,7 @@
 .tgrid__gutter--label {
   align-self: center;
   padding: 0 4px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--muted);
   text-align: right;
@@ -170,7 +170,7 @@
 }
 .tgrid__wd {
   font-family: var(--font-pixel);
-  font-size: 9px;
+  font-size: 10px;
   color: var(--muted);
   text-transform: uppercase;
 }

@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import {
@@ -326,6 +327,11 @@ export function EventModal(props: Props) {
             )}
           </Field>
         )}
+        {kind === 'habit' && habit && (
+          <Link className="btn btn--ghost btn--sm" to={`/habitos/${habit.id}`} onClick={close}>
+            Abrir el hábito →
+          </Link>
+        )}
         {kind === 'task' && (
           <Field label="Tarea" hint={task?.dueDate ? `Fecha límite: ${longDate(task.dueDate)}${task.dueTime ? ` a las ${task.dueTime}` : ''}. No cambia.` : task ? 'Sin fecha límite.' : undefined}>
             {(fid) => (
@@ -339,6 +345,12 @@ export function EventModal(props: Props) {
               </select>
             )}
           </Field>
+        )}
+
+        {kind === 'task' && task && (
+          <Link className="btn btn--ghost btn--sm" to={`/tareas?tarea=${encodeURIComponent(task.id)}`} onClick={close}>
+            Abrir la tarea →
+          </Link>
         )}
 
         <Field label={kind === 'habit' || kind === 'task' ? 'Nombre (opcional)' : 'Nombre'}>

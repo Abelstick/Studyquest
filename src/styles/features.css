@@ -4619,3 +4619,104 @@ a.chip {
     animation: none;
   }
 }
+
+/* ---------- Legibilidad: tamaños mínimos en toda la app ----------
+ * Fuente pixel (Press Start 2P): nunca por debajo de 10px. Sus glifos ocupan toda la altura, así que 10px
+ * se lee como ~13-14px de texto normal sin ensanchar tanto las etiquetas como lo haría subirla a 12px.
+ * Fuente normal: nunca por debajo de 12px. Va al final para ganar a las reglas anteriores. */
+.tag,
+.badge,
+.kicker,
+.back,
+.section-title,
+.field__label,
+.seg__opt,
+.btn--sm,
+.toast__title,
+.toast__coins,
+.quick__btn,
+.update-banner,
+.stat__k,
+.steps li,
+.cal__head,
+.calgrid__head,
+.week__name,
+.week__day,
+.week__day--can,
+.hhist__wd,
+.stat-grid dt,
+.scoreboard dt,
+.card__facts dt,
+.bigstats dt,
+.bigstats__delta,
+.bars__v,
+.bars__axis,
+.topic__state,
+.module__xp,
+.track__title,
+.track__xp,
+.timeline__when,
+.badge-card__title,
+.vitrina__item span,
+.citymini__lv,
+.evo__lv,
+.hpower,
+.jb__n,
+.ladder__coins,
+.ladder__mark,
+.plot__plate,
+.plot__plate b,
+.pwd__toggle,
+.power,
+.chainpick__n,
+.hero3d__hint,
+.wizard li button,
+.dashhero__levelhead,
+.dashhero__levelhead span,
+.viz-record,
+.fcard__label,
+.login__hud,
+.login__features li,
+.mgroup__title,
+.home .mgroup__title {
+  font-size: 10px;
+}
+.chip--sm,
+.chip-task,
+.calday__more,
+.tabs__count,
+.week__val,
+.hhist__v,
+.pick__opt code,
+.quick__hint,
+.viz-tick,
+.agev--mini,
+.agev__time,
+.tgrid__hours span,
+.tgrid__deadline,
+.btn--ink {
+  font-size: 12px;
+}
+
+/* «＋ Nuevo» nunca se parte en dos líneas. */
+.btn.hud__new {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Tarjeta a la que se llega por enlace directo (búsqueda, calendario): se marca un momento para encontrarla. */
+.task.is-target {
+  outline: 4px solid var(--yellow);
+  outline-offset: 3px;
+  animation: target-pulse 0.5s steps(2) 3;
+}
+@keyframes target-pulse {
+  50% {
+    outline-color: var(--red-text);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .task.is-target {
+    animation: none;
+  }
+}

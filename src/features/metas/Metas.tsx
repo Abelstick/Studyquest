@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { Bar, Button, Empty, PageHead, Panel, Tag, cx } from '@/ui/kit';
@@ -11,7 +11,15 @@ export default function Metas() {
   const goals = useData((s) => s.goals);
   const { toggleSkill, setMilestoneDone, deleteGoal } = useData();
   const openModal = useUi((s) => s.openModal);
-  const [pickedId, setPickedId] = useState<string | null>(null);
+  // ?meta=<id> (desde la búsqueda) abre esa meta directamente.
+  const [params] = useSearchParams();
+  const wanted = params.get('meta');
+  const [pickedId, setPickedId] = useState<string | null>(wanted);
+  const [lastWanted, setLastWanted] = useState(wanted);
+  if (wanted !== lastWanted) {
+    setLastWanted(wanted);
+    if (wanted) setPickedId(wanted);
+  }
   const goal = goals.find((g) => g.id === pickedId) ?? goals[0];
 
   if (!goal) {

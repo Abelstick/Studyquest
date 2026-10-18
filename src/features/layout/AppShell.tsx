@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { sfx } from '@/audio/sfx';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { dataLayer, useData } from '@/state';
@@ -18,6 +18,7 @@ import { usePomodoro } from '@/state/pomodoro';
 import { useAiAccountSync } from '@/ai/useAiAccountSync';
 import { usePomodoroEngine } from '@/features/pomodoro/usePomodoroEngine';
 import { dueReviews } from '@/core/review';
+import { SEARCH_MIN, searchAll } from '@/core/search';
 import { PHASE_LABEL, formatClock } from '@/core/pomodoro';
 
 function useRouteTitle(): string {
@@ -250,42 +251,59 @@ function Sidebar() {
 function SearchBox() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
-  const { tasks, habits, courses } = useData();
-  const results = useMemo(() => {
-    const n = q.trim().toLowerCase();
-    if (n.length < 2) return [];
-    const hit = (t: string) => t.toLowerCase().includes(n);
-    return [
-      ...courses.filter((c) => hit(c.title)).map((c) => ({ key: c.id, label: c.title, kind: 'Curso', to: `/cursos/${c.id}` })),
-      ...tasks.filter((t) => hit(t.title)).map((t) => ({ key: t.id, label: t.title, kind: 'Tarea', to: '/tareas' })),
-      ...habits.filter((h) => hit(h.title)).map((h) => ({ key: h.id, label: h.title, kind: 'Hábito', to: `/habitos/${h.id}` })),
-    ].slice(0, 7);
-  }, [q, tasks, habits, courses]);
+  const courses = useData((s) => s.courses);
+  const tasks = useData((s) => s.tasks);
+  const habits = useData((s) => s.habits);
+  const notes = useData((s) => s.notes);
+  const goals = useData((s) => s.goals);
+  const projects = useData((s) => s.projects);
+  const results = useMemo(() => searchAll({ courses, tasks, habits, notes, goals, projects }, q), [q, courses, tasks, habits, notes, goals, projects]);
+  const listRef = useRef<HTMLUListElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const open = q.trim().length >= SEARCH_MIN;
+
+  const go = (to: string) => {
+    setQ('');
+    navigate(to);
+  };
+  /** Flechas: del campo al primer resultado y entre resultados; Escape vuelve al campo y limpia. */
+  const moveFocus = (e: KeyboardEvent<HTMLElement>, from: number) => {
+    const items = Array.from(listRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? []);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const next = e.key === 'ArrowDown' ? Math.min(items.length - 1, from + 1) : from - 1;
+      if (next < 0) inputRef.current?.focus();
+      else items[next]?.focus();
+    } else if (e.key === 'Escape') {
+      setQ('');
+      inputRef.current?.focus();
+    }
+  };
 
   return (
     <div className="search">
       <Sprite name="ring" size={16} />
       <input
+        ref={inputRef}
         className="search__input"
         type="search"
-        placeholder="Buscar misión, curso o hábito…"
+        placeholder="Buscar tareas, cursos…"
         aria-label="Buscar"
+        aria-expanded={open}
+        aria-controls="search-results"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        onKeyDown={(e) => e.key === 'Escape' && setQ('')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && results[0]) go(results[0].to);
+          else moveFocus(e, -1);
+        }}
       />
-      {q.trim().length >= 2 && (
-        <ul className="search__results">
+      {open && (
+        <ul className="search__results" id="search-results" ref={listRef}>
           {results.length === 0 && <li className="search__empty">Nada por aquí… ¡el bloque estaba vacío!</li>}
-          {results.map((r) => (
+          {results.map((r, i) => (
             <li key={r.key}>
-              <button
-                type="button"
-                onClick={() => {
-                  setQ('');
-                  navigate(r.to);
-                }}
-              >
+              <button type="button" onClick={() => go(r.to)} onKeyDown={(e) => moveFocus(e, i)}>
                 <span className="tag tag--plain">{r.kind}</span> {r.label}
               </button>
             </li>

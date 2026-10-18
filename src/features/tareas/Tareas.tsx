@@ -26,7 +26,7 @@ const NEXT: Record<TaskStatus, { to: TaskStatus; label: string }> = {
 const dueKey = (t: Task) => `${t.dueDate ?? '9999'} ${dueTimeOf(t) ?? '99'}`;
 const PRIORITY_LABEL: Record<Priority, string> = { low: 'Baja', mid: 'Media', high: 'Alta', boss: 'Jefe final' };
 
-function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
+function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: string; highlighted?: boolean }) {
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const toggleSubtask = useData((s) => s.toggleSubtask);
   const openModal = useUi((s) => s.openModal);
@@ -45,7 +45,8 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
 
   return (
     <article
-      className={cx('task', `task--${task.priority}`, task.status === 'done' && 'is-done', boss && hp.hp === 0 && 'is-defeated', ready && 'is-ready')}
+      id={`tarea-${task.id}`}
+      className={cx('task', `task--${task.priority}`, task.status === 'done' && 'is-done', boss && hp.hp === 0 && 'is-defeated', ready && 'is-ready', highlighted && 'is-target')}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData('text/plain', task.id);
@@ -130,6 +131,30 @@ export default function Tareas() {
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const [params, setParams] = useSearchParams();
 
+  // Enlace directo a una tarea (/tareas?tarea=<id>, desde la búsqueda o el calendario): se muestra, se trae a la vista y se resalta.
+  const target = params.get('tarea');
+  const [highlight, setHighlight] = useState<string | null>(null);
+  const targetExists = !!target && tasks.some((t) => t.id === target);
+  useEffect(() => {
+    if (!target || !targetExists) return;
+    setFilter('all');
+    setHighlight(target);
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('tarea');
+        return next;
+      },
+      { replace: true },
+    );
+  }, [target, targetExists, setParams]);
+  useEffect(() => {
+    if (!highlight) return;
+    document.getElementById(`tarea-${highlight}`)?.scrollIntoView({ block: 'center' });
+    const t = setTimeout(() => setHighlight(null), 2500);
+    return () => clearTimeout(t);
+  }, [highlight]);
+
   // Atajo de la PWA: /tareas?nuevo=1
   useEffect(() => {
     if (params.get('nuevo')) {
@@ -211,7 +236,7 @@ export default function Tareas() {
                 </h2>
                 {items.length === 0 && <p className="muted small column__empty">{col.status === 'done' ? 'Aún no has superado ninguna.' : 'Vacío.'} Arrastra una tarea aquí.</p>}
                 {items.map((t) => (
-                  <TaskCard key={t.id} task={t} courseName={courseName(t.courseId)} />
+                  <TaskCard key={t.id} task={t} courseName={courseName(t.courseId)} highlighted={t.id === highlight} />
                 ))}
               </section>
             );

@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react';
+import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { cx } from './kit';
 
@@ -28,6 +28,11 @@ interface Props {
  */
 export function SectionTabs({ tabs, current, label, panelId }: Props) {
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const activeIndex = tabs.findIndex((t) => t.to === current);
+  // En móvil la fila de pestañas se desplaza: la activa siempre queda a la vista (sin mover la página en vertical).
+  useEffect(() => {
+    refs.current[activeIndex]?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+  }, [activeIndex]);
   if (tabs.length < 2) return null;
 
   const onKeyDown = (e: KeyboardEvent<HTMLAnchorElement>, i: number) => {

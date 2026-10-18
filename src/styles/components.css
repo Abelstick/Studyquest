@@ -804,7 +804,8 @@ textarea.input {
   .toasts {
     right: 12px;
     left: 12px;
-    bottom: calc(150px + env(safe-area-inset-bottom));
+    /* Justo encima de la barra inferior (ya no hay botón flotante que esquivar). */
+    bottom: calc(76px + env(safe-area-inset-bottom));
     align-items: stretch;
   }
   .toast {

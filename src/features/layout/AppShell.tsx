@@ -107,6 +107,8 @@ function Sidebar() {
   const { level, into, needed, pct } = levelProgress(profile.xp);
   const sound = useUi((s) => s.sound);
   const toggleSound = useUi((s) => s.toggleSound);
+  const theme = useUi((s) => s.theme);
+  const toggleTheme = useUi((s) => s.toggleTheme);
   const badges = useSectionBadges();
   const { active, hrefFor } = useSectionLinks();
   const asideRef = useRef<HTMLElement>(null);
@@ -232,9 +234,12 @@ function Sidebar() {
         </div>
 
         <div className="sysbar">
-          <span className="sysbar__label">Efectos de sonido</span>
+          <span className="sysbar__label">Sonido y tema</span>
           <button type="button" className="icon-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Silenciar efectos' : 'Activar efectos de sonido'} title="Efectos de sonido">
             <span aria-hidden="true">{sound ? '♪' : '✕'}</span>
+          </button>
+          <button type="button" className="icon-btn" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'} title="Día / noche">
+            <Sprite name={theme === 'dark' ? 'star' : 'ghost'} size={18} />
           </button>
         </div>
       </aside>
@@ -350,11 +355,11 @@ function Hud() {
       </div>
       <SearchBox />
       <div className="hud__stats" aria-label="Marcadores">
-        <span className="stat" title="Puntos de experiencia totales">
+        <span className="stat stat--desk" title="Puntos de experiencia totales">
           <span className="stat__k">XP</span>
           <span className="stat__v">{String(profile.xp).padStart(6, '0')}</span>
         </span>
-        <span className="stat" title="Monedas">
+        <span className="stat stat--desk" title="Monedas">
           <Sprite name="coin" size={16} />
           <span className="stat__v">×{profile.credits.toLocaleString('en-US')}</span>
         </span>
@@ -370,15 +375,19 @@ function Hud() {
           ⏳ {pending} {pending === 1 ? 'pendiente' : 'pendientes'}
         </button>
       )}
-      <button type="button" className="icon-btn" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'} title="Día / noche">
+      <button type="button" className="icon-btn hud__pref" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'} title="Día / noche">
         <Sprite name={theme === 'dark' ? 'star' : 'ghost'} size={18} />
       </button>
-      <button type="button" className="icon-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Silenciar efectos' : 'Activar efectos de sonido'} title="Sonido">
+      <button type="button" className="icon-btn hud__pref" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Silenciar efectos' : 'Activar efectos de sonido'} title="Sonido">
         <span aria-hidden="true">{sound ? '♪' : '✕'}</span>
       </button>
       <button type="button" className="icon-btn hud__bell" onClick={() => setNotifOpen(true)} aria-label={`Notificaciones${unread ? `, ${unread} sin leer` : ''}`}>
         <Sprite name="heart" size={18} />
         {unread > 0 && <span className="badge">{unread}</span>}
+      </button>
+      {/* En móvil, crear o registrar vive aquí (antes era un botón flotante que tapaba el contenido). */}
+      <button type="button" className="icon-btn hud__quick" aria-label="Crear o registrar" title="Crear o registrar" onClick={() => openModal({ type: 'quick' })}>
+        <span aria-hidden="true">＋</span>
       </button>
       <Button variant="primary" className="hud__new" onClick={openNew}>
         <span aria-hidden="true">＋</span> Nuevo
@@ -388,14 +397,10 @@ function Hud() {
 }
 
 function MobileNav() {
-  const openModal = useUi((s) => s.openModal);
   const badges = useSectionBadges();
   const { active, hrefFor } = useSectionLinks();
   return (
     <>
-      <button type="button" className="fab" aria-label="Crear o registrar" onClick={() => openModal({ type: 'quick' })}>
-        <Sprite name="qblock" size={30} />
-      </button>
       <nav className="bottom-nav" aria-label="Secciones">
         {SECTIONS.map((s) => {
           const b = badges[s.id];

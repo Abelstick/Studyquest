@@ -532,7 +532,7 @@ svg {
 
 /* ===== Navegación móvil ===== */
 .bottom-nav,
-.fab {
+.icon-btn.hud__quick {
   display: none;
 }
 
@@ -587,7 +587,7 @@ svg {
     display: inline-flex;
   }
   .hud__title {
-    flex: 1 1 120px;
+    flex: 1 1 0;
   }
   .hud__h {
     font-size: 15px;
@@ -598,14 +598,30 @@ svg {
   .btn.hud__new {
     display: none;
   }
-  .hud__stats {
-    order: 5;
-    width: 100%;
-    justify-content: space-between;
+  /* Una sola fila: ☰, título, racha y accesos. XP y monedas siguen en el menú y en Hoy; tema y sonido, en el menú. */
+  .hud {
+    flex-wrap: nowrap;
   }
-  .stat {
-    flex: 1;
-    justify-content: center;
+  .hud .kicker {
+    display: none;
+  }
+  .stat--desk,
+  .icon-btn.hud__pref {
+    display: none;
+  }
+  /* El título puede ir en dos líneas (nunca más), así la barra no crece. */
+  .hud .hud__h {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  .icon-btn.hud__quick {
+    display: inline-flex;
+    background: var(--yellow);
+    color: #1a1a2e;
+    font-weight: 900;
   }
   .page {
     padding: 18px 14px calc(96px + env(safe-area-inset-bottom));
@@ -667,25 +683,6 @@ svg {
     color: var(--yellow);
     border-top-color: var(--yellow);
     background: rgba(255, 210, 63, 0.1);
-  }
-  .fab {
-    position: fixed;
-    z-index: 41;
-    right: 16px;
-    bottom: calc(76px + env(safe-area-inset-bottom));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    background: var(--yellow);
-    border: var(--bw) solid var(--line);
-    box-shadow: var(--sh);
-    animation: bob 1.6s steps(4) infinite;
-  }
-  .fab:active {
-    transform: translate(3px, 3px);
-    box-shadow: 1px 1px 0 var(--shadow);
   }
 }
 @keyframes bob {

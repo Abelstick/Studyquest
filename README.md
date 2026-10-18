@@ -15,7 +15,7 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 
 [<img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="34">](https://render.com/deploy?repo=https://github.com/Abelstick/Studyquest)
 
-<img src="docs/screenshots/inicio.png" alt="Pantalla de inicio de StudyQuest" width="900">
+<img src="docs/screenshots/inicio.png" alt="Pantalla Hoy de StudyQuest con el siguiente paso arriba" width="900">
 
 </div>
 
@@ -24,6 +24,8 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 ## Contenido
 
 - [Qué incluye](#qué-incluye)
+  - [Cómo moverte por la app](#cómo-moverte-por-la-app)
+  - [Pantallas](#pantallas)
 - [Capturas](#capturas)
 - [Inicio rápido](#inicio-rápido)
 - [Configurar Supabase](#configurar-supabase)
@@ -58,41 +60,63 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 
 Se combinan: la *meta* es el destino, el *hábito* la constancia diaria, las *tareas* los pasos concretos y el *proyecto* lo que construyes por el camino. Si dudas, el botón **❓ ¿Cuál uso?** abre una guía con ejemplos y un mini test, y el **Planificador** lo arma todo a partir de un objetivo.
 
+### Cómo moverte por la app
+
+El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañas** arriba del contenido, y al volver a una sección te lleva a la última pestaña que usaste.
+
+| Sección | Pantallas |
+| --- | --- |
+| **Hoy** | Inicio: qué hacer ahora |
+| **Estudiar** | Cursos · Apuntes · Repaso |
+| **Planear** | Tareas · Calendario · Planificador |
+| **Lograr** | Hábitos · Metas · Proyectos · Certificaciones |
+| **Mi juego** | Progreso · Héroe 3D · Ciudad · Arsenal · Perfil |
+
+- **Siguiente paso.** Arriba de Hoy, un solo bloque responde «¿qué hago ahora?»: primero una tarea vencida, luego la que vence hoy (la de hora límite más cercana), un hábito pendiente, los repasos que tocan y, por último, un tema que dejaste a medias. Se completa o registra con un toque; si te equivocas, el aviso trae **Deshacer** (devuelve el XP como siempre). **Empezar enfoque** abre el Pomodoro con el curso ya elegido.
+- **Insignias solo si hay algo que hacer hoy:** tareas vencidas o de hoy (Planear), hábitos pendientes (Lograr) y repasos (Estudiar).
+- **Todo está enlazado.** El curso de una tarea lleva al curso; desde un tema abres sus apuntes o repasas sus tarjetas; el calendario abre la tarea o el curso; y la búsqueda lleva directo a la tarea (resaltada), el apunte o la meta.
+- **Buscar y crear.** En el ordenador, el buscador de la barra superior y **＋ Nuevo**, que crea lo propio de cada pantalla. En el móvil, el botón **＋** de arriba hace las dos cosas.
+- **Atajos de teclado:** `/` buscar · `N` crear · `G` y la letra de la sección (`H` Hoy, `E` Estudiar, `P` Planear, `L` Lograr, `J` Mi juego) · `?` ver todos. No se activan mientras escribes.
+- **Pomodoro** es un acceso rápido 🍅 de la barra superior: muestra el reloj cuando está en marcha.
+- La primera vez, un **tour de tres pasos** explica todo esto.
+
+### Pantallas
+
 | Pantalla | Qué hace |
 | --- | --- |
-| **Inicio** | Misión del día (hábitos que tocan + tareas más urgentes), **con su desglose desplegable**: marca ahí mismo las subtareas de una tarea o los pasos de un hábito. Además nivel y XP, calendario de racha, informe semanal, consejos y repasos pendientes. |
-| **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Marca temas como «necesito repasar». |
+| **Hoy** (Inicio) | El **siguiente paso** arriba y, debajo, la misión del día (hábitos que tocan + tareas por urgencia) **con su desglose desplegable** —marca ahí mismo las subtareas o los pasos de un hábito— y el calendario de racha. Cofre diario y consejos quedan plegados en «Más». |
+| **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Arriba, los cursos **en marcha** con su próximo tema. Marca temas como «necesito repasar», y desde cada tema abre **sus apuntes** o **repasa sus tarjetas**. |
 | **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha y **hora límite**, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
 | **Planificador** | Le dices «quiero aprender análisis de datos en 3 meses» y genera la ruta (Excel → SQL → Python → Pandas → Power BI → proyecto final) y **un plan con fechas** según tu disponibilidad, tus tareas y tus hábitos. Con **IA (Gemini, gratis)** o con plantillas. |
 | **Certificaciones** | Vitrina de tus credenciales: título, quién la emite, fecha, **enlace al certificado** (se abre en una pestaña nueva), ID de credencial, caducidad con aviso y, si quieres, el curso con el que se relaciona. Cada una da XP y suma una pieza a tu museo. |
-| **Apuntes** | Tu cuaderno: escribe lo que aprendes con un formato mínimo (`# título`, `- punto`, `**negrita**`, `` `código` ``). Cada apunte puede colgar de un curso y de un tema concreto, o ir suelto. Búsqueda sin tildes, etiquetas, fijar arriba y **exportar todo a Markdown** para llevártelo a Obsidian. Cada apunte suma un punto a tu biblioteca. |
-| **Ciudad** | Seis edificios que **crecen con tu progreso real** (casa, biblioteca, academia, laboratorio, arena y museo), de 0 a 5 niveles, con recompensas en monedas al mejorar. También aparece resumida en Inicio. |
+| **Apuntes** | Tu cuaderno: escribe lo que aprendes con un formato mínimo (`# título`, `- punto`, `**negrita**`, `` `código` ``). Cada apunte puede colgar de un curso y de un tema concreto, o ir suelto. Búsqueda sin tildes, etiquetas, fijar arriba y **exportar todo a Markdown** para llevártelo a Obsidian. Cada apunte suma un punto a tu biblioteca. Un enlace puede abrir un apunte concreto o filtrar por curso y tema. |
+| **Ciudad** | Seis edificios que **crecen con tu progreso real** (casa, biblioteca, academia, laboratorio, arena y museo), de 0 a 5 niveles, con recompensas en monedas al mejorar. También aparece resumida en Progreso. |
 | **Calendario** | Vistas de mes, semana, día y agenda. Planifica tu día por horas: comidas, trabajo, reuniones, hábitos o tiempo para una tarea. Exporta a `.ics` para Google Calendar, Outlook o Apple. |
-| **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. |
-| **Pomodoro** | Temporizador de enfoque/descanso con **música 8-bit** y un personaje que **corre mientras estudias**. Sigue vivo al cambiar de pantalla. |
+| **Repaso** | **Repaso espaciado**: los temas marcados «necesito repasar» vuelven a 1, 3, 7 y 14 días como **flashcards** que giran. Desde un tema puedes repasarlo aunque no toque: es práctica libre, sin XP ni cambios en la agenda. |
+| **Pomodoro** | Temporizador de enfoque/descanso con **música 8-bit** y un personaje que **corre mientras estudias**. Sigue vivo al cambiar de pantalla y se abre desde el 🍅 de la barra superior. |
 | **Hábitos** | Frecuencia (diaria, días concretos, cada X días, semanal, mensual, **fechas concretas, anual y personalizada** «N veces por semana/mes»), recordatorio con **aviso repetido y sonido**, medición (minutos, páginas, veces, hecho/no hecho…), pasos de sesión, mapa de 12 semanas y aviso del día en que más fallas. Los días pasados de la tira semanal se pueden marcar, por si te olvidaste. |
 | **Dejar un mal hábito** | Al crear un hábito eliges **«Dejar un mal hábito»** (mirar el celular en la cama, picar entre comidas…). Cada día pulsas **«Hoy resistí»** y ganas su XP, igual que un hábito normal; si recaes, **«Recaí»** devuelve el XP de ese día y el contador de **días limpio** vuelve a 0 (con tu mejor racha y el siguiente hito). «Fue un error» deshace la recaída. Es siempre diario, tiene recordatorio y viaja en las copias de seguridad. |
-| **Cadenas de hábitos** | Encadena una rutina en orden (dormir temprano → levantarse → ejercicio → estudio → proyecto). Cada eslabón es la **señal** del siguiente: la app te dice cuál toca ahora y a cuál va después, en Hábitos y en la misión de Inicio. **Nunca bloquea** —puedes registrar cualquier hábito cuando quieras— y completar la cadena entera en un día da **+100 XP**. |
+| **Cadenas de hábitos** | Encadena una rutina en orden (dormir temprano → levantarse → ejercicio → estudio → proyecto). Cada eslabón es la **señal** del siguiente: la app te dice cuál toca ahora y a cuál va después, en Hábitos y en la misión de Hoy. **Nunca bloquea** —puedes registrar cualquier hábito cuando quieras— y completar la cadena entera en un día da **+100 XP**. |
 | **Metas** | Árbol de hitos con habilidades y recompensa final. |
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
-| **Progreso** | Horas por semana, distribución del tiempo por curso, mapa de actividad de 20 semanas. Filtro 90 días / 6 meses / todo. |
+| **Progreso** | Informe de la semana y resumen de tu ciudad, horas por semana, distribución del tiempo por curso y mapa de actividad de 20 semanas. Filtro 30 / 90 días, 6 meses o todo. |
 | **Héroe 3D** | Tu personaje en **3D con bloques**: eliges raza (**Saiyajin, Mario, Koopa, Protoss, Terran o Zerg**), **evoluciona** en 4 etapas a medida que subes de nivel estudiando y le compras **armas, poderes y skins** con tus monedas (puedes **probarlos antes de comprar**). Arrástralo para girarlo. |
 | **Arsenal** | Tienda de Toad (11 avatares, marcos, **6 mundos visuales**, insignias, poderes), **51 logros** y recompensas personales de la vida real. |
 | **Personajes** | **21 avatares** con arte pixel propio (búho, mago, ninja, astronauta, zorro, pingüino, rana, murciélago, ajolote, dragón…) y **cada uno con su gesto de reposo**: el fantasma flota, el slime se aplasta, el ninja parpadea de sitio, el dragón respira. Se ven moviéndose ya en la tienda, antes de comprarlos. |
 | **Perfil** | Camino de aprendizaje, insignias, ajustes, instalar la app, **recordatorios**, **exportar/importar tu partida**, cerrar sesión y reiniciar partida. |
 
-Además: sesiones de estudio con temporizador, búsqueda global, notificaciones, modo día/noche, efectos de sonido 8-bit (sintetizados, sin archivos), pantalla de *level up* con lluvia de monedas, y diseño responsive con barra inferior y botón `?` flotante en móvil.
+Además: sesiones de estudio con temporizador, búsqueda global con enlaces directos, atajos de teclado, notificaciones, modo día/noche, efectos de sonido 8-bit (sintetizados, sin archivos), pantalla de *level up* con lluvia de monedas, y diseño responsive: en el móvil, barra inferior con las cinco secciones y el botón **＋** de arriba para buscar o crear.
 
 ## Capturas
 
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/tareas.png" alt="Tablero de tareas"><br><sub><b>Tareas</b> · tablero por estado</sub></td>
-    <td width="50%"><img src="docs/screenshots/habitos.png" alt="Hábitos"><br><sub><b>Hábitos</b> · power-ups equipados</sub></td>
+    <td width="50%"><img src="docs/screenshots/habitos.png" alt="Hábitos"><br><sub><b>Hábitos</b> · pestañas de la sección Lograr</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/curso.png" alt="Detalle de curso"><br><sub><b>Curso</b> · mapa de módulos y temas</sub></td>
-    <td><img src="docs/screenshots/progreso.png" alt="Progreso"><br><sub><b>Progreso</b> · horas, distribución y actividad</sub></td>
+    <td><img src="docs/screenshots/progreso.png" alt="Progreso"><br><sub><b>Progreso</b> · informe semanal, ciudad y actividad</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/arsenal.png" alt="Arsenal"><br><sub><b>Arsenal</b> · tienda, logros y premios</sub></td>
@@ -100,7 +124,7 @@ Además: sesiones de estudio con temporizador, búsqueda global, notificaciones,
   </tr>
   <tr>
     <td><img src="docs/screenshots/modo-noche.png" alt="Modo noche"><br><sub><b>Modo noche</b></sub></td>
-    <td align="center"><img src="docs/screenshots/movil-inicio.png" alt="Inicio en móvil" width="170"> <img src="docs/screenshots/movil-habitos.png" alt="Hábitos en móvil" width="170"><br><sub><b>Móvil</b> · barra inferior y botón <code>?</code></sub></td>
+    <td align="center"><img src="docs/screenshots/movil-inicio.png" alt="Hoy en móvil" width="170"> <img src="docs/screenshots/movil-habitos.png" alt="Hábitos en móvil" width="170"><br><sub><b>Móvil</b> · cinco secciones abajo y <b>＋</b> para buscar o crear</sub></td>
   </tr>
 </table>
 
@@ -298,7 +322,7 @@ Pantalla **Planificador** (o el botón «Planificar con el asistente» en Metas)
 
 Al pulsar **Crear mi plan** se crean, de una vez: un **curso** con módulos y temas, una **meta** con un hito por módulo (y sus habilidades), **una tarea por módulo y semana** con fecha (aparecen en el calendario), el proyecto final como **jefe** con sus pasos como golpes, y un **hábito** «Estudiar …» en tus días libres.
 
-**¿Pasaron días sin usar la app?** Si tienes 2 o más tareas con la fecha vencida, Inicio y Tareas muestran «Retomar mi plan», que abre *Ajustar plazos* para todas tus tareas. Primero marcas **cuáles ya hiciste** (se completan y dan su XP como siempre; se pueden reabrir). Para cobrarlas hay que aceptar un **contrato de honor**: sin esa casilla no se completa ninguna. Con las que siguen atrasadas eliges: **mover todo el plan** para que empiece hoy conservando el espaciado entre tareas, o **repartir solo las atrasadas**, una por día, sin tocar lo que viene. También puedes cambiar el ritmo y ves cuántas tareas cambian y cuándo terminarías antes de aplicar. Lo ya hecho nunca se mueve. Por curso sigue disponible en su detalle.
+**¿Pasaron días sin usar la app?** Si tienes 2 o más tareas con la fecha vencida, Hoy y Tareas muestran «Retomar mi plan», que abre *Ajustar plazos* para todas tus tareas. Primero marcas **cuáles ya hiciste** (se completan y dan su XP como siempre; se pueden reabrir). Para cobrarlas hay que aceptar un **contrato de honor**: sin esa casilla no se completa ninguna. Con las que siguen atrasadas eliges: **mover todo el plan** para que empiece hoy conservando el espaciado entre tareas, o **repartir solo las atrasadas**, una por día, sin tocar lo que viene. También puedes cambiar el ritmo y ves cuántas tareas cambian y cuándo terminarías antes de aplicar. Lo ya hecho nunca se mueve. Por curso sigue disponible en su detalle.
 
 **De dónde sale el temario.** El *reparto en el tiempo* lo calcula siempre código propio (probado con tests, sin IA). El *temario* puede venir de:
 
@@ -353,7 +377,7 @@ Con el **cambio automático** (activado por defecto), si el modelo agota su cuot
 
 ## Tu ciudad
 
-Pantalla **Ciudad** (y un resumen en Inicio). Cada área de la app es un edificio que sube de nivel (0 = solar en obras, hasta 5) con lo que ya haces: **no hay que registrar nada más**, todo se calcula a partir de tus datos.
+Pantalla **Ciudad** (y un resumen en Progreso). Cada área de la app es un edificio que sube de nivel (0 = solar en obras, hasta 5) con lo que ya haces: **no hay que registrar nada más**, todo se calcula a partir de tus datos.
 
 | Edificio | Área | Puntos | Niveles (umbral de puntos) |
 | --- | --- | --- | --- |
@@ -372,7 +396,7 @@ Pantalla **Ciudad** (y un resumen en Inicio). Cada área de la app es un edifici
 
 ## Tu héroe 3D
 
-Pantalla **Héroe 3D** (menú *Tu juego*). La primera vez eliges raza y nombre; mientras eliges puedes ver cómo será cada raza en sus cuatro etapas.
+Pantalla **Héroe 3D** (sección *Mi juego*). La primera vez eliges raza y nombre; mientras eliges puedes ver cómo será cada raza en sus cuatro etapas.
 
 | Raza | De… | Destaca en | Evoluciona así |
 | --- | --- | --- | --- |
@@ -395,7 +419,7 @@ Son **fan art en bloques** hecho para este proyecto personal: los personajes per
 
 ## Repaso espaciado, calendario, jefes y Pomodoro
 
-**Repaso espaciado (Repaso).** Marca un tema como *«Necesito repasar»* dentro de un curso: reaparece **al día siguiente** y, cada vez que lo recuerdas, a los **3, 7 y 14 días**. Fallar reinicia la escalera; superar los cuatro escalones deja el tema **dominado** (+40 XP). Cada repaso superado da +10 XP. Las tarjetas son tuyas: botón **♪ Tarjetas** en cada tema, una por línea con el formato `pregunta :: respuesta` (si no hay ninguna, se te pregunta si recuerdas el tema). Atajos: `espacio` gira la tarjeta, `1` `2` `3` califican. La agenda se ve también en el calendario y en el menú (insignia con lo que toca hoy).
+**Repaso espaciado (Repaso).** Marca un tema como *«Necesito repasar»* dentro de un curso: reaparece **al día siguiente** y, cada vez que lo recuerdas, a los **3, 7 y 14 días**. Fallar reinicia la escalera; superar los cuatro escalones deja el tema **dominado** (+40 XP). Cada repaso superado da +10 XP. Las tarjetas son tuyas: botón **♪ Tarjetas** en cada tema, una por línea con el formato `pregunta :: respuesta` (si no hay ninguna, se te pregunta si recuerdas el tema). Atajos: `espacio` gira la tarjeta, `1` `2` `3` califican. La agenda se ve también en el calendario, en la sección Estudiar (insignia) y en la pestaña Repaso (contador de lo que toca hoy). El botón **▶ Repasar** de un tema abre solo ese tema; si hoy no le toca, es práctica libre: ves sus tarjetas, pero no se califica, así que ni da XP ni mueve la agenda.
 
 **Calendario.** Tiene vista de mes, semana, día y agenda. En semana y día ves las horas de 00:00 a 24:00: pulsa una hora libre para crear una actividad, y con el ratón arrastra un bloque para moverlo o su borde para alargarlo. Arrastra una tarea a otro día para cambiar su fecha límite.
 
@@ -403,7 +427,7 @@ Una actividad puede ser un bloque normal (desayuno, trabajo, una reunión…), e
 
 **Exportar (.ics).** Descarga un día, una semana, un rango o solo lo que elijas, con su zona horaria y sus repeticiones. Las tareas van con su fecha límite, sin inventarles duración. Es una copia, no una sincronización: si cambias algo, vuelve a exportar. Google Calendar a veces ignora los eventos ya importados, así que mejor importarlo en un calendario aparte. Sincronizar directo con Google queda pendiente; el modelo ya reserva el campo `external` para eso.
 
-**Hora límite.** Además de la fecha, una tarea puede tener **hora límite** (opcional). Sin hora vale todo el día; con hora, vence en cuanto pasa esa hora: la etiqueta pasa a «Quedan 3 h», «Quedan 25 min» o «Venció a las 18:00», la misión de Inicio dice «Hasta hoy a las 18:00» y, dentro del mismo día, va antes la que vence más temprano. **Una hora antes** llega un aviso (dentro de la app y por push).
+**Hora límite.** Además de la fecha, una tarea puede tener **hora límite** (opcional). Sin hora vale todo el día; con hora, vence en cuanto pasa esa hora: la etiqueta pasa a «Quedan 3 h», «Quedan 25 min» o «Venció a las 18:00», la misión de Hoy dice «Hasta hoy a las 18:00» y, dentro del mismo día, va antes la que vence más temprano. **Una hora antes** llega un aviso (dentro de la app y por push).
 
 **Tareas recurrentes.** En el formulario, *Repetir*: cada N días, semanas o meses. Al completarla **nace la siguiente**, con su nueva fecha y sin avance. La fecha sigue el calendario original pero nunca cae en el pasado (completar tarde no crea una cola de atrasadas; 31 ene + 1 mes = 28/29 feb). Si la reabres y nadie tocó la siguiente, esta se retira.
 
@@ -411,7 +435,7 @@ Una actividad puede ser un bloque normal (desayuno, trabajo, una reunión…), e
 
 **Jefes finales.** Una tarea con prioridad *Jefe final* y subtareas es una batalla: **cada subtarea es un golpe** y le quita un corazón. Al caer el último, el jefe se derrota solo: pantalla de **victoria**, su XP y un **botín extra de +50 XP**. Reabrir el jefe le devuelve toda la vida.
 
-**Pomodoro.** 25 min de enfoque + 5 de descanso (configurable), y descanso largo cada 4. Cada enfoque terminado se registra como sesión de estudio (2 XP/min). Suena una melodía 8-bit animada para estudiar y otra tranquila para descansar (**original y sintetizada**, sin archivos); se controla con el botón «Música 8-bit». El reloj aparece en la barra superior desde cualquier pantalla y en el título de la pestaña, y sobrevive a recargar la página.
+**Pomodoro.** 25 min de enfoque + 5 de descanso (configurable), y descanso largo cada 4. Cada enfoque terminado se registra como sesión de estudio (2 XP/min). Suena una melodía 8-bit animada para estudiar y otra tranquila para descansar (**original y sintetizada**, sin archivos); se controla con el botón «Música 8-bit». Se abre desde el 🍅 de la barra superior, que muestra el reloj cuando está en marcha (también en el título de la pestaña), y sobrevive a recargar la página. «Empezar enfoque» en Hoy lo abre con el curso del siguiente paso ya elegido.
 
 **Eventos de racha.**
 
@@ -419,7 +443,7 @@ Una actividad puede ser un bloque normal (desayuno, trabajo, una reunión…), e
 | --- | --- | --- |
 | **Bonus de fin de semana** | Sábado y domingo, por cada hábito completado | **+50%** de su XP |
 | **Combo ×2** | Al completar **3 hábitos** en el mismo día | Duplica el XP de esos hábitos (tope 200) |
-| **Cofre diario** | Una vez al día en Inicio | 20–60 monedas + 2 por cada día de racha (máx. +60) y, a veces, +25 XP |
+| **Cofre diario** | Una vez al día en Hoy (sección «Más») | 20–60 monedas + 2 por cada día de racha (máx. +60) y, a veces, +25 XP |
 
 Los bonos se cobran **una sola vez** (se anotan en el perfil): deshacer y rehacer un hábito no los repite.
 
@@ -464,7 +488,8 @@ src/
 │  └─ index.ts      ← ÚNICO sitio que decide qué adaptador se usa
 ├─ state/      data.ts (datos + reglas de juego) · ui.ts (toasts, modales, tema, sonido)
 ├─ features/   Una carpeta por pantalla, más layout y modales
-├─ ui/         Componentes base y sprites pixel-art (sprites.ts)
+├─ ui/         Componentes base (SectionTabs, kit) y sprites pixel-art (sprites.ts)
+├─ styles/     tokens.css (colores y medidas) y hojas por capa: base, components, screens, features, agenda
 ├─ audio/      Efectos 8-bit con Web Audio
 └─ pwa/        Hooks de conexión e instalación, y cliente de notificaciones push
 supabase/
@@ -536,7 +561,9 @@ Todas llevan `user_id` (por defecto `auth.uid()`) y una política RLS «solo el 
 npm test
 ```
 
-Cubren la lógica que más importa: curva de niveles y rachas, frecuencias de hábito, el store completo (XP, monedas, deshacer, reversión si falla el guardado), la cola offline, las copias de seguridad, los planificadores de avisos y de rutas, el cliente de IA (con el SDK simulado), la ciudad, el repaso espaciado, los jefes, y la validez de sprites, catálogo y logros.
+Cubren la lógica que más importa: curva de niveles y rachas, frecuencias de hábito, el store completo (XP, monedas, deshacer, reversión si falla el guardado), la cola offline, las copias de seguridad, los planificadores de avisos y de rutas, el cliente de IA (con el SDK simulado), la ciudad, el repaso espaciado, los jefes, el siguiente paso (con fechas y horas locales, nunca UTC), la búsqueda, la navegación por secciones y la validez de sprites, catálogo y logros.
+
+También hay pruebas de componentes (`*.test.tsx`, con jsdom y Testing Library) para las pestañas de sección, la búsqueda y los atajos de teclado: roles ARIA, teclado y enlaces directos.
 
 
 ## Problemas frecuentes
@@ -578,6 +605,8 @@ Cubren la lógica que más importa: curva de niveles y rachas, frecuencias de h�
 - Si marcas un hábito como hecho **sin conexión**, el servidor no lo sabe hasta que sincronice y puede llegar algún aviso de más.
 - Los avisos de las actividades del calendario solo llegan con la app abierta.
 - En el móvil, las actividades se mueven desde su formulario, no arrastrando.
+- El tour de novedades se marca como visto **en cada dispositivo** (se guarda en el navegador, no en tu cuenta).
+- Un proyecto encontrado con la búsqueda abre la lista de Proyectos, no el proyecto concreto.
 
 
 ## Créditos y marcas

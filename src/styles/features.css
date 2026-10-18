@@ -501,7 +501,7 @@
   margin: 14px 0;
   overflow: hidden;
   border: var(--bw) solid var(--line);
-  background: linear-gradient(#5c94fc, #9fc4ff);
+  background: linear-gradient(var(--scene-day-1), var(--scene-day-2));
 }
 .pomo__scene--short {
   background: linear-gradient(#ff9a5c, #ffd18a);
@@ -510,7 +510,7 @@
   background: linear-gradient(#2a2a6a, #5a4a9a);
 }
 :root[data-theme='dark'] .pomo__scene--focus {
-  background: linear-gradient(#141446, #2c3f8f);
+  background: linear-gradient(var(--scene-night-1), var(--scene-night-2));
 }
 .pomo__clouds {
   position: absolute;
@@ -529,7 +529,7 @@
     linear-gradient(#3aa640 0 8px, transparent 8px),
     repeating-linear-gradient(90deg, #c8501e 0 30px, #7c2f10 30px 32px);
   background-size: 32px 100%;
-  border-top: 3px solid #1a1a2e;
+  border-top: 3px solid var(--ink);
   animation: ground 0.5s steps(8) infinite paused;
 }
 .pomo__runner {
@@ -705,7 +705,7 @@
     linear-gradient(#3aa640 0 10px, transparent 10px),
     repeating-linear-gradient(90deg, #c8501e 0 30px, #7c2f10 30px 32px);
   background-size: 32px 100%;
-  border-top: 4px solid #1a1a2e;
+  border-top: 4px solid var(--ink);
   animation: ground 0.9s steps(8) infinite;
 }
 .login__track {
@@ -1363,11 +1363,11 @@
   width: min(100%, 260px);
   height: 72px;
   overflow: hidden;
-  background: linear-gradient(#5c94fc, #9fc4ff);
+  background: linear-gradient(var(--scene-day-1), var(--scene-day-2));
   border: 3px solid var(--line);
 }
 :root[data-theme='dark'] .loader__scene {
-  background: linear-gradient(#141446, #2c3f8f);
+  background: linear-gradient(var(--scene-night-1), var(--scene-night-2));
 }
 .loader__ground {
   position: absolute;
@@ -1379,7 +1379,7 @@
     linear-gradient(#3aa640 0 4px, transparent 4px),
     repeating-linear-gradient(90deg, #c8501e 0 14px, #7c2f10 14px 16px);
   background-size: 16px 100%;
-  border-top: 2px solid #1a1a2e;
+  border-top: 2px solid var(--ink);
   animation: ground 0.5s steps(8) infinite;
 }
 .loader__runner {
@@ -1541,10 +1541,10 @@
   overflow: hidden;
   border: var(--bw) solid var(--line);
   box-shadow: var(--sh);
-  background: linear-gradient(#5c94fc 0, #9fc4ff 70%, #bfe0ff);
+  background: linear-gradient(var(--scene-day-1) 0, var(--scene-day-2) 70%, #bfe0ff);
 }
 :root[data-theme='dark'] .cityscene {
-  background: linear-gradient(#0a0a2a 0, #1b2a6b 75%, #2c3f8f);
+  background: linear-gradient(#0a0a2a 0, #1b2a6b 75%, var(--scene-night-2));
 }
 .cityscene__sky {
   position: absolute;
@@ -1677,7 +1677,7 @@
   background:
     repeating-linear-gradient(90deg, #f6d84a 0 22px, transparent 22px 44px) 0 9px / 100% 3px no-repeat,
     #55556a;
-  border-top: 4px solid #1a1a2e;
+  border-top: 4px solid var(--ink);
 }
 .citybar {
   display: grid;
@@ -1750,11 +1750,11 @@
   padding: 8px 6px 4px;
   text-decoration: none;
   color: inherit;
-  background: linear-gradient(#5c94fc, #9fc4ff);
+  background: linear-gradient(var(--scene-day-1), var(--scene-day-2));
   border: 3px solid var(--line);
 }
 :root[data-theme='dark'] .citymini {
-  background: linear-gradient(#0a0a2a, #2c3f8f);
+  background: linear-gradient(#0a0a2a, var(--scene-night-2));
 }
 .citymini__b {
   display: grid;
@@ -1769,7 +1769,7 @@
 .citymini__lv {
   font-family: var(--font-pixel);
   color: #fff;
-  text-shadow: 1px 1px 0 #1a1a2e;
+  text-shadow: 1px 1px 0 var(--ink);
 }
 .plot__stars i {
   font-style: normal;
@@ -3149,7 +3149,7 @@ select.input {
 /* Activo: placa amarilla de bloque «?» con sombra dura y un cursor de menú que apunta a ella. */
 .nav__link.is-active,
 .nav__link.is-active:hover {
-  color: #1a1a2e;
+  color: var(--ink);
   background: var(--yellow);
   border-color: var(--line);
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), var(--sh-sm);
@@ -3184,15 +3184,15 @@ select.input {
   white-space: nowrap;
   /* Colores fijos y opacos: blanco sobre #1a1a2e (16:1) y blanco sobre #b3221b (6.2:1). */
   color: #fff;
-  background: #1a1a2e;
+  background: var(--ink);
 }
 .nav__link.is-active .nav__badge {
   color: #fff;
-  background: #1a1a2e;
+  background: var(--ink);
 }
 .nav__badge--warn,
 .nav__link.is-active .nav__badge--warn {
-  background: #b3221b;
+  background: var(--alert);
   color: #fff;
 }
 /* Textos del menú: nunca por debajo de 12px. */
@@ -3435,7 +3435,7 @@ button.week__day--rich {
 .week__day--rich.is-partial {
   border-color: var(--line);
   background: linear-gradient(to top, var(--partial) var(--p, 50%), var(--panel) var(--p, 50%));
-  color: #1a1a2e;
+  color: var(--ink);
 }
 .week__day--rich.is-done {
   background: var(--green);
@@ -3524,7 +3524,7 @@ button.week__day--rich {
 .hhist__day.is-partial {
   border-color: var(--line);
   background: linear-gradient(to top, var(--partial) var(--p, 50%), var(--panel) var(--p, 50%));
-  color: #1a1a2e;
+  color: var(--ink);
 }
 .hhist__day.is-off,
 .hhist__day.is-future {
@@ -4110,7 +4110,7 @@ button.week__day--rich {
   min-width: 22px;
   padding: 1px 6px;
   border: 2px solid var(--line);
-  background: #b3221b;
+  background: var(--alert);
   color: #fff;
   font-size: 12px;
   text-align: center;
@@ -4254,7 +4254,7 @@ a.chip {
   border: 0;
   border-left: 2px solid currentColor;
   background: var(--yellow);
-  color: #1a1a2e;
+  color: var(--ink);
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 900;

@@ -46,6 +46,15 @@
 
   --hud: #111122;
   --hud-text: #ffffff;
+  /* Constantes: no cambian con el tema ni con el mundo (no se redefinen en modo noche). */
+  --ink: #1a1a2e; /* tinta oscura fija: texto sobre amarillo, placas y contadores */
+  --hud-2: #1c1c36; /* superficie de los chips de la barra superior */
+  --hud-edge: #3a3a5c; /* borde de esos chips */
+  --alert: #b3221b; /* rojo opaco de contadores; blanco encima da 6.6:1 */
+  --scene-day-1: #5c94fc; /* cielo de día de las escenas (Pomodoro, ciudad, cargador) */
+  --scene-day-2: #9fc4ff;
+  --scene-night-1: #141446; /* cielo de noche de las escenas */
+  --scene-night-2: #2c3f8f;
   --side: #b5401f;
   --side-2: #8c2f14;
   --side-text: #ffffff;

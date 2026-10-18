@@ -286,7 +286,7 @@ a.btn {
   box-shadow: 0 3px 0 var(--red-text);
 }
 .btn--ink {
-  --bg: #1a1a2e;
+  --bg: var(--ink);
   --fg: #ffd23f;
   padding: 14px 20px;
 }
@@ -506,7 +506,7 @@ a.btn {
 }
 .input--xp {
   background: var(--yellow);
-  color: #1a1a2e;
+  color: var(--ink);
   font-weight: 900;
 }
 .input--inline {
@@ -820,8 +820,8 @@ textarea.input {
   max-width: 100%;
   padding: 26px 26px 28px;
   background: var(--yellow);
-  color: #1a1a2e;
-  border: 5px solid #1a1a2e;
+  color: var(--ink);
+  border: 5px solid var(--ink);
   box-shadow: 8px 8px 0 #000;
   text-align: center;
   animation: pop 0.35s steps(6);
@@ -855,7 +855,7 @@ textarea.input {
   align-items: center;
   padding: 10px 12px;
   background: rgba(255, 255, 255, 0.55);
-  border: 3px solid #1a1a2e;
+  border: 3px solid var(--ink);
 }
 .levelup__list b {
   display: block;
@@ -950,7 +950,7 @@ textarea.input {
 .splash__text {
   font-family: var(--font-pixel);
   font-size: 12px;
-  text-shadow: 3px 3px 0 #1a1a2e;
+  text-shadow: 3px 3px 0 var(--ink);
 }
 @keyframes run {
   from {
@@ -1042,7 +1042,7 @@ textarea.input {
 }
 .quick__btn.is-primary {
   background: var(--yellow);
-  color: #1a1a2e;
+  color: var(--ink);
 }
 .quick__btn:active {
   transform: translateY(3px);

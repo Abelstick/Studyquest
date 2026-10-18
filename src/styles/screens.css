@@ -69,7 +69,7 @@
   gap: 8px;
 }
 .scoreboard > div + div {
-  border-left: 2px solid #3a3a5c;
+  border-left: 2px solid var(--hud-edge);
 }
 .scoreboard dt {
   font-family: var(--font-pixel);
@@ -145,7 +145,7 @@
   content: '?';
   font-family: var(--font-pixel);
   font-size: 12px;
-  color: #1a1a2e;
+  color: var(--ink);
 }
 .check:active {
   transform: translateY(3px);
@@ -375,7 +375,7 @@
 }
 .module--active .module__n {
   background: var(--yellow);
-  color: #1a1a2e;
+  color: var(--ink);
 }
 .module--locked {
   opacity: 0.7;
@@ -455,7 +455,7 @@
 }
 .topic--doing .topic__dot {
   background: var(--yellow);
-  color: #1a1a2e;
+  color: var(--ink);
 }
 .topic__title {
   padding-top: 4px;
@@ -760,7 +760,7 @@
 }
 .path__item--active .path__node {
   background: var(--yellow);
-  color: #1a1a2e;
+  color: var(--ink);
   box-shadow: var(--sh-sm);
 }
 .path__card {
@@ -852,7 +852,7 @@
 }
 .track__item--active .track__node {
   background: var(--yellow);
-  color: #1a1a2e;
+  color: var(--ink);
 }
 .track__title {
   font-family: var(--font-pixel);
@@ -1170,7 +1170,7 @@
     padding: 10px;
   flex: 1 1 96px;
   min-width: 0;
-  box-shadow: inset 1px 0 0 #3a3a5c, inset 0 1px 0 #3a3a5c;
+  box-shadow: inset 1px 0 0 var(--hud-edge), inset 0 1px 0 var(--hud-edge);
   }
   .scoreboard dd {
     font-size: 12px;

@@ -87,28 +87,56 @@ function Toasts() {
   const navigate = useNavigate();
   return (
     <div className="toasts" role="status" aria-live="polite">
-      {toasts.map((t) => (
-        <button key={t.id} type="button" className={cx('toast', `toast--${t.kind}`)} onClick={() => {
-            dismiss(t.id);
-            if (t.to) navigate(t.to);
-          }}
-        >
-          {t.kind === 'xp' && <span className="toast__xp">+{t.xp}</span>}
-          {t.kind === 'unlock' && <Sprite name="trophy" size={30} />}
-          {t.kind === 'error' && <Sprite name="skull" size={28} />}
-          {t.kind === 'info' && <Sprite name="mushroom" size={28} />}
-          {t.kind === 'reminder' && <Sprite name="fire" size={30} className="toast__shake" />}
-          <span className="toast__text">
-            <span className="toast__title">{t.title}</span>
-            {t.body && <span className="toast__body">{t.body}</span>}
-          </span>
-          {!!t.coins && (
-            <span className="toast__coins">
-              <Sprite name="coin" size={14} />+{t.coins}
+      {toasts.map((t) => {
+        const body = (
+          <>
+            {t.kind === 'xp' && <span className="toast__xp">+{t.xp}</span>}
+            {t.kind === 'unlock' && <Sprite name="trophy" size={30} />}
+            {t.kind === 'error' && <Sprite name="skull" size={28} />}
+            {t.kind === 'info' && <Sprite name="mushroom" size={28} />}
+            {t.kind === 'reminder' && <Sprite name="fire" size={30} className="toast__shake" />}
+            <span className="toast__text">
+              <span className="toast__title">{t.title}</span>
+              {t.body && <span className="toast__body">{t.body}</span>}
             </span>
-          )}
-        </button>
-      ))}
+            {!!t.coins && (
+              <span className="toast__coins">
+                <Sprite name="coin" size={14} />+{t.coins}
+              </span>
+            )}
+          </>
+        );
+        const open = () => {
+          dismiss(t.id);
+          if (t.to) navigate(t.to);
+        };
+        // Con acción propia («Deshacer») no se puede anidar un botón en otro: el aviso pasa a ser un contenedor con dos botones.
+        if (t.action) {
+          const { label, run } = t.action;
+          return (
+            <div key={t.id} className={cx('toast', 'toast--with-action', `toast--${t.kind}`)}>
+              <button type="button" className="toast__main" onClick={open}>
+                {body}
+              </button>
+              <button
+                type="button"
+                className="toast__action"
+                onClick={() => {
+                  dismiss(t.id);
+                  run();
+                }}
+              >
+                {label}
+              </button>
+            </div>
+          );
+        }
+        return (
+          <button key={t.id} type="button" className={cx('toast', `toast--${t.kind}`)} onClick={open}>
+            {body}
+          </button>
+        );
+      })}
     </div>
   );
 }

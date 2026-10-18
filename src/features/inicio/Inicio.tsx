@@ -1,10 +1,10 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { addDays, daysLeftLabel, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
+import { addDays, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
 import { computeStreak, goalLabel, isCounter, levelProgress, logFor, rankFor } from '@/core/game';
-import { dailyMissions, daySummary, deadlineText, isReadyToFinish, missionParts, missionUrgency, taskBucket, tips, type Mission, type TaskBucket } from '@/core/missions';
+import { dailyMissions, deadlineText, isReadyToFinish, missionParts, missionUrgency, taskBucket, tips, type Mission, type TaskBucket } from '@/core/missions';
 import { nextStep, type NextStep } from '@/core/nextStep';
 import { isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
@@ -121,26 +121,6 @@ const BUCKETS: { id: TaskBucket; label: string }[] = [
   { id: 'none', label: 'Sin fecha' },
 ];
 
-/** Una frase que responde «¿qué hago hoy?» antes de ver la lista. */
-function TodayBrief({ missions }: { missions: Mission[] }) {
-  const s = daySummary(missions);
-  const parts: string[] = [];
-  if (s.late) parts.push(`${s.late} ${s.late === 1 ? 'tarea vencida' : 'tareas vencidas'}`);
-  if (s.dueToday) parts.push(`${s.dueToday} ${s.dueToday === 1 ? 'tarea vence hoy' : 'tareas vencen hoy'}`);
-  if (s.habits) parts.push(`${s.habits} ${s.habits === 1 ? 'hábito' : 'hábitos'}`);
-  const nothing = parts.length === 0;
-  return (
-    <div className={cx('brief', s.late > 0 && 'brief--late')}>
-      <p className="brief__main">{nothing ? '¡Hoy no tienes nada urgente!' : <>Hoy te toca: <b>{parts.join(' · ')}</b></>}</p>
-      {s.next && (
-        <p className="muted small">
-          Siguiente fecha: <b>{s.next.title}</b> · {daysLeftLabel(s.next.dueDate)?.toLowerCase()} ({shortDate(s.next.dueDate as string)})
-        </p>
-      )}
-    </div>
-  );
-}
-
 /** Ordena sin mover lo hecho de sitio: lo pendiente va primero y, dentro, el criterio elegido. */
 function sortMissions(items: Mission[], sort: MissionSort): Mission[] {
   const by = (a: Mission, b: Mission) => {
@@ -177,6 +157,8 @@ function MissionTabs({ missions }: { missions: Mission[] }) {
   const [tab, setTab] = useState<MissionTab>('all');
   const [sort, setSort] = useState<MissionSort>('urgency');
   const [onlyPending, setOnlyPending] = useState(false);
+  // En móvil, ordenar y filtrar quedan plegados: casi nunca se tocan y empujan la lista hacia abajo.
+  const [toolsOpen, setToolsOpen] = useState(false);
   const pick = (kind?: Mission['kind']) => sortMissions(missions.filter((m) => (!kind || m.kind === kind) && (!onlyPending || !m.done)), sort);
   const habits = pick('habit');
   const tasks = pick('task');
@@ -211,7 +193,10 @@ function MissionTabs({ missions }: { missions: Mission[] }) {
           </button>
         ))}
       </div>
-      <div className="mtools">
+      <button type="button" className="btn btn--ghost btn--sm mtools__toggle" aria-expanded={toolsOpen} aria-controls="mtools" onClick={() => setToolsOpen(!toolsOpen)}>
+        {toolsOpen ? 'Ocultar orden y filtros' : `Ordenar y filtrar${onlyPending || sort !== 'urgency' ? ' (activos)' : ''}`}
+      </button>
+      <div className={cx('mtools', toolsOpen && 'is-open')} id="mtools">
         <label className="mtools__sort">
           <span className="muted small">Ordenar</span>
           <select className="input input--inline" value={sort} onChange={(e) => setSort(e.target.value as MissionSort)} aria-label="Ordenar misiones">
@@ -293,22 +278,21 @@ function StreakCalendar() {
   );
 }
 
-/** Eventos de racha de hoy: bonus de fin de semana y progreso del combo ×2. */
+/** Eventos de hoy (bonus de fin de semana, combo ×2) en una línea compacta dentro de la misión. */
 function Events({ events }: { events: GameEvent[] }) {
   if (!events.length) return null;
   return (
-    <div className="events">
+    <ul className="events-line" aria-label="Eventos de hoy">
       {events.map((e) => (
-        <div key={e.id} className={cx('event', `event--${e.id}`, e.active && 'is-active')}>
-          <Sprite name={e.id === 'weekend' ? 'star' : 'flower'} size={30} className={cx(e.active && 'event__pulse')} />
-          <div className="event__text">
-            <p className="event__title">{e.title}</p>
-            <p className="event__body">{e.body}</p>
-            {e.pct !== undefined && <Bar pct={e.pct} tone={e.active ? 'green' : 'yellow'} label={e.title} />}
-          </div>
-        </div>
+        <li key={e.id} className={cx('events-line__item', `events-line__item--${e.id}`, e.active && 'is-active')}>
+          <Sprite name={e.id === 'weekend' ? 'star' : 'flower'} size={18} className={cx(e.active && 'event__pulse')} />
+          <span className="events-line__text">
+            <b>{e.title}</b> <span className="muted">{e.body}</span>
+          </span>
+          {e.pct !== undefined && <Bar pct={e.pct} tone={e.active ? 'green' : 'yellow'} label={e.title} className="events-line__bar" />}
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
@@ -361,13 +345,46 @@ function NextStepCard({ step }: { step: NextStep | null }) {
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const setHabitValue = useData((s) => s.setHabitValue);
   const openModal = useUi((s) => s.openModal);
+  const toast = useUi((s) => s.toast);
   const courseName = (id: string | null) => (id ? courses.find((c) => c.id === id)?.title : undefined);
+
+  // Lo que acabas de cerrar desde aquí: se nombra unos segundos para que se vea qué pasó antes de saltar al siguiente.
+  const [justDone, setJustDone] = useState<string | null>(null);
+  useEffect(() => {
+    if (!justDone) return;
+    const t = setTimeout(() => setJustDone(null), 6000);
+    return () => clearTimeout(t);
+  }, [justDone]);
+  /** Cierra el paso y ofrece deshacerlo. Deshacer devuelve el estado anterior y, con él, el XP (regla de siempre). */
+  const finish = (name: string, undo: () => void) => {
+    setJustDone(name);
+    toast({
+      kind: 'info',
+      title: 'Hecho',
+      body: name,
+      action: {
+        label: 'Deshacer',
+        run: () => {
+          undo();
+          setJustDone(null);
+        },
+      },
+    });
+  };
+  const doneLine = justDone && (
+    <p className="nextstep__done" role="status">
+      ✔ «{justDone}» hecho.{step ? ' Esto es lo siguiente:' : ''}
+    </p>
+  );
+  // Al cambiar de paso, el contenido entra con una pequeña animación (la clave fuerza a montarlo de nuevo).
+  const stepKey = !step ? 'none' : step.kind === 'task-late' || step.kind === 'task-today' ? step.task.id : step.kind === 'habit' ? step.habit.id : step.kind === 'review' ? step.review.topicId : step.topic.id;
 
   if (!step) {
     return (
       <section className="panel nextstep nextstep--clear" aria-labelledby="nextstep-title">
         <Sprite name="star" size={48} />
-        <div className="nextstep__body">
+        <div className="nextstep__body" key={stepKey}>
+          {doneLine}
           <p className="kicker">Siguiente paso</p>
           <h2 id="nextstep-title" className="nextstep__title">
             ¡Todo al día!
@@ -394,7 +411,14 @@ function NextStepCard({ step }: { step: NextStep | null }) {
       title = t.title;
       detail = [courseName(t.courseId), deadlineText(t), `+${t.xp} XP`].filter(Boolean).join(' · ');
       action = (
-        <Button variant="primary" onClick={() => setTaskStatus(t.id, 'done')}>
+        <Button
+          variant="primary"
+          onClick={() => {
+            const before = t.status;
+            setTaskStatus(t.id, 'done');
+            finish(t.title, () => setTaskStatus(t.id, before));
+          }}
+        >
           ✔ Completar
         </Button>
       );
@@ -407,7 +431,14 @@ function NextStepCard({ step }: { step: NextStep | null }) {
       action = isCounter(h) ? (
         <HabitAction habit={h} log={logFor(logs, h.id, today())} />
       ) : (
-        <Button variant="primary" onClick={() => setHabitValue(h.id, h.target)}>
+        <Button
+          variant="primary"
+          onClick={() => {
+            const before = logFor(logs, h.id, today())?.value ?? 0;
+            setHabitValue(h.id, h.target);
+            finish(h.title, () => setHabitValue(h.id, before));
+          }}
+        >
           ✔ Registrar
         </Button>
       );
@@ -438,7 +469,8 @@ function NextStepCard({ step }: { step: NextStep | null }) {
 
   return (
     <section className={cx('panel nextstep', `nextstep--${step.kind}`)} aria-labelledby="nextstep-title">
-      <div className="nextstep__body">
+      <div className="nextstep__body" key={stepKey}>
+        {doneLine}
         <p className="kicker">Siguiente paso · {STEP_KICKER[step.kind]}</p>
         <h2 id="nextstep-title" className="nextstep__title">
           {title}
@@ -520,17 +552,14 @@ export default function Inicio() {
           <div className="cols cols--side">
             <div className="stack">
               <LateBanner />
-              <Events events={events} />
               <Panel kicker="// Quest diaria" title="Tu misión de hoy" right={<span className="kicker">{done} / {missions.length} · {inPlay} XP en juego</span>}>
+                <Events events={events} />
                 {missions.length === 0 ? (
                   <Empty sprite="star" title="¡Nivel despejado!">
                     <p>No hay nada pendiente para hoy.</p>
                   </Empty>
                 ) : (
-                  <>
-                    <TodayBrief missions={missions} />
-                    <MissionTabs missions={missions} />
-                  </>
+                  <MissionTabs missions={missions} />
                 )}
                 <div className="row row--top">
                   <Link className="btn btn--ghost" to="/tareas">

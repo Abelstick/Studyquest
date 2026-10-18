@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { sfx } from '@/audio/sfx';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { dataLayer, useData } from '@/state';
@@ -437,7 +437,14 @@ export function AppShell() {
   usePomodoroEngine();
   useAiAccountSync();
   const { pathname, item, section, tabs, showTabs } = useSectionTabs();
-  useEffect(() => rememberTab(pathname), [pathname]);
+  useEffect(() => {
+    rememberTab(pathname);
+  }, [pathname]);
+  // Cada pantalla nueva empieza arriba (cambiar solo los parámetros, como ?nota=, no mueve nada).
+  // Es de layout para ir antes que los efectos de la pantalla que quieran desplazarse a algo concreto.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   return (
     <div className="shell">
       <Sidebar />

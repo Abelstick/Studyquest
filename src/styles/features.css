@@ -2019,6 +2019,9 @@ select.input {
   display: grid;
   justify-items: start;
   gap: 2px;
+  /* Base mínima: en móvil las etiquetas (fecha, XP) bajan de línea en vez de aplastar el título. */
+  flex: 1 1 170px;
+  min-width: 0;
 }
 .mission__more {
   margin-top: 2px;

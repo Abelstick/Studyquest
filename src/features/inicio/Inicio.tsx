@@ -6,7 +6,8 @@ import { addDays, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dat
 import { computeStreak, goalLabel, isCounter, levelProgress, logFor, rankFor } from '@/core/game';
 import { dailyMissions, dayProgress, deadlineText, tips } from '@/core/missions';
 import { nextStep, type NextStep } from '@/core/nextStep';
-import { HabitAction } from '@/features/habitos/HabitAction';
+import { HabitAction, HabitMinimumButton, HabitRecovery } from '@/features/habitos/HabitAction';
+import { IfThenList } from '@/ui/IfThenList';
 import { LateBanner } from '@/features/tareas/LateBanner';
 import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
 import type { Snapshot } from '@/core/domain';
@@ -15,6 +16,7 @@ import { Bar, Button, Empty, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { DaySummary } from './DaySummary';
 import { MissionBoard } from './MissionBoard';
+import { ReviewNudge, TodayPlan } from './TodayPlan';
 
 function StreakCalendar() {
   const events = useData((s) => s.xpEvents);
@@ -189,6 +191,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
   let title: string;
   let detail: string;
   let action: ReactNode;
+  let extra: ReactNode = null;
   switch (step.kind) {
     case 'task-late':
     case 'task-today': {
@@ -216,16 +219,26 @@ function NextStepCard({ step }: { step: NextStep | null }) {
       action = isCounter(h) ? (
         <HabitAction habit={h} log={logFor(logs, h.id, today())} />
       ) : (
-        <Button
-          variant="primary"
-          onClick={() => {
-            const before = logFor(logs, h.id, today())?.value ?? 0;
-            setHabitValue(h.id, h.target);
-            finish(h.title, () => setHabitValue(h.id, before));
-          }}
-        >
-          ✔ Registrar
-        </Button>
+        <>
+          <Button
+            variant="primary"
+            onClick={() => {
+              const before = logFor(logs, h.id, today())?.value ?? 0;
+              setHabitValue(h.id, h.target);
+              finish(h.title, () => setHabitValue(h.id, before));
+            }}
+          >
+            ✔ Registrar
+          </Button>
+          <HabitMinimumButton habit={h} log={logFor(logs, h.id, today())} />
+        </>
+      );
+      // Volver a la rutina tras un día perdido y el plan «si… entonces…» que el propio hábito se dio.
+      extra = (
+        <>
+          <HabitRecovery habit={h} logs={logs} />
+          <IfThenList plans={h.ifThen} compact />
+        </>
       );
       break;
     }
@@ -261,6 +274,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
           {title}
         </h2>
         <p className="muted">{detail}</p>
+        {extra}
       </div>
       <div className="nextstep__actions">
         {action}
@@ -337,6 +351,8 @@ export default function Inicio() {
             <div className="stack home__main">
               <NextStepCard step={step} />
               <LateBanner />
+              <ReviewNudge />
+              <TodayPlan />
               <Events events={events} />
               {missions.length === 0 ? (
                 <Panel kicker="// Quest diaria" title="Tu misión de hoy">

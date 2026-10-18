@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
-import type { Snapshot } from '@/core/domain';
+import type { ISODate, Snapshot } from '@/core/domain';
 import { addDays, shortDate, today, weekStart } from '@/core/dates';
 import { computeStreak, levelProgress, monthlyCompliance, rankFor } from '@/core/game';
 import { ACHIEVEMENTS, achievementById } from '@/core/achievements';
@@ -10,6 +11,7 @@ import { computeStats, hoursBetween, timeDistribution, weeklyHours, weeklyXp, xp
 import { Bar, PageHead, Panel, Segmented, cx } from '@/ui/kit';
 import { ChartCard, ColumnChart, HBars, LineChart, Sparkline } from './charts';
 import { CityMini, WeeklyReport } from './WeekPanels';
+import { WeekReviewPanel } from './WeekReview';
 
 type Range = '30' | '90' | '180' | 'all';
 const RANGES: { value: Range; label: string }[] = [
@@ -74,6 +76,18 @@ export default function Progreso() {
   const events = useData((s) => s.events);
   const [range, setRange] = useState<Range>('90');
 
+  // /progreso?revision=<lunes> (desde el aviso de Hoy) abre directamente la revisión de esa semana.
+  const [params, setParams] = useSearchParams();
+  const asked = params.get('revision');
+  const [reviewWeek, setReviewWeek] = useState<ISODate | null>(() => (asked && /^\d{4}-\d{2}-\d{2}$/.test(asked) ? weekStart(asked) : null));
+  const reviewRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (asked) setParams({}, { replace: true });
+  }, [asked, setParams]);
+  useEffect(() => {
+    if (reviewWeek) reviewRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  }, [reviewWeek]);
+
   const snap: Snapshot = useMemo(
     () => ({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events }),
     [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events],
@@ -132,9 +146,14 @@ export default function Progreso() {
     <div className="stack dash">
       <PageHead kicker="// Hoja de personaje" title="Progreso" sprite="star" right={<Segmented label="Rango de fechas" value={range} options={RANGES} onChange={setRange} />} />
       <div className="cols">
-        <WeeklyReport snap={snap} />
+        <WeeklyReport snap={snap} onReview={setReviewWeek} />
         <CityMini />
       </div>
+      {reviewWeek && (
+        <div ref={reviewRef} id="revision">
+          <WeekReviewPanel key={reviewWeek} week={reviewWeek} onClose={() => setReviewWeek(null)} />
+        </div>
+      )}
 
       <section className="dashhero panel" aria-label="Resumen">
         <div className="dashhero__main">

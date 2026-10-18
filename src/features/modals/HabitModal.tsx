@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { newId, shortDate, today, WEEKDAYS_SHORT } from '@/core/dates';
-import type { Difficulty, Frequency, Habit, Measure } from '@/core/domain';
+import type { AreaId, Difficulty, Frequency, Habit, IfThen, Measure } from '@/core/domain';
 import { Button, ChipGroup, Field, Modal, cx, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
+import { Fold, IfThenEditor, OrganizeFields } from './LifeFields';
+import { cleanMinimum } from '@/core/minimum';
+import { cleanIfThen } from '@/core/ifthen';
 import { isQuit } from '@/core/quit';
 import { DIFFICULTIES, HABIT_BASE_XP, difficultyInfo, difficultyOf, xpForDifficulty } from '@/core/difficulty';
 
@@ -44,7 +47,7 @@ const REPEATS: { value: number; label: string }[] = [
 
 const stepLine = (s: Habit['steps'][number]) => (s.minutes ? `${s.title} | ${s.minutes}` : s.title);
 
-export function HabitModal({ id }: { id?: string }) {
+export function HabitModal({ id, goalId: presetGoal }: { id?: string; goalId?: string }) {
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
   const { habits, createHabit, updateHabit, deleteHabit } = useData();
@@ -76,6 +79,12 @@ export function HabitModal({ id }: { id?: string }) {
   const [reminder, setReminder] = useState(editing?.reminder ?? '');
   const [repeat, setRepeat] = useState(editing?.reminderRepeatMin ?? 30);
   const [steps, setSteps] = useState(editing?.steps.map(stepLine).join('\n') ?? '');
+
+  const [area, setArea] = useState<AreaId | ''>(editing?.area ?? '');
+  const [goalId, setGoalId] = useState(editing?.goalId ?? presetGoal ?? '');
+  // 0 = sin versión mínima.
+  const [minTarget, setMinTarget] = useState(editing?.minTarget ?? 0);
+  const [ifThen, setIfThen] = useState<IfThen[]>(editing?.ifThen ?? []);
 
   const toggleDay = (d: number) => setDays((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d].sort()));
   const addDate = () => {
@@ -122,6 +131,11 @@ export function HabitModal({ id }: { id?: string }) {
       reminderRepeatMin: repeat,
       steps: quit ? [] : parsedSteps,
       ...(quit ? { kind: 'quit' as const } : {}),
+      area: area || undefined,
+      goalId: goalId || undefined,
+      // Vacío o incoherente (≥ objetivo, hecho/no hecho, mal hábito) = sin versión mínima.
+      minTarget: cleanMinimum(minTarget, { target: quit || measure === 'boolean' ? 1 : Math.max(1, target), measure: quit ? 'boolean' : measure, kind: quit ? 'quit' : 'build' }),
+      ifThen: cleanIfThen(ifThen),
     };
     if (editing) updateHabit(editing.id, data);
     else createHabit(data);
@@ -224,6 +238,19 @@ export function HabitModal({ id }: { id?: string }) {
         <Field label="Subtareas de la sesión" hint="Una por línea. Opcional: «Ver clase | 10» para indicar los minutos.">
           {(fid) => <textarea id={fid} className="input" rows={4} value={steps} onChange={(e) => setSteps(e.target.value)} placeholder={'Ver clase | 10\nTomar apuntes | 5'} />}
         </Field>
+        <Fold summary="Para los días difíciles (opcional)" open={!!editing?.minTarget || !!editing?.ifThen?.length}>
+          {!quit && measure !== 'boolean' && (
+            <Field label="Versión mínima" hint={`La cantidad más pequeña que aún cuenta para mantener tu racha, siempre menor que el objetivo (${target}). En 0 se desactiva. Da solo el XP proporcional: no es un atajo para ganar más.`}>
+              {(fid) => <NumberInput id={fid} className="input" min={0} max={Math.max(0, target - 1)} value={minTarget} onValue={(n) => setMinTarget(n)} />}
+            </Field>
+          )}
+          <Field label="Si… entonces…" hint="Decide hoy qué harás cuando algo se cruce, para no improvisar ese día.">
+            {() => <IfThenEditor value={ifThen} onChange={setIfThen} />}
+          </Field>
+        </Fold>
+        <Fold summary="Área y meta (opcional)" open={!!area || !!goalId}>
+          <OrganizeFields area={area} onArea={setArea} goalId={goalId} onGoal={setGoalId} />
+        </Fold>
         <div className="modal__actions">
           <Button variant="primary" type="submit" disabled={invalid}>
             {editing ? 'Guardar cambios' : 'Crear hábito'}

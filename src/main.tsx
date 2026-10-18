@@ -9,6 +9,7 @@ import './styles/screens.css';
 import './styles/features.css';
 import './styles/agenda.css';
 import './styles/today.css';
+import './styles/plan.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -66,3 +66,18 @@ export const planIdsToDelete = (m: PlanMembers): { goals: ID[]; habits: ID[] } =
   goals: m.goal ? [m.goal.id] : [],
   habits: m.habit ? [m.habit.id] : [],
 });
+
+/**
+ * ¿Ya hay algo con el mismo nombre que el plan que se va a crear? Crear el plan dos veces dejaría dos cursos, dos metas
+ * y dos hábitos iguales, con sus tareas repetidas: se avisa antes. Devuelve en palabras qué existe, o null.
+ */
+export function existingPlanFor(goalTitle: string, s: Pick<Snapshot, 'courses' | 'goals'>): string | null {
+  const name = goalTitle.trim().toLowerCase();
+  if (!name) return null;
+  const course = s.courses.find((c) => c.title.trim().toLowerCase() === name);
+  const goal = s.goals.find((g) => g.title.trim().toLowerCase() === name);
+  if (course && goal) return `el curso y la meta «${goal.title}»`;
+  if (course) return `el curso «${course.title}»`;
+  if (goal) return `la meta «${goal.title}»`;
+  return null;
+}

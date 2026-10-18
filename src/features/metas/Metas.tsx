@@ -6,6 +6,7 @@ import { Bar, Button, Empty, PageHead, Panel, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
+import { GoalActionsPanel, GoalIfThenPanel, GoalSmartPanel } from './GoalPanels';
 
 export default function Metas() {
   const goals = useData((s) => s.goals);
@@ -69,6 +70,7 @@ export default function Metas() {
                 {earnedXp.toLocaleString('en-US')} / {totalXp.toLocaleString('en-US')} XP
               </span>
             </div>
+            <Button onClick={() => openModal({ type: 'goal', id: goal.id })}>Editar meta</Button>
             <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'goal' })}>
               ＋ Nueva meta
@@ -144,10 +146,13 @@ export default function Metas() {
             {goal.rewardDescription && <p className="muted">{goal.rewardDescription}</p>}
             <p className="kicker">{complete ? '¡Meta conquistada! Reclama tu título.' : `${goal.milestones.length - done} ${goal.milestones.length - done === 1 ? 'hito' : 'hitos'} para conseguirla`}</p>
           </Panel>
+          <GoalSmartPanel goal={goal} />
+          <GoalActionsPanel goal={goal} />
+          <GoalIfThenPanel goal={goal} />
           <Button
             variant="danger"
             small
-            onClick={() => openModal({ type: 'confirm', title: 'Borrar meta', body: `Se eliminará "${goal.title}" y sus hitos.`, confirmLabel: 'Borrar', onConfirm: () => deleteGoal(goal.id) })}
+            onClick={() => openModal({ type: 'confirm', title: 'Borrar meta', body: `Se eliminará "${goal.title}" y sus hitos. Sus tareas y hábitos se conservan, sin el vínculo con la meta.`, confirmLabel: 'Borrar', onConfirm: () => deleteGoal(goal.id) })}
           >
             Borrar meta
           </Button>

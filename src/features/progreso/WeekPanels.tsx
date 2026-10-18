@@ -1,32 +1,34 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { addDays, shortDate, today, weekStart } from '@/core/dates';
-import { isDueOn } from '@/core/game';
 import { weeklyReport } from '@/core/stats';
+import { buildWeekReview, reviewWeekFor } from '@/core/weekReview';
 import { CITY_MAX } from '@/core/city';
-import type { Snapshot } from '@/core/domain';
+import type { ISODate, Snapshot } from '@/core/domain';
 import { useCity } from '@/features/ciudad/useCity';
-import { Panel, cx } from '@/ui/kit';
+import { Button, Panel, cx } from '@/ui/kit';
 import { PixelArt } from '@/ui/PixelArt';
 import { buildingRows } from '@/ui/city-art';
 
-/** Resumen de la semana en curso (antes vivía en Inicio). */
-export function WeeklyReport({ snap }: { snap: Snapshot }) {
+/**
+ * Resumen de la semana en curso, con la puerta a la revisión semanal. El cumplimiento sale de la misma cuenta que la
+ * revisión (días que tocaban, sin contar los de antes de crear el hábito), así ambos números coinciden.
+ */
+export function WeeklyReport({ snap, onReview }: { snap: Snapshot; onReview: (week: ISODate) => void }) {
   const r = useMemo(() => weeklyReport(snap), [snap]);
-  const habitsDue = useMemo(() => {
-    const now = today();
-    let n = 0;
-    for (let d = weekStart(now); d <= now; d = addDays(d, 1)) n += snap.habits.filter((h) => isDueOn(h, d, snap.habitLogs)).length;
-    return n;
-  }, [snap.habits, snap.habitLogs]);
-  const compliance = habitsDue ? Math.min(100, Math.round((r.habitsDone / habitsDue) * 100)) : 0;
+  const review = useMemo(() => buildWeekReview(snap, weekStart(today())), [snap]);
+  const due = review.habits.reduce((a, h) => a + h.due, 0);
+  const compliance = due ? Math.round(review.habits.reduce((a, h) => a + h.pct * h.due, 0) / due) : 0;
+  const now = today();
+  const suggested = reviewWeekFor(now);
+  const last = snap.profile.reviews?.at(-1);
   const cells: [string, string, boolean?][] = [
     ['Horas', r.hours.toFixed(1)],
     ['Tareas', String(r.tasks)],
     ['Hábitos', String(r.habitsDone)],
     ['XP ganado', r.xp.toLocaleString('en-US'), true],
     ['Días activos', `${r.days}/7`],
-    ['Cumplimiento', `${compliance}%`, true],
+    ['Cumplimiento', due ? `${compliance}%` : '—', true],
   ];
   return (
     <Panel title="Informe semanal" kicker={`Semana del ${shortDate(r.from)}`}>
@@ -38,6 +40,17 @@ export function WeeklyReport({ snap }: { snap: Snapshot }) {
           </div>
         ))}
       </dl>
+      <div className="row">
+        <Button small variant="primary" onClick={() => onReview(suggested ?? weekStart(now))}>
+          Revisar mi semana
+        </Button>
+        {suggested !== addDays(weekStart(now), -7) && (
+          <Button small variant="ghost" onClick={() => onReview(addDays(weekStart(now), -7))}>
+            Revisar la anterior
+          </Button>
+        )}
+      </div>
+      <p className="muted small">{last ? `Última revisión guardada: semana del ${shortDate(last.week)}.` : 'Aún no has hecho ninguna revisión. Dos minutos bastan: qué avanzó, qué mover y qué priorizar.'}</p>
     </Panel>
   );
 }

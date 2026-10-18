@@ -10,6 +10,10 @@ import { safeUrl } from './certifications';
 import { cleanChains } from './chains';
 import { sanitizeHero } from './hero';
 import { parseAgendaEvent } from './agenda';
+import { cleanArea } from './areas';
+import { cleanIfThen } from './ifthen';
+import { cleanMinimum } from './minimum';
+import { cleanReview, MAX_REVIEWS } from './weekReview';
 
 export const BACKUP_APP = 'studyquest';
 export const BACKUP_VERSION = 1;
@@ -114,12 +118,44 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       })),
     };
   });
+  // Las metas van antes que hábitos y tareas: estos las referencian con `goalId`.
+  const goals = list('goals', 'metas', (o) =>
+    str(o.title)
+      ? {
+          id: fixId(o.id), title: str(o.title), rewardTitle: str(o.rewardTitle), rewardDescription: str(o.rewardDescription), createdAt: str(o.createdAt, new Date().toISOString()),
+          ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
+          ...(DATE.test(str(o.deadline)) ? { deadline: str(o.deadline) } : {}),
+          ...(str(o.measure).trim() ? { measure: str(o.measure).trim().slice(0, 300) } : {}),
+          ...(str(o.why).trim() ? { why: str(o.why).trim().slice(0, 300) } : {}),
+          ...(cleanArea(o.area) ? { area: cleanArea(o.area) } : {}),
+          ...(cleanIfThen(o.ifThen) ? { ifThen: cleanIfThen(o.ifThen) } : {}),
+          milestones: subs(o.milestones, (m) => ({
+            id: fixId(m.id), title: str(m.title, 'Hito'), summary: str(m.summary), xp: num(m.xp, 100), done: m.done === true,
+            skills: subs(m.skills, (k) => ({ id: fixId(k.id), label: str(k.label, 'Habilidad'), done: k.done === true })),
+          })),
+        }
+      : null,
+  );
+  const goalIds = new Set(goals.map((g) => (g as Obj).id as string));
+  /** Campos comunes de tareas y hábitos: área y meta (solo si la meta sigue existiendo). */
+  const links = (o: Obj) => {
+    const goalId = ref(o.goalId);
+    return {
+      ...(cleanArea(o.area) ? { area: cleanArea(o.area) } : {}),
+      ...(goalId && goalIds.has(goalId) ? { goalId } : {}),
+    };
+  };
   const habits = list('habits', 'hábitos', (o) => {
     if (!str(o.title) || !isObj(o.frequency) || typeof o.frequency.type !== 'string') return null;
+    // La versión mínima solo vale si es menor que el objetivo y el hábito se mide en cantidad.
+    const minTarget = cleanMinimum(o.minTarget, { target: Math.max(1, num(o.target, 1)), measure: str(o.measure, 'times') as Habit['measure'], kind: o.kind === 'quit' ? 'quit' : 'build' });
     return {
       id: fixId(o.id), title: str(o.title), frequency: o.frequency, measure: str(o.measure, 'times'), target: Math.max(1, num(o.target, 1)), xp: num(o.xp, 10),
       ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       ...(DIFFICULTY_IDS.includes(str(o.difficulty)) ? { difficulty: str(o.difficulty) } : {}),
+      ...links(o),
+      ...(cleanIfThen(o.ifThen) ? { ifThen: cleanIfThen(o.ifThen) } : {}),
+      ...(minTarget ? { minTarget } : {}),
       ...(o.kind === 'quit' ? { kind: 'quit', slips: [...new Set(asArray(o.slips).filter((d): d is string => typeof d === 'string' && DATE.test(d)))].sort() } : {}),
       reminder: /^\d{2}:\d{2}$/.test(str(o.reminder)) ? str(o.reminder) : null,
       ...(typeof o.reminderRepeatMin === 'number' && o.reminderRepeatMin >= 0 && o.reminderRepeatMin <= 240 ? { reminderRepeatMin: o.reminderRepeatMin } : {}),
@@ -143,6 +179,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       completedAt: DATE.test(str(o.completedAt)) ? str(o.completedAt) : null,
       ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       ...(DIFFICULTY_IDS.includes(str(o.difficulty)) ? { difficulty: str(o.difficulty) } : {}),
+      ...links(o),
       ...(DATE.test(str(o.dueDate)) && isClockTime(o.dueTime) ? { dueTime: o.dueTime } : {}),
       ...(isObj(o.recurrence) && ['day', 'week', 'month'].includes(str(o.recurrence.unit)) ? { recurrence: { unit: str(o.recurrence.unit), interval: Math.min(365, Math.max(1, Math.floor(num(o.recurrence.interval, 1)))) } } : {}),
       spawnedRaw: str(o.spawnedId),
@@ -155,18 +192,6 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     if (!habitId || !habitIds.has(habitId) || !DATE.test(str(o.date))) return null;
     return { id: fixId(o.id), habitId, date: str(o.date), value: num(o.value), stepsDone: asArray(o.stepsDone).map(ref).filter((x): x is string => !!x) };
   });
-  const goals = list('goals', 'metas', (o) =>
-    str(o.title)
-      ? {
-          id: fixId(o.id), title: str(o.title), rewardTitle: str(o.rewardTitle), rewardDescription: str(o.rewardDescription), createdAt: str(o.createdAt, new Date().toISOString()),
-          ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
-          milestones: subs(o.milestones, (m) => ({
-            id: fixId(m.id), title: str(m.title, 'Hito'), summary: str(m.summary), xp: num(m.xp, 100), done: m.done === true,
-            skills: subs(m.skills, (k) => ({ id: fixId(k.id), label: str(k.label, 'Habilidad'), done: k.done === true })),
-          })),
-        }
-      : null,
-  );
   const projects = list('projects', 'proyectos', (o) =>
     str(o.title)
       ? {
@@ -224,6 +249,10 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
 
   const p = isObj(d.profile) ? d.profile : {};
   const base = defaultProfile(userId);
+  // Las prioridades de una revisión apuntan a tareas: solo se conservan las que siguen existiendo.
+  const reviews = [...new Map(asArray(p.reviews).flatMap((r) => cleanReview(r, (v) => { const t = ref(v); return t && taskIds.has(t) ? t : null; }) ?? []).map((r) => [r.week, r])).values()]
+    .sort((a, b) => a.week.localeCompare(b.week))
+    .slice(-MAX_REVIEWS);
   const inventory = asArray(p.inventory).filter((x): x is string => typeof x === 'string');
   // El héroe solo puede llevar objetos que están en el inventario.
   const hero = sanitizeHero(p.hero, inventory);
@@ -257,6 +286,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
         }
       : {}),
     ...(hero ? { hero } : {}),
+    ...(reviews.length ? { reviews } : {}),
   };
 
   for (const [what, n] of Object.entries(dropped)) warnings.push(`${n} ${what} descartados por datos inválidos.`);

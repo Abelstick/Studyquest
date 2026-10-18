@@ -45,6 +45,34 @@ export interface Profile {
   weeklyDigest?: boolean;
   /** Tu héroe 3D. Opcional: no existe hasta que eliges raza. */
   hero?: Hero;
+  /** Revisiones semanales guardadas (las últimas semanas). Son reflexiones y decisiones, no registros: viven con el perfil. */
+  reviews?: WeekReview[];
+}
+
+/* ---------- Áreas de la vida y planes «si… entonces…» ---------- */
+/** Dónde encaja algo en tu vida. Una etiqueta opcional y plana: no hay jerarquía ni pantalla propia. */
+export type AreaId = 'career' | 'health' | 'money' | 'people' | 'growth' | 'home';
+
+/** Plan de intención: «si ocurre X, haré Y». Se guarda dentro del hábito o la meta que protege. */
+export interface IfThen {
+  id: ID;
+  when: string;
+  then: string;
+}
+
+/** Revisión de una semana: qué se interpuso, qué se aprendió y qué se prioriza después. */
+export interface WeekReview {
+  /** Lunes de la semana revisada. */
+  week: ISODate;
+  /** Qué se interpuso (texto libre, uno por obstáculo). */
+  obstacles: string[];
+  /** Qué funcionó. */
+  wins: string;
+  /** Qué cambio se hará la semana siguiente. */
+  adjustment: string;
+  /** Hasta tres tareas (ids) elegidas como prioridades de la semana SIGUIENTE a `week`. */
+  priorities: ID[];
+  savedAt: ISODateTime;
 }
 
 /* ---------- Héroe 3D ---------- */
@@ -110,6 +138,10 @@ export interface Task {
   spawnedId?: ID;
   /** Qué tan exigente es. Solo ajusta el XP que se propone al crearla; el XP que cuenta es `xp`. Sin definir = normal. */
   difficulty?: Difficulty;
+  /** Área de la vida a la que pertenece. */
+  area?: AreaId;
+  /** Meta a la que aporta. El progreso de la meta sigue siendo el de sus hitos; esto solo la enlaza. */
+  goalId?: ID;
 }
 
 export type Difficulty = 'easy' | 'normal' | 'hard' | 'epic';
@@ -158,6 +190,14 @@ export interface Habit {
   slips?: ISODate[];
   /** Qué tan exigente es. Solo ajusta el XP que se propone al crearlo; el XP que cuenta es `xp`. Sin definir = normal. */
   difficulty?: Difficulty;
+  /** Área de la vida a la que pertenece. */
+  area?: AreaId;
+  /** Meta a la que aporta. */
+  goalId?: ID;
+  /** Versión mínima: una cantidad menor que `target` que basta para no cortar la racha del hábito. Sin definir = no hay. */
+  minTarget?: number;
+  /** Planes «si ocurre X, haré Y» para los días difíciles. */
+  ifThen?: IfThen[];
 }
 
 /**
@@ -257,6 +297,14 @@ export interface Goal {
   createdAt: ISODateTime;
   /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
   planId?: ID;
+  /** Fecha límite (SMART: con plazo). */
+  deadline?: ISODate;
+  /** Cómo se mide el avance, en tus palabras (SMART: medible). */
+  measure?: string;
+  /** Por qué importa (SMART: relevante). */
+  why?: string;
+  area?: AreaId;
+  ifThen?: IfThen[];
 }
 
 export interface Checkpoint {

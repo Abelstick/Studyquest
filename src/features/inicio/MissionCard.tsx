@@ -6,8 +6,9 @@ import { habitProgress, isCounter, logFor } from '@/core/game';
 import { isReadyToFinish, missionParts, type Mission } from '@/core/missions';
 import { PRIORITY_LABEL, isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
+import { minimumOf } from '@/core/minimum';
 import type { HabitChain, Priority } from '@/core/domain';
-import { HabitAction } from '@/features/habitos/HabitAction';
+import { HabitAction, HabitMinimumButton, HabitRecovery } from '@/features/habitos/HabitAction';
 import { Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
@@ -130,6 +131,13 @@ export function MissionCard({ m }: { m: Mission }) {
             <HabitAction habit={m.habit} log={habitLog} />
           </div>
         )}
+        {/* Los que no son contador no muestran control propio aquí: si tienen versión mínima, se ofrece al lado de la casilla. */}
+        {m.kind === 'habit' && !isCounter(m.habit) && !m.done && minimumOf(m.habit) !== null && (
+          <div className="mission__counter">
+            <HabitMinimumButton habit={m.habit} log={habitLog} />
+          </div>
+        )}
+        {m.kind === 'habit' && !m.done && <HabitRecovery habit={m.habit} logs={logs} />}
         {parts.length > 0 && (
           <button type="button" className={cx('tag tag--btn mission__more', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${open ? 'Ocultar' : 'Ver'} ${noun} de ${m.title}`}>
             {doneParts}/{parts.length} {noun} {open ? '−' : '+'}

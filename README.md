@@ -80,11 +80,19 @@ El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañ
 - **Pomodoro** es un acceso rápido 🍅 de la barra superior: muestra el reloj cuando está en marcha.
 - La primera vez, un **tour de tres pasos** explica todo esto.
 
+### Organización personal
+
+- **Áreas de la vida.** Tareas, hábitos y metas llevan una etiqueta opcional con una de seis áreas (carrera, salud, finanzas, relaciones, aprendizaje, hogar). No es una jerarquía ni una colección: sirve para filtrar Tareas y Hábitos y para ver el equilibrio de la semana, sin puntuarlo ni penalizar que un área quede vacía.
+- **Versión mínima de un hábito.** En «Para los días difíciles» del hábito defines una cantidad menor que el objetivo (5 de 30 min). En un mal día, «Solo lo mínimo» la anota **en el mismo registro del día**: mantiene la **racha del propio hábito**, pero no cuenta como día cumplido y da solo el XP proporcional de siempre (nunca el completo ni los bonos de fin de semana, combo o cadena). Si ayer tocaba y no se hizo ni el mínimo, el hábito te lo recuerda con un «hoy basta con volver», sin pedir que compenses.
+- **Si… entonces….** Hasta tres planes por hábito o meta («si termino cansado → descanso 15 min y hago solo el mínimo»). Se ven en la ficha y, en los hábitos, en el siguiente paso de Hoy.
+- **Revisión semanal** (Progreso, o el aviso de Hoy): lo planificado frente a lo hecho (tareas, hábitos, bloques, estudio), hábitos con **previstos / hechos / solo mínimo / omitidos** y tendencia (lo que no tocaba nunca cuenta como omisión), metas que avanzaron o no, equilibrio por área, y **lo pendiente sin culpas**: mover a otra fecha (la misma tarea, no una nueva), repartir en la semana siguiente, reducir o quitar. Registra obstáculos (avisa si uno se repite), lo que funcionó y el cambio de la próxima semana (convertible en tarea), muestra la carga de la semana siguiente y guarda **tus 3 prioridades**, que aparecen en Hoy durante esa semana. No da XP.
+- **Planificador.** La meta que crea nace con el plazo que elegiste y su indicador, y sus tareas y su hábito quedan enlazados a ella. Si ya existe un curso o una meta con ese nombre, pide confirmación antes de duplicarlo.
+
 ### Pantallas
 
 | Pantalla | Qué hace |
 | --- | --- |
-| **Hoy** (Inicio) | Un panel del día. Arriba, un **resumen** con el avance del día, los hábitos y tareas hechos y tu racha; después el **siguiente paso** y la misión del día en **dos columnas**: **Hábitos** (verde: constancia) y **Tareas** (azul: plazos, agrupadas en vencidas, hoy, próximos 7 días…; rojo = vencida, indicador de 1-3 barras = prioridad). Cada columna lleva su barra por bloques y un **＋** para crear. Pulsa una tarjeta (o su título) para abrir su **ficha** —estado de hoy, plazo o racha, subtareas o pasos, semana del hábito— con las acciones a mano (completar, deshacer, editar, ver más); la casilla ✔ y el desglose siguen marcándose sin abrirla. En móvil se ve una columna a la vez. El calendario de racha queda a un lado (o abajo en pantallas estrechas); cofre diario y consejos, plegados en «Más». |
+| **Hoy** (Inicio) | Un panel del día. Arriba, un **resumen** con el avance del día, los hábitos y tareas hechos y tu racha; después el **siguiente paso** y la misión del día en **dos columnas**: **Hábitos** (verde: constancia) y **Tareas** (azul: plazos, agrupadas en vencidas, hoy, próximos 7 días…; rojo = vencida, indicador de 1-3 barras = prioridad). Cada columna lleva su barra por bloques y un **＋** para crear. Pulsa una tarjeta (o su título) para abrir su **ficha** —estado de hoy, plazo o racha, subtareas o pasos, semana del hábito— con las acciones a mano (completar, deshacer, editar, ver más); la casilla ✔ y el desglose siguen marcándose sin abrirla. En móvil se ve una columna a la vez. Entre el siguiente paso y el tablero aparecen, solo si hay algo que decir, **tus 3 prioridades del día** (vencidas, de hoy y las que elegiste en la revisión semanal; cada una con ✔ y «Mañana», con *Deshacer*) y **tu agenda de hoy** (los bloques con hora del calendario, con «Ahora» / «Siguiente»). El domingo y los primeros días de la semana, un aviso invita a **revisar tu semana**. El calendario de racha queda a un lado (o abajo en pantallas estrechas); cofre diario y consejos, plegados en «Más». |
 | **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Arriba, los cursos **en marcha** con su próximo tema. Marca temas como «necesito repasar», y desde cada tema abre **sus apuntes** o **repasa sus tarjetas**. |
 | **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha y **hora límite**, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
 | **Planificador** | Le dices «quiero aprender análisis de datos en 3 meses» y genera la ruta (Excel → SQL → Python → Pandas → Power BI → proyecto final) y **un plan con fechas** según tu disponibilidad, tus tareas y tus hábitos. Con **IA (Gemini, gratis)** o con plantillas. |
@@ -97,9 +105,9 @@ El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañ
 | **Hábitos** | Frecuencia (diaria, días concretos, cada X días, semanal, mensual, **fechas concretas, anual y personalizada** «N veces por semana/mes»), recordatorio con **aviso repetido y sonido**, medición (minutos, páginas, veces, hecho/no hecho…), pasos de sesión, mapa de 12 semanas y aviso del día en que más fallas. Los días pasados de la tira semanal se pueden marcar, por si te olvidaste. |
 | **Dejar un mal hábito** | Al crear un hábito eliges **«Dejar un mal hábito»** (mirar el celular en la cama, picar entre comidas…). Cada día pulsas **«Hoy resistí»** y ganas su XP, igual que un hábito normal; si recaes, **«Recaí»** devuelve el XP de ese día y el contador de **días limpio** vuelve a 0 (con tu mejor racha y el siguiente hito). «Fue un error» deshace la recaída. Es siempre diario, tiene recordatorio y viaja en las copias de seguridad. |
 | **Cadenas de hábitos** | Encadena una rutina en orden (dormir temprano → levantarse → ejercicio → estudio → proyecto). Cada eslabón es la **señal** del siguiente: la app te dice cuál toca ahora y a cuál va después, en Hábitos y en la misión de Hoy. **Nunca bloquea** —puedes registrar cualquier hábito cuando quieras— y completar la cadena entera en un día da **+100 XP**. |
-| **Metas** | Árbol de hitos con habilidades y recompensa final. |
+| **Metas** | Árbol de hitos con habilidades y recompensa final, y **criterio SMART** en su ficha: **plazo** (con aviso de si vas a tiempo, por delante o atrasado), **cómo se mide**, **por qué importa**, área de la vida y planes «si… entonces…». Las **acciones** son tareas y hábitos de siempre enlazados a la meta (se crean ya enlazados desde su ficha o eligiendo «Aporta a la meta» en sus formularios): se ven juntos con su propio avance, y el de la meta sigue siendo el de sus hitos. Se puede **editar**; al borrarla, sus tareas y hábitos se conservan. |
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
-| **Progreso** | Informe de la semana y resumen de tu ciudad, horas por semana, distribución del tiempo por curso y mapa de actividad de 20 semanas. Filtro 30 / 90 días, 6 meses o todo. |
+| **Progreso** | Informe de la semana con su **revisión semanal** (ver abajo) y resumen de tu ciudad, horas por semana, distribución del tiempo por curso y mapa de actividad de 20 semanas. Filtro 30 / 90 días, 6 meses o todo. |
 | **Héroe 3D** | Tu personaje en **3D con bloques**: eliges raza (**Saiyajin, Mario, Koopa, Protoss, Terran o Zerg**), **evoluciona** en 4 etapas a medida que subes de nivel estudiando y le compras **armas, poderes y skins** con tus monedas (puedes **probarlos antes de comprar**). Arrástralo para girarlo. |
 | **Arsenal** | Tienda de Toad (11 avatares, marcos, **6 mundos visuales**, insignias, poderes), **51 logros** y recompensas personales de la vida real. |
 | **Personajes** | **21 avatares** con arte pixel propio (búho, mago, ninja, astronauta, zorro, pingüino, rana, murciélago, ajolote, dragón…) y **cada uno con su gesto de reposo**: el fantasma flota, el slime se aplasta, el ninja parpadea de sitio, el dragón respira. Se ven moviéndose ya en la tienda, antes de comprarlos. |
@@ -454,7 +462,7 @@ Los bonos se cobran **una sola vez** (se anotan en el perfil): deshacer y rehace
 | **Nivel** | El nivel *L* cuesta `250 × L` XP (nivel 12 → 3 000 XP). Cada nivel tiene un mundo (`3-4`) y un rango. |
 | **Monedas** | 1 moneda por cada 4 XP. Subir de nivel da +500. Cada logro da su premio. |
 | **Tarea** | Da su XP al pasar a *Superada*. Reabrirla lo devuelve. Prioridad: baja 20 · media 35 · alta 50 · jefe final 120 (+50 de botín al derrotarlo). |
-| **Hábito** | Da su XP al alcanzar el objetivo del día, **una sola vez**. Bajar del objetivo lo devuelve. |
+| **Hábito** | Da su XP al alcanzar el objetivo del día, **una sola vez**. Bajar del objetivo lo devuelve. La **versión mínima** (opcional) mantiene la racha del hábito pero solo da el XP proporcional y ningún bono. |
 | **Dificultad** | Tareas y hábitos tienen nivel **Fácil (×0,5) · Normal (×1) · Difícil (×1,5) · Épica (×2)**. No cambia las reglas: propone el XP (el de la prioridad en una tarea, 30 en un hábito) multiplicado por el nivel, redondeado a múltiplos de 5, y ese XP es el que se cobra y se devuelve al deshacer. Si ya personalizaste el XP a mano, cambiar la dificultad no lo pisa. |
 | **Tema de curso** | XP del módulo repartido entre sus temas. |
 | **Sesión de estudio** | 2 XP por minuto (también cada Pomodoro de enfoque). |
@@ -543,8 +551,8 @@ Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por háb
 
 | Tabla | Tipo | Contenido |
 | --- | --- | --- |
-| `profiles` | `data jsonb` | Nombre, XP, monedas, inventario, equipado, logros, congeladores |
-| `tasks` · `habits` · `courses` · `goals` · `projects` · `personal_rewards` | `data jsonb` | Entidades con estructura anidada |
+| `profiles` | `data jsonb` | Nombre, XP, monedas, inventario, equipado, logros, congeladores y las últimas 26 revisiones semanales |
+| `tasks` · `habits` · `courses` · `goals` · `projects` · `personal_rewards` | `data jsonb` | Entidades con estructura anidada. Área, meta enlazada (`goalId`), versión mínima, «si… entonces…» y plazo/medida de las metas viven aquí dentro: no hacen falta migraciones |
 | `habit_logs` | relacional | `habit_id`, `day`, `value`, `steps_done` — único por `(user_id, habit_id, day)` |
 | `study_sessions` | relacional | `day`, `minutes`, `course_id` |
 | `xp_events` | relacional | `day`, `amount`, `source`, `label` — fuente de la racha y del mapa de actividad |
@@ -597,6 +605,8 @@ También hay pruebas de componentes (`*.test.tsx`, con jsdom y Testing Library) 
 | Supabase limita los correos | El plan gratuito envía pocos correos por hora. Para pruebas, desactiva *Confirm email* o usa contraseña en vez de enlace mágico. |
 
 ## Límites conocidos
+- **Pomodoro y hábitos medidos en minutos son independientes:** una sesión de enfoque suma sus 2 XP/min y un hábito de «estudiar 30 min» se registra aparte. No se vinculan automáticamente para no tocar la economía del juego; registra cada cosa una vez.
+- Las prioridades de la semana se eligen en la revisión semanal; sin revisión, «tus 3 prioridades» se deducen solas de las fechas y la prioridad de las tareas.
 - **Cola offline:** ante conflictos entre dispositivos gana la última escritura (*last write wins*).
 - **El héroe 3D necesita WebGL** (cualquier navegador actual lo tiene). Sin él se ve la ficha y la tienda, pero no el modelo.
 - **Arrastrar y soltar solo con ratón/trackpad.** En pantallas táctiles y con teclado se usan los botones *Empezar / Completar / Reabrir*.

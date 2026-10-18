@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { newId, today } from '@/core/dates';
-import type { Mentor } from '@/core/domain';
+import { addDays, diffDays, newId, today } from '@/core/dates';
+import type { AreaId, IfThen, Mentor } from '@/core/domain';
+import { cleanIfThen } from '@/core/ifthen';
 import { safeUrl } from '@/core/certifications';
 import { Button, ChipGroup, Field, Modal, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { describeExtras, planOfCourse } from '@/core/plans';
+import { AreaChips } from '@/ui/Area';
 import { ConceptHint } from '../help/ConceptGuide';
+import { Fold, IfThenEditor } from './LifeFields';
 
 /** "Título | 120" → { title, xp }. */
 const parseXpLine = (line: string, fallback: number) => {
@@ -110,43 +113,97 @@ export function CourseModal({ id }: { id?: string }) {
   );
 }
 
-export function GoalModal() {
+/** Plazos rápidos de una meta, en días desde hoy. */
+const GOAL_DEADLINES = [
+  { value: 30, label: '30 días' },
+  { value: 90, label: '90 días' },
+  { value: 180, label: '6 meses' },
+];
+
+/**
+ * Crear o editar una meta. Además de los hitos y la recompensa, guía a definirla con criterio SMART:
+ * plazo, cómo se mide y por qué importa. Todo es opcional: una meta sin completar sigue siendo válida.
+ * Al editar, los hitos existentes no se tocan (su XP ya está contabilizado); solo se pueden añadir nuevos.
+ */
+export function GoalModal({ id }: { id?: string }) {
   const close = useUi((s) => s.closeModal);
-  const createGoal = useData((s) => s.createGoal);
-  const [title, setTitle] = useState('');
-  const [rewardTitle, setRewardTitle] = useState('');
-  const [rewardDescription, setRewardDescription] = useState('');
+  const { goals, createGoal, updateGoal } = useData();
+  const editing = goals.find((g) => g.id === id);
+  const [title, setTitle] = useState(editing?.title ?? '');
+  const [rewardTitle, setRewardTitle] = useState(editing?.rewardTitle ?? '');
+  const [rewardDescription, setRewardDescription] = useState(editing?.rewardDescription ?? '');
   const [milestones, setMilestones] = useState('');
+  const [deadline, setDeadline] = useState(editing?.deadline ?? '');
+  const [measure, setMeasure] = useState(editing?.measure ?? '');
+  const [why, setWhy] = useState(editing?.why ?? '');
+  const [area, setArea] = useState<AreaId | ''>(editing?.area ?? '');
+  const [ifThen, setIfThen] = useState<IfThen[]>(editing?.ifThen ?? []);
 
   const items = linesToList(milestones);
+  const canSave = !!title.trim() && (!!editing || items.length > 0);
+  const chipDays = deadline ? diffDays(deadline, today()) : -1;
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !items.length) return;
-    createGoal({
+    if (!canSave) return;
+    const fresh = items.map((l) => {
+      const { title: t, xp } = parseXpLine(l, 100);
+      return { id: newId(), title: t, summary: '', xp, done: false, skills: [] };
+    });
+    const data = {
       title: title.trim(),
       rewardTitle: rewardTitle.trim() || 'Título: Leyenda',
       rewardDescription: rewardDescription.trim(),
-      milestones: items.map((l) => {
-        const { title: t, xp } = parseXpLine(l, 100);
-        return { id: newId(), title: t, summary: '', xp, done: false, skills: [] };
-      }),
-    });
+      deadline: deadline || undefined,
+      measure: measure.trim() || undefined,
+      why: why.trim() || undefined,
+      area: area || undefined,
+      ifThen: cleanIfThen(ifThen),
+    };
+    if (editing) updateGoal(editing.id, { ...data, milestones: [...editing.milestones, ...fresh] });
+    else createGoal({ ...data, milestones: fresh });
     close();
   };
 
   return (
-    <Modal title="Nueva meta" kicker="// Árbol de habilidades" onClose={close}>
+    <Modal title={editing ? 'Editar meta' : 'Nueva meta'} kicker="// Árbol de habilidades" onClose={close}>
       <form onSubmit={submit} className="form">
-        <ConceptHint id="meta" />
-        <Field label="Meta">{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Aprender Análisis de Datos" required maxLength={100} />}</Field>
-        <Field label="Hitos" hint="Uno por línea, en orden. Añade «| 300» para darle XP (por defecto 100).">
-          {(fid) => <textarea id={fid} className="input" rows={5} value={milestones} onChange={(e) => setMilestones(e.target.value)} placeholder={'Aprender Excel | 100\nAprender SQL | 200\nProyecto final | 1000'} required />}
+        {!editing && <ConceptHint id="meta" />}
+        <Field label="Meta" hint="Concreta: qué quieres lograr, no un tema general.">
+          {(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Aprender Análisis de Datos" required maxLength={100} />}
+        </Field>
+        <Field
+          label={editing ? 'Añadir hitos' : 'Hitos'}
+          hint={editing ? `Uno por línea; se suman a los ${editing.milestones.length} que ya tiene. Los hitos existentes no se cambian aquí.` : 'Uno por línea, en orden. Añade «| 300» para darle XP (por defecto 100).'}
+        >
+          {(fid) => <textarea id={fid} className="input" rows={editing ? 3 : 5} value={milestones} onChange={(e) => setMilestones(e.target.value)} placeholder={'Aprender Excel | 100\nAprender SQL | 200\nProyecto final | 1000'} required={!editing} />}
+        </Field>
+        <Field label="Plazo" hint="Una fecha límite convierte el deseo en compromiso y permite ver si vas a tiempo.">
+          {(fid) => (
+            <div className="row">
+              <input id={fid} className="input input--inline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+              <ChipGroup label="Plazo rápido" value={GOAL_DEADLINES.some((d) => d.value === chipDays) ? chipDays : -1} options={GOAL_DEADLINES} onChange={(d) => setDeadline(addDays(today(), d))} />
+            </div>
+          )}
+        </Field>
+        <Field label="Cómo lo mido" hint="Qué te dirá que avanzas: horas, entregables, cifras. Ej.: «3 sesiones de SQL por semana y una API publicada».">
+          {(fid) => <TextInput id={fid} className="input" value={measure} onChange={(e) => setMeasure(e.target.value)} maxLength={300} />}
+        </Field>
+        <Field label="Por qué me importa" hint="Lo que recordarás el día que no tengas ganas.">
+          {(fid) => <TextInput id={fid} className="input" value={why} onChange={(e) => setWhy(e.target.value)} maxLength={300} />}
         </Field>
         <Field label="Recompensa final">{(fid) => <TextInput id={fid} className="input" value={rewardTitle} onChange={(e) => setRewardTitle(e.target.value)} placeholder="Título: Analista de Datos Jr." />}</Field>
         <Field label="Descripción de la recompensa">{(fid) => <textarea id={fid} className="input" rows={2} value={rewardDescription} onChange={(e) => setRewardDescription(e.target.value)} />}</Field>
+        <Fold summary="Área y planes «si… entonces…» (opcional)" open={!!area || ifThen.length > 0}>
+          <Field label="Área de la vida">{() => <AreaChips value={area} onChange={setArea} />}</Field>
+          <Field label="Si… entonces…" hint="Qué harás cuando algo amenace esta meta.">
+            {() => <IfThenEditor value={ifThen} onChange={setIfThen} />}
+          </Field>
+        </Fold>
+        {!editing && <p className="muted small">Después podrás enlazar tareas y hábitos a esta meta desde su ficha: ahí viven las acciones.</p>}
         <div className="modal__actions">
-          <Button variant="primary" type="submit" disabled={!title.trim() || !items.length}>
-            Crear meta
+          <Button variant="primary" type="submit" disabled={!canSave}>
+            {editing ? 'Guardar cambios' : 'Crear meta'}
           </Button>
           <Button onClick={close}>Cancelar</Button>
         </div>

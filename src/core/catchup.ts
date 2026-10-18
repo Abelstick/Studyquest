@@ -10,6 +10,8 @@ import type { Habit, HabitLog, ISODate } from './domain';
 import { addDays, diffDays, today } from './dates';
 import { habitProgress, isDueOn, isHabitDone, logFor } from './game';
 import { isQuotaHabit } from './periods';
+import { isQuit } from './quit';
+import { keepsStreakAt } from './minimum';
 
 /** Cuántos días atrás se puede rellenar. Una semana cubre el olvido normal sin falsear el historial. */
 export const CATCH_UP_DAYS = 7;
@@ -65,3 +67,18 @@ export const pendingCatchUp = (habit: Habit, logs: HabitLog[], now: ISODate = to
 /** Cuántos olvidos hay en total, para avisar en la pantalla de hábitos. */
 export const totalPending = (habits: Habit[], logs: HabitLog[], now: ISODate = today()): number =>
   habits.reduce((a, h) => a + pendingCatchUp(h, logs, now).length, 0);
+
+/**
+ * Volver a la rutina tras un día perdido: ayer tocaba y no se hizo ni el mínimo, y hoy toca. Solo en los hábitos de
+ * días fijos (diarios o de días de la semana): en los de cuota o de calendario un día suelto no cuenta como pérdida.
+ * Sirve para decir «hoy basta con retomar», no para pedir que compenses lo de ayer.
+ */
+export function needsRecovery(habit: Habit, logs: HabitLog[], now: ISODate = today()): boolean {
+  const f = habit.frequency.type;
+  if (isQuit(habit) || (f !== 'daily' && f !== 'days')) return false;
+  const yesterday = addDays(now, -1);
+  if (yesterday < habit.startDate || !isDueOn(habit, yesterday, logs) || !isDueOn(habit, now, logs)) return false;
+  const missedYesterday = (logFor(logs, habit.id, yesterday)?.value ?? 0) < keepsStreakAt(habit);
+  const todayDone = (logFor(logs, habit.id, now)?.value ?? 0) >= keepsStreakAt(habit);
+  return missedYesterday && !todayDone;
+}

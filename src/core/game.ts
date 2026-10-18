@@ -1,5 +1,6 @@
 import type { Course, Habit, HabitLog, ISODate, Module, Priority, Profile, XpEvent } from './domain';
 import { addDays, diffDays, fromISODate, monthKey, today, weekStart, weekdayIndex } from './dates';
+import { keepsStreakAt } from './minimum';
 
 /* ---------- Niveles ---------- */
 
@@ -328,12 +329,17 @@ export const defaultProfile = (id: string, name = 'Jugador 1'): Profile => ({
   joinedAt: new Date().toISOString(),
 });
 
-/** Racha actual y mejor racha de un hábito, contando solo los días en que tocaba. */
+/**
+ * Racha actual y mejor racha de un hábito, contando solo los días en que tocaba. Un día con la versión mínima
+ * (si el hábito la tiene) mantiene la racha; `completions` cuenta solo los días con el objetivo completo.
+ */
 export function habitStreaks(habit: Habit, logs: HabitLog[], now: ISODate = today()) {
   const doneOn = new Set(logs.filter((l) => l.habitId === habit.id && l.value >= habit.target).map((l) => l.date));
+  const keep = keepsStreakAt(habit);
+  const keptOn = keep === habit.target ? doneOn : new Set(logs.filter((l) => l.habitId === habit.id && l.value >= keep).map((l) => l.date));
   let current = 0;
   for (let i = 0, d = now; i < 400; i++, d = addDays(now, -i)) {
-    if (doneOn.has(d)) current++;
+    if (keptOn.has(d)) current++;
     else if (i === 0 || !isDueOn(habit, d, logs)) continue;
     else break;
   }
@@ -341,7 +347,7 @@ export function habitStreaks(habit: Habit, logs: HabitLog[], now: ISODate = toda
   let run = 0;
   for (let i = 400; i >= 0; i--) {
     const d = addDays(now, -i);
-    if (doneOn.has(d)) best = Math.max(best, ++run);
+    if (keptOn.has(d)) best = Math.max(best, ++run);
     else if (isDueOn(habit, d, logs) && i !== 0) run = 0;
   }
   return { current, best: Math.max(best, current), completions: doneOn.size };
@@ -355,7 +361,8 @@ export function weakestWeekday(habit: Habit, logs: HabitLog[], now: ISODate = to
     if (d < habit.startDate || !isDueOn(habit, d, logs)) continue;
     const w = weekdayIndex(d);
     stats[w].due++;
-    if (logFor(logs, habit.id, d) && (logFor(logs, habit.id, d)?.value ?? 0) >= habit.target) stats[w].done++;
+    // Con versión mínima, un día en el mínimo no es un fallo: es justo para lo que sirve.
+    if ((logFor(logs, habit.id, d)?.value ?? 0) >= keepsStreakAt(habit)) stats[w].done++;
   }
   const worst = stats
     .map((s, day) => ({ day, due: s.due, missRate: s.due ? 1 - s.done / s.due : 0 }))

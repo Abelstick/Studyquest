@@ -10,6 +10,9 @@ import { GuideButton } from '@/features/help/ConceptGuide';
 import { difficultyInfo, difficultyOf } from '@/core/difficulty';
 import { Bar, Button, Empty, PageHead, cx } from '@/ui/kit';
 import { LateBanner } from './LateBanner';
+import { AreaFilterSelect, AreaTag } from '@/ui/Area';
+import { matchesArea, type AreaFilter } from '@/core/areas';
+import type { AreaId } from '@/core/domain';
 import { Sprite } from '@/ui/Sprite';
 
 const COLUMNS: { status: TaskStatus; title: string; sprite: 'qblock' | 'flower' | 'star' }[] = [
@@ -82,6 +85,7 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
         {task.status !== 'done' && daysLeft && <span className={cx('tag', overdue ? 'tag--red' : soon ? 'tag--xp' : 'tag--plain')}>{daysLeft}</span>}
         {task.estimateMin > 0 && <span className="tag tag--plain">{task.estimateMin >= 60 ? `${+(task.estimateMin / 60).toFixed(1)} h` : `${task.estimateMin} min`}</span>}
         <span className="tag tag--plain">{PRIORITY_LABEL[task.priority]}</span>
+        <AreaTag area={task.area} />
         {difficultyOf(task) !== 'normal' && <span className="tag tag--xp" title={difficultyInfo(difficultyOf(task)).hint}>{difficultyInfo(difficultyOf(task)).label}</span>}
         {task.recurrence && <span className="tag tag--blue" title="Al completarla se crea la siguiente">↻ {recurrenceLabel(task.recurrence)}</span>}
         {task.subtasks.length > 0 && (
@@ -121,6 +125,7 @@ export default function Tareas() {
   const courses = useData((s) => s.courses);
   const openModal = useUi((s) => s.openModal);
   const [filter, setFilter] = useState('all');
+  const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
   const [over, setOver] = useState<TaskStatus | null>(null);
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const [params, setParams] = useSearchParams();
@@ -158,7 +163,11 @@ export default function Tareas() {
   }, [params, setParams, openModal]);
 
   const courseName = (id: string | null) => courses.find((c) => c.id === id)?.title ?? 'Side quest';
-  const visible = useMemo(() => tasks.filter((t) => filter === 'all' || (filter === 'none' ? !t.courseId : t.courseId === filter)), [tasks, filter]);
+  const usedAreas = useMemo(() => new Set<AreaId>(tasks.flatMap((t) => (t.area ? [t.area] : []))), [tasks]);
+  const visible = useMemo(
+    () => tasks.filter((t) => (filter === 'all' || (filter === 'none' ? !t.courseId : t.courseId === filter)) && matchesArea(t, areaFilter)),
+    [tasks, filter, areaFilter],
+  );
   const byStatus = (st: TaskStatus) =>
     visible
       .filter((t) => t.status === st)
@@ -183,6 +192,7 @@ export default function Tareas() {
                 </option>
               ))}
             </select>
+            <AreaFilterSelect value={areaFilter} onChange={setAreaFilter} used={usedAreas} />
             <Button variant="primary" onClick={() => openModal({ type: 'task' })}>
               ＋ Nueva tarea
             </Button>

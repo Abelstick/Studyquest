@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
@@ -10,7 +10,10 @@ import { Sprite } from '@/ui/Sprite';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { Chains } from './ChainPanel';
-import { HabitAction } from './HabitAction';
+import { HabitAction, HabitRecovery } from './HabitAction';
+import { AreaFilterSelect } from '@/ui/Area';
+import { areaInfo, matchesArea, type AreaFilter } from '@/core/areas';
+import type { AreaId } from '@/core/domain';
 import { HabitSteps, progressNote } from './HabitSteps';
 import { HabitWeek } from './HabitWeek';
 import { QuitStatus } from './QuitStatus';
@@ -23,14 +26,16 @@ export default function Habitos() {
   const logs = useData((s) => s.habitLogs);
   const openModal = useUi((s) => s.openModal);
   const now = today();
+  const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
+  const usedAreas = useMemo(() => new Set<AreaId>(habits.flatMap((h) => (h.area ? [h.area] : []))), [habits]);
 
   const cards = useMemo(
     () =>
-      habits.map((h) => {
+      habits.filter((h) => matchesArea(h, areaFilter)).map((h) => {
         const log = logFor(logs, h.id, now);
         return { h, log, pct: monthlyCompliance(h, logs, now), due: isDueOn(h, now, logs), done: isHabitDone(h, log), progress: habitProgress(h, log), credit: habitCreditXp(h, log) };
       }),
-    [habits, logs, now],
+    [habits, logs, now, areaFilter],
   );
   const doneToday = cards.filter((c) => c.done).length;
   // Días que tocaban, ya pasaron y siguen sin marcar: el olvido que esta pantalla ayuda a arreglar.
@@ -46,6 +51,7 @@ export default function Habitos() {
         right={
           <>
             <GuideButton />
+            <AreaFilterSelect value={areaFilter} onChange={setAreaFilter} used={usedAreas} />
             <span className="kicker">
               {doneToday} de {cards.length} registrados hoy
             </span>
@@ -90,6 +96,7 @@ export default function Habitos() {
                   <p className="kicker">
                     {isQuit(h) ? 'Mal hábito a dejar' : `${frequencyLabel(h.frequency)} · ${goalLabel(h)}`}
                     {difficultyOf(h) !== 'normal' && ` · ${difficultyInfo(difficultyOf(h)).label}`}
+                    {h.area && ` · ${areaInfo(h.area).icon} ${areaInfo(h.area).label}`}
                   </p>
                 </div>
                 <Tag tone={done ? 'green' : 'xp'}>{!done && credit > 0 ? `+${credit} / ${h.xp} XP` : `+${h.xp} XP`}</Tag>
@@ -110,6 +117,7 @@ export default function Habitos() {
                 <b>{pct}%</b>
               </div>
               <Bar pct={pct} tone={pct >= 75 ? 'green' : pct >= 40 ? 'yellow' : 'red'} label={`Cumplimiento mensual de ${h.title}`} />
+              <HabitRecovery habit={h} logs={logs} />
               <div className="habit__actions">
                 <HabitAction habit={h} log={log} />
                 <Link className="btn btn--ghost btn--sm" to={`/habitos/${h.id}`}>

@@ -11,6 +11,7 @@ import {
   DEFAULT_WEEK_MINUTES, TEMPLATES, blankRoadmap, buildPlanEntities, busyMinutes, cleanGoal, cleanRoadmap, matchTemplate, sanitizeWeek, schedulePlan, templateRoadmap, validateRoadmap, weekTotal,
   type Level, type Roadmap, type Template,
 } from '@/core/planner';
+import { existingPlanFor } from '@/core/plans';
 import { Bar, Button, ChipGroup, Field, PageHead, Panel, Tag, cx, TextInput } from '@/ui/kit';
 import { Loader } from '@/ui/Loader';
 import { RouteEditor } from './RouteEditor';
@@ -64,7 +65,7 @@ const STEPS = ['Objetivo', 'Tiempo', 'Plan'];
 
 export default function Planificador() {
   const navigate = useNavigate();
-  const { tasks, habits, habitLogs, addPlan } = useData();
+  const { tasks, habits, habitLogs, courses, goals, addPlan } = useData();
   const apiKey = useAi((s) => s.apiKey);
   const model = useAi((s) => s.model);
   const lastUsed = useAi((s) => s.lastUsed);
@@ -159,8 +160,20 @@ export default function Planificador() {
 
   const create = () => {
     if (!cleaned || !schedule?.ok) return;
-    addPlan(buildPlanEntities(cleaned, schedule, week, now));
-    navigate('/calendario');
+    const build = () => {
+      addPlan(buildPlanEntities(cleaned, schedule, week, now, deadline));
+      navigate('/calendario');
+    };
+    // Crear el mismo plan dos veces duplicaría curso, meta, hábito y tareas: se pide confirmación.
+    const already = existingPlanFor(cleaned.goal, { courses, goals });
+    if (!already) return build();
+    openModal({
+      type: 'confirm',
+      title: 'Ya tienes algo con este nombre',
+      body: `Ya existe ${already}. Si creas el plan otra vez tendrás todo duplicado (curso, meta, hábito y tareas). Si solo quieres mover fechas, usa «Retomar mi plan» en Tareas.`,
+      confirmLabel: 'Crear de todos modos',
+      onConfirm: build,
+    });
   };
 
   const canNext = goal.trim().length >= 3 && weeks >= 1;

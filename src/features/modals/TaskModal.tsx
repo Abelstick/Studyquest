@@ -4,10 +4,11 @@ import { useUi } from '@/state/ui';
 import { XP_BY_PRIORITY } from '@/core/game';
 import { DIFFICULTIES, difficultyInfo, difficultyOf, xpForDifficulty } from '@/core/difficulty';
 import { isClockTime, newId } from '@/core/dates';
-import type { Difficulty, Priority, Recurrence, TaskStatus } from '@/core/domain';
+import type { AreaId, Difficulty, Priority, Recurrence, TaskStatus } from '@/core/domain';
 import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
 import { Button, Field, Modal, Segmented, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
+import { Fold, OrganizeFields } from './LifeFields';
 
 const PRIORITIES: { value: Priority; label: string }[] = [
   { value: 'low', label: 'Baja' },
@@ -21,7 +22,7 @@ const STATUSES: { value: TaskStatus; label: string }[] = [
   { value: 'done', label: 'Superada' },
 ];
 
-export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
+export function TaskModal({ id, dueDate, goalId: presetGoal }: { id?: string; dueDate?: string; goalId?: string }) {
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
   const { tasks, courses, createTask, updateTask, deleteTask } = useData();
@@ -41,6 +42,8 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
   const [subs, setSubs] = useState(editing?.subtasks.map((s) => s.title).join('\n') ?? '');
   const [tags, setTags] = useState(editing?.tags.join(', ') ?? '');
   const [status, setStatus] = useState<TaskStatus>(editing?.status ?? 'todo');
+  const [area, setArea] = useState<AreaId | ''>(editing?.area ?? '');
+  const [goalId, setGoalId] = useState(editing?.goalId ?? presetGoal ?? '');
 
   const pickPriority = (p: Priority) => {
     setPriority(p);
@@ -69,6 +72,8 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
       subtasks,
       tags: tags.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean),
       recurrence: repeat ? { unit: repeat.unit, interval: Math.max(1, Math.min(365, Math.floor(repeat.interval) || 1)) } : undefined,
+      area: area || undefined,
+      goalId: goalId || undefined,
     };
     if (editing) updateTask(editing.id, { ...data, status });
     else createTask({ ...data, status });
@@ -144,6 +149,9 @@ export function TaskModal({ id, dueDate }: { id?: string; dueDate?: string }) {
           )}
         </Field>
         {editing && <Field label="Estado">{() => <Segmented label="Estado" value={status} options={STATUSES} onChange={setStatus} />}</Field>}
+        <Fold summary="Área y meta (opcional)" open={!!area || !!goalId}>
+          <OrganizeFields area={area} onArea={setArea} goalId={goalId} onGoal={setGoalId} />
+        </Fold>
         <Field label="Subtareas" hint="Una por línea.">{(fid) => <textarea id={fid} className="input" rows={3} value={subs} onChange={(e) => setSubs(e.target.value)} placeholder={'Repasar INNER vs LEFT\nResolver los 8 ejercicios'} />}</Field>
         <Field label="Etiquetas" hint="Separadas por comas.">{(fid) => <TextInput id={fid} className="input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="sql, práctica" />}</Field>
         <div className="modal__actions">

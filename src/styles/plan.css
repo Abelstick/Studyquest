@@ -1,0 +1,250 @@
+/* ===== Organización personal: áreas, metas SMART, si… entonces…, plan de Hoy y revisión semanal =====
+ * Solo estilos nuevos de componentes nuevos; los colores salen de tokens.css. Texto mínimo: 12 px. */
+
+/* ---------- Bloques plegables de formulario ---------- */
+.fold {
+  border: 2px solid var(--line-soft);
+  background: var(--panel-2);
+}
+.fold__summary {
+  padding: 10px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.fold__body {
+  padding: 4px 12px 12px;
+}
+
+/* ---------- Si… entonces… ---------- */
+.ifthen {
+  display: grid;
+  gap: 10px;
+}
+.ifthen__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+.ifthen__field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .ifthen__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ifthen-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ifthen-list li {
+  padding: 6px 10px;
+  background: var(--panel-2);
+  border-left: 4px solid var(--violet);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.ifthen-list--compact li {
+  padding: 3px 8px;
+  font-size: 13px;
+}
+
+/* ---------- Áreas y hábitos ---------- */
+.area-tag {
+  text-transform: none;
+}
+.habit-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.habit-recover {
+  margin: 0;
+  padding: 4px 8px;
+  border-left: 4px solid var(--orange);
+  background: color-mix(in srgb, var(--orange) 12%, var(--panel));
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- Meta SMART ---------- */
+.goalpace {
+  display: grid;
+  gap: 6px;
+}
+.smart {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.smart__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+.smart__letter {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  font-family: var(--font-pixel);
+  font-size: 10px;
+}
+.smart__item.is-ok .smart__letter {
+  background: var(--green);
+  color: var(--on-green);
+}
+
+/* ---------- Plan de Hoy: prioridades y agenda ---------- */
+.today-plan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .today-plan--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.tagenda__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tagenda__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--panel);
+  border: 2px solid var(--line-soft);
+  border-left: 6px solid var(--blue);
+}
+.tagenda__row.is-now {
+  border-color: var(--line);
+  border-left-color: var(--yellow);
+  background: color-mix(in srgb, var(--yellow) 12%, var(--panel));
+}
+.tagenda__row.is-done {
+  border-left-color: var(--green);
+}
+.tagenda__row.is-done .tagenda__what .link {
+  text-decoration: line-through;
+}
+.tagenda__time {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.tagenda__what {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tagenda__acts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+@media (max-width: 560px) {
+  .tagenda__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .tagenda__time {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Revisión semanal ---------- */
+.rv {
+  scroll-margin-top: 80px;
+}
+.rv__sec {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 2px solid var(--line-soft);
+}
+.rv__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+}
+.rv__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rv__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding: 8px 10px;
+  background: var(--panel-2);
+  border-left: 5px solid var(--line-soft);
+}
+.rv__row--pending {
+  border-left-color: var(--orange);
+}
+.rv__name {
+  margin: 0;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.rv__side,
+.rv__acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.rv__date .input {
+  width: auto;
+}
+.rv__repeat {
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 4px solid var(--orange);
+  background: color-mix(in srgb, var(--orange) 12%, var(--panel));
+  font-size: 14px;
+}
+.rv__cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rv__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding-top: 14px;
+  border-top: 2px solid var(--line-soft);
+}

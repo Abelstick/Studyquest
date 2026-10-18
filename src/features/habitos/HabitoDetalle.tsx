@@ -5,7 +5,10 @@ import { useUi } from '@/state/ui';
 import { addDays, today, weekdayAbbr, weekdayIndex } from '@/core/dates';
 import { frequencyLabel, goalLabel, habitStreaks, isHabitDone, logFor, weakestWeekday, MEASURE_LABEL } from '@/core/game';
 import { Bar, Button, Panel, cx } from '@/ui/kit';
-import { HabitAction } from './HabitAction';
+import { HabitAction, HabitRecovery, minimumLabel } from './HabitAction';
+import { minimumOf } from '@/core/minimum';
+import { areaInfo } from '@/core/areas';
+import { IfThenList } from '@/ui/IfThenList';
 import { HabitWeek } from './HabitWeek';
 import { HabitHistory } from './HabitHistory';
 import { HabitPeriod } from './HabitPeriod';
@@ -49,6 +52,8 @@ export default function HabitoDetalle() {
     ['Objetivo', goalLabel(habit)],
     ['Recompensa', `+${habit.xp} XP`],
     ['Recordatorio', habit.reminder ?? 'Sin recordatorio'],
+    ...(minimumOf(habit) !== null ? ([['Versión mínima', minimumLabel(habit)]] as [string, string][]) : []),
+    ...(habit.area ? ([['Área', areaInfo(habit.area).label]] as [string, string][]) : []),
   ];
 
   return (
@@ -98,6 +103,13 @@ export default function HabitoDetalle() {
               </>
             )}
           </Panel>
+
+          <HabitRecovery habit={habit} logs={logs} />
+          {habit.ifThen && habit.ifThen.length > 0 && (
+            <Panel kicker="// Si… entonces…">
+              <IfThenList plans={habit.ifThen} />
+            </Panel>
+          )}
 
           <Panel kicker="// Esta semana · pulsa un día para registrar avance">
             <HabitPeriod habit={habit} logs={logs} now={now} />

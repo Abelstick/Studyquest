@@ -7,13 +7,14 @@ import type { EditScope } from '@/core/agenda';
 
 export type ModalState =
   | null
-  | { type: 'task'; id?: string; dueDate?: string }
-  | { type: 'habit'; id?: string }
+  /** `goalId` propone la meta a la que aportará una tarea u hábito nuevo (desde la ficha de la meta). */
+  | { type: 'task'; id?: string; dueDate?: string; goalId?: string }
+  | { type: 'habit'; id?: string; goalId?: string }
   /** Ficha de solo lectura (con acciones) de un hábito o una tarea, abierta desde Hoy. */
   | { type: 'habit-detail'; id: string }
   | { type: 'task-detail'; id: string }
   | { type: 'course'; id?: string }
-  | { type: 'goal' }
+  | { type: 'goal'; id?: string }
   | { type: 'project' }
   | { type: 'reward' }
   | { type: 'certification'; id?: string }

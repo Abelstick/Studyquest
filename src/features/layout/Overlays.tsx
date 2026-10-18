@@ -41,7 +41,7 @@ function ModalHost() {
   if (!modal) return null;
   switch (modal.type) {
     case 'task':
-      return <TaskModal key={`${modal.id ?? 'new'}${modal.dueDate ?? ''}`} id={modal.id} dueDate={modal.dueDate} />;
+      return <TaskModal key={`${modal.id ?? 'new'}${modal.dueDate ?? ''}${modal.goalId ?? ''}`} id={modal.id} dueDate={modal.dueDate} goalId={modal.goalId} />;
     case 'pace':
       return <PaceModal courseId={modal.courseId} />;
     case 'pack':
@@ -53,7 +53,7 @@ function ModalHost() {
     case 'cards':
       return <CardsModal key={modal.topicId} courseId={modal.courseId} topicId={modal.topicId} />;
     case 'habit':
-      return <HabitModal key={modal.id ?? 'new'} id={modal.id} />;
+      return <HabitModal key={`${modal.id ?? 'new'}${modal.goalId ?? ''}`} id={modal.id} goalId={modal.goalId} />;
     case 'habit-detail':
       return <HabitDetailModal key={modal.id} id={modal.id} />;
     case 'task-detail':
@@ -61,7 +61,7 @@ function ModalHost() {
     case 'course':
       return <CourseModal key={modal.id ?? 'new'} id={modal.id} />;
     case 'goal':
-      return <GoalModal />;
+      return <GoalModal key={modal.id ?? 'new'} id={modal.id} />;
     case 'project':
       return <ProjectModal />;
     case 'reward':

@@ -1,9 +1,47 @@
+import type { ReactNode } from 'react';
 import { useData } from '@/state';
 import { MEASURE_LABEL, goalLabel, isCounter, isHabitDone, stepForCounter } from '@/core/game';
 import type { Habit, HabitLog } from '@/core/domain';
 import { isQuit, slippedOn } from '@/core/quit';
 import { today } from '@/core/dates';
-import { Button } from '@/ui/kit';
+import { minimumOf } from '@/core/minimum';
+import { needsRecovery } from '@/core/catchup';
+import { Button, Tag } from '@/ui/kit';
+
+/** «5 min», «2 pág.»: la versión mínima dicha con la unidad del hábito. */
+export function minimumLabel(habit: Habit): string {
+  const min = minimumOf(habit);
+  if (min === null) return '';
+  const unit = MEASURE_LABEL[habit.measure];
+  return `${min} ${min === 1 ? unit.unit : unit.plural}`.trim();
+}
+
+/**
+ * Botón de la versión mínima: registra la cantidad mínima en el mismo registro del día (nunca otro aparte) y
+ * mantiene la racha del hábito. Si hoy ya se llegó al mínimo, lo dice; si ya se hizo todo, no aparece.
+ */
+export function HabitMinimumButton({ habit, log }: Readonly<{ habit: Habit; log?: HabitLog }>) {
+  const setHabitValue = useData((s) => s.setHabitValue);
+  const min = minimumOf(habit);
+  if (min === null || isHabitDone(habit, log)) return null;
+  if ((log?.value ?? 0) >= min) return <Tag tone="green">✔ Mínimo cumplido · tu racha sigue</Tag>;
+  return (
+    <Button small variant="ghost" onClick={() => setHabitValue(habit.id, min)} title="Un día malo también cuenta: lo mínimo mantiene tu racha">
+      Solo lo mínimo ({minimumLabel(habit)})
+    </Button>
+  );
+}
+
+/** Aviso amable cuando ayer tocaba y no se hizo: hoy basta con volver, sin compensar nada. */
+export function HabitRecovery({ habit, logs }: Readonly<{ habit: Habit; logs: HabitLog[] }>) {
+  if (!needsRecovery(habit, logs)) return null;
+  const min = minimumOf(habit);
+  return (
+    <p className="habit-recover" role="note">
+      ↺ Ayer no pudo ser. {min === null ? 'Hoy basta con volver; no hace falta compensar.' : `Hoy basta con volver: ${minimumLabel(habit)} ya cuentan.`}
+    </p>
+  );
+}
 
 /**
  * Botón (o contador +/−) para registrar un hábito, tal cual toque su medida.
@@ -44,10 +82,11 @@ export function HabitAction({ habit, log }: { habit: Habit; log?: HabitLog }) {
     );
   }
 
+  let main: ReactNode;
   if (isCounter(habit)) {
     const step = stepForCounter(habit);
     const unit = MEASURE_LABEL[habit.measure].plural;
-    return (
+    main = (
       <div className="counter">
         <Button small aria-label="Restar" onClick={() => setHabitValue(habit.id, value - step)} disabled={value <= 0}>
           −
@@ -60,11 +99,20 @@ export function HabitAction({ habit, log }: { habit: Habit; log?: HabitLog }) {
         </Button>
       </div>
     );
+  } else {
+    const label = habit.measure === 'minutes' || habit.measure === 'hours' ? `Registrar ${goalLabel(habit)}` : 'Registrar hoy';
+    main = (
+      <Button variant={done ? 'ghost' : 'primary'} small onClick={() => setHabitValue(habit.id, done ? 0 : habit.target)} aria-pressed={done}>
+        {done ? '✔ Registrado' : label}
+      </Button>
+    );
   }
-  const label = habit.measure === 'minutes' || habit.measure === 'hours' ? `Registrar ${goalLabel(habit)}` : 'Registrar hoy';
+  // Sin versión mínima el resultado es el de siempre; con ella, el botón mínimo acompaña al principal.
+  if (minimumOf(habit) === null) return main;
   return (
-    <Button variant={done ? 'ghost' : 'primary'} small onClick={() => setHabitValue(habit.id, done ? 0 : habit.target)} aria-pressed={done}>
-      {done ? '✔ Registrado' : label}
-    </Button>
+    <div className="habit-action">
+      {main}
+      <HabitMinimumButton habit={habit} log={log} />
+    </div>
   );
 }

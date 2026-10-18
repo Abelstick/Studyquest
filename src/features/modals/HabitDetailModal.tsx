@@ -8,7 +8,10 @@ import { frequencyLabel, goalLabel, habitProgress, habitStreaks, isCounter, isDu
 import { chainOf } from '@/core/chains';
 import { habitDayState, type HabitDayState } from '@/core/missions';
 import { cleanDays, isQuit } from '@/core/quit';
-import { HabitAction } from '@/features/habitos/HabitAction';
+import { HabitAction, HabitRecovery, minimumLabel } from '@/features/habitos/HabitAction';
+import { isMinimumMet, minimumOf } from '@/core/minimum';
+import { areaInfo } from '@/core/areas';
+import { IfThenList } from '@/ui/IfThenList';
 import { HabitWeek } from '@/features/habitos/HabitWeek';
 import { Bar, Button, Modal, Tag, cx } from '@/ui/kit';
 
@@ -27,6 +30,7 @@ export function HabitDetailModal({ id }: { id: string }) {
   const habit = useData((s) => s.habits.find((h) => h.id === id));
   const logs = useData((s) => s.habitLogs);
   const chains = useData((s) => s.profile.chains) ?? NO_CHAINS;
+  const goal = useData((s) => s.goals.find((g) => g.id === habit?.goalId));
   const toggleStep = useData((s) => s.toggleHabitStep);
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
@@ -48,6 +52,7 @@ export function HabitDetailModal({ id }: { id: string }) {
   const stepsDone = new Set(log?.stepsDone ?? []);
   const chain = chainOf(chains, habit.id);
   const state = habitDayState(done, pct, due);
+  const minMet = isMinimumMet(habit, log);
   const status = STATE_TAG[state];
   const doneText = quit ? 'Hoy resistí' : 'Hecho hoy';
   const counted = isCounter(habit) ? `${log?.value ?? 0} / ${habit.target} ${MEASURE_LABEL[habit.measure].plural}` : null;
@@ -58,6 +63,9 @@ export function HabitDetailModal({ id }: { id: string }) {
     ['Objetivo', goalLabel(habit)],
     ['Recompensa', `+${habit.xp} XP`],
     ['Recordatorio', habit.reminder ?? 'Sin recordatorio'],
+    ...(minimumOf(habit) !== null ? ([['Versión mínima', `${minimumLabel(habit)} (mantiene la racha)`]] as [string, string][]) : []),
+    ...(habit.area ? ([['Área', areaInfo(habit.area).label]] as [string, string][]) : []),
+    ...(goal ? ([['Aporta a la meta', goal.title]] as [string, string][]) : []),
     ...(quit ? ([['Días limpio', String(cleanDays(habit, now))]] as [string, string][]) : []),
     ['Racha', `${stats.current} · mejor ${stats.best}`],
     ['Veces cumplido', String(stats.completions)],
@@ -69,6 +77,7 @@ export function HabitDetailModal({ id }: { id: string }) {
       <div className="detail__status">
         <Tag tone={status.tone}>{state === 'done' ? `✔ ${doneText}` : status.label}</Tag>
         <Tag tone="xp">+{habit.xp} XP</Tag>
+        {minMet && <Tag tone="green">Mínimo cumplido</Tag>}
         {stats.current > 0 && <Tag tone="plain">Racha {stats.current}</Tag>}
       </div>
 
@@ -79,7 +88,15 @@ export function HabitDetailModal({ id }: { id: string }) {
         </div>
         <Bar pct={pct} tone="green" label={`Progreso de hoy: ${habit.title}`} />
         <HabitAction habit={habit} log={log} />
+        <HabitRecovery habit={habit} logs={logs} />
       </section>
+
+      {habit.ifThen && habit.ifThen.length > 0 && (
+        <section aria-label="Si… entonces…">
+          <p className="kicker">Si… entonces…</p>
+          <IfThenList plans={habit.ifThen} />
+        </section>
+      )}
 
       {habit.steps.length > 0 && (
         <section aria-label="Pasos de la sesión">

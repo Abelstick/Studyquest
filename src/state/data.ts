@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type {
-  AgendaEvent, AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, XpEvent, XpSource,
+  AgendaEvent, AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, WeekReview, XpEvent, XpSource,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
@@ -16,6 +16,8 @@ import { isQuit, slippedOn, withSlip, withoutSlip } from '@/core/quit';
 import type { PlanEntities } from '@/core/planner';
 import { describePack, type PackEntities } from '@/core/pack';
 import { planIdsToDelete, type PlanMembers } from '@/core/plans';
+import { unlinkGoal } from '@/core/goals';
+import { upsertReview } from '@/core/weekReview';
 import { buildingById, cityUpgrades } from '@/core/city';
 import { ACHIEVEMENTS } from '@/core/achievements';
 import { shopItem } from '@/core/catalog';
@@ -42,7 +44,8 @@ export interface DataState extends Data {
   finishOnboarding: (withDemo: boolean) => Promise<void>;
   resetAll: () => Promise<void>;
 
-  createTask: (draft: Omit<Task, 'id' | 'createdAt' | 'completedAt'>) => void;
+  /** Crea la tarea y devuelve su id (para enlazarla enseguida, p. ej. como prioridad de la semana). */
+  createTask: (draft: Omit<Task, 'id' | 'createdAt' | 'completedAt'>) => ID;
   updateTask: (id: ID, patch: Partial<Omit<Task, 'id'>>) => void;
   deleteTask: (id: ID) => void;
   setTaskStatus: (id: ID, status: TaskStatus) => void;
@@ -78,6 +81,9 @@ export interface DataState extends Data {
   reviewTopic: (courseId: ID, topicId: ID, rating: Rating) => void;
 
   createGoal: (draft: Omit<Goal, 'id' | 'createdAt'>) => void;
+  /** Edita los datos de la meta (plazo, cómo se mide, por qué importa, hitos nuevos…). El XP de los hitos se mueve solo con `setMilestoneDone`. */
+  updateGoal: (id: ID, patch: Partial<Omit<Goal, 'id'>>) => void;
+  /** Borra la meta; las tareas y hábitos que le aportaban se quedan, sin el vínculo. */
   deleteGoal: (id: ID) => void;
   toggleSkill: (goalId: ID, milestoneId: ID, skillId: ID) => void;
   setMilestoneDone: (goalId: ID, milestoneId: ID, done: boolean) => void;
@@ -134,6 +140,9 @@ export interface DataState extends Data {
   shiftTasks: (shifts: { id: ID; dueDate: ISODate }[]) => void;
   /** Borra de golpe la meta y el hábito que salieron del mismo plan que un curso. */
   deletePlanExtras: (members: PlanMembers) => void;
+
+  /** Guarda (o corrige) la revisión de una semana. No da XP: es reflexión, no un logro que farmear. */
+  saveWeekReview: (review: WeekReview) => void;
 
   markAllRead: () => void;
   notify: (n: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => void;
@@ -422,6 +431,7 @@ export function createDataStore(repo: Repository) {
         const task: Task = { ...draft, id: newId(), createdAt: isoNow(), completedAt: draft.status === 'done' ? today() : null };
         run((s) => ({ tasks: [...s.tasks, task] }), () => repo.tasks.create(task));
         sfx.jump();
+        return task.id;
       },
       updateTask(id, patch) {
         const cur = get().tasks.find((t) => t.id === id);
@@ -691,8 +701,21 @@ export function createDataStore(repo: Repository) {
         run((s) => ({ goals: [...s.goals, goal] }), () => repo.goals.create(goal));
         sfx.jump();
       },
+      updateGoal(id, patch) {
+        run((s) => ({ goals: s.goals.map((g) => (g.id === id ? { ...g, ...patch } : g)) }), () => repo.goals.update(id, patch));
+      },
       deleteGoal(id) {
-        run((s) => ({ goals: s.goals.filter((g) => g.id !== id) }), () => repo.goals.remove(id));
+        // Lo que aportaba a la meta sigue teniendo sentido por sí solo: solo se suelta el vínculo.
+        const freed = unlinkGoal(id, get());
+        const swap = <T extends { id: ID }>(list: T[], changed: T[]) => list.map((x) => changed.find((c) => c.id === x.id) ?? x);
+        run(
+          (s) => ({ goals: s.goals.filter((g) => g.id !== id), tasks: swap(s.tasks, freed.tasks), habits: swap(s.habits, freed.habits) }),
+          async () => {
+            await repo.goals.remove(id);
+            if (freed.tasks.length) await repo.tasks.createMany(freed.tasks);
+            if (freed.habits.length) await repo.habits.createMany(freed.habits);
+          },
+        );
         sfx.stomp();
       },
       toggleSkill(goalId, milestoneId, skillId) {
@@ -1012,6 +1035,12 @@ export function createDataStore(repo: Repository) {
         // El hábito arrastra su historial, igual que al borrarlo a mano.
         habits.forEach((id) => get().deleteHabit(id));
         goals.forEach((id) => get().deleteGoal(id));
+      },
+
+      saveWeekReview(review) {
+        patchProfile({ reviews: upsertReview(get().profile.reviews, review) });
+        useUi.getState().toast({ kind: 'info', title: 'Revisión guardada', body: 'Tus prioridades de la semana siguiente quedan en Hoy.' });
+        sfx.unlock();
       },
 
       markAllRead() {

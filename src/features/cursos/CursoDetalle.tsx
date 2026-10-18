@@ -8,7 +8,7 @@ import { agoDays, diffDays, today } from '@/core/dates';
 import { reviewDueDate } from '@/core/review';
 import { certificationsOfCourse, linkLabel, safeUrl } from '@/core/certifications';
 import { overdueOf } from '@/core/pace';
-import { blankNote, notesOfTopic } from '@/core/notes';
+import { blankNote, notesOfTopic, sortNotes } from '@/core/notes';
 import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Panel, Tag, cx, TextInput } from '@/ui/kit';
@@ -160,14 +160,26 @@ export default function CursoDetalle() {
                         <button type="button" className={cx('chip chip--sm', !!t.cards?.length && 'is-on')} onClick={() => openModal({ type: 'cards', courseId: course.id, topicId: t.id })} aria-label={`Tarjetas de ${t.title}`}>
                           ♪ Tarjetas{t.cards?.length ? ` (${t.cards.length})` : ''}
                         </button>
-                        {/* Apuntes del tema: si no hay, lo crea ya colgado de este tema y te lleva a escribirlo. */}
+                        {/* Las tarjetas del tema se repasan ya, sin esperar a que toque en la agenda. */}
+                        {!!t.cards?.length && (
+                          <Link className="chip chip--sm" to={`/repaso?curso=${encodeURIComponent(course.id)}&tema=${encodeURIComponent(t.id)}`} aria-label={`Repasar las tarjetas de ${t.title}`}>
+                            ▶ Repasar
+                          </Link>
+                        )}
+                        {/* Apuntes del tema: abre el más reciente (o lo crea ya colgado de este tema) y filtra por el tema. */}
                         <button
                           type="button"
                           className={cx('chip chip--sm', notesOfTopic(allNotes, t.id).length > 0 && 'is-on')}
                           onClick={() => {
-                            const mios = notesOfTopic(allNotes, t.id);
-                            if (!mios.length) createNote(blankNote({ title: t.title, courseId: course.id, topicId: t.id }));
-                            navigate('/apuntes');
+                            const mios = sortNotes(notesOfTopic(allNotes, t.id));
+                            const noteId = mios[0]?.id ?? createNote(blankNote({ title: t.title, courseId: course.id, topicId: t.id }));
+                            const q = new URLSearchParams({ nota: noteId });
+                            // Con varios apuntes del tema, se filtra por él para verlos todos juntos.
+                            if (mios.length > 1) {
+                              q.set('curso', course.id);
+                              q.set('tema', t.id);
+                            }
+                            navigate(`/apuntes?${q.toString()}`);
                           }}
                           aria-label={`Apuntes de ${t.title}`}
                         >

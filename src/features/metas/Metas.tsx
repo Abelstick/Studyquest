@@ -23,10 +23,12 @@ export default function Metas() {
             <p>Una meta es lo que quieres lograr a largo plazo, por ejemplo «aprender análisis de datos». Se divide en hitos (Excel, SQL, Python…): cada uno da XP y te acerca a la recompensa final.</p>
             <p className="muted small">Las metas se cumplen avanzando con tareas y hábitos. ¿Dudas? Pulsa «¿Cuál uso?».</p>
             <div className="row">
-              <Link className="btn btn--primary" to="/planificador">
+              <Button variant="primary" onClick={() => openModal({ type: 'goal' })}>
+                ＋ Crear mi primera meta
+              </Button>
+              <Link className="btn btn--ghost" to="/planificador">
                 ✨ Planificar con el asistente
               </Link>
-              <Button onClick={() => openModal({ type: 'goal' })}>Crear a mano</Button>
               <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
             </div>
           </Empty>

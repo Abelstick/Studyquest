@@ -67,10 +67,12 @@ export default function Proyectos() {
           <Empty sprite="chest" title="Cofre vacío">
             <p>Un proyecto es algo que construyes y entregas: un portafolio, una tesis, una app. Se divide en partes (checkpoints) y cada una da XP.</p>
             <p className="muted small">¿Es algo que quieres aprender o lograr? Eso es una meta. ¿Dudas? Pulsa «¿Cuál uso?».</p>
-            <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
-            <Button variant="primary" onClick={() => openModal({ type: 'project' })}>
-              Crear primer proyecto
-            </Button>
+            <div className="row">
+              <Button variant="primary" onClick={() => openModal({ type: 'project' })}>
+                ＋ Crear mi primer proyecto
+              </Button>
+              <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
+            </div>
           </Empty>
         </div>
       )}

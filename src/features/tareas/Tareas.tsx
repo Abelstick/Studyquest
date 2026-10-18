@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { diffDays, dueLabel, today } from '@/core/dates';
@@ -53,7 +53,14 @@ function TaskCard({ task, courseName }: { task: Task; courseName: string }) {
       }}
     >
       <div className="split">
-        <span className="kicker">{courseName}</span>
+        {/* El curso lleva a su pantalla; las side quests no tienen adónde ir. */}
+        {task.courseId ? (
+          <Link className="kicker task__course" to={`/cursos/${task.courseId}`} draggable={false}>
+            {courseName}
+          </Link>
+        ) : (
+          <span className="kicker">{courseName}</span>
+        )}
         <span className="xp-text">+{task.xp}</span>
       </div>
       <h3 className="task__title">

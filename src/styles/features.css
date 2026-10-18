@@ -4477,3 +4477,19 @@ button.week__day--rich {
     justify-content: center;
   }
 }
+
+
+/* ---------- Enlaces con contexto ---------- */
+a.chip {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.task__course {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.task__course:hover {
+  color: var(--text);
+}

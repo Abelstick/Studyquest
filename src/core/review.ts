@@ -79,6 +79,32 @@ const allReviews = (s: Pick<Snapshot, 'courses'>, now: ISODate): DueReview[] =>
 export const dueReviews = (s: Pick<Snapshot, 'courses'>, now: ISODate = today()): DueReview[] =>
   allReviews(s, now).filter((r) => r.due <= now).sort((a, b) => a.due.localeCompare(b.due));
 
+/** Foco del repaso que llega por la URL (`/repaso?curso=<id>&tema=<id>`). */
+export interface ReviewFocus {
+  courseId?: string | null;
+  topicId?: string | null;
+}
+
+/**
+ * Cola de repaso con foco. Con curso, solo los repasos de ese curso; con tema, solo ese tema.
+ * Si el tema pedido no toca hoy, se devuelve como práctica libre: se ven sus tarjetas, pero no se
+ * califica (no da XP ni mueve la agenda). Un curso o tema que no existe se ignora.
+ */
+export function focusedReviews(s: Pick<Snapshot, 'courses'>, focus: ReviewFocus, now: ISODate = today()): { queue: DueReview[]; practice: DueReview | null } {
+  const due = dueReviews(s, now);
+  const course = focus.courseId ? s.courses.find((c) => c.id === focus.courseId) : undefined;
+  if (!course) return { queue: due, practice: null };
+  const inCourse = due.filter((r) => r.courseId === course.id);
+  const topic = focus.topicId ? course.modules.flatMap((m) => m.topics).find((t) => t.id === focus.topicId) : undefined;
+  if (!topic) return { queue: inCourse, practice: null };
+  const hit = inCourse.filter((r) => r.topicId === topic.id);
+  if (hit.length) return { queue: hit, practice: null };
+  return {
+    queue: [],
+    practice: { courseId: course.id, course: course.title, topicId: topic.id, title: topic.title, due: reviewDueDate(topic, now) ?? now, late: 0, stage: topic.reviewStage ?? 0, cards: cardsFor(topic) },
+  };
+}
+
 /** Todos los repasos agendados (para el calendario). */
 export const scheduledReviews = (s: Pick<Snapshot, 'courses'>, now: ISODate = today()): DueReview[] => allReviews(s, now);
 

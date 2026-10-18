@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import type { Note } from '@/core/domain';
@@ -158,17 +159,43 @@ export default function Apuntes() {
   const updateNote = useData((s) => s.updateNote);
   const [q, setQ] = useState('');
   const [tag, setTag] = useState('');
-  const [openId, setOpenId] = useState<string | null>(null);
+  // La URL manda: ?nota=<id> abre un apunte y ?curso=<id>&tema=<id> filtra. Así los enlaces desde un curso llegan con contexto.
+  const [params, setParams] = useSearchParams();
+  const openId = params.get('nota');
+  const courseFilter = params.get('curso');
+  const topicFilter = params.get('tema');
+  const setOpenId = (id: string | null) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (id) next.set('nota', id);
+        else next.delete('nota');
+        return next;
+      },
+      { replace: true },
+    );
 
   const courseName = (id: string) => courses.find((c) => c.id === id)?.title;
+  const filterCourse = courses.find((c) => c.id === courseFilter);
+  const filterTopic = filterCourse?.modules.flatMap((m) => m.topics).find((t) => t.id === topicFilter);
   const tags = useMemo(() => allTags(notes), [notes]);
   const shown = useMemo(() => {
-    const base = tag ? notes.filter((n) => n.tags.includes(tag)) : notes;
+    let base = tag ? notes.filter((n) => n.tags.includes(tag)) : notes;
+    if (filterCourse) base = base.filter((n) => n.courseId === filterCourse.id);
+    if (filterTopic) base = base.filter((n) => n.topicId === filterTopic.id);
     return sortNotes(searchNotes(base, q));
-  }, [notes, q, tag]);
+  }, [notes, q, tag, filterCourse, filterTopic]);
   const open = notes.find((n) => n.id === openId);
+  // En móvil el apunte va debajo de la lista: al abrir uno (también desde un enlace) lo traemos a la vista.
+  const detailRef = useRef<HTMLDivElement>(null);
+  const hasOpen = !!open;
+  useEffect(() => {
+    if (!hasOpen || !openId) return;
+    if (window.matchMedia('(max-width: 900px)').matches) detailRef.current?.scrollIntoView({ block: 'start' });
+  }, [openId, hasOpen]);
 
-  const nuevo = () => setOpenId(createNote(blankNote()));
+  // Con filtro activo, el apunte nuevo ya nace colgado de ese curso y tema.
+  const nuevo = () => setOpenId(createNote(blankNote({ title: filterTopic?.title ?? '', courseId: filterCourse?.id ?? null, topicId: filterTopic?.id ?? null })));
 
   return (
     <div className="stack">
@@ -210,6 +237,20 @@ export default function Apuntes() {
               </p>
               <Tag tone="xp">📚 {notes.length} puntos de biblioteca</Tag>
             </div>
+            {filterCourse && (
+              <div className="row">
+                <span className="tag tag--plain">
+                  Solo {filterCourse.title}
+                  {filterTopic ? ` · ${filterTopic.title}` : ''}
+                </span>
+                <Link className="btn btn--ghost btn--sm" to={`/cursos/${filterCourse.id}`}>
+                  Ir al curso
+                </Link>
+                <Link className="btn btn--ghost btn--sm" to={openId ? `/apuntes?nota=${encodeURIComponent(openId)}` : '/apuntes'}>
+                  Ver todos los apuntes
+                </Link>
+              </div>
+            )}
             <input className="input" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar en tus apuntes…" aria-label="Buscar apuntes" />
             {tags.length > 0 && (
               <div className="chips" aria-label="Filtrar por etiqueta">
@@ -263,13 +304,28 @@ export default function Apuntes() {
                   </button>
                 </li>
               ))}
-              {shown.length === 0 && <li className="muted">Ningún apunte coincide.</li>}
+              {shown.length === 0 && (
+                <li className="muted">
+                  {filterCourse && !q && !tag ? (
+                    <>
+                      Aún no hay apuntes {filterTopic ? 'de este tema' : 'de este curso'}.{' '}
+                      <button type="button" className="link" onClick={nuevo}>
+                        Escribir uno
+                      </button>
+                    </>
+                  ) : (
+                    'Ningún apunte coincide.'
+                  )}
+                </li>
+              )}
             </ul>
 
             {open ? (
               // `key` obliga a montar de nuevo al cambiar de apunte: si no, el editor se
               // quedaría con el texto del anterior (useState solo lee su valor inicial al montar).
-              <Detail key={open.id} note={open} onClose={() => setOpenId(null)} />
+              <div ref={detailRef}>
+                <Detail key={open.id} note={open} onClose={() => setOpenId(null)} />
+              </div>
             ) : (
               <Panel kicker="// Cuaderno" title="Elige un apunte">
                 <p className="muted">Pulsa uno de la izquierda para leerlo, o crea uno nuevo. Se guarda solo en cuanto pulses «Guardar».</p>

@@ -21,6 +21,7 @@ import { AiKeyModal } from '../modals/AiKeyModal';
 import { PackModal } from '../modals/PackModal';
 import { PaceModal } from '../modals/PaceModal';
 import { RoutineModal } from '../modals/RoutineModal';
+import { ConflictsModal } from '../calendario/ConflictsModal';
 import { ConceptGuide } from '../help/ConceptGuide';
 import { HowToGuide } from '../help/HowToGuide';
 import { EventModal } from '../calendario/EventModal';
@@ -66,6 +67,8 @@ function ModalHost() {
       return <CourseModal key={modal.id ?? 'new'} id={modal.id} />;
     case 'goal':
       return <GoalModal key={modal.id ?? 'new'} id={modal.id} />;
+    case 'conflicts':
+      return <ConflictsModal from={modal.from} to={modal.to} />;
     case 'routine':
       return <RoutineModal />;
     case 'project':

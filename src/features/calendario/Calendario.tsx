@@ -8,6 +8,7 @@ import type { ISODate, Task } from '@/core/domain';
 import { recurrenceLabel } from '@/core/tasks';
 import { DAY_MIN, durationLabel, freeMinutes, occurrencesBetween, segmentsOn, toClock, type EditScope, type Occurrence } from '@/core/agenda';
 import { Button, PageHead, Panel, cx } from '@/ui/kit';
+import { findConflicts } from '@/core/conflicts';
 import { Sprite } from '@/ui/Sprite';
 import { TimeGrid } from './TimeGrid';
 import { AgendaList } from './AgendaList';
@@ -86,6 +87,8 @@ export default function Calendario() {
 
   const source = useMemo(() => ({ tasks, courses, habits, habitLogs, sessions }), [tasks, courses, habits, habitLogs, sessions]);
   const ctx = useMemo(() => ({ habits, tasks, logs: habitLogs }), [habits, tasks, habitLogs]);
+  // Ratos reservados (de tareas y hábitos) que se pisan con otra cosa en las próximas dos semanas.
+  const conflictCount = useMemo(() => findConflicts({ events, habits, tasks, habitLogs }, today(), addDays(today(), 13)).length, [events, habits, tasks, habitLogs]);
   const days = useMemo(() => calendarDays(source, from, to, now), [source, from, to, now]);
   const occs = useMemo(() => occurrencesBetween(events, from, to, ctx), [events, from, to, ctx]);
 
@@ -199,6 +202,11 @@ export default function Calendario() {
             <Button small variant="primary" onClick={() => createAt(view === 'day' ? cursor : selected)}>
               ＋ Actividad
             </Button>
+            {conflictCount > 0 && (
+              <Button small variant="danger" onClick={() => openModal({ type: 'conflicts' })} title="Ratos reservados que se pisan con otra cosa">
+                ⚠ {conflictCount} {conflictCount === 1 ? 'cruce' : 'cruces'}
+              </Button>
+            )}
             <Button small onClick={() => openModal({ type: 'routine' })} title="Tu horario de trabajo, la hora de tus hábitos y la exportación">
               🗓 Mi semana
             </Button>

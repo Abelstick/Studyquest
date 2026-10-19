@@ -430,3 +430,23 @@
 .worksq p {
   margin: 0;
 }
+
+/* ---------- Cruces de horario ---------- */
+.conflicts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.conflicts__row {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--orange) 10%, var(--panel));
+  border-left: 6px solid var(--orange);
+}
+.conflicts__what {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

@@ -8,6 +8,7 @@ import { categoryInfo, toClock } from '@/core/agenda';
 import { deadlineText } from '@/core/missions';
 import { PRIORITY_REASON_TEXT, agendaToday, topPriorities, type AgendaItem, type TodayPriority } from '@/core/today';
 import { reviewOf, reviewWeekFor } from '@/core/weekReview';
+import { findConflicts } from '@/core/conflicts';
 import { Button, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
@@ -169,6 +170,31 @@ export function ReviewNudge() {
       <Link className="btn btn--primary btn--sm" to={`/progreso?revision=${week}`}>
         Revisar mi semana
       </Link>
+    </section>
+  );
+}
+
+/** Aviso de cruces de horario en los próximos 7 días, con la puerta a arreglarlos. */
+export function ConflictBanner() {
+  const events = useData((s) => s.events);
+  const habits = useData((s) => s.habits);
+  const tasks = useData((s) => s.tasks);
+  const habitLogs = useData((s) => s.habitLogs);
+  const openModal = useUi((s) => s.openModal);
+  const n = useMemo(() => findConflicts({ events, habits, tasks, habitLogs }, today(), addDays(today(), 6)).length, [events, habits, tasks, habitLogs]);
+  if (!n) return null;
+  return (
+    <section className="panel catchup" role="status">
+      <Sprite name="ghost" size={24} />
+      <p className="grow">
+        <b>
+          {n} {n === 1 ? 'cruce de horario' : 'cruces de horario'} esta semana.
+        </b>{' '}
+        Un rato que reservaste se pisa con otra cosa; se arregla en un toque.
+      </p>
+      <Button small variant="primary" onClick={() => openModal({ type: 'conflicts' })}>
+        Resolver
+      </Button>
     </section>
   );
 }

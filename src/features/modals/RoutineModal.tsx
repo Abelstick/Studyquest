@@ -3,6 +3,7 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, minutesOfDay, today, weekdayIndex, WEEKDAYS_SHORT } from '@/core/dates';
 import { durationLabel, toClock } from '@/core/agenda';
+import { findConflicts } from '@/core/conflicts';
 import { findRoutine, freeWindows, habitsWithoutTime, planTaskSlots, routineDrafts, routineOf, slotLabel, taskBlockDrafts, tasksWithoutTime, validateRoutine, type RoutineInput } from '@/core/routine';
 import { Button, ChipGroup, Field, Modal, Tag, cx } from '@/ui/kit';
 import { HabitScheduler } from '../calendario/HabitScheduler';
@@ -66,7 +67,15 @@ export function RoutineModal() {
     apply(work, found.work, true);
     apply(sleep, found.sleep, true);
     updateProfile({ works: !!works });
-    toast({ kind: 'info', title: 'Tu semana quedó guardada', body: 'Ya aparece en el calendario y en Hoy. Ahora ponle hora a tus hábitos.' });
+    // Cambiar el horario puede pisar ratos que ya tenías reservados: se avisa y se ofrece arreglarlo.
+    const s = useData.getState();
+    const clashes = findConflicts({ events: s.events, habits: s.habits, tasks: s.tasks, habitLogs: s.habitLogs }, today(), addDays(today(), 13)).length;
+    toast({
+      kind: clashes ? 'error' : 'info',
+      title: clashes ? `Tu semana quedó guardada, con ${clashes} ${clashes === 1 ? 'cruce' : 'cruces'}` : 'Tu semana quedó guardada',
+      body: clashes ? 'Algunos ratos que ya tenías reservados caen en tu jornada.' : 'Ya aparece en el calendario y en Hoy. Ahora ponle hora a tus hábitos.',
+      ...(clashes ? { action: { label: 'Resolver', run: () => openModal({ type: 'conflicts' }) } } : {}),
+    });
   };
 
   return (

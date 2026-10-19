@@ -151,6 +151,8 @@ export interface ExportEvent {
   description: string;
   location?: string;
   categories: string[];
+  /** Actividad de la que sale (una serie expandida comparte grupo). */
+  group?: string;
   /** Primera ocurrencia. */
   date: ISODate;
   start: number | null;
@@ -212,7 +214,8 @@ function firstOccurrence(ev: AgendaEvent, habits: Habit[]): ISODate | null {
   return null;
 }
 
-export function eventToExport(ev: AgendaEvent, ctx: AgendaContext, range: { from: ISODate; to: ISODate }): ExportEvent | null {
+/** Lo común a todas las ocurrencias de una actividad: descripción, categorías, avisos y versión. */
+function baseOf(ev: AgendaEvent, ctx: AgendaContext) {
   const habit = ev.habitId ? ctx.habits.find((h) => h.id === ev.habitId) : undefined;
   const task = ev.taskId ? ctx.tasks.find((t) => t.id === ev.taskId) : undefined;
   const cat = categoryInfo(ev.category);
@@ -226,6 +229,7 @@ export function eventToExport(ev: AgendaEvent, ctx: AgendaContext, range: { from
     .join('\n');
   const base = {
     kind: 'event' as const,
+    group: ev.id,
     uid: `${ev.id}@studyquest`,
     title: displayTitle(ev, ctx),
     description,
@@ -238,6 +242,23 @@ export function eventToExport(ev: AgendaEvent, ctx: AgendaContext, range: { from
     sequence: ev.rev,
     lastModified: ev.updatedAt,
   };
+  return { habit, base };
+}
+
+/**
+ * Cada ocurrencia de la actividad dentro del rango como un evento suelto, sin regla de repetición. Es lo que entiende
+ * cualquier calendario aunque no sepa expandir repeticiones: si trabajas de lunes a viernes, salen cinco eventos esa semana.
+ * Cada uno lleva un id fijo (actividad + fecha), así que volver a importarlo actualiza en vez de duplicar. Lo cancelado no sale.
+ */
+export function expandEvent(ev: AgendaEvent, ctx: AgendaContext, range: { from: ISODate; to: ISODate }): ExportEvent[] {
+  const { base } = baseOf(ev, ctx);
+  return occurrencesBetween([ev], range.from, range.to, ctx)
+    .filter((o) => o.status !== 'cancelled')
+    .map((o) => ({ ...base, uid: `${ev.id}-${o.original}@studyquest`, title: o.title, date: o.date, start: o.start, minutes: o.minutes }));
+}
+
+export function eventToExport(ev: AgendaEvent, ctx: AgendaContext, range: { from: ISODate; to: ISODate }): ExportEvent | null {
+  const { habit, base } = baseOf(ev, ctx);
 
   if (!ev.repeat) {
     const ex = ev.exceptions?.[ev.date];
@@ -306,6 +327,8 @@ export interface ExportSelection {
   deadlines: boolean;
   /** Si se indica, solo estos ids (de actividades o de tareas), aunque estén fuera del rango. */
   ids?: Set<string>;
+  /** Cada repetición como un evento propio dentro del rango, en vez de una regla de repetición. */
+  expand?: boolean;
 }
 
 export interface ExportSource extends AgendaContext {
@@ -321,6 +344,10 @@ export function selectExport(src: ExportSource, sel: ExportSelection): ExportIte
     for (const ev of src.events) {
       const picked = sel.ids ? sel.ids.has(ev.id) : occurrencesBetween([ev], sel.from, sel.to, ctx).length > 0;
       if (!picked) continue;
+      if (sel.expand && ev.repeat) {
+        out.push(...expandEvent(ev, ctx, sel));
+        continue;
+      }
       const item = eventToExport(ev, ctx, sel);
       if (item) out.push(item);
     }

@@ -16,7 +16,7 @@ import { Bar, Button, Empty, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { DaySummary } from './DaySummary';
 import { MissionBoard } from './MissionBoard';
-import { ReviewNudge, TodayPlan } from './TodayPlan';
+import { ConflictBanner, ReviewNudge, TodayPlan } from './TodayPlan';
 import { NowStrip } from './NowStrip';
 import { StartGuide } from './StartGuide';
 import { HowToButton } from '@/features/help/HowToGuide';
@@ -358,6 +358,7 @@ export default function Inicio() {
               <NowStrip />
               <NextStepCard step={step} />
               <LateBanner />
+              <ConflictBanner />
               <ReviewNudge />
               <TodayPlan />
               <Events events={events} />

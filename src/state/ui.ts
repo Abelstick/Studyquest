@@ -15,6 +15,8 @@ export type ModalState =
   | { type: 'task-detail'; id: string }
   | { type: 'course'; id?: string }
   | { type: 'goal'; id?: string }
+  /** Ratos reservados que se pisan con otra cosa, con la solución a un toque. */
+  | { type: 'conflicts'; from?: string; to?: string }
   /** «Mi semana»: horario fijo, hora de cada hábito y exportación. */
   | { type: 'routine' }
   | { type: 'project' }

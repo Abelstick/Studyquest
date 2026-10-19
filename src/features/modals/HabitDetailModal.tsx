@@ -12,6 +12,7 @@ import { HabitAction, HabitRecovery, minimumLabel } from '@/features/habitos/Hab
 import { isMinimumMet, minimumOf } from '@/core/minimum';
 import { areaInfo } from '@/core/areas';
 import { IfThenList } from '@/ui/IfThenList';
+import { HabitScheduler } from '@/features/calendario/HabitScheduler';
 import { HabitWeek } from '@/features/habitos/HabitWeek';
 import { Bar, Button, Modal, Tag, cx } from '@/ui/kit';
 
@@ -90,6 +91,12 @@ export function HabitDetailModal({ id }: { id: string }) {
         <HabitAction habit={habit} log={log} />
         <HabitRecovery habit={habit} logs={logs} />
       </section>
+
+      {!quit && (
+        <section aria-label="Hora del hábito">
+          <HabitScheduler habit={habit} />
+        </section>
+      )}
 
       {habit.ifThen && habit.ifThen.length > 0 && (
         <section aria-label="Si… entonces…">

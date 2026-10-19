@@ -11,6 +11,7 @@ import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { Chains } from './ChainPanel';
 import { HabitAction, HabitRecovery } from './HabitAction';
+import { habitBlocks } from '@/core/routine';
 import { AreaFilterSelect } from '@/ui/Area';
 import { areaInfo, matchesArea, type AreaFilter } from '@/core/areas';
 import type { AreaId } from '@/core/domain';
@@ -24,6 +25,7 @@ import { HabitPeriod } from './HabitPeriod';
 export default function Habitos() {
   const habits = useData((s) => s.habits);
   const logs = useData((s) => s.habitLogs);
+  const events = useData((s) => s.events);
   const openModal = useUi((s) => s.openModal);
   const now = today();
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
@@ -118,6 +120,11 @@ export default function Habitos() {
               </div>
               <Bar pct={pct} tone={pct >= 75 ? 'green' : pct >= 40 ? 'yellow' : 'red'} label={`Cumplimiento mensual de ${h.title}`} />
               <HabitRecovery habit={h} logs={logs} />
+              {!isQuit(h) && habitBlocks(events, h.id).length === 0 && (
+                <Button small variant="ghost" onClick={() => openModal({ type: 'habit-detail', id: h.id })}>
+                  🕒 Ponle hora
+                </Button>
+              )}
               <div className="habit__actions">
                 <HabitAction habit={h} log={log} />
                 <Link className="btn btn--ghost btn--sm" to={`/habitos/${h.id}`}>

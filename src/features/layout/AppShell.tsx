@@ -239,6 +239,9 @@ function Sidebar() {
 
         <div className="sysbar">
           <span className="sysbar__label">Ajustes</span>
+          <button type="button" className="icon-btn" onClick={() => openModal({ type: 'howto' })} aria-label="Guía de uso" title="Guía de uso: cómo empezar y qué hacer">
+            <span aria-hidden="true">❓</span>
+          </button>
           <button type="button" className="icon-btn sysbar__keys" onClick={() => openModal({ type: 'shortcuts' })} aria-label="Atajos de teclado" title="Atajos de teclado (?)">
             <span aria-hidden="true">⌨</span>
           </button>

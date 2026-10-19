@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { addDays, minutesOfDay, today } from '@/core/dates';
+import { addDays, today } from '@/core/dates';
+import { useMinuteOfDay } from './useMinuteOfDay';
 import { categoryInfo, toClock } from '@/core/agenda';
 import { deadlineText } from '@/core/missions';
 import { PRIORITY_REASON_TEXT, agendaToday, topPriorities, type AgendaItem, type TodayPriority } from '@/core/today';
@@ -12,16 +13,6 @@ import { Sprite } from '@/ui/Sprite';
 
 /** Bloques de la agenda que se enseñan de entrada; el resto está en el calendario. */
 const SHOW_AGENDA = 4;
-
-/** Minuto del día, vivo: la agenda de Hoy se pone al día sola sin recargar. */
-function useMinuteOfDay(): number {
-  const [min, setMin] = useState(minutesOfDay);
-  useEffect(() => {
-    const id = setInterval(() => setMin(minutesOfDay()), 60_000);
-    return () => clearInterval(id);
-  }, []);
-  return min;
-}
 
 function PriorityRow({ p }: Readonly<{ p: TodayPriority }>) {
   const setTaskStatus = useData((s) => s.setTaskStatus);

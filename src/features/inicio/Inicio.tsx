@@ -17,6 +17,9 @@ import { Sprite } from '@/ui/Sprite';
 import { DaySummary } from './DaySummary';
 import { MissionBoard } from './MissionBoard';
 import { ReviewNudge, TodayPlan } from './TodayPlan';
+import { NowStrip } from './NowStrip';
+import { StartGuide } from './StartGuide';
+import { HowToButton } from '@/features/help/HowToGuide';
 
 function StreakCalendar() {
   const events = useData((s) => s.xpEvents);
@@ -327,28 +330,32 @@ export default function Inicio() {
           <p className="muted small">
             Nivel {lp.level} — <b>{rankFor(lp.level)}</b> · faltan {lp.left.toLocaleString('en-US')} XP para el nivel {lp.level + 1}
           </p>
+          <HowToButton label="Cómo usar la app" />
         </div>
         <Bar pct={lp.pct} tone="yellow" className="today-head__bar" label="Progreso al siguiente nivel" />
       </header>
 
       {isEmpty ? (
-        <Panel>
-          <Empty sprite="qblock" title="Todavía no hay bloques ? por romper">
-            <p>Crea tu primera tarea, hábito o curso para empezar a ganar XP.</p>
-            <div className="row">
-              <Button variant="primary" onClick={() => openModal({ type: 'task' })}>
-                Nueva tarea
-              </Button>
-              <Button onClick={() => openModal({ type: 'habit' })}>Nuevo hábito</Button>
-              <Button onClick={() => openModal({ type: 'course' })}>Nuevo curso</Button>
-            </div>
-          </Empty>
-        </Panel>
+        <>
+          <StartGuide always />
+          <Panel>
+            <Empty sprite="qblock" title="O empieza por lo más simple">
+              <p>Crea tu primera tarea, hábito o curso para empezar a ganar XP.</p>
+              <div className="row">
+                <Button onClick={() => openModal({ type: 'task' })}>Nueva tarea</Button>
+                <Button onClick={() => openModal({ type: 'habit' })}>Nuevo hábito</Button>
+                <Button onClick={() => openModal({ type: 'course' })}>Nuevo curso</Button>
+              </div>
+            </Empty>
+          </Panel>
+        </>
       ) : (
         <>
+          <StartGuide />
           <DaySummary progress={progress} streak={streak.current} streakAlive={streak.activeToday} />
           <div className="home__grid">
             <div className="stack home__main">
+              <NowStrip />
               <NextStepCard step={step} />
               <LateBanner />
               <ReviewNudge />

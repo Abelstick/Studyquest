@@ -15,6 +15,8 @@ export type ModalState =
   | { type: 'task-detail'; id: string }
   | { type: 'course'; id?: string }
   | { type: 'goal'; id?: string }
+  /** «Mi semana»: horario fijo, hora de cada hábito y exportación. */
+  | { type: 'routine' }
   | { type: 'project' }
   | { type: 'reward' }
   | { type: 'certification'; id?: string }
@@ -29,6 +31,8 @@ export type ModalState =
   | { type: 'pack' }
   | { type: 'pace'; courseId?: string }
   | { type: 'guide' }
+  /** Guía de uso paso a paso (siempre a un toque). */
+  | { type: 'howto' }
   | { type: 'settings' }
   /** Actividad del calendario: nueva (con día, hora o vínculo propuestos) o una ocurrencia existente (`original`). */
   | { type: 'event'; id?: string; original?: string; date?: string; start?: string | null; minutes?: number; habitId?: string; taskId?: string }

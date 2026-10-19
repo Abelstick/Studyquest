@@ -199,6 +199,9 @@ export default function Calendario() {
             <Button small variant="primary" onClick={() => createAt(view === 'day' ? cursor : selected)}>
               ＋ Actividad
             </Button>
+            <Button small onClick={() => openModal({ type: 'routine' })} title="Tu horario de trabajo, la hora de tus hábitos y la exportación">
+              🗓 Mi semana
+            </Button>
             <Button small onClick={exportVisible} title="Descarga un .ics para Google Calendar, Outlook o Apple">
               📅 Exportar
             </Button>

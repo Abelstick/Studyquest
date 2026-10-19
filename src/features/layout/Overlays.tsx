@@ -20,7 +20,9 @@ import { ChainModal } from '../modals/ChainModal';
 import { AiKeyModal } from '../modals/AiKeyModal';
 import { PackModal } from '../modals/PackModal';
 import { PaceModal } from '../modals/PaceModal';
+import { RoutineModal } from '../modals/RoutineModal';
 import { ConceptGuide } from '../help/ConceptGuide';
+import { HowToGuide } from '../help/HowToGuide';
 import { EventModal } from '../calendario/EventModal';
 import { ExportModal } from '../calendario/ExportModal';
 import { ScopeModal } from '../calendario/ScopeChoice';
@@ -50,6 +52,8 @@ function ModalHost() {
       return <AiKeyModal />;
     case 'guide':
       return <ConceptGuide />;
+    case 'howto':
+      return <HowToGuide />;
     case 'cards':
       return <CardsModal key={modal.topicId} courseId={modal.courseId} topicId={modal.topicId} />;
     case 'habit':
@@ -62,6 +66,8 @@ function ModalHost() {
       return <CourseModal key={modal.id ?? 'new'} id={modal.id} />;
     case 'goal':
       return <GoalModal key={modal.id ?? 'new'} id={modal.id} />;
+    case 'routine':
+      return <RoutineModal />;
     case 'project':
       return <ProjectModal />;
     case 'reward':

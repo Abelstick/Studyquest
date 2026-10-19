@@ -1002,7 +1002,11 @@ export function createDataStore(repo: Repository) {
         );
         const what = describePack(e);
         notify({ category: 'mission', title: 'Pack importado', body: `Se creó: ${what}.` });
-        useUi.getState().toast({ kind: 'unlock', title: '¡Pack importado!', body: what });
+        useUi.getState().toast({
+          kind: 'unlock', title: '¡Pack importado!', body: what,
+          // Los hábitos y tareas recién creados no tienen hora: se ofrece ponérsela de un toque.
+          ...(e.habits.length || e.tasks.length ? { action: { label: 'Ponerles hora', run: () => useUi.getState().openModal({ type: 'routine' }) } } : {}),
+        });
         sfx.levelUp();
       },
       shiftTasks(shifts) {

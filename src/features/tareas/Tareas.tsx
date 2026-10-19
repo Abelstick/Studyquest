@@ -11,6 +11,7 @@ import { difficultyInfo, difficultyOf } from '@/core/difficulty';
 import { Bar, Button, Empty, PageHead, cx } from '@/ui/kit';
 import { LateBanner } from './LateBanner';
 import { AreaFilterSelect, AreaTag } from '@/ui/Area';
+import { slotLabel, taskBlocks } from '@/core/routine';
 import { matchesArea, type AreaFilter } from '@/core/areas';
 import type { AreaId } from '@/core/domain';
 import { Sprite } from '@/ui/Sprite';
@@ -28,6 +29,7 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
   const toggleSubtask = useData((s) => s.toggleSubtask);
   const openModal = useUi((s) => s.openModal);
   const overdue = isOverdue(task);
+  const nextBlock = useData((s) => taskBlocks(s.events, task.id).find((b) => b.date >= today()));
   const daysLeft = timeLeftLabel(task);
   const dueTime = dueTimeOf(task);
   const soon = !overdue && !!task.dueDate && diffDays(task.dueDate, today()) <= 2;
@@ -86,6 +88,7 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
         {task.estimateMin > 0 && <span className="tag tag--plain">{task.estimateMin >= 60 ? `${+(task.estimateMin / 60).toFixed(1)} h` : `${task.estimateMin} min`}</span>}
         <span className="tag tag--plain">{PRIORITY_LABEL[task.priority]}</span>
         <AreaTag area={task.area} />
+        {nextBlock && task.status !== 'done' && <span className="tag tag--blue" title="Rato reservado en tu calendario">🕒 {slotLabel({ date: nextBlock.date, start: nextBlock.start ?? '00:00', minutes: nextBlock.minutes }, today())}</span>}
         {difficultyOf(task) !== 'normal' && <span className="tag tag--xp" title={difficultyInfo(difficultyOf(task)).hint}>{difficultyInfo(difficultyOf(task)).label}</span>}
         {task.recurrence && <span className="tag tag--blue" title="Al completarla se crea la siguiente">↻ {recurrenceLabel(task.recurrence)}</span>}
         {task.subtasks.length > 0 && (

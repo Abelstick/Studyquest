@@ -54,4 +54,14 @@ describe('copia de seguridad: organización personal', () => {
     const res = roundtrip(demo());
     expect(res.ok && res.snapshot.profile.reviews).toBeUndefined();
   });
+
+  it('recuerda si trabajas y descarta un valor que no es sí/no', () => {
+    const data = base();
+    data.profile.works = false;
+    expect(roundtrip(data).ok && (roundtrip(data) as { snapshot: { profile: { works?: boolean } } }).snapshot.profile.works).toBe(false);
+    const raw = JSON.parse(JSON.stringify(buildBackup(base())));
+    raw.data.profile.works = 'quizá';
+    const res = parseBackup(JSON.stringify(raw), 'u2');
+    expect(res.ok && res.snapshot.profile.works).toBeUndefined();
+  });
 });

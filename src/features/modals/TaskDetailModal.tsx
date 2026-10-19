@@ -7,6 +7,7 @@ import { deadlineText } from '@/core/missions';
 import { NEXT_STATUS, PRIORITY_LABEL, STATUS_LABEL, bossHp, isBoss, isOverdue, recurrenceLabel, taskReward, timeLeftLabel } from '@/core/tasks';
 import type { TaskStatus } from '@/core/domain';
 import { Bar, Button, Modal, Tag, cx } from '@/ui/kit';
+import { TaskScheduler } from '@/features/calendario/TaskScheduler';
 
 const STATUS_TONE: Record<TaskStatus, 'plain' | 'blue' | 'green'> = { todo: 'plain', doing: 'blue', done: 'green' };
 
@@ -84,6 +85,10 @@ export function TaskDetailModal({ id }: { id: string }) {
           {ready && <p className="task__ready">✔ Todo el desglose hecho: solo falta darla por terminada.</p>}
         </section>
       )}
+
+      <section aria-label="Cuándo hacerla">
+        <TaskScheduler task={task} />
+      </section>
 
       <dl className="kv">
         {facts.map(([k, v]) => (

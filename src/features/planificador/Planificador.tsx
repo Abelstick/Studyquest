@@ -12,6 +12,8 @@ import {
   type Level, type Roadmap, type Template,
 } from '@/core/planner';
 import { existingPlanFor } from '@/core/plans';
+import { weekMinutesFromSchedule } from '@/core/routine';
+import { WorksQuestion } from '@/features/calendario/WorksQuestion';
 import { Bar, Button, ChipGroup, Field, PageHead, Panel, Tag, cx, TextInput } from '@/ui/kit';
 import { Loader } from '@/ui/Loader';
 import { RouteEditor } from './RouteEditor';
@@ -65,7 +67,7 @@ const STEPS = ['Objetivo', 'Tiempo', 'Plan'];
 
 export default function Planificador() {
   const navigate = useNavigate();
-  const { tasks, habits, habitLogs, courses, goals, addPlan } = useData();
+  const { tasks, habits, habitLogs, courses, goals, events, addPlan } = useData();
   const apiKey = useAi((s) => s.apiKey);
   const model = useAi((s) => s.model);
   const lastUsed = useAi((s) => s.lastUsed);
@@ -228,7 +230,13 @@ export default function Planificador() {
         <div className="cols cols--side">
           <Panel kicker="// Paso 2" title="¿Cuánto tiempo tienes?">
             <p className="muted small">Marca cuánto puedes estudiar cada día de la semana. Los días en «libre» no se planifican.</p>
+            <WorksQuestion />
             <div className="presets">
+              {events.length > 0 && (
+                <button type="button" className="chip chip--sm" onClick={() => applyPreset(weekMinutesFromSchedule({ events, habits, tasks, habitLogs }, now))} title="La mitad de tu tiempo libre cada día, fuera de tu trabajo">
+                  📅 Calcular desde mi horario
+                </button>
+              )}
               {PRESETS.map((p) => (
                 <button key={p.label} type="button" className="chip chip--sm" onClick={() => applyPreset(p.week)}>
                   {p.label}

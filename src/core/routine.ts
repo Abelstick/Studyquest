@@ -7,7 +7,7 @@
  * Lógica pura, sin React ni base de datos.
  */
 import type { AgendaCategory, AgendaEvent, Habit, ISODate, Snapshot, Task } from './domain';
-import { addDays, clockToMinutes, diffDays, isClockTime, weekdayIndex } from './dates';
+import { addDays, clockToMinutes, diffDays, dueLabel, isClockTime, weekdayIndex } from './dates';
 import { isDueOn, isHabitDone, logFor } from './game';
 import { DAY_MIN, MAX_EVENT_MIN, MIN_BLOCK_MIN, habitDefaults, habitScheduledOn, occurrencesBetween, segmentsOn, toClock, type EventDraft, type Occurrence } from './agenda';
 import { isQuit } from './quit';
@@ -259,3 +259,140 @@ export const habitBlocks = (events: AgendaEvent[], habitId: string): AgendaEvent
 
 /** Hábitos que todavía no tienen hora en el calendario (los de dejar un vicio no la necesitan). */
 export const habitsWithoutTime = (habits: Habit[], events: AgendaEvent[]): Habit[] => habits.filter((h) => !isQuit(h) && habitBlocks(events, h.id).length === 0);
+
+const DAY_ABBR = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+/**
+ * Tu tiempo libre habitual dicho en una frase para la IA («Lun–Vie 18:00–22:30; Sáb–Dom 06:00–22:30»), mirando la
+ * semana que viene. Vacío si aún no has contado cómo es tu semana: sin horario no hay nada que decir.
+ */
+export function availabilityText(ctx: Ctx, from: ISODate): string {
+  if (!ctx.events.length) return '';
+  const rows = Array.from({ length: 7 }, (_, i) => {
+    const d = addDays(from, i);
+    const wins = freeWindows(ctx, d, wakingOf(ctx.events), 30);
+    return { w: weekdayIndex(d), text: wins.length ? wins.map((x) => `${toClock(x.start)}–${toClock(x.end)}`).join(' y ') : 'sin tiempo libre' };
+  }).sort((a, b) => a.w - b.w);
+  const groups: { from: number; to: number; text: string }[] = [];
+  for (const r of rows) {
+    const last = groups.at(-1);
+    if (last && last.text === r.text && last.to === r.w - 1) last.to = r.w;
+    else groups.push({ from: r.w, to: r.w, text: r.text });
+  }
+  return groups.map((g) => `${g.from === g.to ? DAY_ABBR[g.from] : `${DAY_ABBR[g.from]}–${DAY_ABBR[g.to]}`} ${g.text}`).join('; ');
+}
+
+/* ---------- Cuándo hacer cada tarea ---------- */
+
+export interface TaskSlot {
+  taskId: string;
+  date: ISODate;
+  /** «HH:MM». */
+  start: string;
+  minutes: number;
+}
+
+export interface TaskPlan {
+  slots: TaskSlot[];
+  /** Tareas a las que no les cabe todo el tiempo antes de su plazo, y cuántos minutos quedaron sin sitio. */
+  unplaced: { task: PlannableTask; left: number }[];
+}
+
+export type PlannableTask = Pick<Task, 'id' | 'title' | 'dueDate' | 'dueTime' | 'estimateMin' | 'priority' | 'courseId' | 'area'>;
+
+/** Una sesión de trabajo no pasa de esto: mejor varias sesiones cortas en días distintos que un bloque inabarcable. */
+export const TASK_SESSION_MAX = 90;
+const TASK_SESSION_MIN = 15;
+/** Tiempo para una tarea sin estimación. */
+const TASK_DEFAULT_MIN = 30;
+/** Cuánto del tiempo libre de un día se reparte entre tareas: el resto queda para hábitos y para vivir. */
+const DAY_SHARE = 0.6;
+const HORIZON_DAYS = 14;
+const PRIORITY_RANK: Record<Task['priority'], number> = { boss: 0, high: 1, mid: 2, low: 3 };
+
+const ceil15 = (m: number) => Math.ceil(m / STEP) * STEP;
+
+/** Nadie quiere estudiar a las 6 de la mañana: las tareas se proponen a partir de esta hora. */
+const TASKS_FROM = 9 * 60;
+
+/** Tiempo libre utilizable para tareas: el de siempre, pero sin madrugadas. */
+const taskWindows = (ctx: Ctx, d: ISODate, minLen: number): Window[] =>
+  freeWindows(ctx, d, wakingOf(ctx.events), minLen)
+    .map((w) => ({ start: Math.max(w.start, TASKS_FROM), end: w.end }))
+    .filter((w) => w.end - w.start >= minLen);
+
+/**
+ * Propone cuándo hacer cada tarea: en tus ratos libres (fuera de tu trabajo y de lo que ya tienes), antes de su plazo, la
+ * más urgente primero, en sesiones de hasta 90 min en días distintos y sin llenar más del 60 % del tiempo libre de un día.
+ * Hoy solo cuenta lo que queda desde ahora. Es una sugerencia: nunca se aplica sola.
+ */
+export function planTaskSlots(tasks: PlannableTask[], ctx: Ctx, from: ISODate, nowMin: number): TaskPlan {
+  const placed: AgendaEvent[] = [];
+  const used = new Map<ISODate, number>();
+  const slots: TaskSlot[] = [];
+  const unplaced: TaskPlan['unplaced'] = [];
+  const order = [...tasks].sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999') || PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]);
+
+  for (const task of order) {
+    let need = task.estimateMin > 0 ? Math.min(task.estimateMin, 360) : TASK_DEFAULT_MIN;
+    // Con plazo, hasta ese día; vencida o sin plazo, en los próximos días.
+    const last = task.dueDate && task.dueDate >= from ? (task.dueDate < addDays(from, HORIZON_DAYS) ? task.dueDate : addDays(from, HORIZON_DAYS - 1)) : addDays(from, task.dueDate ? 2 : 6);
+    for (let d = from; d <= last && need > 0; d = addDays(d, 1)) {
+      const full = { ...ctx, events: [...ctx.events, ...placed] };
+      const cap = Math.max(60, Math.floor(taskWindows(ctx, d, 1).reduce((a, w) => a + w.end - w.start, 0) * DAY_SHARE));
+      const room = cap - (used.get(d) ?? 0);
+      // El día del plazo, con hora límite, la sesión debe terminar antes.
+      const limit = task.dueDate === d && isClockTime(task.dueTime) ? clockToMinutes(task.dueTime) : DAY_MIN;
+      const win = taskWindows(full, d, TASK_SESSION_MIN)
+        .map((w) => ({ start: d === from ? ceil15(Math.max(w.start, nowMin)) : w.start, end: Math.min(w.end, limit) }))
+        .find((w) => w.end - w.start >= Math.min(TASK_SESSION_MIN, need) && room >= Math.min(TASK_SESSION_MIN, need));
+      if (!win) continue;
+      const minutes = Math.min(need, TASK_SESSION_MAX, win.end - win.start, room);
+      if (minutes < MIN_BLOCK_MIN) continue;
+      const start = toClock(win.start);
+      slots.push({ taskId: task.id, date: d, start, minutes });
+      placed.push({ id: `plan-${task.id}-${d}`, title: '', category: 'other', date: d, start, minutes, taskId: task.id, rev: 0, createdAt: '', updatedAt: '' });
+      used.set(d, (used.get(d) ?? 0) + minutes);
+      need -= minutes;
+    }
+    if (need > 0) unplaced.push({ task, left: need });
+  }
+  return { slots, unplaced };
+}
+
+const CATEGORY_BY_TASK_AREA: Partial<Record<NonNullable<Task['area']>, AgendaCategory>> = { health: 'health', growth: 'study', career: 'work' };
+
+/** Los bloques del calendario para esas sesiones: vinculados a la tarea (que sigue siendo quien se completa) y con aviso 10 min antes. */
+export function taskBlockDrafts(task: PlannableTask, slots: TaskSlot[]): EventDraft[] {
+  const category: AgendaCategory = task.courseId ? 'study' : ((task.area && CATEGORY_BY_TASK_AREA[task.area]) || 'personal');
+  return slots
+    .filter((s) => s.taskId === task.id)
+    .map((s) => ({ title: '', category, date: s.date, start: s.start, minutes: s.minutes, habitId: null, taskId: task.id, reminderMin: 10 }));
+}
+
+/** Tareas abiertas que todavía no tienen un rato reservado en el calendario. */
+export const tasksWithoutTime = (tasks: Task[], events: AgendaEvent[]): Task[] => {
+  const withBlock = new Set(events.flatMap((e) => (e.taskId ? [e.taskId] : [])));
+  return tasks.filter((t) => t.status !== 'done' && !withBlock.has(t.id));
+};
+
+/** Los ratos reservados para una tarea, de más próximo a más lejano. */
+export const taskBlocks = (events: AgendaEvent[], taskId: string): AgendaEvent[] => events.filter((e) => e.taskId === taskId).sort((a, b) => a.date.localeCompare(b.date));
+
+/**
+ * Minutos por día de la semana (0 = lunes) que puedes dedicar a estudiar según tu horario: la mitad del tiempo libre,
+ * en múltiplos de 15 y con tope de 4 h. Es el punto de partida del planificador; tú lo ajustas.
+ */
+export function weekMinutesFromSchedule(ctx: Ctx, from: ISODate): number[] {
+  const out = Array.from({ length: 7 }, () => 0);
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(from, i);
+    const free = taskWindows(ctx, d, 30).reduce((a, w) => a + w.end - w.start, 0);
+    out[weekdayIndex(d)] = Math.min(240, Math.floor((free * 0.5) / STEP) * STEP);
+  }
+  return out;
+}
+
+/** «Hoy · 18:00–19:00», «Mañana · 18:00–18:30», «Vie 18 · 19:00–20:30». */
+export const slotLabel = (s: Pick<TaskSlot, 'date' | 'start' | 'minutes'>, now: ISODate): string =>
+  `${dueLabel(s.date, now)} · ${s.start}–${toClock(clockToMinutes(s.start) + s.minutes)}`;

@@ -112,4 +112,12 @@ describe('organización personal: store', () => {
     expect(store.getState().tasks).toHaveLength(1);
     expect(store.getState().tasks[0].dueDate).toBe('2026-09-21');
   });
+
+  it('importar un pack con hábitos ofrece, en el aviso, ponerles hora', () => {
+    store.getState().importPack({ courses: [], goals: [], projects: [], tasks: [], habits: [{ id: 'h', title: 'Estudiar', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-09-16', createdAt: '' }] });
+    const toast = useUi.getState().toasts.at(-1);
+    expect(toast?.action?.label).toBe('Ponerles hora');
+    toast?.action?.run();
+    expect(useUi.getState().modal).toEqual({ type: 'routine' });
+  });
 });

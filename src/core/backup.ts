@@ -287,6 +287,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       : {}),
     ...(hero ? { hero } : {}),
     ...(reviews.length ? { reviews } : {}),
+    ...(typeof p.works === 'boolean' ? { works: p.works } : {}),
   };
 
   for (const [what, n] of Object.entries(dropped)) warnings.push(`${n} ${what} descartados por datos inválidos.`);

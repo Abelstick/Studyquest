@@ -34,6 +34,7 @@ interface Step {
  */
 export function StartGuide({ always }: Readonly<{ always?: boolean }>) {
   const events = useData((s) => s.events);
+  const works = useData((s) => s.profile.works);
   const goals = useData((s) => s.goals);
   const courses = useData((s) => s.courses);
   const habits = useData((s) => s.habits);
@@ -43,8 +44,8 @@ export function StartGuide({ always }: Readonly<{ always?: boolean }>) {
 
   const steps: Step[] = [
     {
-      id: 'week', title: 'Cuenta cómo es tu semana', body: 'Cuándo trabajas y cuándo duermes. Así sé cuándo tienes tiempo libre y te digo qué hacer en cada rato.',
-      done: events.length > 0, cta: <Button variant="primary" onClick={() => openModal({ type: 'routine' })}>Armar mi semana</Button>,
+      id: 'week', title: 'Cuenta cómo es tu semana', body: '¿Trabajas? Si sí, tu horario; y cuándo duermes. Así sé cuándo tienes tiempo libre y te sugiero día y hora para cada tarea y hábito.',
+      done: events.length > 0 || works !== undefined, cta: <Button variant="primary" onClick={() => openModal({ type: 'routine' })}>Armar mi semana</Button>,
     },
     {
       id: 'goal', title: 'Elige qué quieres lograr', body: 'Un curso o una meta (aprender SQL, inglés B1…). El planificador reparte el trabajo en fechas según tu tiempo libre.',

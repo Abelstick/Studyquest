@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AgendaEvent, Habit, Task } from './domain';
-import { DEFAULT_WAKING, DEFAULT_ROUTINE, freeTimeIdeas, freeWindows, habitBlockDrafts, habitsWithoutTime, nowState, routineDrafts, routineOf, suggestHabitTimes, validateRoutine, wakingOf } from './routine';
+import { DEFAULT_WAKING, DEFAULT_ROUTINE, freeTimeIdeas, freeWindows, habitBlockDrafts, habitsWithoutTime, nowState, planTaskSlots, routineDrafts, routineOf, suggestHabitTimes, taskBlockDrafts, taskBlocks, tasksWithoutTime, validateRoutine, wakingOf, weekMinutesFromSchedule } from './routine';
 
 const MON = '2026-09-14';
 const WED = '2026-09-16';
@@ -123,5 +123,70 @@ describe('a qué hora hacer un hábito', () => {
   it('sabe qué hábitos aún no tienen hora', () => {
     const linked = ev({ habitId: 'h1', repeat: { type: 'habit' } });
     expect(habitsWithoutTime([habit(), habit({ id: 'h2' }), habit({ id: 'q', kind: 'quit', measure: 'boolean', target: 1 })], [linked]).map((h) => h.id)).toEqual(['h2']);
+  });
+});
+
+describe('cuándo hacer cada tarea', () => {
+  const t = (extra: Partial<Task> = {}): Task => task({ estimateMin: 60, dueDate: '2026-09-18', ...extra });
+
+  it('trabajando de 8:30 a 18:00, propone la primera hora libre al salir', () => {
+    const plan = planTaskSlots([t()], ctx([work()]), WED, hm(10));
+    expect(plan.slots).toEqual([{ taskId: 't1', date: WED, start: '18:00', minutes: 60 }]);
+    expect(plan.unplaced).toEqual([]);
+  });
+
+  it('hoy solo cuenta lo que queda desde ahora', () => {
+    const plan = planTaskSlots([t({ estimateMin: 30 })], ctx([work()]), WED, hm(19, 5));
+    expect(plan.slots[0]).toMatchObject({ date: WED, start: '19:15' });
+  });
+
+  it('una tarea larga se parte en sesiones de hasta 90 min en días distintos y respeta el plazo', () => {
+    const plan = planTaskSlots([t({ estimateMin: 240, dueDate: '2026-09-21' })], ctx([work()]), WED, hm(10));
+    expect(plan.slots.map((s) => [s.date, s.minutes])).toEqual([[WED, 90], ['2026-09-17', 90], ['2026-09-18', 60]]);
+    expect(plan.slots.every((s) => s.date <= '2026-09-21')).toBe(true);
+  });
+
+  it('no llena todo el tiempo libre de un día: reparte varias tareas', () => {
+    const tasks = [t({ id: 'a', estimateMin: 90 }), t({ id: 'b', estimateMin: 90 }), t({ id: 'c', estimateMin: 90 })];
+    const plan = planTaskSlots(tasks, ctx([work()]), WED, hm(10));
+    const perDay = new Map<string, number>();
+    for (const s of plan.slots) perDay.set(s.date, (perDay.get(s.date) ?? 0) + s.minutes);
+    expect(Math.max(...perDay.values())).toBeLessThanOrEqual(Math.floor(270 * 0.6));
+  });
+
+  it('lo más urgente se coloca primero y lo que no cabe antes del plazo se avisa', () => {
+    const tasks = [t({ id: 'tarde', dueDate: '2026-09-25', estimateMin: 30 }), t({ id: 'urgente', dueDate: WED, estimateMin: 600 })];
+    const plan = planTaskSlots(tasks, ctx([work()]), WED, hm(10));
+    expect(plan.slots[0].taskId).toBe('urgente');
+    expect(plan.unplaced.map((u) => u.task.id)).toEqual(['urgente']);
+    expect(plan.unplaced[0].left).toBeGreaterThan(0);
+  });
+
+  it('con hora límite, la sesión del último día termina antes', () => {
+    const plan = planTaskSlots([t({ dueDate: WED, dueTime: '18:30', estimateMin: 60 })], ctx([work()]), WED, hm(10));
+    expect(plan.slots).toEqual([{ taskId: 't1', date: WED, start: '18:00', minutes: 30 }]);
+    expect(plan.unplaced[0].left).toBe(30);
+  });
+
+  it('esquiva lo ya programado y no pisa dos tareas', () => {
+    const clase = ev({ date: WED, title: 'Clase', category: 'study', start: '18:00', minutes: 60 });
+    const plan = planTaskSlots([t({ id: 'a', estimateMin: 30 }), t({ id: 'b', estimateMin: 30 })], ctx([work(), clase]), WED, hm(10));
+    expect(plan.slots[0]).toMatchObject({ taskId: 'a', start: '19:00' });
+    expect(plan.slots[1].start === '19:30' || plan.slots[1].date !== WED).toBe(true);
+  });
+
+  it('crea bloques vinculados a la tarea y sabe qué tareas aún no tienen hora', () => {
+    const tk = t({ courseId: 'c1' });
+    const drafts = taskBlockDrafts(tk, [{ taskId: 't1', date: WED, start: '18:00', minutes: 60 }, { taskId: 'otra', date: WED, start: '20:00', minutes: 30 }]);
+    expect(drafts).toEqual([expect.objectContaining({ taskId: 't1', habitId: null, category: 'study', start: '18:00', minutes: 60, reminderMin: 10 })]);
+    const linked = ev({ taskId: 't1' });
+    expect(tasksWithoutTime([tk, t({ id: 't2' }), t({ id: 't3', status: 'done' })], [linked]).map((x) => x.id)).toEqual(['t2']);
+    expect(taskBlocks([linked, ev({ taskId: 'x' })], 't1')).toHaveLength(1);
+  });
+
+  it('calcula cuánto puedes estudiar cada día según tu horario', () => {
+    const week = weekMinutesFromSchedule(ctx([work()]), MON);
+    expect(week.slice(0, 5)).toEqual([135, 135, 135, 135, 135]); // la mitad de 18:00–22:30; las madrugadas no cuentan
+    expect(week[5]).toBe(240);
   });
 });

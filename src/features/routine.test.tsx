@@ -5,18 +5,21 @@ import { MemoryRouter } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { defaultProfile } from '@/core/game';
-import type { AgendaEvent, Habit } from '@/core/domain';
+import type { AgendaEvent, Habit, Task } from '@/core/domain';
 import { HabitScheduler } from './calendario/HabitScheduler';
 import { NowStrip } from './inicio/NowStrip';
 import { StartGuide } from './inicio/StartGuide';
 import { RoutineModal } from './modals/RoutineModal';
 import { HowToGuide } from './help/HowToGuide';
+import { TaskScheduler } from './calendario/TaskScheduler';
+import { WorksQuestion } from './calendario/WorksQuestion';
+import { TaskModal } from './modals/TaskModal';
 
 const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Estudiar SQL', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
 /** Trabajo de lunes a viernes de 8:30 a 18:00. */
 const work: AgendaEvent = { id: 'w', title: 'Jornada laboral', category: 'work', date: '2026-09-14', start: '08:30', minutes: 570, repeat: { type: 'weekly', every: 1, days: [0, 1, 2, 3, 4] }, rev: 0, createdAt: '', updatedAt: '' };
 
-const spies = { createEvent: vi.fn(() => 'e'), saveEvent: vi.fn(), removeEvent: vi.fn() };
+const spies = { createEvent: vi.fn(() => 'e'), saveEvent: vi.fn(), removeEvent: vi.fn(), createTask: vi.fn(() => 'nueva'), updateProfile: vi.fn() };
 const at = (h: number, m: number) => vi.setSystemTime(new Date(2026, 8, 16, h, m, 0)); // miércoles
 const wrap = (ui: React.ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
@@ -130,6 +133,7 @@ describe('ponerle hora a un hábito', () => {
 describe('Mi semana', () => {
   it('guarda el horario de lunes a viernes de 8:30 a 18:00 como una serie del calendario', () => {
     wrap(<RoutineModal />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Sí, tengo horario' }));
     fireEvent.change(screen.getByLabelText('Entro a las'), { target: { value: '08:30' } });
     fireEvent.change(screen.getByLabelText('Salgo a las'), { target: { value: '18:00' } });
     expect(screen.getByText(/te queda libre/)).toBeTruthy();
@@ -148,6 +152,7 @@ describe('Mi semana', () => {
 
   it('no deja guardar una salida anterior a la entrada y ofrece exportar a Google Calendar', () => {
     wrap(<RoutineModal />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Sí, tengo horario' }));
     fireEvent.change(screen.getByLabelText('Salgo a las'), { target: { value: '07:00' } });
     expect(screen.getByRole('alert').textContent).toMatch(/posterior/);
     expect(screen.getByRole('button', { name: 'Guardar mi horario' }).hasAttribute('disabled')).toBe(true);
@@ -173,5 +178,82 @@ describe('guía de uso', () => {
     expect(screen.getByRole('dialog', { name: 'Si te pierdes' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Entendido' }));
     expect(useUi.getState().modal).toBeNull();
+  });
+});
+
+const tarea = (extra: Partial<Task> = {}): Task => ({ id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-09-18', estimateMin: 60, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+
+describe('¿Trabajas?', () => {
+  it('pregunta primero y no deja guardar sin contestar', () => {
+    wrap(<RoutineModal />);
+    expect(screen.getByRole('alert').textContent).toMatch(/si trabajas/);
+    expect(screen.getByRole('button', { name: 'Guardar mi horario' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.queryByLabelText('Entro a las')).toBeNull();
+  });
+
+  it('«No trabajo» se recuerda y quita la jornada que hubiera', () => {
+    useData.setState({ events: [work], profile: { ...defaultProfile('u'), works: true } });
+    wrap(<RoutineModal />);
+    fireEvent.click(screen.getByRole('radio', { name: 'No trabajo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizar mi horario' }));
+    expect(spies.updateProfile).toHaveBeenCalledWith({ works: false });
+    expect(spies.removeEvent).toHaveBeenCalledWith('w');
+  });
+
+  it('la pregunta suelta aparece una vez: con «Sí» abre Mi semana, con «No» no vuelve', () => {
+    const first = wrap(<WorksQuestion />);
+    fireEvent.click(screen.getByRole('button', { name: 'Sí, contar mi horario' }));
+    expect(useUi.getState().modal).toEqual({ type: 'routine' });
+    fireEvent.click(screen.getByRole('button', { name: 'No trabajo' }));
+    expect(spies.updateProfile).toHaveBeenCalledWith({ works: false });
+    first.unmount();
+    useData.setState({ profile: { ...defaultProfile('u'), works: false } });
+    expect(wrap(<WorksQuestion />).container.textContent).toBe('');
+  });
+});
+
+describe('día y hora sugeridos para una tarea', () => {
+  it('en la ficha sugiere un rato libre tras el trabajo y lo reserva vinculado a la tarea', () => {
+    at(10, 0);
+    useData.setState({ events: [work], tasks: [tarea()] });
+    wrap(<TaskScheduler task={tarea()} />);
+    expect(screen.getByText(/Hoy · 18:00–19:00/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Reservar en mi calendario' }));
+    expect(spies.createEvent).toHaveBeenCalledWith(expect.objectContaining({ taskId: 't1', start: '18:00', minutes: 60, reminderMin: 10 }));
+  });
+
+  it('si ya tiene rato reservado, lo enseña; si no hay horario, invita a contarlo', () => {
+    useData.setState({ events: [work, { ...work, id: 'b', title: '', taskId: 't1', date: '2026-09-17', start: '19:00', minutes: 45, repeat: undefined, category: 'personal' }], tasks: [tarea()] });
+    const first = wrap(<TaskScheduler task={tarea()} />);
+    expect(screen.getByText(/Mañana · 19:00–19:45/)).toBeTruthy();
+    first.unmount();
+    useData.setState({ events: [] });
+    wrap(<TaskScheduler task={tarea()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Contar mi horario' }));
+    expect(useUi.getState().modal).toEqual({ type: 'routine' });
+  });
+
+  it('al crear una tarea ofrece reservar el rato sugerido y lo crea con ella', () => {
+    at(10, 0);
+    useData.setState({ events: [work], tasks: [], courses: [] });
+    wrap(<TaskModal />);
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Preparar informe' } });
+    fireEvent.change(screen.getByLabelText('Fecha límite'), { target: { value: '2026-09-18' } });
+    expect(screen.getByText(/Reservar un rato en mi calendario/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Crear tarea' }));
+    expect(spies.createTask).toHaveBeenCalledTimes(1);
+    expect(spies.createEvent).toHaveBeenCalledWith(expect.objectContaining({ taskId: 'nueva', start: '18:00' }));
+  });
+
+  it('se puede desmarcar y entonces no crea ningún bloque', () => {
+    at(10, 0);
+    useData.setState({ events: [work], tasks: [], courses: [] });
+    wrap(<TaskModal />);
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Preparar informe' } });
+    fireEvent.change(screen.getByLabelText('Fecha límite'), { target: { value: '2026-09-18' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: /Reservar un rato en mi calendario/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Crear tarea' }));
+    expect(spies.createTask).toHaveBeenCalledTimes(1);
+    expect(spies.createEvent).not.toHaveBeenCalled();
   });
 });

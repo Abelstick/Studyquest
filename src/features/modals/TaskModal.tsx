@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { XP_BY_PRIORITY } from '@/core/game';
 import { DIFFICULTIES, difficultyInfo, difficultyOf, xpForDifficulty } from '@/core/difficulty';
-import { isClockTime, newId } from '@/core/dates';
+import { isClockTime, minutesOfDay, newId, today } from '@/core/dates';
+import { planTaskSlots, slotLabel, taskBlockDrafts, taskBlocks } from '@/core/routine';
+import { WorksQuestion } from '../calendario/WorksQuestion';
 import type { AreaId, Difficulty, Priority, Recurrence, TaskStatus } from '@/core/domain';
 import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
 import { Button, Field, Modal, Segmented, linesToList, TextInput, NumberInput } from '@/ui/kit';
@@ -25,7 +27,7 @@ const STATUSES: { value: TaskStatus; label: string }[] = [
 export function TaskModal({ id, dueDate, goalId: presetGoal }: { id?: string; dueDate?: string; goalId?: string }) {
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
-  const { tasks, courses, createTask, updateTask, deleteTask } = useData();
+  const { tasks, courses, events, habits, habitLogs, createTask, updateTask, deleteTask, createEvent } = useData();
   const editing = tasks.find((t) => t.id === id);
 
   const [title, setTitle] = useState(editing?.title ?? '');
@@ -44,6 +46,15 @@ export function TaskModal({ id, dueDate, goalId: presetGoal }: { id?: string; du
   const [status, setStatus] = useState<TaskStatus>(editing?.status ?? 'todo');
   const [area, setArea] = useState<AreaId | ''>(editing?.area ?? '');
   const [goalId, setGoalId] = useState(editing?.goalId ?? presetGoal ?? '');
+  // Reservar un rato en el calendario: por defecto al crear (si ya hay horario) y nunca si la tarea ya tiene uno.
+  const [reserve, setReserve] = useState(true);
+  const hasBlocks = !!editing && taskBlocks(events, editing.id).length > 0;
+  const draftTask = { id: editing?.id ?? 'nueva', title, dueDate: due || null, dueTime: due && isClockTime(dueTime) ? dueTime : undefined, estimateMin: Math.max(0, estimate), priority, courseId: courseId || null, area: area || undefined };
+  const plan = useMemo(
+    () => (!events.length || hasBlocks || status === 'done' ? null : planTaskSlots([draftTask], { events, habits, tasks, habitLogs }, today(), minutesOfDay())),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [events, hasBlocks, status, due, dueTime, estimate, priority, courseId, area, habits, tasks, habitLogs],
+  );
 
   const pickPriority = (p: Priority) => {
     setPriority(p);
@@ -75,8 +86,13 @@ export function TaskModal({ id, dueDate, goalId: presetGoal }: { id?: string; du
       area: area || undefined,
       goalId: goalId || undefined,
     };
-    if (editing) updateTask(editing.id, { ...data, status });
-    else createTask({ ...data, status });
+    let id: string;
+    if (editing) {
+      updateTask(editing.id, { ...data, status });
+      id = editing.id;
+    } else id = createTask({ ...data, status });
+    // El rato sugerido pasa a ser un bloque del calendario vinculado a la tarea; la tarea sigue siendo quien se completa.
+    if (reserve && plan?.slots.length) taskBlockDrafts({ ...draftTask, id }, plan.slots.map((s) => ({ ...s, taskId: id }))).forEach((d) => createEvent(d));
     close();
   };
 
@@ -129,6 +145,23 @@ export function TaskModal({ id, dueDate, goalId: presetGoal }: { id?: string; du
             )}
           </Field>
         </div>
+        {plan && (
+          <div className="sched">
+            {plan.slots.length > 0 ? (
+              <label className="stepcheck">
+                <input type="checkbox" checked={reserve} onChange={(e) => setReserve(e.target.checked)} />
+                <span>
+                  <b>Reservar un rato en mi calendario:</b> {plan.slots.slice(0, 2).map((s) => slotLabel(s, today())).join(' · ')}
+                  {plan.slots.length > 2 && ` y ${plan.slots.length - 2} más`} <span className="muted small">(fuera de tu horario laboral)</span>
+                </span>
+              </label>
+            ) : (
+              <p className="muted small">No encuentro un rato libre antes del plazo; revisa la fecha o libera tiempo en el calendario.</p>
+            )}
+            {plan.unplaced.length > 0 && plan.slots.length > 0 && <p className="muted small">⚠ No cabe todo antes del plazo (faltarían {plan.unplaced[0].left} min).</p>}
+          </div>
+        )}
+        {!events.length && !editing && <WorksQuestion />}
         <Field label="Repetir" hint={repeat ? 'Al completarla se crea la siguiente con su nueva fecha.' : 'Al completarla se crea sola la siguiente.'}>
           {() => (
             <div className="repeat">

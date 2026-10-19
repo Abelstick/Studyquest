@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { addDays, today, weekdayIndex, WEEKDAYS_SHORT } from '@/core/dates';
+import { addDays, minutesOfDay, today, weekdayIndex, WEEKDAYS_SHORT } from '@/core/dates';
 import { durationLabel, toClock } from '@/core/agenda';
-import { findRoutine, freeWindows, habitsWithoutTime, routineDrafts, routineOf, validateRoutine, type RoutineInput } from '@/core/routine';
-import { Button, Field, Modal, Tag, cx } from '@/ui/kit';
+import { findRoutine, freeWindows, habitsWithoutTime, planTaskSlots, routineDrafts, routineOf, slotLabel, taskBlockDrafts, tasksWithoutTime, validateRoutine, type RoutineInput } from '@/core/routine';
+import { Button, ChipGroup, Field, Modal, Tag, cx } from '@/ui/kit';
 import { HabitScheduler } from '../calendario/HabitScheduler';
 
 const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -18,12 +18,14 @@ export function RoutineModal() {
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
   const toast = useUi((s) => s.toast);
-  const { events, habits, tasks, habitLogs, createEvent, saveEvent, removeEvent } = useData();
+  const { events, habits, tasks, habitLogs, profile, createEvent, saveEvent, removeEvent, updateProfile } = useData();
   const [r, setR] = useState<RoutineInput>(() => routineOf(events));
   const [withSleep, setWithSleep] = useState(r.sleep !== null);
   const found = findRoutine(events);
-  const input: RoutineInput = { ...r, sleep: withSleep ? (r.sleep ?? '23:00') : null, wake: withSleep ? (r.wake ?? '06:30') : null };
-  const problem = validateRoutine(input);
+  // ¿Trabaja? Es lo primero que se pregunta: sin saberlo no se puede repartir nada fuera de la jornada.
+  const [works, setWorks] = useState<boolean | null>(profile.works ?? (found.work ? true : null));
+  const input: RoutineInput = { ...r, workDays: works ? r.workDays : [], sleep: withSleep ? (r.sleep ?? '23:00') : null, wake: withSleep ? (r.wake ?? '06:30') : null };
+  const problem = validateRoutine(input) ?? (works === null ? 'Cuéntame primero si trabajas.' : works && !r.workDays.length ? 'Marca al menos un día en que trabajas.' : null);
   const without = habitsWithoutTime(habits, events);
 
   // Qué tiempo libre te queda un día de trabajo y uno libre, con lo que ya hay más lo que estás definiendo.
@@ -40,6 +42,16 @@ export function RoutineModal() {
     return freeWindows(ctx, date);
   }, [problem, input, events, found.work?.id, found.sleep?.id, habits, tasks, habitLogs]);
 
+  // Tareas con plazo cercano que aún no tienen un rato reservado, con las sesiones que se les propondrían.
+  const pending = useMemo(() => tasksWithoutTime(tasks, events).filter((t) => t.dueDate && t.dueDate <= addDays(today(), 14)), [tasks, events]);
+  const taskPlan = useMemo(() => (events.length && pending.length ? planTaskSlots(pending, { events, habits, tasks, habitLogs }, today(), minutesOfDay()) : null), [events, pending, habits, tasks, habitLogs]);
+  const reserveAll = () => {
+    if (!taskPlan) return;
+    let n = 0;
+    for (const t of pending) for (const d of taskBlockDrafts(t, taskPlan.slots)) (createEvent(d), n++);
+    toast({ kind: 'info', title: 'Tareas con hora', body: `${n} ${n === 1 ? 'sesión reservada' : 'sesiones reservadas'} en tu calendario.` });
+  };
+
   const toggleDay = (d: number) => setR((cur) => ({ ...cur, workDays: cur.workDays.includes(d) ? cur.workDays.filter((x) => x !== d) : [...cur.workDays, d].sort() }));
 
   const save = () => {
@@ -53,6 +65,7 @@ export function RoutineModal() {
     };
     apply(work, found.work, true);
     apply(sleep, found.sleep, true);
+    updateProfile({ works: !!works });
     toast({ kind: 'info', title: 'Tu semana quedó guardada', body: 'Ya aparece en el calendario y en Hoy. Ahora ponle hora a tus hábitos.' });
   };
 
@@ -60,19 +73,25 @@ export function RoutineModal() {
     <Modal title="Mi semana" kicker="// Tu horario de verdad" onClose={close} wide>
       <div className="form">
         <section className="rt__sec" aria-labelledby="rt-horario">
-          <h3 id="rt-horario" className="rv__title">1 · Cuándo trabajas</h3>
-          <p className="muted small">Así la app sabe cuándo estás ocupado y cuándo tienes tiempo libre para estudiar y hacer tus hábitos.</p>
-          <div className="weekdays" role="group" aria-label="Días que trabajas">
+          <h3 id="rt-horario" className="rv__title">1 · ¿Trabajas?</h3>
+          <p className="muted small">Así la app sabe cuándo estás ocupado y cuándo tienes tiempo libre para tus tareas y hábitos.</p>
+          <ChipGroup
+            label="¿Trabajas?"
+            value={works === null ? 'none' : works ? 'yes' : 'no'}
+            options={[{ value: 'yes', label: 'Sí, tengo horario' }, { value: 'no', label: 'No trabajo' }]}
+            onChange={(v) => setWorks(v === 'yes')}
+          />
+          {works && <div className="weekdays" role="group" aria-label="Días que trabajas">
             {WEEKDAYS_SHORT.map((d, i) => (
               <button key={d} type="button" aria-pressed={r.workDays.includes(i)} title={DAY_NAMES[i]} className={cx('weekdays__day', r.workDays.includes(i) && 'is-on')} onClick={() => toggleDay(i)}>
                 {d}
               </button>
             ))}
-          </div>
-          <div className="form__row">
+          </div>}
+          {works && <div className="form__row">
             <Field label="Entro a las">{(fid) => <input id={fid} className="input" type="time" value={r.workStart} onChange={(e) => setR({ ...r, workStart: e.target.value })} disabled={!r.workDays.length} />}</Field>
             <Field label="Salgo a las">{(fid) => <input id={fid} className="input" type="time" value={r.workEnd} onChange={(e) => setR({ ...r, workEnd: e.target.value })} disabled={!r.workDays.length} />}</Field>
-          </div>
+          </div>}
           <label className="stepcheck">
             <input type="checkbox" checked={withSleep} onChange={(e) => setWithSleep(e.target.checked)} />
             <span>Marcar mis horas de sueño (así no te sugiero nada de madrugada)</span>
@@ -121,8 +140,43 @@ export function RoutineModal() {
           <p className="muted small">Para algo varias veces al día (agua, pausas), elige «2×» o «3×» y la app reparte las horas.</p>
         </section>
 
+        <section className="rt__sec" aria-labelledby="rt-tareas">
+          <h3 id="rt-tareas" className="rv__title">
+            3 · Cuándo haces tus tareas {pending.length === 0 && tasks.some((t) => t.status !== 'done') && <Tag tone="green">✔ Con hora</Tag>}
+          </h3>
+          {!events.length ? (
+            <p className="muted small">Guarda primero tu horario (arriba) y te propongo un rato libre para cada tarea con fecha.</p>
+          ) : pending.length === 0 ? (
+            <p className="muted small">No hay tareas con fecha en los próximos 14 días sin hora. Las que crees nuevas te sugerirán su rato al guardarlas.</p>
+          ) : (
+            <>
+              <p className="muted small">
+                {pending.length} {pending.length === 1 ? 'tarea con fecha' : 'tareas con fecha'} sin hora. Las pongo en tus ratos libres, la más urgente primero, en sesiones de hasta 90 min y sin llenar tus días.
+              </p>
+              <ul className="rt__habits">
+                {pending.slice(0, 6).map((t) => {
+                  const mine = taskPlan?.slots.filter((s) => s.taskId === t.id) ?? [];
+                  return (
+                    <li key={t.id}>
+                      <p className="rv__name">{t.title}</p>
+                      <p className="muted small">{mine.length ? `🕒 ${slotLabel(mine[0], today())}${mine.length > 1 ? ` y ${mine.length - 1} sesión${mine.length > 2 ? 'es' : ''} más` : ''}` : 'No encuentro un rato libre antes de su plazo.'}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+              {pending.length > 6 && <p className="muted small">…y {pending.length - 6} más.</p>}
+              {taskPlan && taskPlan.unplaced.length > 0 && <p className="form__info">⚠ {taskPlan.unplaced.length} no caben del todo antes de su plazo: conviene moverles la fecha.</p>}
+              <div className="row">
+                <Button variant="primary" onClick={reserveAll} disabled={!taskPlan?.slots.length}>
+                  Reservar tiempo para mis tareas
+                </Button>
+              </div>
+            </>
+          )}
+        </section>
+
         <section className="rt__sec" aria-labelledby="rt-export">
-          <h3 id="rt-export" className="rv__title">3 · Llévalo a Google Calendar</h3>
+          <h3 id="rt-export" className="rv__title">4 · Llévalo a Google Calendar</h3>
           <p className="muted small">
             Se descarga un archivo <b>.ics</b> con tu trabajo, tus bloques y tus hábitos con hora (las series se exportan como repetición). En Google Calendar:
             «Configuración → Importar y exportar → Importar». Es una copia del momento: si cambias algo aquí, vuelve a exportar (no duplica; actualiza).

@@ -47,6 +47,8 @@ export interface Profile {
   hero?: Hero;
   /** Revisiones semanales guardadas (las últimas semanas). Son reflexiones y decisiones, no registros: viven con el perfil. */
   reviews?: WeekReview[];
+  /** ¿Trabaja? Sin definir = aún no se le ha preguntado. Con `true`, su horario laboral vive en el calendario («Mi semana»). */
+  works?: boolean;
 }
 
 /* ---------- Áreas de la vida y planes «si… entonces…» ---------- */

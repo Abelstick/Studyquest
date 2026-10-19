@@ -411,3 +411,22 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- Cuándo hacer una tarea y «¿Trabajas?» ---------- */
+.sched__list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.worksq {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-left: 6px solid var(--blue);
+  background: color-mix(in srgb, var(--blue) 9%, var(--panel));
+}
+.worksq p {
+  margin: 0;
+}

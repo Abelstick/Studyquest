@@ -17,6 +17,7 @@ import { WorksQuestion } from '@/features/calendario/WorksQuestion';
 import { Bar, Button, ChipGroup, Field, PageHead, Panel, Tag, cx, TextInput } from '@/ui/kit';
 import { Loader } from '@/ui/Loader';
 import { RouteEditor } from './RouteEditor';
+import { Icon } from '@/ui/Icon';
 
 const STORAGE_KEY = 'sq:planner-week';
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -184,7 +185,7 @@ export default function Planificador() {
 
   return (
     <div className="stack">
-      <PageHead kicker="Estratega" title="Planificador inteligente" sprite="sword" right={<Button onClick={() => openModal({ type: 'pack' })}>✨ Importar pack de IA</Button>} />
+      <PageHead kicker="Estratega" title="Planificador inteligente" sprite="sword" right={<Button onClick={() => openModal({ type: 'pack' })}>Importar pack de IA</Button>} />
 
       <ol className="wizard" aria-label="Pasos">
         {STEPS.map((s, i) => (
@@ -234,7 +235,7 @@ export default function Planificador() {
             <div className="presets">
               {events.length > 0 && (
                 <button type="button" className="chip chip--sm" onClick={() => applyPreset(weekMinutesFromSchedule({ events, habits, tasks, habitLogs }, now))} title="La mitad de tu tiempo libre cada día, fuera de tu trabajo">
-                  📅 Calcular desde mi horario
+                  Calcular desde mi horario
                 </button>
               )}
               {PRESETS.map((p) => (
@@ -271,7 +272,7 @@ export default function Planificador() {
                   </Button>
                   {blocked.map((b) => (
                     <button key={b} type="button" className="chip chip--sm is-on" onClick={() => setBlocked(blocked.filter((x) => x !== b))} aria-label={`Quitar ${shortDate(b)}`}>
-                      {shortDate(b)} ✕
+                      {shortDate(b)} <Icon name="close" size={9} />
                     </button>
                   ))}
                 </div>
@@ -331,7 +332,7 @@ export default function Planificador() {
               {apiKey && !generating ? (
                 <>
                   <Button variant="primary" block disabled={!canNext || weekTotal(week) === 0} onClick={() => void generate()}>
-                    ✨ Generar con IA
+                    Generar con IA
                   </Button>
                   <label className="modelpick">
                     <span className="muted small">Modelo</span>
@@ -349,13 +350,13 @@ export default function Planificador() {
                 <div className="ai__cta">
                   <p className="muted small">Con la IA puedes planificar <b>cualquier objetivo</b>. Se activa con tu propia clave gratuita de Google.</p>
                   <Button variant="primary" block onClick={() => openModal({ type: 'ai' })}>
-                    {remote === 'encrypted' ? '🔓 Desbloquear funciones inteligentes' : '🔑 Activar funciones inteligentes'}
+                    {remote === 'encrypted' ? 'Desbloquear funciones inteligentes' : 'Activar funciones inteligentes'}
                   </Button>
                 </div>
               ) : null}
               <p className="kicker">{apiKey ? 'O sin IA' : 'Sin IA'}</p>
               <button type="button" className="template template--own" disabled={!canNext || generating} onClick={startManual}>
-                <b>✍ Crear mi propia ruta</b>
+                <b>Crear mi propia ruta</b>
                 <span>Empiezas en blanco: tú pones los módulos, los temas y las horas.</span>
               </button>
               <p className="kicker">O parte de una plantilla (podrás editarla)</p>
@@ -382,7 +383,7 @@ export default function Planificador() {
             <Panel
               kicker={source === 'ai' ? 'Ruta generada con IA' : source === 'manual' ? 'Tu ruta' : 'Ruta de plantilla'}
               title="Edita tu ruta"
-              right={<Tag tone={source === 'ai' ? 'green' : 'plain'}>{source === 'ai' ? `✨ ${modelName(lastUsed ?? model)}` : source === 'manual' ? '✍ Hecha por ti' : 'Plantilla'}</Tag>}
+              right={<Tag tone={source === 'ai' ? 'green' : 'plain'}>{source === 'ai' ? modelName(lastUsed ?? model) : source === 'manual' ? 'Hecha por ti' : 'Plantilla'}</Tag>}
             >
               {roadmap.summary && <p className="muted">{roadmap.summary}</p>}
               <p className="muted small">Cambia lo que quieras: nombres, horas, el orden, y añade o quita módulos, temas y pasos. El calendario se recalcula solo.</p>
@@ -423,12 +424,12 @@ export default function Planificador() {
                 <>
                   <ul className="planner__problems" role="status">
                     {problems.map((p) => (
-                      <li key={p}>⚠ {p}</li>
+                      <li key={p}>{p}</li>
                     ))}
                   </ul>
                   <div className="modal__actions">
                     <Button variant="primary" disabled>
-                      ✔ Crear mi plan
+                      <Icon name="check" size={12} /> Crear mi plan
                     </Button>
                     <Button onClick={() => setStep(1)}>← Ajustar tiempo</Button>
                   </div>
@@ -457,7 +458,6 @@ export default function Planificador() {
               <Bar pct={schedule.coverage * 100} tone={schedule.coverage >= 1 ? 'green' : 'red'} label="Cuánto de la ruta cabe en tu tiempo" />
               {schedule.warnings.map((w) => (
                 <p key={w} className={cx('planner__warn', schedule.coverage < 1 && 'is-bad')} role="status">
-                  {schedule.coverage < 1 ? '⚠ ' : 'ℹ '}
                   {w}
                 </p>
               ))}
@@ -466,7 +466,7 @@ export default function Planificador() {
               </p>
               <div className="modal__actions">
                 <Button variant="primary" disabled={!schedule.ok} onClick={create}>
-                  ✔ Crear mi plan
+                  <Icon name="check" size={12} /> Crear mi plan
                 </Button>
                 <Button onClick={() => setStep(1)}>← Ajustar tiempo</Button>
               </div>

@@ -12,6 +12,7 @@ import { Bar, PageHead, Panel, Segmented, cx } from '@/ui/kit';
 import { ChartCard, ColumnChart, HBars, LineChart, Sparkline } from './charts';
 import { CityMini, WeeklyReport } from './WeekPanels';
 import { WeekReviewPanel } from './WeekReview';
+import { Scramble } from '@/ui/motion';
 
 type Range = '30' | '90' | '180' | 'all';
 const RANGES: { value: Range; label: string }[] = [
@@ -52,7 +53,9 @@ function StatTile({ label, value, note, change, spark, sprite }: TileProps) {
       <p className="kpi__label">
         {sprite && <Sprite name={sprite} size={18} />} {label}
       </p>
-      <p className="kpi__value">{value}</p>
+      <p className="kpi__value">
+        <Scramble value={value} />
+      </p>
       {change ? <p className={cx('kpi__delta', `is-${change.tone}`)}>{change.text}</p> : <p className="kpi__delta">{note}</p>}
       {spark && spark.length > 1 && <Sparkline values={spark} />}
     </div>
@@ -160,7 +163,9 @@ export default function Progreso() {
           <p className="kpi__label">
             <Sprite name="coin" size={18} /> XP histórico
           </p>
-          <p className="dashhero__figure">{fmt(stats.xp)}</p>
+          <p className="dashhero__figure">
+            <Scramble value={fmt(stats.xp)} />
+          </p>
           <p className="muted">
             {fmt(view.xpNow)} XP en {RANGE_TEXT[range]}
           </p>

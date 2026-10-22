@@ -64,7 +64,7 @@ export function WelcomeModal() {
         </div>
         <p>Cada tarea es un bloque <b>?</b>, cada hábito un power-up y cada curso un mundo. Estudia, gana XP y monedas, y sube de nivel.</p>
         <p className="muted small">
-          <b>Tarea</b>: algo que haces una vez · <b>Hábito</b>: algo que repites · <b>Meta</b>: lo que quieres lograr a largo plazo · <b>Proyecto</b>: algo que construyes. Si dudas, la guía «❓ ¿Cuál uso?» está en cada pantalla.
+          <b>Tarea</b>: algo que haces una vez · <b>Hábito</b>: algo que repites · <b>Meta</b>: lo que quieres lograr a largo plazo · <b>Proyecto</b>: algo que construyes. Si dudas, la guía «¿Cuál uso?» está en cada pantalla.
         </p>
         <label className="field__label" htmlFor="player-name">
           ¿Cómo te llamas, jugador?

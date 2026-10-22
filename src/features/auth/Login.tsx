@@ -5,6 +5,8 @@ import { Button, Field } from '@/ui/kit';
 import { PasswordInput } from '@/ui/PasswordInput';
 import { Sprite } from '@/ui/Sprite';
 import type { SpriteName } from '@/ui/sprites';
+import { Icon } from '@/ui/Icon';
+import { WorldStage } from '@/ui/WorldStage';
 
 type Mode = 'signin' | 'signup';
 
@@ -107,7 +109,8 @@ export default function Login() {
             </span>
           </span>
         </div>
-        <div className="login__ground" />
+        {/* La pantalla de título enseña el mismo mundo que verás dentro: es la «demo» de la recreativa. */}
+        <WorldStage tall />
       </div>
 
       <div className="login__card panel">
@@ -131,7 +134,9 @@ export default function Login() {
           <h1 className="login__title">
             STUDY<span>QUEST</span>
           </h1>
-          <p className="login__start">▶ Press start</p>
+          <p className="login__start">
+            <Icon name="play" size={12} /> Press start
+          </p>
           <ul className="login__features" aria-label="Qué te espera">
             {FEATURES.map((f) => (
               <li key={f.label}>

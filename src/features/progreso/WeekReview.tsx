@@ -316,7 +316,7 @@ export function WeekReviewPanel({ week, onClose }: Readonly<{ week: ISODate; onC
         </label>
         {adjustment.trim() && (
           <Button small onClick={adjustmentToTask} disabled={adjustmentTask}>
-            {adjustmentTask ? `✔ Tarea creada para el ${shortDate(nextFrom)}` : 'Convertirlo en tarea'}
+            {adjustmentTask ? `Tarea creada para el ${shortDate(nextFrom)}` : 'Convertirlo en tarea'}
           </Button>
         )}
       </Section>

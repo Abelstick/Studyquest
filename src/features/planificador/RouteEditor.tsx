@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MAX_MODULES, MAX_TOPICS, type Roadmap, type RoadmapModule } from '@/core/planner';
 import { Button, Field, cx, TextInput, NumberInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 
 interface Props {
   roadmap: Roadmap;
@@ -31,7 +32,7 @@ function ItemList({ items, label, addLabel, focusKey, onFocused, onChange }: { i
             }}
           />
           <button type="button" className="icon-btn icon-btn--sm" aria-label={`Quitar ${label.toLowerCase()} ${k + 1}`} onClick={() => onChange(items.filter((_, j) => j !== k))}>
-            ✕
+            <Icon name="close" size={10} />
           </button>
         </li>
       ))}
@@ -44,7 +45,7 @@ function ItemList({ items, label, addLabel, focusKey, onFocused, onChange }: { i
             onFocused(`${label}-${items.length}`);
           }}
         >
-          ＋ {addLabel}
+          <Icon name="plus" size={12} /> {addLabel}
         </Button>
       </li>
     </ul>
@@ -143,7 +144,7 @@ export function RouteEditor({ roadmap, onChange }: Props) {
           setFocus(`m-${roadmap.modules.length}`);
         }}
       >
-        ＋ Añadir módulo
+        <Icon name="plus" size={12} /> Añadir módulo
       </Button>
     </div>
   );

@@ -290,7 +290,9 @@
   align-items: flex-start;
 }
 .big-num {
-  font-family: var(--font-num);
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
   font-size: var(--fs-2xl);
   line-height: 1;
 }
@@ -454,7 +456,9 @@ a.btn {
   background: var(--yellow);
   color: var(--on-yellow);
   border-color: var(--ink);
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 13px;
   letter-spacing: 0.02em;
 }
@@ -631,7 +635,9 @@ a.btn {
 .input--xp {
   background: var(--yellow);
   color: var(--ink);
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 18px;
 }
 .input--inline {
@@ -693,7 +699,9 @@ textarea.input {
 .counter__value {
   flex: 1;
   text-align: center;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 16px;
 }
 
@@ -877,7 +885,9 @@ textarea.input {
   border-left-color: var(--blue);
 }
 .toast__xp {
-  font-family: var(--font-num);
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
   font-size: 24px;
   color: var(--yellow);
   animation: coin-jump 0.5s steps(6);
@@ -900,7 +910,9 @@ textarea.input {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 16px;
   color: var(--yellow);
   margin-left: auto;

@@ -103,7 +103,9 @@
   border: var(--bw) solid var(--line);
   background: var(--panel-3);
   color: var(--text);
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
 }
 .smart__item.is-ok .smart__letter {
@@ -120,10 +122,12 @@
   list-style: none;
 }
 .tagenda__row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 4px 10px;
+  /* El riel de Inicio es estrecho: la fila se parte en líneas (hora · título · acciones) en vez de repartir columnas,
+     así el título nunca se queda sin sitio y se ve una letra por línea. */
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 4px 10px;
   padding: 8px 10px;
   background: var(--panel);
   color: var(--text);
@@ -143,31 +147,42 @@
   text-decoration: line-through;
 }
 .tagenda__time {
-  font-family: var(--font-pixel);
-  font-size: 10px;
+  flex: 0 0 auto;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 13px;
   color: var(--muted);
   white-space: nowrap;
 }
+/* Mínimo de ancho propio: si no cabe junto a la hora, baja a su línea; las palabras se parten solo si de verdad no hay más remedio. */
 .tagenda__what {
+  flex: 1 1 10rem;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
-  overflow-wrap: anywhere;
+  gap: 4px 6px;
+  min-width: min(100%, 10rem);
+  overflow-wrap: break-word;
+}
+.tagenda__what .link {
+  text-align: left;
+  overflow-wrap: break-word;
 }
 .tagenda__acts {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-left: auto;
 }
-@container (max-width: 560px) {
-  .tagenda__row {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .tagenda__time {
-    grid-column: 1 / -1;
-  }
+
+/* Prioridades de Hoy (también en el riel estrecho): el botón «Mañana» baja a su propia línea y el título conserva todo el ancho. */
+.tprio .mission {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.tprio .mission__counter {
+  grid-column: 2 / -1;
 }
 
 /* ---------- Revisión semanal ---------- */
@@ -293,56 +308,79 @@
 }
 
 .nowstrip {
+  /* «Ahora» es una franja a lo ancho, encima de todo: responde a «¿qué debería estar haciendo?» sin tener que buscarlo. */
+  --tone: var(--task);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 12px 16px;
-  align-items: start;
-  border-left: 10px solid var(--blue);
+  gap: var(--sp-3) var(--sp-5);
+  align-items: center;
+  border-left: 10px solid var(--tone);
+}
+.nowstrip--free {
+  --tone: var(--habit);
+}
+.nowstrip--rest {
+  --tone: var(--violet);
+}
+.nowstrip--solo {
+  grid-template-columns: auto minmax(0, 1fr);
 }
 .nowstrip__clock {
-  align-self: center;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: var(--hud);
   color: var(--hud-text);
   border: var(--bw) solid var(--line);
-  font-family: var(--font-pixel);
-  font-size: 16px;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
 }
-.nowstrip__body {
+.nowstrip__main,
+.nowstrip__next,
+.nowstrip__ideas {
   display: grid;
   gap: 4px;
   min-width: 0;
 }
 .nowstrip__title {
   margin: 0;
-  font-size: 20px;
-  font-weight: 900;
-  overflow-wrap: anywhere;
+  font-size: var(--fs-lg, 22px);
+  font-weight: 800;
+  overflow-wrap: break-word;
+}
+.nowstrip__next {
+  padding-left: var(--sp-4);
+  border-left: 2px solid var(--line-soft);
+  max-width: 16rem;
+}
+.nowstrip__nexttitle {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: break-word;
+}
+.nowstrip__ideas {
+  grid-column: 1 / -1;
 }
 .nowstrip .chips {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-/* Estrecho (el riel de Inicio): reloj y «Mi semana» arriba, y el texto debajo con todo el ancho. */
-@container (max-width: 560px) {
-  .nowstrip {
-    grid-template-columns: auto auto;
-    grid-template-areas:
-      'clock btn'
-      'body body';
-    justify-content: space-between;
-    align-items: center;
+@media (max-width: 700px) {
+  .nowstrip,
+  .nowstrip--solo {
+    grid-template-columns: auto minmax(0, 1fr);
   }
   .nowstrip__clock {
-    grid-area: clock;
-    font-size: 14px;
+    font-size: 18px;
   }
-  .nowstrip__body {
-    grid-area: body;
-  }
-  .nowstrip > .btn {
-    grid-area: btn;
+  .nowstrip__next {
+    grid-column: 1 / -1;
+    max-width: none;
+    padding: var(--sp-2) 0 0;
+    border-left: 0;
+    border-top: 2px solid var(--line-soft);
   }
 }
 

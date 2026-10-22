@@ -51,8 +51,10 @@
   align-items: baseline;
 }
 .hero__xp {
-  font-family: var(--font-pixel);
-  font-size: 11px;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 13px;
 }
 .hero__xp b {
   color: var(--xp-text);
@@ -82,7 +84,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 15px;
 }
 .scoreboard dd.is-hot {
@@ -146,7 +150,9 @@
   color: var(--muted);
 }
 .stat-grid dd {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 15px;
 }
 .stat-grid dd.is-hot {
@@ -187,7 +193,9 @@
 }
 .cal__head {
   text-align: center;
-  font-family: var(--font-pixel);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: var(--muted);
 }
 .cal__cell {
@@ -312,7 +320,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
   background: var(--green);
   color: var(--on-green);
@@ -352,7 +362,9 @@
 .module__xp {
   align-self: center;
   padding-right: 14px;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -500,7 +512,8 @@
 }
 .column__n {
   margin-left: auto;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
   font-size: 22px;
   font-weight: 400;
   color: var(--on-page-muted);
@@ -542,7 +555,9 @@
   line-height: 1.1;
 }
 .task__xp {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 16px;
   color: var(--xp-text);
 }
@@ -615,7 +630,9 @@
   color: var(--text);
 }
 .habit__pct {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 20px;
   line-height: 1;
 }
@@ -736,7 +753,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
   background: var(--panel);
   color: var(--muted);
@@ -814,7 +833,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
   background: var(--panel);
   color: var(--muted);
@@ -852,7 +873,9 @@
   margin-top: 6px;
 }
 .track__xp {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: var(--xp-text);
 }
 .track__item--locked .track__title {
@@ -876,16 +899,22 @@
   border-bottom: 2px dashed var(--line-soft);
 }
 .bigstats dt {
-  font-family: var(--font-pixel);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--muted);
 }
 .bigstats dd:not(.bigstats__delta) {
-  font-family: var(--font-pixel);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 22px;
 }
 .bigstats__delta {
-  font-family: var(--font-pixel);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
 }
@@ -911,7 +940,9 @@
 }
 .bars__v {
   text-align: center;
-  font-family: var(--font-pixel);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: var(--muted);
   margin-bottom: 4px;
 }
@@ -928,7 +959,9 @@
   display: flex;
   justify-content: space-between;
   margin-top: 8px;
-  font-family: var(--font-pixel);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
 }
@@ -967,7 +1000,9 @@
   border: var(--bw) solid var(--line);
 }
 .wallet__n {
-  font-family: var(--font-num);
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
   font-size: 24px;
   line-height: 1;
   color: var(--yellow);
@@ -1014,7 +1049,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
 }
 .badge-card {

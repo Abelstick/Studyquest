@@ -328,6 +328,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
  * la pantalla después del siguiente paso, y sube por encima de la ficha hasta montarse en el cielo.
  */
 function LevelCard({ profile }: { profile: Profile }) {
+  const openModal = useUi((s) => s.openModal);
   const lp = levelProgress(profile.xp);
   return (
     <section className="levelcard" aria-label={`Nivel ${lp.level}, ${rankFor(lp.level)}`}>
@@ -344,7 +345,12 @@ function LevelCard({ profile }: { profile: Profile }) {
       <p className="levelcard__meta">
         Faltan <b>{lp.left.toLocaleString('en-US')} XP</b> para el nivel {lp.level + 1}
       </p>
-      <HowToButton label="Cómo usar la app" />
+      <div className="levelcard__actions">
+        <Button small onClick={() => openModal({ type: 'routine' })} title="Tu horario de trabajo, la hora de tus hábitos y tus tareas">
+          <Icon name="flag" size={12} /> Mi semana
+        </Button>
+        <HowToButton label="Cómo usar la app" />
+      </div>
     </section>
   );
 }
@@ -403,6 +409,7 @@ export default function Inicio() {
         </>
       ) : (
         <>
+          <NowStrip />
           <StartGuide />
           <DaySummary progress={progress} streak={streak.current} streakAlive={streak.activeToday} />
           {/* Dos columnas en pantallas anchas: a la izquierda lo que se hace (siguiente paso y misiones), a la derecha
@@ -424,7 +431,6 @@ export default function Inicio() {
               )}
             </div>
             <aside className="stack home__rail" aria-label="Tu día">
-              <NowStrip />
               <TodayPriorities />
               <TodayAgenda />
               <QuickLog />

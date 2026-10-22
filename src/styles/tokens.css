@@ -45,6 +45,10 @@
   --font-body: 'Atkinson Hyperlegible Next Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-num: 'Pixelify Sans Variable', ui-monospace, 'Courier New', monospace;
   --font-pixel: 'Press Start 2P', ui-monospace, 'Courier New', monospace;
+  /* Cifras pequeñas (por debajo de 24 px): la letra de lectura, en negrita y con cifras de ancho fijo. La pixel solo se deja para cifras grandes, donde sí se distingue cada dígito. */
+  --font-data: var(--font-body);
+  /* Cifras protagonistas (progreso del día, estadísticas, monedas). Para cambiar su letra basta esta línea: --font-data (Atkinson Hyperlegible, la más clara), --font-display (Bricolage, más de rótulo) o --font-num (pixel). */
+  --font-figure: var(--font-data);
   /* Escala con contraste fuerte: el texto vive en 14–16 px y los datos protagonistas saltan a 64–132 px. */
   --fs-xs: 12px;
   --fs-sm: 14px;

@@ -5,8 +5,7 @@ import { useUi } from '@/state/ui';
 import { today } from '@/core/dates';
 import { durationLabel, toClock } from '@/core/agenda';
 import { freeTimeIdeas, nowState, type Idea } from '@/core/routine';
-import { Button } from '@/ui/kit';
-import { Sprite } from '@/ui/Sprite';
+import { cx } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
 import { useMinuteOfDay } from './useMinuteOfDay';
 
@@ -33,7 +32,6 @@ export function NowStrip() {
   const habits = useData((s) => s.habits);
   const tasks = useData((s) => s.tasks);
   const habitLogs = useData((s) => s.habitLogs);
-  const openModal = useUi((s) => s.openModal);
   const nowMin = useMinuteOfDay();
   const date = today();
   const ctx = useMemo(() => ({ events, habits, tasks, habitLogs }), [events, habits, tasks, habitLogs]);
@@ -56,22 +54,28 @@ export function NowStrip() {
     detail = 'Fuera de tus horas despierto. Mañana será otro día.';
   }
 
+  const label = { block: 'ocupado', free: 'libre', rest: 'descanso' }[state.kind];
+
   return (
-    <section className="panel nowstrip" aria-label="Ahora">
+    <section className={cx('panel nowstrip', `nowstrip--${state.kind}`, !next && 'nowstrip--solo')} aria-label="Ahora">
       <div className="nowstrip__clock" aria-hidden="true">
         {toClock(nowMin)}
       </div>
-      <div className="nowstrip__body">
-        <p className="kicker">Ahora {state.kind === 'block' ? '· ocupado' : state.kind === 'free' ? '· libre' : ''}</p>
+      <div className="nowstrip__main">
+        <p className="kicker">Ahora · {label}</p>
         <h2 className="nowstrip__title">{headline}</h2>
         <p className="muted">{detail}</p>
-        {next && (
-          <p className="muted small">
-            Después: <b>{next.title}</b> a las {toClock(next.start as number)}
-          </p>
-        )}
-        {state.kind === 'free' &&
-          (ideas.length > 0 ? (
+      </div>
+      {next && (
+        <div className="nowstrip__next">
+          <p className="kicker">Después</p>
+          <p className="nowstrip__nexttitle">{next.title}</p>
+          <p className="muted small">a las {toClock(next.start as number)}</p>
+        </div>
+      )}
+      {state.kind === 'free' && (
+        <div className="nowstrip__ideas">
+          {ideas.length > 0 ? (
             <>
               <p className="kicker">Para este rato</p>
               <ul className="chips">
@@ -82,14 +86,11 @@ export function NowStrip() {
             </>
           ) : (
             <p className="muted small">
-              Nada pendiente para este rato: descansa o adelanta algo con una{' '}
-              <Link to="/pomodoro">sesión de enfoque</Link>.
+              Nada pendiente para este rato: descansa o adelanta algo con una <Link to="/pomodoro">sesión de enfoque</Link>.
             </p>
-          ))}
-      </div>
-      <Button small variant="ghost" onClick={() => openModal({ type: 'routine' })}>
-        <Sprite name="flag" size={14} /> Mi semana
-      </Button>
+          )}
+        </div>
+      )}
     </section>
   );
 }

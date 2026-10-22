@@ -147,7 +147,9 @@
   color: var(--on-page-muted);
 }
 .stat__v {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 19px;
   line-height: 1;
 }
@@ -195,7 +197,9 @@
   background: var(--alert);
   color: var(--on-red);
   border: var(--bw) solid var(--ink);
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 13px;
 }
 
@@ -280,7 +284,9 @@
   white-space: nowrap;
 }
 .player__rank {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 15px;
   color: var(--yellow);
 }
@@ -295,7 +301,9 @@
   gap: 6px;
 }
 .player__xp-meta {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 13px;
   color: var(--on-page-muted);
 }
@@ -371,7 +379,9 @@
   border: var(--bw) solid var(--side-edge);
   background: var(--hud-2);
   color: var(--hud-text);
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
   line-height: 1.2;
   text-align: center;
@@ -399,7 +409,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 13px;
   color: var(--on-page-muted);
 }
@@ -609,7 +621,9 @@
     border: var(--bw) solid var(--hud-edge);
     background: var(--hud-2);
     color: var(--hud-text);
-    font-family: var(--font-num);
+    font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
     font-size: 13px;
     line-height: 16px;
     text-align: center;

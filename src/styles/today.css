@@ -182,7 +182,9 @@
   line-height: 1;
 }
 .levelcard__meta {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 15px;
   color: var(--on-page-muted);
 }
@@ -193,6 +195,11 @@
 .levelcard .bar {
   border-color: var(--hud-edge);
   background: var(--hud-2);
+}
+.levelcard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
 }
 .levelcard .link {
   justify-self: start;
@@ -248,7 +255,9 @@
 }
 .daysum__v {
   margin: var(--sp-1) 0 0;
-  font-family: var(--font-num);
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
   font-size: var(--fs-xl);
   line-height: 1;
 }
@@ -305,7 +314,9 @@
   color: var(--on-page);
 }
 .today-board__xp {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 16px;
   letter-spacing: 0;
   text-transform: none;
@@ -344,7 +355,9 @@
   border: var(--bw) solid var(--alert);
   background: var(--alert);
   color: var(--on-red);
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 13px;
   text-align: center;
 }
@@ -400,7 +413,8 @@
   font-weight: 800;
 }
 .lane__count {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
   font-size: 16px;
   font-weight: 400;
   color: var(--muted);
@@ -440,7 +454,9 @@
   color: var(--late);
 }
 .lane__subn {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
   letter-spacing: 0;
 }

@@ -11,6 +11,7 @@ import { NowStrip } from './inicio/NowStrip';
 import { StartGuide } from './inicio/StartGuide';
 import { RoutineModal } from './modals/RoutineModal';
 import { HowToGuide } from './help/HowToGuide';
+import Inicio from './inicio/Inicio';
 import { TaskScheduler } from './calendario/TaskScheduler';
 import { WorksQuestion } from './calendario/WorksQuestion';
 import { TaskModal } from './modals/TaskModal';
@@ -255,5 +256,28 @@ describe('día y hora sugeridos para una tarea', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Crear tarea' }));
     expect(spies.createTask).toHaveBeenCalledTimes(1);
     expect(spies.createEvent).not.toHaveBeenCalled();
+  });
+});
+
+describe('Hoy: «Ahora» y «Mi semana»', () => {
+  it('«Ahora» muestra el estado, lo que viene después y ya no lleva el botón de Mi semana', () => {
+    at(18, 40);
+    const clase: AgendaEvent = { ...work, id: 'c', title: 'Inglés', category: 'study', date: '2026-09-16', start: '20:00', minutes: 60, repeat: undefined };
+    useData.setState({ events: [work, clase], habits: [habit()] });
+    wrap(<NowStrip />);
+    const now = screen.getByRole('region', { name: 'Ahora' });
+    expect(within(now).getByText('Tiempo libre')).toBeTruthy();
+    expect(within(now).getByText('Después')).toBeTruthy();
+    expect(within(now).getByText('Inglés')).toBeTruthy();
+    expect(within(now).getByText('a las 20:00')).toBeTruthy();
+    expect(within(now).queryByRole('button', { name: /Mi semana/ })).toBeNull();
+  });
+
+  it('«Mi semana» está en la ficha de nivel de Hoy, siempre a la vista, y abre el horario', () => {
+    at(18, 40);
+    useData.setState({ events: [], habits: [habit()], tasks: [] });
+    wrap(<Inicio />);
+    fireEvent.click(screen.getByRole('button', { name: /Mi semana/ }));
+    expect(useUi.getState().modal).toEqual({ type: 'routine' });
   });
 });

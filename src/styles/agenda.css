@@ -189,7 +189,9 @@
 }
 .tgrid__num {
   white-space: nowrap;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 20px;
 }
 .tgrid__dayname.is-today .tgrid__num {

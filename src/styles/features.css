@@ -370,7 +370,9 @@
   border: 0;
   background: transparent;
   color: inherit;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 15px;
   line-height: 1.2;
   cursor: pointer;
@@ -967,7 +969,9 @@
 .tstep__btn {
   width: 30px;
   height: 30px;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
   color: var(--text);
   background: var(--panel);
@@ -985,7 +989,9 @@
 .tstep__val {
   min-width: 58px;
   text-align: center;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
 }
 .tstep__val.is-off {
@@ -1739,7 +1745,9 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   background: var(--panel);
   color: var(--text);
   border: var(--bw) solid var(--line);
@@ -1751,7 +1759,9 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: var(--xp-text);
 }
 @media (max-width: 520px) {
@@ -1795,7 +1805,9 @@
   max-width: 76px;
 }
 .citymini__lv {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: var(--on-green);
   text-shadow: 1px 1px 0 var(--ink);
 }
@@ -2211,7 +2223,9 @@ select.input {
   height: 22px;
   background: var(--yellow);
   border: 2px solid var(--line);
-  font-family: var(--font-pixel);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }
 @media (max-width: 640px) {
   /* El botón de registrar no puede robarle el ancho al nombre del hábito: baja a su fila. */
@@ -2455,7 +2469,9 @@ select.input {
   background: var(--panel-3);
   color: var(--text);
   border: 2px solid var(--line-soft);
-  font-family: var(--font-pixel);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }
 .jb__track.is-on .jb__n {
   background: var(--panel);
@@ -2780,7 +2796,9 @@ select.input {
   animation: evo-ready 0.9s steps(2) infinite;
 }
 .evo__n {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
 }
 .evo__name {
@@ -2790,7 +2808,9 @@ select.input {
   overflow-wrap: anywhere;
 }
 .evo__lv {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: var(--muted);
 }
 .evo__step.is-now .evo__lv {
@@ -2862,7 +2882,9 @@ select.input {
 }
 .hstat__n {
   min-width: 4.5em;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
   text-align: right;
   white-space: nowrap;
@@ -3132,7 +3154,9 @@ select.input {
   --tone: var(--task);
 }
 .tabs__count {
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 14px;
 }
 .tabs + [role='tabpanel'] {
@@ -3444,9 +3468,10 @@ button.week__day--rich {
 }
 /* La cifra protagonista del progreso: pixel y enorme, como la del nivel en Inicio. */
 .dashhero__figure {
-  font-family: var(--font-num);
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
   font-size: clamp(40px, 6vw, 72px);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0;
   line-height: 1;
 }
@@ -3474,7 +3499,9 @@ button.week__day--rich {
   gap: 6px;
 }
 .kpi__value {
-  font-family: var(--font-num);
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
   font-size: var(--fs-xl);
   line-height: 1.1;
 }
@@ -3673,7 +3700,8 @@ button.week__day--rich {
   font-variant-numeric: tabular-nums;
   min-width: 64px;
   text-align: right;
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
   font-size: 14px;
 }
 .hbars__note {
@@ -3728,7 +3756,9 @@ button.week__day--rich {
 }
 .viz-record {
   fill: var(--text);
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }
 .viz-seam {
   fill: var(--panel);
@@ -3860,7 +3890,9 @@ button.week__day--rich {
   padding: 1px 6px;
   background: var(--alert);
   color: var(--on-red);
-  font-family: var(--font-num);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   font-size: 13px;
   text-align: center;
 }

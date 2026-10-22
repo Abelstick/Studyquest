@@ -32,7 +32,7 @@ const board = (habits: Habit[] = [habit], tasks: Task[] = [late, soon]) => {
 beforeEach(() => {
   Object.values(spies).forEach((s) => s.mockClear());
   useData.setState({ ...spies });
-  useUi.setState({ modal: null });
+  useUi.setState({ modal: null, folds: {} });
 });
 afterEach(cleanup);
 
@@ -80,6 +80,23 @@ describe('tablero de Hoy', () => {
     board();
     fireEvent.click(screen.getByRole('button', { name: 'Nueva tarea' }));
     expect(useUi.getState().modal).toEqual({ type: 'task' });
+  });
+
+  it('cada columna se pliega desde su nombre y lo recuerda', () => {
+    board();
+    const toggle = within(screen.getByRole('region', { name: /^Hábitos/ })).getByRole('button', { name: /^Hábitos/ });
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('checkbox', { name: /Completar: Leer/ })).toBeNull();
+    expect(useUi.getState().folds['home-lane-habit']).toBe(false);
+  });
+
+  it('lo que puede esperar empieza plegado y se abre con su título', () => {
+    board([], [late, task('t6', 'Leer capítulo', { dueDate: addDays(today(), 3) })]);
+    expect(screen.queryByRole('checkbox', { name: /Completar: Leer capítulo/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Próximos 7 días/ }));
+    expect(screen.getByRole('checkbox', { name: /Completar: Leer capítulo/ })).toBeTruthy();
   });
 
   it('con solo pendientes, lo hecho se oculta y la columna lo celebra', () => {

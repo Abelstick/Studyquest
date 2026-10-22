@@ -76,6 +76,8 @@ interface Prefs {
   sound: boolean;
   music: boolean;
   world: string | null;
+  /** Secciones plegables abiertas (true) o cerradas (false) por id; si falta, manda el valor por defecto de la sección. */
+  folds: Record<string, boolean>;
 }
 
 const PREFS_KEY = 'sq:prefs';
@@ -86,6 +88,7 @@ function readPrefs(): Prefs {
     sound: true,
     music: true,
     world: null,
+    folds: {},
   };
   try {
     return { ...fallback, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') };
@@ -121,9 +124,11 @@ interface UiState extends Prefs {
   toggleTheme: () => void;
   toggleSound: () => void;
   setWorld: (world: string | null) => void;
+  setFold: (id: string, open: boolean) => void;
 }
 
 const initial = readPrefs();
+const prefsOf = (s: Prefs): Prefs => ({ theme: s.theme, sound: s.sound, music: s.music, world: s.world, folds: s.folds });
 setSoundEnabled(initial.sound);
 
 const applyTheme = (theme: Prefs['theme'], world: string | null) => {
@@ -154,7 +159,7 @@ export const useUi = create<UiState>((set, get) => ({
   toggleMusic: () => {
     const music = !get().music;
     set({ music });
-    writePrefs({ theme: get().theme, sound: get().sound, music, world: get().world });
+    writePrefs(prefsOf(get()));
   },
   openModal: (modal) => set({ modal, notifOpen: false, navOpen: false }),
   closeModal: () => set({ modal: null }),
@@ -164,20 +169,24 @@ export const useUi = create<UiState>((set, get) => ({
     const theme = get().theme === 'dark' ? 'light' : 'dark';
     set({ theme });
     applyTheme(theme, get().world);
-    writePrefs({ theme, sound: get().sound, music: get().music, world: get().world });
+    writePrefs(prefsOf(get()));
     sfx.click();
   },
   toggleSound: () => {
     const sound = !get().sound;
     set({ sound });
     setSoundEnabled(sound);
-    writePrefs({ theme: get().theme, sound, music: get().music, world: get().world });
+    writePrefs(prefsOf(get()));
     if (sound) sfx.coin();
   },
   setWorld: (world) => {
     set({ world });
     applyTheme(get().theme, world);
-    writePrefs({ theme: get().theme, sound: get().sound, music: get().music, world });
+    writePrefs(prefsOf(get()));
+  },
+  setFold: (id, open) => {
+    set((s) => ({ folds: { ...s.folds, [id]: open } }));
+    writePrefs(prefsOf(get()));
   },
 }));
 

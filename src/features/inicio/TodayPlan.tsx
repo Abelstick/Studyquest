@@ -10,6 +10,7 @@ import { PRIORITY_REASON_TEXT, agendaToday, topPriorities, type AgendaItem, type
 import { reviewOf, reviewWeekFor } from '@/core/weekReview';
 import { findConflicts } from '@/core/conflicts';
 import { Button, Tag, cx } from '@/ui/kit';
+import { FoldPanel } from '@/ui/Fold';
 import { Sprite } from '@/ui/Sprite';
 
 /** Bloques de la agenda que se enseñan de entrada; el resto está en el calendario. */
@@ -97,61 +98,56 @@ function AgendaRow({ item }: Readonly<{ item: AgendaItem }>) {
   );
 }
 
-/**
- * Lo que ayuda a decidir qué hacer hoy y que el tablero de misiones no cuenta: las tres prioridades y los
- * bloques con hora del calendario. Si no hay nada que decir, no ocupa sitio.
- */
-export function TodayPlan() {
+/** Las tres prioridades de hoy, si hay al menos dos que elegir. Si no, no ocupa sitio. */
+export function TodayPriorities() {
   const tasks = useData((s) => s.tasks);
   const profile = useData((s) => s.profile);
+  const nowMin = useMinuteOfDay();
+  const priorities = useMemo(() => topPriorities({ tasks, profile }, today(), nowMin), [tasks, profile, nowMin]);
+  if (priorities.length < 2) return null;
+
+  return (
+    <FoldPanel id="home-priorities" className="tprio" kicker="// Lo que más importa" title={`Tus ${priorities.length} prioridades de hoy`}>
+      <ul className="missions">
+        {priorities.map((p) => (
+          <PriorityRow key={p.task.id} p={p} />
+        ))}
+      </ul>
+    </FoldPanel>
+  );
+}
+
+/** Los bloques con hora que quedan hoy en el calendario. Si no queda ninguno, no ocupa sitio. */
+export function TodayAgenda() {
+  const tasks = useData((s) => s.tasks);
   const events = useData((s) => s.events);
   const habits = useData((s) => s.habits);
   const habitLogs = useData((s) => s.habitLogs);
   const nowMin = useMinuteOfDay();
-
-  const priorities = useMemo(() => topPriorities({ tasks, profile }, today(), nowMin), [tasks, profile, nowMin]);
   const agenda = useMemo(() => agendaToday({ events, habits, tasks, habitLogs }, today(), nowMin), [events, habits, tasks, habitLogs, nowMin]);
   const upcoming = agenda.filter((a) => a.state !== 'past');
-  const showPriorities = priorities.length >= 2;
-  if (!showPriorities && upcoming.length === 0) return null;
+  if (upcoming.length === 0) return null;
 
   return (
-    <div className={cx('today-plan', showPriorities && upcoming.length > 0 && 'today-plan--two')}>
-      {showPriorities && (
-        <section className="panel tprio" aria-labelledby="tprio-title">
-          <p className="kicker">// Lo que más importa</p>
-          <h2 id="tprio-title" className="panel__title">
-            Tus {priorities.length} prioridades de hoy
-          </h2>
-          <ul className="missions">
-            {priorities.map((p) => (
-              <PriorityRow key={p.task.id} p={p} />
-            ))}
-          </ul>
-        </section>
-      )}
-      {upcoming.length > 0 && (
-        <section className="panel tagenda" aria-labelledby="tagenda-title">
-          <div className="split">
-            <div>
-              <p className="kicker">// Calendario</p>
-              <h2 id="tagenda-title" className="panel__title">
-                Tu agenda de hoy
-              </h2>
-            </div>
-            <Link className="btn btn--ghost btn--sm" to="/calendario">
-              Ver calendario
-            </Link>
-          </div>
-          <ul className="tagenda__list">
-            {upcoming.slice(0, SHOW_AGENDA).map((a) => (
-              <AgendaRow key={a.occ.key} item={a} />
-            ))}
-          </ul>
-          {upcoming.length > SHOW_AGENDA && <p className="muted small">y {upcoming.length - SHOW_AGENDA} más hoy.</p>}
-        </section>
-      )}
-    </div>
+    <FoldPanel
+      id="home-agenda"
+      className="tagenda"
+      kicker="// Calendario"
+      title="Tu agenda de hoy"
+      badge={upcoming.length}
+      right={
+        <Link className="btn btn--ghost btn--sm" to="/calendario">
+          Ver calendario
+        </Link>
+      }
+    >
+      <ul className="tagenda__list">
+        {upcoming.slice(0, SHOW_AGENDA).map((a) => (
+          <AgendaRow key={a.occ.key} item={a} />
+        ))}
+      </ul>
+      {upcoming.length > SHOW_AGENDA && <p className="muted small">y {upcoming.length - SHOW_AGENDA} más hoy.</p>}
+    </FoldPanel>
   );
 }
 

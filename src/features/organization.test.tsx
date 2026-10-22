@@ -7,7 +7,7 @@ import { useUi } from '@/state/ui';
 import { defaultProfile } from '@/core/game';
 import type { AgendaEvent, Goal, Habit, Task } from '@/core/domain';
 import { HabitMinimumButton } from './habitos/HabitAction';
-import { ReviewNudge, TodayPlan } from './inicio/TodayPlan';
+import { ReviewNudge, TodayAgenda, TodayPriorities } from './inicio/TodayPlan';
 import { GoalActionsPanel, GoalSmartPanel } from './metas/GoalPanels';
 import { WeekReviewPanel } from './progreso/WeekReview';
 
@@ -42,13 +42,18 @@ afterEach(() => {
 
 describe('Hoy: prioridades y agenda', () => {
   it('no ocupa sitio si no hay nada que decir', () => {
-    const { container } = wrap(<TodayPlan />);
+    const { container } = wrap(
+      <>
+        <TodayPriorities />
+        <TodayAgenda />
+      </>,
+    );
     expect(container.textContent).toBe('');
   });
 
   it('muestra las prioridades, completa con «Deshacer» y mueve a mañana sin crear otra tarea', () => {
     useData.setState({ tasks: [task('A', { dueDate: '2026-09-10' }), task('B', { dueDate: TODAY })] });
-    wrap(<TodayPlan />);
+    wrap(<TodayPriorities />);
     const region = screen.getByRole('region', { name: /prioridades de hoy/i });
     expect(within(region).getAllByRole('checkbox')).toHaveLength(2);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Completar: A' }));
@@ -64,7 +69,7 @@ describe('Hoy: prioridades y agenda', () => {
       tasks: [task('T', { title: 'Informe' })],
       events: [block({ id: 'suelto', title: 'Leer' }), block({ id: 'ligado', title: '', taskId: 'T', start: '17:00' })],
     });
-    wrap(<TodayPlan />);
+    wrap(<TodayAgenda />);
     const agenda = screen.getByRole('region', { name: /agenda de hoy/i });
     expect(within(agenda).getByText('Siguiente')).toBeTruthy();
     fireEvent.click(within(agenda).getByRole('button', { name: 'Marcar como hecho: Leer' }));

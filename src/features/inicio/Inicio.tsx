@@ -16,7 +16,8 @@ import { Bar, Button, Empty, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { DaySummary } from './DaySummary';
 import { MissionBoard } from './MissionBoard';
-import { ConflictBanner, ReviewNudge, TodayPlan } from './TodayPlan';
+import { FoldPanel } from '@/ui/Fold';
+import { ConflictBanner, ReviewNudge, TodayAgenda, TodayPriorities } from './TodayPlan';
 import { NowStrip } from './NowStrip';
 import { StartGuide } from './StartGuide';
 import { HowToButton } from '@/features/help/HowToGuide';
@@ -32,7 +33,8 @@ function StreakCalendar() {
   const frozenToday = profile.frozenDates.includes(now);
 
   return (
-    <Panel
+    <FoldPanel
+      id="home-streak"
       title={`Racha · ${streak.current} ${streak.current === 1 ? 'día' : 'días'}`}
       right={<span className="kicker">Récord {streak.best}</span>}
     >
@@ -64,7 +66,7 @@ function StreakCalendar() {
           </>
         )}
       </p>
-    </Panel>
+    </FoldPanel>
   );
 }
 
@@ -93,7 +95,7 @@ function DailyChest({ streak }: { streak: number }) {
   const open = canOpenChest(profile);
   const preview = chestReward(today(), streak);
   return (
-    <Panel kicker="// Botín del día" title="Cofre diario">
+    <FoldPanel id="home-chest" kicker="// Botín del día" title="Cofre diario" badge={open ? '¡Por abrir!' : undefined}>
       <div className={cx('chestbox', !open && 'is-open')}>
         <Sprite name="chest" size={64} className={cx(open && 'chestbox__sprite')} />
         <div>
@@ -113,7 +115,31 @@ function DailyChest({ streak }: { streak: number }) {
         </div>
       </div>
       {open && <p className="kicker">Botín de hoy: desde {preview.coins} monedas</p>}
-    </Panel>
+    </FoldPanel>
+  );
+}
+
+/** Para apuntar estudio sin abrir nada: sesión guiada o minutos ya hechos. */
+function QuickLog() {
+  const logSession = useData((s) => s.logSession);
+  const openModal = useUi((s) => s.openModal);
+  return (
+    <FoldPanel id="home-quicklog" className="today-actions" kicker="// Registro rápido" title="Sesión de estudio">
+      <div className="row">
+        <Button onClick={() => openModal({ type: 'session' })}>▶ Iniciar sesión</Button>
+        <Link className="btn btn--ghost" to="/tareas">
+          Ver todas las tareas
+        </Link>
+      </div>
+      <div className="row">
+        <span className="kicker">¿Ya estudiaste? Márcalo</span>
+        {[5, 10, 20, 30].map((m) => (
+          <button key={m} type="button" className="chip" onClick={() => logSession({ minutes: m, courseId: null })} title={`Registrar ${m} min de estudio ya hecho, sin abrir nada más`}>
+            ✔ {m} min
+          </button>
+        ))}
+      </div>
+    </FoldPanel>
   );
 }
 
@@ -304,7 +330,6 @@ export default function Inicio() {
   const xpEvents = useData((s) => s.xpEvents);
   const notifications = useData((s) => s.notifications);
   const agenda = useData((s) => s.events);
-  const logSession = useData((s) => s.logSession);
   const openModal = useUi((s) => s.openModal);
 
   const snap: Snapshot = useMemo(
@@ -353,14 +378,14 @@ export default function Inicio() {
         <>
           <StartGuide />
           <DaySummary progress={progress} streak={streak.current} streakAlive={streak.activeToday} />
+          {/* Dos columnas en pantallas anchas: a la izquierda lo que se hace (siguiente paso y misiones), a la derecha
+              el contexto del día. Cada panel se pliega, así nada empuja lo demás hacia abajo sin permiso. */}
           <div className="home__grid">
             <div className="stack home__main">
-              <NowStrip />
               <NextStepCard step={step} />
               <LateBanner />
               <ConflictBanner />
               <ReviewNudge />
-              <TodayPlan />
               <Events events={events} />
               {missions.length === 0 ? (
                 <Panel kicker="// Quest diaria" title="Tu misión de hoy">
@@ -371,47 +396,28 @@ export default function Inicio() {
               ) : (
                 <MissionBoard missions={missions} hasHabits={habits.length > 0} hasTasks={tasks.length > 0} />
               )}
-              <Panel className="today-actions">
-                <div className="row">
-                  <Button onClick={() => openModal({ type: 'session' })}>▶ Iniciar sesión de estudio</Button>
-                  <Link className="btn btn--ghost" to="/tareas">
-                    Ver todas las tareas
-                  </Link>
-                </div>
-                <div className="row">
-                  <span className="kicker">¿Ya estudiaste? Márcalo</span>
-                  {[5, 10, 20, 30].map((m) => (
-                    <button key={m} type="button" className="chip" onClick={() => logSession({ minutes: m, courseId: null })} title={`Registrar ${m} min de estudio ya hecho, sin abrir nada más`}>
-                      ✔ {m} min
-                    </button>
-                  ))}
-                </div>
-              </Panel>
             </div>
-            <aside className="stack home__rail" aria-label="Racha">
+            <aside className="stack home__rail" aria-label="Tu día">
+              <NowStrip />
+              <TodayPriorities />
+              <TodayAgenda />
+              <QuickLog />
               <StreakCalendar />
+              <DailyChest streak={streak.current} />
+              <FoldPanel id="home-tips" kicker="// Inteligencia táctica" title="Consejos del Toad" badge={advice.length} defaultOpen={false}>
+                <ul className="tips">
+                  {advice.map((t) => (
+                    <li key={t.title} className="tip">
+                      <p className="tip__title">{t.title}</p>
+                      <p className="muted small">{t.body}</p>
+                    </li>
+                  ))}
+                </ul>
+              </FoldPanel>
             </aside>
           </div>
         </>
       )}
-
-      {/* Lo que no es urgente queda plegado al final: sigue a mano sin competir con el siguiente paso. */}
-      <details className="panel more">
-        <summary className="more__summary">Más: cofre diario y consejos</summary>
-        <div className="cols more__body">
-          <DailyChest streak={streak.current} />
-          <Panel kicker="// Inteligencia táctica" title="Consejos del Toad">
-            <ul className="tips">
-              {advice.map((t) => (
-                <li key={t.title} className="tip">
-                  <p className="tip__title">{t.title}</p>
-                  <p className="muted small">{t.body}</p>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        </div>
-      </details>
     </div>
   );
 }

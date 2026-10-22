@@ -4017,22 +4017,6 @@ button.week__day--rich {
   gap: 10px;
   align-items: center;
 }
-.more {
-  padding: 0;
-}
-.more__summary {
-  min-height: 44px;
-  padding: 12px 18px;
-  font-weight: 900;
-  cursor: pointer;
-}
-.more__summary:focus-visible {
-  outline: 3px solid var(--yellow);
-  outline-offset: -3px;
-}
-.more__body {
-  padding: 0 18px 18px;
-}
 @media (max-width: 700px) {
   .nextstep,
   .nextstep--clear {

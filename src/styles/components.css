@@ -162,6 +162,65 @@
   font-size: 16px;
 }
 
+/* ===== Secciones plegables (ui/Fold.tsx) ===== */
+.fold__head {
+  align-items: center;
+}
+.fold.is-closed .fold__head {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.fold__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fold__toggle:hover .fold__chev {
+  color: var(--text);
+}
+.fold__toggle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.fold__chev {
+  flex: none;
+  width: 1em;
+  font-size: 14px;
+  line-height: 1;
+}
+.fold__label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.fold__badge {
+  flex: none;
+  padding: 1px 6px;
+  border: 2px solid var(--line-soft);
+  font-size: 12px;
+  font-weight: 900;
+}
+.fold__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.fold__body[hidden] {
+  display: none;
+}
+
 /* ===== Cabecera de página (cartel de madera) ===== */
 .page-head {
   display: flex;

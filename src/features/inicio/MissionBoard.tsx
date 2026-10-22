@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import { useUi } from '@/state/ui';
 import { dayProgress, missionUrgency, taskBucket, type Mission, type TaskBucket } from '@/core/missions';
 import { Bar, Button, Empty, cx } from '@/ui/kit';
+import { FoldToggle, useFold } from '@/ui/Fold';
 import { Sprite } from '@/ui/Sprite';
 import { MissionCard } from './MissionCard';
 
@@ -14,8 +15,8 @@ const SORTS: { value: MissionSort; label: string }[] = [
   { value: 'name', label: 'A–Z' },
 ];
 /** Cuántas misiones se enseñan de entrada en cada grupo; el resto queda tras «Ver más». */
-const SHOW_HABITS = 8;
-const SHOW_URGENT = 8;
+const SHOW_HABITS = 6;
+const SHOW_URGENT = 6;
 const SHOW_OTHER = 3;
 
 const BUCKETS: { id: TaskBucket; label: string }[] = [
@@ -56,31 +57,64 @@ function MissionList({ items, limit }: { items: Mission[]; limit: number }) {
   );
 }
 
-interface LaneHeadProps {
+interface LaneProps {
   kind: Lane;
   title: string;
   done: number;
   total: number;
   addLabel: string;
   onAdd: () => void;
+  shown: boolean;
+  children: ReactNode;
 }
 
-/** Cabecera de una columna: nombre, cuántas van hechas, barra de avance y el botón de crear. */
-function LaneHead({ kind, title, done, total, addLabel, onAdd }: LaneHeadProps) {
+/**
+ * Una columna: cabecera con nombre, cuántas van hechas, barra de avance y el botón de crear. El nombre pliega la
+ * columna; plegada se queda en la cabecera, que ya cuenta lo que importa.
+ */
+function LaneSection({ kind, title, done, total, addLabel, onAdd, shown, children }: Readonly<LaneProps>) {
+  const [open, toggle] = useFold(`home-lane-${kind}`);
+  const bodyId = useId();
   return (
-    <header className="lane__head">
-      <h3 className="lane__title" id={`lane-${kind}`}>
-        <Sprite name={kind === 'habit' ? 'flower' : 'qblock'} size={18} />
-        {title}
-        <span className="lane__count">
-          {done}/{total}
-        </span>
-      </h3>
-      <button type="button" className="lane__add" onClick={onAdd} aria-label={addLabel} title={addLabel}>
-        ＋
-      </button>
-      <Bar className="lane__bar" pct={total ? (done / total) * 100 : 0} tone={kind === 'habit' ? 'green' : 'blue'} segments={total} label={`${title} hechos hoy`} />
-    </header>
+    <section className={cx('lane', `lane--${kind}`, shown && 'is-shown', !open && 'is-closed')} aria-labelledby={`lane-${kind}`}>
+      <header className="lane__head">
+        <h3 className="lane__title" id={`lane-${kind}`}>
+          <FoldToggle open={open} onToggle={toggle} controls={bodyId}>
+            <Sprite name={kind === 'habit' ? 'flower' : 'qblock'} size={18} />
+            {title}
+            <span className="lane__count">
+              {done}/{total}
+            </span>
+          </FoldToggle>
+        </h3>
+        <button type="button" className="lane__add" onClick={onAdd} aria-label={addLabel} title={addLabel}>
+          ＋
+        </button>
+        <Bar className="lane__bar" pct={total ? (done / total) * 100 : 0} tone={kind === 'habit' ? 'green' : 'blue'} segments={total} label={`${title} hechos hoy`} />
+      </header>
+      <div className="lane__body" id={bodyId} hidden={!open}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+/** Un grupo de tareas por plazo. Lo vencido y lo de hoy empiezan abiertos; lo que puede esperar, plegado. */
+function TaskGroup({ id, label, items, first, listKey }: Readonly<{ id: TaskBucket; label: string; items: Mission[]; first: boolean; listKey: string }>) {
+  const urgent = id === 'late' || id === 'today';
+  const [open, toggle] = useFold(`home-tasks-${id}`, urgent || first);
+  const bodyId = useId();
+  return (
+    <div className={cx('lane__group', `lane__group--${id}`)}>
+      <h4 className="lane__sub">
+        <FoldToggle open={open} onToggle={toggle} controls={bodyId}>
+          {label} <span className="lane__subn">{items.length}</span>
+        </FoldToggle>
+      </h4>
+      <div id={bodyId} hidden={!open}>
+        <MissionList key={listKey} items={items} limit={urgent ? SHOW_URGENT : SHOW_OTHER} />
+      </div>
+    </div>
   );
 }
 
@@ -167,30 +201,21 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
       </div>
 
       <div className="lanes">
-        <section className={cx('lane lane--habit', lane === 'habit' && 'is-shown')} aria-labelledby="lane-habit">
-          <LaneHead kind="habit" title="Hábitos" done={progress.habitsDone} total={progress.habitsTotal} addLabel="Nuevo hábito" onAdd={() => openModal({ type: 'habit' })} />
+        <LaneSection kind="habit" title="Hábitos" done={progress.habitsDone} total={progress.habitsTotal} addLabel="Nuevo hábito" onAdd={() => openModal({ type: 'habit' })} shown={lane === 'habit'}>
           {habits.length > 0 ? (
             <MissionList key={`habit-${sort}-${onlyPending}`} items={habits} limit={SHOW_HABITS} />
           ) : (
             <LaneEmpty kind="habit" state={habitEmpty} onCreate={() => openModal({ type: 'habit' })} />
           )}
-        </section>
+        </LaneSection>
 
-        <section className={cx('lane lane--task', lane === 'task' && 'is-shown')} aria-labelledby="lane-task">
-          <LaneHead kind="task" title="Tareas" done={progress.tasksDone} total={progress.tasksTotal} addLabel="Nueva tarea" onAdd={() => openModal({ type: 'task' })} />
+        <LaneSection kind="task" title="Tareas" done={progress.tasksDone} total={progress.tasksTotal} addLabel="Nueva tarea" onAdd={() => openModal({ type: 'task' })} shown={lane === 'task'}>
           {taskGroups.length > 0 ? (
-            taskGroups.map((g) => (
-              <div key={g.id} className={cx('lane__group', `lane__group--${g.id}`)}>
-                <h4 className="lane__sub">
-                  {g.label} <span className="lane__subn">{g.items.length}</span>
-                </h4>
-                <MissionList key={`${g.id}-${sort}-${onlyPending}`} items={g.items} limit={g.id === 'late' || g.id === 'today' ? SHOW_URGENT : SHOW_OTHER} />
-              </div>
-            ))
+            taskGroups.map((g, i) => <TaskGroup key={g.id} id={g.id} label={g.label} items={g.items} first={i === 0} listKey={`${g.id}-${sort}-${onlyPending}`} />)
           ) : (
             <LaneEmpty kind="task" state={taskEmpty} onCreate={() => openModal({ type: 'task' })} />
           )}
-        </section>
+        </LaneSection>
       </div>
     </section>
   );

@@ -2,21 +2,42 @@
  * Cada color tiene una función: verde = hábitos (constancia), azul = tareas (plazos), rojo = vencido,
  * amarillo = XP y progreso. Lo hecho se marca con ✔ y verde. Los tonos salen de tokens.css (--habit, --task, --late). */
 
+/* Inicio usa todo el ancho de la pantalla: la página se ensancha solo aquí. */
+.page:has(> .home) {
+  max-width: 1760px;
+}
+.home {
+  container-type: inline-size;
+}
 .home__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   align-items: start;
 }
+/* Cada columna es un contenedor: «Ahora» y la agenda se compactan según su columna, no según la pantalla. */
+.home__main,
 .home__rail {
-  max-width: 420px;
+  container-type: inline-size;
 }
-@media (min-width: 1440px) {
-  .home__grid {
-    grid-template-columns: minmax(0, 1fr) 300px;
-  }
+/* Una sola columna: el riel se funde con la principal y «Ahora» sube arriba del todo. */
+@media (max-width: 1199px) {
+  .home__main,
   .home__rail {
-    max-width: none;
+    display: contents;
+  }
+  .home__rail > .nowstrip {
+    order: -1;
+  }
+}
+@media (min-width: 1200px) {
+  .home__grid {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+}
+@media (min-width: 1680px) {
+  .home__grid {
+    grid-template-columns: minmax(0, 1fr) 400px;
   }
 }
 
@@ -161,7 +182,7 @@
 
 .lanes {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 16px;
   align-items: start;
 }
@@ -179,8 +200,17 @@
 .lane--task {
   --tone: var(--task);
 }
-.lane > :not(.lane__head) {
+.lane.is-closed {
+  padding-bottom: 0;
+}
+.lane__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin-inline: 12px;
+}
+.lane__body[hidden] {
+  display: none;
 }
 .lane__head {
   display: grid;
@@ -548,7 +578,7 @@
 @media (max-width: 700px) {
   /* Lo importante sube: menos aire entre bloques y los eventos del día pasan al final. */
   .home,
-  .home__main {
+  .home__grid {
     gap: 14px;
   }
   .home__main > .events-line {

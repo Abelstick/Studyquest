@@ -433,15 +433,75 @@
   .shell {
     display: block;
   }
+  /*
+   * Cajón móvil: todo cabe en un teléfono de 640 px sin barra de desplazamiento, como el menú de una app nativa.
+   * Si el teléfono es aún más bajo, se puede desplazar con el dedo, pero sin barra visible y sin arrastrar la
+   * página de detrás. El relleno respeta las zonas seguras (notch arriba, barra de gestos abajo).
+   */
   .sidebar {
     position: fixed;
     z-index: 60;
     left: 0;
     top: 0;
     width: min(300px, 86vw);
+    gap: var(--sp-2);
+    padding: calc(var(--sp-3) + env(safe-area-inset-top)) var(--sp-3) calc(var(--sp-3) + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+    scrollbar-width: none;
     transform: translateX(-102%);
     visibility: hidden;
     transition: transform 0.28s var(--ease-out), visibility 0s linear 0.28s;
+  }
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Logotipo en una sola línea, con la versión al lado: de 84 px de alto a unos 36. */
+  .brand {
+    padding: var(--sp-1) var(--sp-2);
+  }
+  .brand > div {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-2);
+    min-width: 0;
+  }
+  .brand__name {
+    font-size: 26px;
+    white-space: nowrap;
+  }
+  .brand__name span {
+    display: inline;
+  }
+  .brand__build {
+    margin-top: 0;
+    white-space: nowrap;
+  }
+  /* Ficha del jugador: mundo y nivel en una sola línea. */
+  .player {
+    padding: var(--sp-2) var(--sp-3);
+    gap: var(--sp-1) var(--sp-3);
+  }
+  .player__rank,
+  .player__rank--sub {
+    display: inline;
+  }
+  .player__rank--sub {
+    margin-left: var(--sp-2);
+  }
+  .player__xp {
+    gap: var(--sp-1);
+  }
+  /* Filas de 48 px: cómodas al dedo (mínimo 44) y cinco caben de sobra. */
+  .nav__link {
+    min-height: 48px;
+    padding-block: 5px;
+  }
+  .challenge {
+    gap: 6px;
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .sysbar {
+    padding-top: var(--sp-2);
   }
   .sidebar.is-open {
     transform: none;

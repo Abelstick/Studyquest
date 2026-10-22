@@ -314,13 +314,25 @@
   padding: 0;
   list-style: none;
 }
+/* Estrecho (el riel de Inicio): reloj y «Mi semana» arriba, y el texto debajo con todo el ancho. */
 @container (max-width: 560px) {
   .nowstrip {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto auto;
+    grid-template-areas:
+      'clock btn'
+      'body body';
+    justify-content: space-between;
+    align-items: center;
+  }
+  .nowstrip__clock {
+    grid-area: clock;
+    font-size: 14px;
+  }
+  .nowstrip__body {
+    grid-area: body;
   }
   .nowstrip > .btn {
-    grid-column: 1 / -1;
-    justify-self: start;
+    grid-area: btn;
   }
 }
 

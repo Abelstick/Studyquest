@@ -3978,9 +3978,10 @@ button.week__day--rich {
     grid-column: 1 / -1;
   }
 }
+/* Las acciones nunca pasan del 45 % del ancho: si no caben, sus botones bajan de línea y el título conserva su sitio. */
 .nextstep {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) fit-content(45%);
   align-items: center;
   gap: 16px 24px;
   padding: 22px 24px;
@@ -3996,7 +3997,17 @@ button.week__day--rich {
   border-left-color: var(--green);
 }
 .nextstep--clear {
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) fit-content(45%);
+}
+/* En una columna estrecha (Inicio con el riel al lado), las acciones pasan debajo del texto. */
+@container (max-width: 640px) {
+  .nextstep,
+  .nextstep--clear {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nextstep--clear > .sprite {
+    display: none;
+  }
 }
 .nextstep__body {
   display: grid;

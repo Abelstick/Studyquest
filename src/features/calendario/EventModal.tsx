@@ -263,7 +263,7 @@ export function EventModal(props: Props) {
   if (step !== 'form' && editing) {
     const verb = step === 'save' ? 'guardar los cambios en' : 'borrar';
     return (
-      <Modal title={step === 'save' ? 'Guardar cambios' : 'Borrar actividad'} kicker="// Serie" onClose={() => setStep('form')}>
+      <Modal title={step === 'save' ? 'Guardar cambios' : 'Borrar actividad'} kicker="Serie" onClose={() => setStep('form')}>
         <ScopeChoice
           title={occ?.title ?? title}
           verb={verb}
@@ -282,7 +282,7 @@ export function EventModal(props: Props) {
   }
 
   return (
-    <Modal title={editing ? 'Editar actividad' : 'Nueva actividad'} kicker={editing && occ ? `// ${longDate(occ.date)}` : '// Agenda'} onClose={close} wide>
+    <Modal title={editing ? 'Editar actividad' : 'Nueva actividad'} kicker={editing && occ ? `${longDate(occ.date)}` : 'Agenda'} onClose={close} wide>
       <form className="form" onSubmit={submit}>
         {!editing && <Segmented label="Tipo de actividad" value={kind} options={KINDS} onChange={pickKind} />}
         <p className="muted small">{KIND_HINT[kind]}</p>

@@ -17,7 +17,7 @@ export function CoursesInPlay() {
   const shown = useMemo(() => coursesInPlay({ courses, sessions }).filter((c) => nextTopic(c)).slice(0, IN_PLAY), [courses, sessions]);
   if (shown.length === 0) return null;
   return (
-    <Panel kicker="// Sigue donde lo dejaste" title="En marcha">
+    <Panel kicker="Sigue donde lo dejaste" title="En marcha">
       <ul className="hcourses">
         {shown.map((c) => {
           const p = courseProgress(c);

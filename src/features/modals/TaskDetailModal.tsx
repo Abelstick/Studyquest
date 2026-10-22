@@ -47,7 +47,7 @@ export function TaskDetailModal({ id }: { id: string }) {
   ];
 
   return (
-    <Modal title={task.title} kicker={`// ${course?.title ?? 'Side quest'}`} onClose={close} wide>
+    <Modal title={task.title} kicker={`${course?.title ?? 'Side quest'}`} onClose={close} wide>
       <div className="detail__status">
         <Tag tone={STATUS_TONE[task.status]}>{STATUS_LABEL[task.status]}</Tag>
         <Tag tone={boss ? 'red' : 'plain'}>{PRIORITY_LABEL[task.priority]}</Tag>

@@ -77,7 +77,7 @@ export default function Pomodoro() {
 
   return (
     <div className="stack">
-      <PageHead kicker="// Modo enfoque" title="Pomodoro" sprite="tomato" />
+      <PageHead kicker="Modo enfoque" title="Pomodoro" sprite="tomato" />
 
       <div className="cols">
         <Panel className={cx('pomo', `pomo--${p.phase}`)}>
@@ -123,7 +123,7 @@ export default function Pomodoro() {
 
         <div className="stack">
           <Jukebox />
-          <Panel kicker="// Hoy" title="Tu racha de tomates">
+          <Panel kicker="Hoy" title="Tu racha de tomates">
             <dl className="stat-grid">
               <div>
                 <dt>Pomodoros</dt>
@@ -136,7 +136,7 @@ export default function Pomodoro() {
             </dl>
           </Panel>
 
-          <Panel kicker="// Ajustes" title="Tu ritmo">
+          <Panel kicker="Ajustes" title="Tu ritmo">
             <div className="form">
               <Field label="¿Qué estudias?">
                 {(id) => (

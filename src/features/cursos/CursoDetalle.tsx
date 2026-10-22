@@ -63,7 +63,7 @@ export default function CursoDetalle() {
 
       <header className="page-head page-head--big">
         <div className="page-head__text">
-          <p className="kicker">// {course.professor || 'Autodidacta'}{course.field ? ` · ${course.field}` : ''}</p>
+          <p className="kicker">{course.professor || 'Autodidacta'}{course.field ? ` · ${course.field}` : ''}</p>
           <h1 className="page-title page-title--big">{course.title}</h1>
           <p className="muted upper">
             {course.modules.length} módulos · {hours.toFixed(0)} h · {p.xp.toLocaleString('en-US')} XP · racha {streak} {streak === 1 ? 'día' : 'días'}
@@ -90,7 +90,7 @@ export default function CursoDetalle() {
 
       <div className="cols cols--wide">
         <div className="stack">
-          <p className="kicker">// Mapa de módulos</p>
+          <p className="kicker">Mapa de módulos</p>
           <ol className="modules">
             {course.modules.map((m, i) => {
               const st = states[i];
@@ -214,7 +214,7 @@ export default function CursoDetalle() {
 
         <div className="stack">
           {mentor && (
-            <Panel kicker="// Mentor asignado">
+            <Panel kicker="Mentor asignado">
               <div className="mentor">
                 <Avatar profile={{ displayName: mentor.name, equipped: { avatar: null, frame: null, world: null } }} size={46} />
                 <div>
@@ -230,7 +230,7 @@ export default function CursoDetalle() {
               )}
             </Panel>
           )}
-          <Panel kicker="// Credenciales" title="Certificaciones">
+          <Panel kicker="Credenciales" title="Certificaciones">
             {certs.length === 0 ? (
               <p className="muted small">
                 ¿Terminaste este curso y te dieron certificado?{' '}
@@ -261,7 +261,7 @@ export default function CursoDetalle() {
               </ul>
             )}
           </Panel>
-          <Panel kicker="// Telemetría">
+          <Panel kicker="Telemetría">
             <dl className="kv">
               <div>
                 <dt>Tiempo invertido</dt>

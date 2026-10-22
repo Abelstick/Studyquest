@@ -13,7 +13,7 @@ const GENERAL: [string, string][] = [
 export function ShortcutsModal() {
   const closeModal = useUi((s) => s.closeModal);
   return (
-    <Modal title="Atajos de teclado" kicker="// Juega más rápido" onClose={closeModal}>
+    <Modal title="Atajos de teclado" kicker="Juega más rápido" onClose={closeModal}>
       <dl className="keys">
         {GENERAL.map(([k, what]) => (
           <div key={k} className="keys__row">

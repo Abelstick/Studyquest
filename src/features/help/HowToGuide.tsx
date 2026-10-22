@@ -124,7 +124,7 @@ export function HowToGuide() {
   };
 
   return (
-    <Modal title={ch.title} kicker={`// Guía de uso · ${i + 1} de ${CHAPTERS.length}`} onClose={close} wide>
+    <Modal title={ch.title} kicker={`Guía de uso · ${i + 1} de ${CHAPTERS.length}`} onClose={close} wide>
       <nav aria-label="Capítulos de la guía">
         <ol className="howto__tabs">
           {CHAPTERS.map((c, n) => (

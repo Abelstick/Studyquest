@@ -213,7 +213,7 @@ export default function Perfil() {
           <div className="hero__who">
             <Avatar profile={profile} size={92} />
             <div>
-              <p className="kicker">// Nivel {level} · {rankFor(level)}</p>
+              <p className="kicker">Nivel {level} · {rankFor(level)}</p>
               <h1 className="hero__hi">{profile.displayName}</h1>
               <p className="muted upper">
                 Desde {shortDate(profile.joinedAt.slice(0, 10))} · {profile.xp.toLocaleString('en-US')} XP · racha {streak}
@@ -233,7 +233,7 @@ export default function Perfil() {
 
       <div className="cols">
         <section>
-          <h2 className="section-title">// Mi camino de aprendizaje</h2>
+          <h2 className="section-title">Mi camino de aprendizaje</h2>
           <ol className="timeline">
             {timeline.map((t, i) => (
               <li key={i} className={cx('timeline__item', t.hot && 'is-now')}>
@@ -249,7 +249,7 @@ export default function Perfil() {
 
         <div className="stack">
           <section>
-            <h2 className="section-title">// Vitrina de insignias</h2>
+            <h2 className="section-title">Vitrina de insignias</h2>
             <div className="grid grid--vitrina">
               {ACHIEVEMENTS.map((a) => (
                 <div key={a.id} className={cx('vitrina__item', !unlocked.has(a.id) && 'is-locked')} title={a.title}>
@@ -260,7 +260,7 @@ export default function Perfil() {
             </div>
           </section>
 
-          <Panel kicker="// Equipado">
+          <Panel kicker="Equipado">
             <dl className="kv">
               {equipped.map(([k, v]) => (
                 <div key={k}>
@@ -271,7 +271,7 @@ export default function Perfil() {
             </dl>
           </Panel>
 
-          <Panel kicker="// Ajustes">
+          <Panel kicker="Ajustes">
             <form className="form" onSubmit={save}>
               <Field label="Nombre de jugador">{(fid) => <input id={fid} className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} />}</Field>
               <Field label="Reto semanal (horas)">{(fid) => <NumberInput id={fid} className="input" min={1} max={80} value={goal} onValue={(n) => setGoal(n)}/>}</Field>
@@ -295,15 +295,15 @@ export default function Perfil() {
             </div>
           </Panel>
 
-          <Panel kicker="// Funciones inteligentes" title="IA con tu clave de Gemini">
+          <Panel kicker="Funciones inteligentes" title="IA con tu clave de Gemini">
             <AiSetup />
           </Panel>
 
-          <Panel kicker="// Recordatorios">
+          <Panel kicker="Recordatorios">
             <PushPanel />
           </Panel>
 
-          <Panel kicker="// Cuenta y datos">
+          <Panel kicker="Cuenta y datos">
             <p className="muted small">
               Datos guardados en: <b>{dataLayer.kind === 'supabase' ? 'Supabase (nube)' : 'este dispositivo (modo local)'}</b>
             </p>

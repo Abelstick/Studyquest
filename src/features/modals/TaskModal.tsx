@@ -97,7 +97,7 @@ export function TaskModal({ id, dueDate, goalId: presetGoal }: { id?: string; du
   };
 
   return (
-    <Modal title={editing ? 'Editar tarea' : 'Crear tarea'} kicker={editing ? '// Contrato' : '// Nuevo contrato'} onClose={close}>
+    <Modal title={editing ? 'Editar tarea' : 'Crear tarea'} kicker={editing ? 'Contrato' : 'Nuevo contrato'} onClose={close}>
       <form onSubmit={submit} className="form">
         {!editing && <ConceptHint id="tarea" />}
         <Field label="Título">{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Terminar ejercicios de JOIN" required maxLength={120} />}</Field>

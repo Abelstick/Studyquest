@@ -19,7 +19,7 @@ export function LateBanner() {
         <b>Tienes {late} tareas con la fecha vencida.</b> Es normal si pasaron días sin usar la app: dinos cuáles ya hiciste y mueve el resto para seguir desde hoy.
       </p>
       <Button small variant="primary" onClick={() => openModal({ type: 'pace' })}>
-        ⏱ Retomar mi plan
+        Retomar mi plan
       </Button>
     </section>
   );

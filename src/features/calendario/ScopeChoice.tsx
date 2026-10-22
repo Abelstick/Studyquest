@@ -28,7 +28,7 @@ export function ScopeChoice({ title, verb, oneHint, onPick, onBack }: { title: s
 export function ScopeModal({ title, verb, onPick }: { title: string; verb: string; onPick: (s: EditScope) => void }) {
   const close = useUi((s) => s.closeModal);
   return (
-    <Modal title="Actividad que se repite" kicker="// Serie" onClose={close}>
+    <Modal title="Actividad que se repite" kicker="Serie" onClose={close}>
       <ScopeChoice
         title={title}
         verb={verb}

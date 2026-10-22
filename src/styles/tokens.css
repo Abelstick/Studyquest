@@ -1,4 +1,30 @@
-/* ===== Fuentes (solo el subconjunto latino: cubre ñ y tildes) ===== */
+/* ===== Fuentes (autoalojadas y solo el subconjunto latino: cubre ñ y tildes, y funcionan sin conexión) ===== */
+/* Títulos: grotesca de carácter con eje de anchura; se usa condensada y muy pesada, como el rótulo de una recreativa. */
+@font-face {
+  font-family: 'Bricolage Grotesque Variable';
+  font-style: normal;
+  font-weight: 200 800;
+  font-stretch: 75% 100%;
+  font-display: swap;
+  src: url('../../node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wdth-normal.woff2') format('woff2-variations');
+}
+/* Texto: diseñada para leer bien a tamaño pequeño y con baja visión. */
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next Variable';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('../../node_modules/@fontsource-variable/atkinson-hyperlegible-next/files/atkinson-hyperlegible-next-latin-wght-normal.woff2') format('woff2-variations');
+}
+/* Cifras y marcadores: pixel art legible (mucho más que Press Start a tamaño de interfaz). */
+@font-face {
+  font-family: 'Pixelify Sans Variable';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../../node_modules/@fontsource-variable/pixelify-sans/files/pixelify-sans-latin-wght-normal.woff2') format('woff2-variations');
+}
+/* Heredada: las pantallas que aún no se migran la siguen usando a través de --font-pixel. */
 @font-face {
   font-family: 'Press Start 2P';
   font-style: normal;
@@ -6,181 +32,203 @@
   font-display: swap;
   src: url('../../node_modules/@fontsource/press-start-2p/files/press-start-2p-latin-400-normal.woff2') format('woff2');
 }
-@font-face {
-  font-family: 'Nunito Variable';
-  font-style: normal;
-  font-weight: 200 1000;
-  font-display: swap;
-  src: url('../../node_modules/@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2') format('woff2-variations');
-}
 
-/* ===== Tokens: Mundo 1-1 de día ===== */
+/*
+ * ===== Tokens · Dirección «Recreativa de barrio» =====
+ * 60 % carbón (la caja de la máquina) · 30 % crema (las etiquetas pegadas encima, donde se trabaja)
+ * · 10 % amarillo ficha, SOLO en XP, monedas y la acción principal. El rojo queda reservado para «vencido».
+ * Verde y azul ya no son colores de marca: son marcas pequeñas que distinguen hábitos de tareas.
+ */
 :root {
+  /* --- Tipografía --- */
+  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: 'Atkinson Hyperlegible Next Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-num: 'Pixelify Sans Variable', ui-monospace, 'Courier New', monospace;
   --font-pixel: 'Press Start 2P', ui-monospace, 'Courier New', monospace;
-  --font-body: 'Nunito Variable', 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Escala con contraste fuerte: el texto vive en 14–16 px y los datos protagonistas saltan a 64–132 px. */
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;
+  --fs-lg: 20px;
+  --fs-xl: 28px;
+  --fs-2xl: 40px;
+  --fs-display: clamp(40px, 5.6vw, 84px);
+  --fs-mega: clamp(72px, 10vw, 132px);
+  --display-stretch: 78%; /* condensada: más letra en menos ancho, aspecto de rótulo */
+  --tracking-caps: 0.08em;
 
-  --page: #5c94fc;
-  --panel: #fffdf3;
-  --panel-2: #f6efd6;
-  --panel-3: #ebe0b4;
-  --text: #1a1a2e;
-  --muted: #57536e;
-  --line: #1a1a2e;
-  --line-soft: #d9cfa6;
-  --shadow: #1a1a2e;
+  /* --- Espaciado (múltiplos de 4) --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 72px;
 
-  --red: #d3201c;
-  --red-text: #b31611;
-  --yellow: #ffd23f;
-  --xp-text: #8a5a00;
-  --green: #1c9b41;
-  --green-text: #0d6e2a;
-  --blue: #0f6fd6;
-  --violet: #7b3fc4;
-  --orange: #f08a1c;
-  --ink-soft: #7a7690;
-  /* Identidad de Hoy: cada color tiene una función. Siguen al tema porque apuntan a los de arriba. */
-  --habit: var(--green); /* hábitos: constancia y cumplimiento */
-  --task: var(--blue); /* tareas: plazos y pendientes */
+  /* --- Superficies y texto (modo día: etiquetas crema sobre la caja carbón) --- */
+  --page: #17191f; /* 60 %: carbón con tinte azul, nunca negro puro */
+  --on-page: #ece3ce; /* texto suelto sobre la caja: 13.9:1 */
+  --on-page-muted: #a39c8a; /* 6.6:1 sobre --page */
+  --panel: #ece3ce; /* 30 %: crema */
+  --panel-2: #e3d8be;
+  --panel-3: #d6c9a8;
+  --field: #f6f0e1;
+  --text: #17191f; /* 13.9:1 sobre --panel */
+  --muted: #57503f; /* 6.4:1 sobre --panel */
+  --ink-soft: #645d4c; /* 5.0:1 sobre --panel */
+  --line: #17191f;
+  --line-soft: #c9bb98;
+  --shadow: #17191f;
+
+  /* --- Acento y estados --- */
+  --yellow: #f2c230; /* 10 %: la ficha. Solo XP, monedas y la acción principal */
+  --xp-text: #7a5600; /* el amarillo hecho texto legible sobre crema: 5.1:1 */
+  --red: #d2452b;
+  --red-text: #a3301a; /* 5.6:1 sobre crema */
+  --green: #3e8e57;
+  --green-text: #23633a;
+  --blue: #3566a0;
+  --violet: #6d4fa0;
+  --orange: #d9822b;
+  --partial: #d9822b;
+  --habit: var(--green); /* hábitos: constancia */
+  --task: var(--blue); /* tareas: plazos */
   --late: var(--red-text); /* vencido o en peligro */
 
-  --on-red: #ffffff;
-  --on-yellow: #1a1a2e;
-  --on-green: #ffffff;
+  --on-red: #fbf6ea;
+  --on-yellow: #17191f;
+  --on-green: #fbf6ea;
 
-  --hud: #111122;
-  --hud-text: #ffffff;
-  /* Constantes: no cambian con el tema ni con el mundo (no se redefinen en modo noche). */
-  --ink: #1a1a2e; /* tinta oscura fija: texto sobre amarillo, placas y contadores */
-  --hud-2: #1c1c36; /* superficie de los chips de la barra superior */
-  --hud-edge: #3a3a5c; /* borde de esos chips */
-  --alert: #b3221b; /* rojo opaco de contadores; blanco encima da 6.6:1 */
-  --scene-day-1: #5c94fc; /* cielo de día de las escenas (Pomodoro, ciudad, cargador) */
-  --scene-day-2: #9fc4ff;
-  --scene-night-1: #141446; /* cielo de noche de las escenas */
-  --scene-night-2: #2c3f8f;
-  --side: #b5401f;
-  --side-2: #8c2f14;
-  --side-text: #ffffff;
-  --bar-bg: #e7dcb2;
-  --field: #ffffff;
-  /* Foco en dos tonos: uno de los dos anillos siempre contrasta, esté sobre panel claro,
-     sobre el ladrillo de la barra o sobre el HUD oscuro. */
-  --focus: #0f6fd6;
-  --focus-ink: #ffffff;
-  /* Superficies de la barra lateral: cada enlace tiene su propia placa para no flotar sobre el ladrillo. */
-  --side-plate: rgba(0, 0, 0, 0.26);
-  --side-plate-hi: rgba(0, 0, 0, 0.42);
-  --side-edge: rgba(255, 255, 255, 0.18);
-  --side-label: #fff2df;
-  --rail: rgba(0, 0, 0, 0.3);
-  --rail-thumb: #ffd23f;
-  /* Identidad de cada mundo: el césped del suelo, la textura del muro y el acento. */
-  --turf: #3fbf4a;
-  --turf-2: #2a9a36;
-  --side-texture: repeating-linear-gradient(90deg, transparent 0 46px, rgba(0, 0, 0, 0.22) 46px 48px),
-    repeating-linear-gradient(0deg, transparent 0 22px, rgba(0, 0, 0, 0.22) 22px 24px);
-  --accent: var(--red);
+  /* --- La caja de la máquina: HUD y barra lateral, siempre oscuros --- */
+  --hud: #0f1115;
+  --hud-text: #ece3ce;
+  --side: #121419;
+  --side-2: #0c0d11;
+  --side-text: #ece3ce;
+  --side-plate: rgba(236, 227, 206, 0.04);
+  --side-plate-hi: rgba(236, 227, 206, 0.09);
+  --side-edge: rgba(236, 227, 206, 0.14);
+  --side-label: #ece3ce;
+  --side-texture: none;
+  --bar-bg: #d6c9a8;
+
+  /* Constantes: no cambian con el tema ni con el mundo. */
+  --ink: #17191f;
+  --cream: #ece3ce;
+  --hud-2: #1b1e25;
+  --hud-edge: #2e323c;
+  --alert: #b3321f; /* contadores en rojo; crema encima da 5.6:1 */
+  --scene-day-1: #4f8fe8; /* cielo de las escenas (Pomodoro, ciudad, cargador) */
+  --scene-day-2: #a8d2ff;
+  --scene-night-1: #141836;
+  --scene-night-2: #2b3c7c;
+
+  /* Foco en dos tonos: el anillo amarillo destaca sobre lo oscuro, el halo carbón sobre la crema. */
+  --focus: #f2c230;
+  --focus-ink: #17191f;
+  --rail: rgba(0, 0, 0, 0.35);
+  --rail-thumb: #f2c230;
+
+  /* --- Identidad de cada mundo: acento, suelo y tinte de la caja --- */
+  --accent: #f2c230;
+  --turf: #5fc95b;
+  --turf-2: #2f8f3a;
+
+  /* --- Forma: un único sistema. Radio 0, bordes de 1 px y UNA sombra dura reservada al botón principal --- */
+  --radius: 0;
+  --bw: 1px;
+  --bw-strong: 2px;
+  --sh: none;
+  --sh-sm: none;
+  --sh-press: 0 4px 0 var(--ink); /* el botón de la máquina: se hunde al pulsarlo */
+  /* Grano sutil, como el vinilo de una recreativa. Va en el fondo, nunca encima del texto. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* --- Medidas del armazón --- */
+  --side-w: 256px;
+  --hud-h: 64px;
+  --stage-h: clamp(220px, 34vh, 360px); /* la pantalla del mundo en Inicio */
+  --stage-h-sm: 148px; /* en el resto de pantallas, una franja */
+
+  /* --- Movimiento (equivalentes CSS de los easings de GSAP en ui/motion) --- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* expo.out */
+  --dur-micro: 0.24s;
+  --dur-enter: 1s;
 
   --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='340' shape-rendering='crispEdges'%3E%3Cg fill='%23fff' opacity='.6'%3E%3Crect x='48' y='64' width='96' height='16'/%3E%3Crect x='64' y='48' width='64' height='16'/%3E%3Crect x='32' y='80' width='128' height='16'/%3E%3Crect x='330' y='190' width='96' height='16'/%3E%3Crect x='346' y='174' width='64' height='16'/%3E%3Crect x='314' y='206' width='128' height='16'/%3E%3C/g%3E%3C/svg%3E");
-
-  --radius: 0;
-  --bw: 3px;
-  --sh: 4px 4px 0 var(--shadow);
-  --sh-sm: 2px 2px 0 var(--shadow);
-  --side-w: 248px;
-  --hud-h: 64px;
-  /* GENERADO por scripts/gen-worlds.mjs — no editar a mano: ejecuta `npm run worlds`.
- * Decorado por capas de cada mundo visual (cielo, lo que flota en él, silueta lejana y detalle cercano).
- */
-  --sky: linear-gradient(180deg, #4b86f0 0%, #5c94fc 45%, #93c0ff 100%);
-  --skybits: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'980'%20height%3D'300'%20viewBox%3D'0%200%20980%20300'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'40'%20y%3D'49'%20width%3D'54'%20height%3D'9'%20fill%3D'%23ffffff'%20opacity%3D'0.92'%2F%3E%3Crect%20x%3D'49'%20y%3D'40'%20width%3D'36'%20height%3D'9'%20fill%3D'%23ffffff'%20opacity%3D'0.92'%2F%3E%3Crect%20x%3D'58'%20y%3D'31'%20width%3D'18'%20height%3D'9'%20fill%3D'%23ffffff'%20opacity%3D'0.92'%2F%3E%3Crect%20x%3D'31'%20y%3D'49'%20width%3D'9'%20height%3D'9'%20fill%3D'%23ffffff'%20opacity%3D'0.92'%2F%3E%3Crect%20x%3D'94'%20y%3D'49'%20width%3D'9'%20height%3D'9'%20fill%3D'%23ffffff'%20opacity%3D'0.92'%2F%3E%3Crect%20x%3D'360'%20y%3D'117'%20width%3D'42'%20height%3D'7'%20fill%3D'%23ffffff'%20opacity%3D'0.8'%2F%3E%3Crect%20x%3D'367'%20y%3D'110'%20width%3D'28'%20height%3D'7'%20fill%3D'%23ffffff'%20opacity%3D'0.8'%2F%3E%3Crect%20x%3D'374'%20y%3D'103'%20width%3D'14'%20height%3D'7'%20fill%3D'%23ffffff'%20opacity%3D'0.8'%2F%3E%3Crect%20x%3D'353'%20y%3D'117'%20width%3D'7'%20height%3D'7'%20fill%3D'%23ffffff'%20opacity%3D'0.8'%2F%3E%3Crect%20x%3D'402'%20y%3D'117'%20width%3D'7'%20height%3D'7'%20fill%3D'%23ffffff'%20opacity%3D'0.8'%2F%3E%3Crect%20x%3D'620'%20y%3D'41'%20width%3D'66'%20height%3D'11'%20fill%3D'%23ffffff'%20opacity%3D'0.85'%2F%3E%3Crect%20x%3D'631'%20y%3D'30'%20width%3D'44'%20height%3D'11'%20fill%3D'%23ffffff'%20opacity%3D'0.85'%2F%3E%3Crect%20x%3D'642'%20y%3D'19'%20width%3D'22'%20height%3D'11'%20fill%3D'%23ffffff'%20opacity%3D'0.85'%2F%3E%3Crect%20x%3D'609'%20y%3D'41'%20width%3D'11'%20height%3D'11'%20fill%3D'%23ffffff'%20opacity%3D'0.85'%2F%3E%3Crect%20x%3D'686'%20y%3D'41'%20width%3D'11'%20height%3D'11'%20fill%3D'%23ffffff'%20opacity%3D'0.85'%2F%3E%3Crect%20x%3D'820'%20y%3D'156'%20width%3D'36'%20height%3D'6'%20fill%3D'%23ffffff'%20opacity%3D'0.7'%2F%3E%3Crect%20x%3D'826'%20y%3D'150'%20width%3D'24'%20height%3D'6'%20fill%3D'%23ffffff'%20opacity%3D'0.7'%2F%3E%3Crect%20x%3D'832'%20y%3D'144'%20width%3D'12'%20height%3D'6'%20fill%3D'%23ffffff'%20opacity%3D'0.7'%2F%3E%3Crect%20x%3D'814'%20y%3D'156'%20width%3D'6'%20height%3D'6'%20fill%3D'%23ffffff'%20opacity%3D'0.7'%2F%3E%3Crect%20x%3D'856'%20y%3D'156'%20width%3D'6'%20height%3D'6'%20fill%3D'%23ffffff'%20opacity%3D'0.7'%2F%3E%3C%2Fsvg%3E");
-  --far: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'560'%20height%3D'300'%20viewBox%3D'0%200%20560%20300'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'20'%20y%3D'290'%20width%3D'260'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'30'%20y%3D'280'%20width%3D'240'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'40'%20y%3D'270'%20width%3D'220'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'50'%20y%3D'260'%20width%3D'200'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'60'%20y%3D'250'%20width%3D'180'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'70'%20y%3D'240'%20width%3D'160'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'80'%20y%3D'230'%20width%3D'140'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'90'%20y%3D'220'%20width%3D'120'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'100'%20y%3D'210'%20width%3D'100'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'110'%20y%3D'200'%20width%3D'80'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'120'%20y%3D'190'%20width%3D'60'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'130'%20y%3D'180'%20width%3D'40'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'140'%20y%3D'170'%20width%3D'20'%20height%3D'10'%20fill%3D'%231f8f31'%2F%3E%3Crect%20x%3D'340'%20y%3D'290'%20width%3D'180'%20height%3D'10'%20fill%3D'%232aa63c'%2F%3E%3Crect%20x%3D'350'%20y%3D'280'%20width%3D'160'%20height%3D'10'%20fill%3D'%232aa63c'%2F%3E%3Crect%20x%3D'360'%20y%3D'270'%20width%3D'140'%20height%3D'10'%20fill%3D'%232aa63c'%2F%3E%3Crect%20x%3D'370'%20y%3D'260'%20width%3D'120'%20height%3D'10'%20fill%3D'%232aa63c'%2F%3E%3Crect%20x%3D'380'%20y%3D'250'%20width%3D'100'%20height%3D'10'%20fill%3D'%232aa63c'%2F%3E%3Crect%20x%3D'390'%20y%3D'240'%20width%3D'80'%20height%3D'10'%20fill%3D'%232aa63c'%2F%3E%3Crect%20x%3D'400'%20y%3D'230'%20width%3D'60'%20height%3D'10'%20fill%3D'%232aa63c'%2F%3E%3Crect%20x%3D'410'%20y%3D'220'%20width%3D'40'%20height%3D'10'%20fill%3D'%232aa63c'%2F%3E%3Crect%20x%3D'420'%20y%3D'210'%20width%3D'20'%20height%3D'10'%20fill%3D'%232aa63c'%2F%3E%3C%2Fsvg%3E");
-  --near: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'420'%20height%3D'190'%20viewBox%3D'0%200%20420%20190'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'50'%20y%3D'174'%20width%3D'48'%20height%3D'16'%20fill%3D'%233fbf4a'%2F%3E%3Crect%20x%3D'66'%20y%3D'158'%20width%3D'16'%20height%3D'16'%20fill%3D'%233fbf4a'%2F%3E%3Crect%20x%3D'34'%20y%3D'174'%20width%3D'16'%20height%3D'16'%20fill%3D'%233fbf4a'%2F%3E%3Crect%20x%3D'98'%20y%3D'174'%20width%3D'16'%20height%3D'16'%20fill%3D'%233fbf4a'%2F%3E%3Crect%20x%3D'250'%20y%3D'177'%20width%3D'39'%20height%3D'13'%20fill%3D'%234ad45a'%2F%3E%3Crect%20x%3D'263'%20y%3D'164'%20width%3D'13'%20height%3D'13'%20fill%3D'%234ad45a'%2F%3E%3Crect%20x%3D'237'%20y%3D'177'%20width%3D'13'%20height%3D'13'%20fill%3D'%234ad45a'%2F%3E%3Crect%20x%3D'289'%20y%3D'177'%20width%3D'13'%20height%3D'13'%20fill%3D'%234ad45a'%2F%3E%3C%2Fsvg%3E");
-  --partial: #f59e0b;
 }
 
-/* ===== Noche / castillo ===== */
+/* ===== Noche: la caja se queda, las etiquetas se apagan ===== */
 :root[data-theme='dark'] {
-  --page: #0d0d24;
-  --panel: #1b1b3a;
-  --panel-2: #24244f;
-  --panel-3: #2f2f66;
-  --text: #f4f1ff;
-  --muted: #b9b4dc;
-  --line: #05050f;
-  --line-soft: #3a3a6e;
-  --shadow: #000000;
+  --panel: #22252d;
+  --panel-2: #2a2e37;
+  --panel-3: #343844;
+  --field: #1b1e25;
+  --text: #ece3ce; /* 12.6:1 sobre --panel */
+  --muted: #a9a18d; /* 6.0:1 */
+  --ink-soft: #948c79;
+  --line: #3d424e;
+  --line-soft: #343844;
+  --shadow: #0a0b0e;
+  --bar-bg: #1b1e25;
 
-  --red: #e0352f;
-  --red-text: #ff8a80;
-  --yellow: #ffd23f;
-  --xp-text: #ffd23f;
-  --green: #2fb85a;
-  --green-text: #6ee08f;
-  --blue: #4aa3ff;
-  --violet: #b07cff;
-  --ink-soft: #8d88b5;
-
-  --hud: #05050f;
-  --side: #3b1a52;
-  --side-2: #2a1140;
-  --bar-bg: #0c0c24;
-  --field: #12122b;
-  --focus: #ffd23f;
-  --focus-ink: #05050f;
-  --side-plate: rgba(0, 0, 0, 0.32);
-  --side-plate-hi: rgba(0, 0, 0, 0.5);
-  --side-edge: rgba(255, 255, 255, 0.14);
-  --side-label: #f3e8ff;
-  --rail: rgba(0, 0, 0, 0.45);
-  --rail-thumb: #ffd23f;
-  --turf: #2b7a3c;
-  --turf-2: #1d5c2b;
+  --xp-text: #f2c230;
+  --red: #e0553a;
+  --red-text: #ff9a80;
+  --green: #4fae6a;
+  --green-text: #7fd497;
+  --blue: #6f9fd8;
+  --violet: #a58bd6;
 
   --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' shape-rendering='crispEdges'%3E%3Cg fill='%23fff'%3E%3Crect x='30' y='40' width='3' height='3' opacity='.8'/%3E%3Crect x='190' y='90' width='3' height='3' opacity='.5'/%3E%3Crect x='300' y='30' width='3' height='3' opacity='.7'/%3E%3Crect x='90' y='200' width='3' height='3' opacity='.6'/%3E%3Crect x='250' y='250' width='3' height='3' opacity='.8'/%3E%3Crect x='330' y='170' width='3' height='3' opacity='.5'/%3E%3Crect x='20' y='320' width='3' height='3' opacity='.6'/%3E%3Crect x='160' y='330' width='3' height='3' opacity='.4'/%3E%3C/g%3E%3Crect x='210' y='140' width='6' height='6' fill='%23ffd23f' opacity='.7'/%3E%3C/svg%3E");
-  --sky: linear-gradient(180deg, #05051a 0%, #0d0d24 55%, #1b1b3a 100%);
-  --skybits: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'980'%20height%3D'320'%20viewBox%3D'0%200%20980%20320'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'60'%20y%3D'40'%20width%3D'3'%20height%3D'3'%20fill%3D'%23ffffff'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'150'%20y%3D'120'%20width%3D'2'%20height%3D'2'%20fill%3D'%23ffffff'%20opacity%3D'0.6'%2F%3E%3Crect%20x%3D'240'%20y%3D'60'%20width%3D'3'%20height%3D'3'%20fill%3D'%23ffffff'%20opacity%3D'0.8'%2F%3E%3Crect%20x%3D'330'%20y%3D'180'%20width%3D'2'%20height%3D'2'%20fill%3D'%23ffffff'%20opacity%3D'0.5'%2F%3E%3Crect%20x%3D'430'%20y%3D'30'%20width%3D'3'%20height%3D'3'%20fill%3D'%23ffffff'%20opacity%3D'0.95'%2F%3E%3Crect%20x%3D'520'%20y%3D'140'%20width%3D'2'%20height%3D'2'%20fill%3D'%23ffffff'%20opacity%3D'0.6'%2F%3E%3Crect%20x%3D'610'%20y%3D'80'%20width%3D'3'%20height%3D'3'%20fill%3D'%23ffffff'%20opacity%3D'0.75'%2F%3E%3Crect%20x%3D'700'%20y%3D'200'%20width%3D'2'%20height%3D'2'%20fill%3D'%23ffffff'%20opacity%3D'0.5'%2F%3E%3Crect%20x%3D'790'%20y%3D'50'%20width%3D'3'%20height%3D'3'%20fill%3D'%23ffffff'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'880'%20y%3D'150'%20width%3D'2'%20height%3D'2'%20fill%3D'%23ffffff'%20opacity%3D'0.65'%2F%3E%3Crect%20x%3D'120'%20y%3D'240'%20width%3D'2'%20height%3D'2'%20fill%3D'%23ffffff'%20opacity%3D'0.5'%2F%3E%3Crect%20x%3D'460'%20y%3D'250'%20width%3D'2'%20height%3D'2'%20fill%3D'%23ffffff'%20opacity%3D'0.45'%2F%3E%3Crect%20x%3D'830'%20y%3D'260'%20width%3D'2'%20height%3D'2'%20fill%3D'%23ffffff'%20opacity%3D'0.5'%2F%3E%3Ccircle%20cx%3D'760'%20cy%3D'80'%20r%3D'34'%20fill%3D'%23ffd23f'%20opacity%3D'0.75'%2F%3E%3Ccircle%20cx%3D'745'%20cy%3D'70'%20r%3D'34'%20fill%3D'%230a0a20'%2F%3E%3C%2Fsvg%3E");
-  --far: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'560'%20height%3D'300'%20viewBox%3D'0%200%20560%20300'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'20'%20y%3D'290'%20width%3D'260'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'30'%20y%3D'280'%20width%3D'240'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'40'%20y%3D'270'%20width%3D'220'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'50'%20y%3D'260'%20width%3D'200'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'60'%20y%3D'250'%20width%3D'180'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'70'%20y%3D'240'%20width%3D'160'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'80'%20y%3D'230'%20width%3D'140'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'90'%20y%3D'220'%20width%3D'120'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'100'%20y%3D'210'%20width%3D'100'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'110'%20y%3D'200'%20width%3D'80'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'120'%20y%3D'190'%20width%3D'60'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'130'%20y%3D'180'%20width%3D'40'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'140'%20y%3D'170'%20width%3D'20'%20height%3D'10'%20fill%3D'%231a1a40'%2F%3E%3Crect%20x%3D'340'%20y%3D'290'%20width%3D'180'%20height%3D'10'%20fill%3D'%2323234f'%2F%3E%3Crect%20x%3D'350'%20y%3D'280'%20width%3D'160'%20height%3D'10'%20fill%3D'%2323234f'%2F%3E%3Crect%20x%3D'360'%20y%3D'270'%20width%3D'140'%20height%3D'10'%20fill%3D'%2323234f'%2F%3E%3Crect%20x%3D'370'%20y%3D'260'%20width%3D'120'%20height%3D'10'%20fill%3D'%2323234f'%2F%3E%3Crect%20x%3D'380'%20y%3D'250'%20width%3D'100'%20height%3D'10'%20fill%3D'%2323234f'%2F%3E%3Crect%20x%3D'390'%20y%3D'240'%20width%3D'80'%20height%3D'10'%20fill%3D'%2323234f'%2F%3E%3Crect%20x%3D'400'%20y%3D'230'%20width%3D'60'%20height%3D'10'%20fill%3D'%2323234f'%2F%3E%3Crect%20x%3D'410'%20y%3D'220'%20width%3D'40'%20height%3D'10'%20fill%3D'%2323234f'%2F%3E%3Crect%20x%3D'420'%20y%3D'210'%20width%3D'20'%20height%3D'10'%20fill%3D'%2323234f'%2F%3E%3C%2Fsvg%3E");
-  --near: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'420'%20height%3D'190'%20viewBox%3D'0%200%20420%20190'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'50'%20y%3D'174'%20width%3D'48'%20height%3D'16'%20fill%3D'%232a2a5e'%2F%3E%3Crect%20x%3D'66'%20y%3D'158'%20width%3D'16'%20height%3D'16'%20fill%3D'%232a2a5e'%2F%3E%3Crect%20x%3D'34'%20y%3D'174'%20width%3D'16'%20height%3D'16'%20fill%3D'%232a2a5e'%2F%3E%3Crect%20x%3D'98'%20y%3D'174'%20width%3D'16'%20height%3D'16'%20fill%3D'%232a2a5e'%2F%3E%3Crect%20x%3D'250'%20y%3D'177'%20width%3D'39'%20height%3D'13'%20fill%3D'%2333337a'%2F%3E%3Crect%20x%3D'263'%20y%3D'164'%20width%3D'13'%20height%3D'13'%20fill%3D'%2333337a'%2F%3E%3Crect%20x%3D'237'%20y%3D'177'%20width%3D'13'%20height%3D'13'%20fill%3D'%2333337a'%2F%3E%3Crect%20x%3D'289'%20y%3D'177'%20width%3D'13'%20height%3D'13'%20fill%3D'%2333337a'%2F%3E%3C%2Fsvg%3E");
 }
 
-/* ===== Mundos comprables (se combinan con día/noche) ===== */
+/*
+ * ===== Mundos comprables (se combinan con día/noche) =====
+ * Cada mundo tiñe la caja carbón con su color (sigue siendo el 60 % neutro, ahora con temperatura propia),
+ * cambia el acento del logotipo y el suelo. El decorado por capas está en worlds.css (generado).
+ */
 :root[data-world='underground'] {
-  --page: #050514;
-  --side: #0a3a8a;
-  --side-2: #062a66;
-  --page-art: none;
-  --sky: linear-gradient(180deg, #071233 0%, #0b1c4a 60%, #10265e 100%);
-  --skybits: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'600'%20height%3D'120'%20viewBox%3D'0%200%20600%20120'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'0'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'60'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'120'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'180'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'240'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'300'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'360'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'420'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'480'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'540'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3Crect%20x%3D'600'%20y%3D'0'%20width%3D'52'%20height%3D'26'%20fill%3D'%230a1738'%20opacity%3D'0.9'%2F%3E%3C%2Fsvg%3E");
-  --far: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'560'%20height%3D'300'%20viewBox%3D'0%200%20560%20300'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'0'%20y%3D'180'%20width%3D'68'%20height%3D'120'%20fill%3D'%2313296b'%2F%3E%3Crect%20x%3D'76'%20y%3D'180'%20width%3D'68'%20height%3D'120'%20fill%3D'%2313296b'%2F%3E%3Crect%20x%3D'152'%20y%3D'180'%20width%3D'68'%20height%3D'120'%20fill%3D'%2313296b'%2F%3E%3Crect%20x%3D'228'%20y%3D'180'%20width%3D'68'%20height%3D'120'%20fill%3D'%2313296b'%2F%3E%3Crect%20x%3D'304'%20y%3D'180'%20width%3D'68'%20height%3D'120'%20fill%3D'%2313296b'%2F%3E%3Crect%20x%3D'380'%20y%3D'180'%20width%3D'68'%20height%3D'120'%20fill%3D'%2313296b'%2F%3E%3Crect%20x%3D'456'%20y%3D'180'%20width%3D'68'%20height%3D'120'%20fill%3D'%2313296b'%2F%3E%3Crect%20x%3D'532'%20y%3D'180'%20width%3D'68'%20height%3D'120'%20fill%3D'%2313296b'%2F%3E%3C%2Fsvg%3E");
-  --near: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'420'%20height%3D'190'%20viewBox%3D'0%200%20420%20190'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'0'%20y%3D'130'%20width%3D'52'%20height%3D'60'%20fill%3D'%231b3688'%2F%3E%3Crect%20x%3D'60'%20y%3D'130'%20width%3D'52'%20height%3D'60'%20fill%3D'%231b3688'%2F%3E%3Crect%20x%3D'120'%20y%3D'130'%20width%3D'52'%20height%3D'60'%20fill%3D'%231b3688'%2F%3E%3Crect%20x%3D'180'%20y%3D'130'%20width%3D'52'%20height%3D'60'%20fill%3D'%231b3688'%2F%3E%3Crect%20x%3D'240'%20y%3D'130'%20width%3D'52'%20height%3D'60'%20fill%3D'%231b3688'%2F%3E%3Crect%20x%3D'300'%20y%3D'130'%20width%3D'52'%20height%3D'60'%20fill%3D'%231b3688'%2F%3E%3Crect%20x%3D'360'%20y%3D'130'%20width%3D'52'%20height%3D'60'%20fill%3D'%231b3688'%2F%3E%3Crect%20x%3D'420'%20y%3D'130'%20width%3D'52'%20height%3D'60'%20fill%3D'%231b3688'%2F%3E%3C%2Fsvg%3E");
-  /* Subterráneo: ladrillo azul y suelo de piedra. */
-  --turf: #5a6ea8;
+  --page: #12161f;
+  --accent: #6fa8ff;
+  --turf: #6f86c4;
   --turf-2: #3d4d7a;
-  --accent: #4aa3ff;
-  --side-texture: repeating-linear-gradient(90deg, transparent 0 38px, rgba(0, 0, 0, 0.3) 38px 40px),
-    repeating-linear-gradient(0deg, transparent 0 18px, rgba(0, 0, 0, 0.3) 18px 20px);
-}
-:root[data-theme='light'][data-world='underground'] {
-  --page: #1e40a8;
+  --page-art: none;
 }
 :root[data-world='castle'] {
-  --page: #2a1a1a;
-  --side: #6b6b78;
-  --side-2: #4a4a55;
-  --page-art: none;
-  --sky: linear-gradient(180deg, #1a0e10 0%, #2a1a1a 60%, #4a1f18 100%);
-  --skybits: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'900'%20height%3D'300'%20viewBox%3D'0%200%20900%20300'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'80'%20y%3D'60'%20width%3D'3'%20height%3D'3'%20fill%3D'%23ff8a3c'%20opacity%3D'0.5'%2F%3E%3Crect%20x%3D'300'%20y%3D'120'%20width%3D'3'%20height%3D'3'%20fill%3D'%23ff8a3c'%20opacity%3D'0.5'%2F%3E%3Crect%20x%3D'560'%20y%3D'40'%20width%3D'3'%20height%3D'3'%20fill%3D'%23ff8a3c'%20opacity%3D'0.5'%2F%3E%3Crect%20x%3D'760'%20y%3D'150'%20width%3D'3'%20height%3D'3'%20fill%3D'%23ff8a3c'%20opacity%3D'0.5'%2F%3E%3C%2Fsvg%3E");
-  --far: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'560'%20height%3D'300'%20viewBox%3D'0%200%20560%20300'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'30'%20y%3D'228'%20width%3D'72'%20height%3D'72'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'30'%20y%3D'204'%20width%3D'24'%20height%3D'24'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'78'%20y%3D'204'%20width%3D'24'%20height%3D'24'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'210'%20y%3D'228'%20width%3D'72'%20height%3D'72'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'210'%20y%3D'204'%20width%3D'24'%20height%3D'24'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'258'%20y%3D'204'%20width%3D'24'%20height%3D'24'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'390'%20y%3D'228'%20width%3D'72'%20height%3D'72'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'390'%20y%3D'204'%20width%3D'24'%20height%3D'24'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'438'%20y%3D'204'%20width%3D'24'%20height%3D'24'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'570'%20y%3D'228'%20width%3D'72'%20height%3D'72'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'570'%20y%3D'204'%20width%3D'24'%20height%3D'24'%20fill%3D'%234a3038'%2F%3E%3Crect%20x%3D'618'%20y%3D'204'%20width%3D'24'%20height%3D'24'%20fill%3D'%234a3038'%2F%3E%3C%2Fsvg%3E");
-  --near: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'420'%20height%3D'190'%20viewBox%3D'0%200%20420%20190'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'0'%20y%3D'164'%20width%3D'420'%20height%3D'26'%20fill%3D'%23e0542a'%20opacity%3D'0.75'%2F%3E%3Crect%20x%3D'0'%20y%3D'150'%20width%3D'420'%20height%3D'14'%20fill%3D'%23ff8a3c'%20opacity%3D'0.45'%2F%3E%3Crect%20x%3D'0'%20y%3D'140'%20width%3D'420'%20height%3D'10'%20fill%3D'%23ffd23f'%20opacity%3D'0.2'%2F%3E%3C%2Fsvg%3E");
-  /* Castillo: piedra grande y suelo de lava apagada. */
-  --turf: #8a4a3a;
-  --turf-2: #5f2e22;
+  --page: #1c1716;
   --accent: #ff8a3c;
-  --side-texture: repeating-linear-gradient(90deg, transparent 0 62px, rgba(0, 0, 0, 0.32) 62px 65px),
-    repeating-linear-gradient(0deg, transparent 0 30px, rgba(0, 0, 0, 0.32) 30px 33px);
+  --turf: #b0563a;
+  --turf-2: #6b2a1c;
+  --page-art: none;
 }
-:root[data-theme='light'][data-world='castle'] {
-  --page: #7a5c5c;
+:root[data-world='water'] {
+  --page: #10191f;
+  --accent: #5be0ff;
+  --turf: #e3cf8f;
+  --turf-2: #a99457;
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' shape-rendering='crispEdges'%3E%3Cg fill='none' stroke='%2359c8ff' stroke-width='3' opacity='.45'%3E%3Crect x='40' y='60' width='12' height='12'/%3E%3Crect x='70' y='30' width='8' height='8'/%3E%3Crect x='210' y='120' width='14' height='14'/%3E%3Crect x='250' y='90' width='8' height='8'/%3E%3Crect x='120' y='230' width='10' height='10'/%3E%3Crect x='150' y='260' width='6' height='6'/%3E%3C/g%3E%3C/svg%3E");
+}
+:root[data-world='snow'] {
+  --page: #161b21;
+  --accent: #a9e4ff;
+  --turf: #f2f8ff;
+  --turf-2: #a9cfe8;
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' shape-rendering='crispEdges'%3E%3Cg fill='%23fff'%3E%3Crect x='20' y='30' width='6' height='6' opacity='.9'/%3E%3Crect x='90' y='80' width='4' height='4' opacity='.7'/%3E%3Crect x='170' y='20' width='6' height='6' opacity='.8'/%3E%3Crect x='240' y='110' width='4' height='4' opacity='.7'/%3E%3Crect x='60' y='170' width='6' height='6' opacity='.85'/%3E%3Crect x='150' y='200' width='4' height='4' opacity='.6'/%3E%3Crect x='260' y='240' width='6' height='6' opacity='.9'/%3E%3Crect x='30' y='260' width='4' height='4' opacity='.6'/%3E%3C/g%3E%3C/svg%3E");
+}
+:root[data-world='desert'] {
+  --page: #1e1913;
+  --accent: #ffa64d;
+  --turf: #ecc97a;
+  --turf-2: #b98d45;
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='240' shape-rendering='crispEdges'%3E%3Cg fill='%23e8c87a' opacity='.22'%3E%3Crect x='0' y='200' width='120' height='16'/%3E%3Crect x='24' y='184' width='72' height='16'/%3E%3Crect x='200' y='216' width='160' height='16'/%3E%3Crect x='240' y='200' width='80' height='16'/%3E%3C/g%3E%3Ccircle cx='290' cy='50' r='22' fill='%23ffd23f' opacity='.35'/%3E%3C/svg%3E");
+}
+:root[data-world='ghost'] {
+  --page: #17131f;
+  --accent: #c3a2ff;
+  --turf: #5a4a80;
+  --turf-2: #2f2448;
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' shape-rendering='crispEdges'%3E%3Cg fill='%23c9b6ff' opacity='.5'%3E%3Crect x='40' y='60' width='16' height='16'/%3E%3Crect x='44' y='76' width='8' height='8'/%3E%3Crect x='250' y='140' width='16' height='16'/%3E%3Crect x='254' y='156' width='8' height='8'/%3E%3Crect x='120' y='280' width='12' height='12'/%3E%3C/g%3E%3Cg fill='%23fff' opacity='.5'%3E%3Crect x='200' y='40' width='3' height='3'/%3E%3Crect x='300' y='250' width='3' height='3'/%3E%3Crect x='30' y='220' width='3' height='3'/%3E%3C/g%3E%3C/svg%3E");
 }

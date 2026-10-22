@@ -57,7 +57,7 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
   };
 
   return (
-    <Modal title={`Tarjetas · ${topic.title}`} kicker="// Flashcards" onClose={close} wide>
+    <Modal title={`Tarjetas · ${topic.title}`} kicker="Flashcards" onClose={close} wide>
       <form
         className="form"
         onSubmit={(e) => {

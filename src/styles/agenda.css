@@ -133,6 +133,7 @@
   flex-direction: column;
   min-width: 0;
   background: var(--panel);
+  color: var(--text);
   border: 2px solid var(--line-soft);
 }
 .tgrid__frame {
@@ -207,6 +208,7 @@
 }
 .tgrid__alldaycell.is-over {
   background: color-mix(in srgb, var(--yellow) 30%, var(--panel));
+  color: var(--text);
 }
 .chip-task--habits {
   --chip: var(--green);
@@ -214,6 +216,7 @@
 }
 .chip-task--habits.is-complete {
   background: color-mix(in srgb, var(--green) 25%, var(--panel));
+  color: var(--text);
 }
 .tgrid__scroll {
   height: min(68vh, 680px);
@@ -307,6 +310,7 @@
 /* Recordatorio: una pastilla centrada en su hora, sin ocupar tiempo. */
 .agev--point {
   background-color: var(--panel);
+  color: var(--text);
   border-left-width: 0;
   outline: 2px solid var(--ag);
   outline-offset: -2px;
@@ -404,6 +408,7 @@
 .dayfree {
   padding: 8px 10px;
   background: color-mix(in srgb, var(--green) 14%, var(--panel));
+  color: var(--text);
   border-left: 4px solid var(--green);
 }
 .dayev {

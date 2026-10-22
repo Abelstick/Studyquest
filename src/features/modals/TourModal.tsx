@@ -98,7 +98,7 @@ export function TourModal() {
     closeModal();
   };
   return (
-    <Modal title={step.title} kicker={`// Novedades · ${i + 1} de ${STEPS.length}`} onClose={finish}>
+    <Modal title={step.title} kicker={`Novedades · ${i + 1} de ${STEPS.length}`} onClose={finish}>
       <div className="tour">
         <Sprite name={step.sprite} size={40} className="tour__sprite" />
         <div className="tour__body">{step.body}</div>

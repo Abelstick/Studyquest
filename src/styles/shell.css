@@ -1,0 +1,571 @@
+/*
+ * ===== Armazón: la caja de la recreativa =====
+ * Barra lateral y HUD son la carcasa (siempre oscuros, sea el tema que sea). Debajo del HUD va la pantalla
+ * del mundo (.stage) y el contenido se monta encima de su borde inferior: las etiquetas crema «se salen»
+ * de la pantalla, que es lo que da profundidad al conjunto sin necesidad de sombras.
+ */
+.shell {
+  display: grid;
+  grid-template-columns: var(--side-w) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+  align-items: start;
+}
+.shell__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.page {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  max-width: 1320px;
+  margin: calc(-1 * var(--sp-8)) auto 0;
+  padding: 0 var(--sp-6) var(--sp-7);
+  /* Red de seguridad: cualquier texto del contenido (títulos de tareas, hábitos, cursos…) parte en vez de desbordar. */
+  overflow-wrap: anywhere;
+}
+/* En Inicio la pantalla es alta y el contenido sube más: el siguiente paso se apoya en el horizonte. */
+.page--home {
+  max-width: 1480px;
+  margin-top: calc(-1 * clamp(96px, 14vh, 150px));
+}
+
+/* ===== Pantalla del mundo ===== */
+.stage {
+  position: relative;
+  flex: none;
+  height: var(--stage-h-sm);
+  overflow: hidden;
+  background: var(--sky, var(--scene-day-1));
+  border-bottom: var(--bw-strong) solid var(--ink);
+}
+.stage--tall {
+  height: var(--stage-h);
+}
+.stage__layer,
+.stage__ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-repeat: repeat-x;
+  /* Las capas crecen un poco más que la pantalla para que el parallax nunca descubra un borde. */
+  will-change: transform;
+}
+.stage__skybits {
+  top: 0;
+  height: 100%;
+  background-image: var(--skybits);
+  background-size: auto min(260px, 100%);
+}
+.stage__far {
+  bottom: 30px;
+  height: 92%;
+  background-image: var(--far);
+  background-position: 0 100%;
+  background-size: auto 100%;
+}
+.stage__mid {
+  bottom: 30px;
+  height: 72%;
+  background-image: var(--mid);
+  background-position: 0 100%;
+  background-size: auto 100%;
+}
+.stage__near {
+  bottom: 30px;
+  height: 44%;
+  background-image: var(--near);
+  background-position: 0 100%;
+  background-size: auto 100%;
+}
+.stage__ground {
+  bottom: 0;
+  height: 40px;
+  background-image: var(--ground);
+  background-size: 88px 40px;
+}
+/* De noche, los mundos comprables (que solo tienen versión de día) bajan la luz en vez de quedarse brillando. */
+:root[data-theme='dark'][data-world] .stage > * {
+  filter: brightness(0.62) saturate(0.85);
+}
+:root[data-theme='dark'][data-world] .stage {
+  background-color: var(--scene-night-1);
+}
+
+/* ===== HUD superior ===== */
+.hud {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--hud-h);
+  padding: 10px var(--sp-6);
+  background: var(--hud);
+  color: var(--hud-text);
+  border-bottom: var(--bw) solid var(--hud-edge);
+}
+.hud__title {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.hud__h {
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hud__stats {
+  display: flex;
+  gap: var(--sp-2);
+}
+/* Marcadores con cifras pixel: el único sitio de la barra donde aparece el amarillo es el dato. */
+.stat {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 40px;
+  padding: 4px 10px;
+  border: var(--bw) solid var(--hud-edge);
+  background: var(--hud-2);
+  white-space: nowrap;
+}
+.stat__k {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  color: var(--on-page-muted);
+}
+.stat__v {
+  font-family: var(--font-num);
+  font-size: 19px;
+  line-height: 1;
+}
+.stat--xp .stat__v {
+  color: var(--yellow);
+}
+.stat--fire .stat__v {
+  color: var(--orange);
+}
+.icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  color: var(--hud-text);
+  border: var(--bw) solid var(--hud-edge);
+  transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out);
+}
+.icon-btn:hover {
+  border-color: var(--on-page-muted);
+  background-color: var(--hud-2);
+}
+.icon-btn.hud__menu,
+.icon-btn.hud__quick {
+  display: none;
+}
+.btn.hud__new {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--alert);
+  color: var(--on-red);
+  border: var(--bw) solid var(--ink);
+  font-family: var(--font-num);
+  font-size: 13px;
+}
+
+/* ===== Rótulos ===== */
+.kicker {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.kicker--light {
+  color: var(--on-page-muted);
+}
+
+/* ===== Barra lateral: el costado de la máquina ===== */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--grain), var(--side);
+  color: var(--side-text);
+  border-right: var(--bw) solid var(--hud-edge);
+  scrollbar-width: thin;
+  scrollbar-color: var(--hud-edge) transparent;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-2) var(--sp-2);
+}
+/* El logotipo es el rótulo de la máquina: condensado, enorme para su sitio, con el acento del mundo. */
+.brand__name {
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+.brand__name span {
+  display: block;
+  color: var(--accent);
+}
+.brand__build {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--on-page-muted);
+}
+.brand__beta {
+  color: var(--side-text);
+}
+.brand__coin {
+  animation: spin-coin 2.4s steps(6) infinite;
+}
+.player {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3);
+  border: var(--bw) solid var(--side-edge);
+  background: var(--side-plate);
+}
+.player__text {
+  min-width: 0;
+}
+.player__name {
+  font-weight: 700;
+  font-size: var(--fs-md);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.player__rank {
+  font-family: var(--font-num);
+  font-size: 15px;
+  color: var(--yellow);
+}
+.player__rank--sub {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  color: var(--on-page-muted);
+}
+.player__xp {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+}
+.player__xp-meta {
+  font-family: var(--font-num);
+  font-size: 13px;
+  color: var(--on-page-muted);
+}
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav__link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 52px;
+  padding: 8px 10px 8px 14px;
+  border: var(--bw) solid transparent;
+  color: var(--side-text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+}
+/* La muesca de la izquierda es el cursor del menú: aparece a saltos, como en un juego. */
+.nav__link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  background: var(--yellow);
+  transform: scaleY(0);
+  transition: transform 0.2s steps(3);
+}
+.nav__link:hover {
+  background: var(--side-plate-hi);
+}
+.nav__link.is-active {
+  background: var(--panel);
+  color: var(--text);
+  border-color: var(--ink);
+}
+.nav__link.is-active::before {
+  transform: scaleY(1);
+}
+:root[data-theme='dark'] .nav__link.is-active {
+  background: var(--panel-3);
+}
+.nav__text {
+  display: grid;
+  min-width: 0;
+}
+.nav__label,
+.nav__sub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav__sub {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--on-page-muted);
+}
+.nav__link.is-active .nav__sub {
+  color: var(--muted);
+}
+.nav__badge {
+  flex-shrink: 0;
+  margin-left: auto;
+  min-width: 24px;
+  padding: 2px 6px;
+  border: var(--bw) solid var(--side-edge);
+  background: var(--hud-2);
+  color: var(--hud-text);
+  font-family: var(--font-num);
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: center;
+}
+.nav__badge--warn {
+  background: var(--alert);
+  color: var(--on-red);
+  border-color: var(--alert);
+}
+.challenge {
+  margin-top: auto;
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: var(--bw) solid var(--side-edge);
+}
+.challenge__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.challenge__title b {
+  color: var(--yellow);
+}
+.challenge__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-num);
+  font-size: 13px;
+  color: var(--on-page-muted);
+}
+.sysbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: var(--sp-3);
+  border-top: var(--bw) solid var(--side-edge);
+}
+.sysbar__label {
+  flex: 1;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--on-page-muted);
+}
+.scrim,
+.bottom-nav {
+  display: none;
+}
+
+/* ===== Móvil: la barra lateral pasa a cajón y las secciones bajan a una barra inferior ===== */
+@media (max-width: 1100px) {
+  .stat__k {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .shell {
+    display: block;
+  }
+  .sidebar {
+    position: fixed;
+    z-index: 60;
+    left: 0;
+    top: 0;
+    width: min(300px, 86vw);
+    transform: translateX(-102%);
+    visibility: hidden;
+    transition: transform 0.28s var(--ease-out), visibility 0s linear 0.28s;
+  }
+  .sidebar.is-open {
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(15, 17, 21, 0.7);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-micro) var(--ease-out);
+  }
+  .scrim.is-on {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* Una sola fila: menú, título, racha y accesos. XP y monedas siguen en el menú y en Inicio. */
+  .hud {
+    gap: var(--sp-2);
+    padding: 8px 12px;
+    flex-wrap: nowrap;
+  }
+  .icon-btn.hud__menu {
+    display: inline-flex;
+  }
+  .icon-btn.hud__quick {
+    display: inline-flex;
+    background: var(--yellow);
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .hud__title {
+    flex: 1 1 0;
+  }
+  .hud .kicker,
+  .btn.hud__new,
+  .stat--desk,
+  .icon-btn.hud__pref {
+    display: none;
+  }
+  /* El título puede ir en dos líneas (nunca más), así la barra no crece. */
+  .hud .hud__h {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 18px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .stage {
+    height: 112px;
+  }
+  .stage--tall {
+    height: 220px;
+  }
+  .page {
+    margin-top: -40px;
+    padding: 0 var(--sp-4) calc(96px + env(safe-area-inset-bottom));
+  }
+  .page--home {
+    margin-top: -72px;
+  }
+  .bottom-nav {
+    position: fixed;
+    z-index: 40;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--hud);
+    border-top: var(--bw) solid var(--hud-edge);
+  }
+  .bottom-nav__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 56px;
+    padding: 7px 2px 6px;
+    color: var(--on-page-muted);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    white-space: nowrap;
+    border-top: 3px solid transparent;
+  }
+  .bottom-nav__icon {
+    position: relative;
+    display: inline-flex;
+  }
+  /* Contador de lo accionable hoy: crema sobre carbón o sobre rojo, siempre por encima de 4.5:1. */
+  .bottom-nav__badge {
+    position: absolute;
+    top: -6px;
+    right: -12px;
+    min-width: 18px;
+    padding: 0 4px;
+    border: var(--bw) solid var(--hud-edge);
+    background: var(--hud-2);
+    color: var(--hud-text);
+    font-family: var(--font-num);
+    font-size: 13px;
+    line-height: 16px;
+    text-align: center;
+  }
+  .bottom-nav__badge--warn {
+    background: var(--alert);
+    border-color: var(--alert);
+  }
+  .bottom-nav__link.is-active {
+    color: var(--hud-text);
+    border-top-color: var(--yellow);
+    background: var(--hud-2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand__coin {
+    animation: none;
+  }
+}

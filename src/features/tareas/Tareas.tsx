@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
@@ -15,6 +15,8 @@ import { slotLabel, taskBlocks } from '@/core/routine';
 import { matchesArea, type AreaFilter } from '@/core/areas';
 import type { AreaId } from '@/core/domain';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
+import { useFlipReorder } from '@/ui/motion';
 
 const COLUMNS: { status: TaskStatus; title: string; sprite: 'qblock' | 'flower' | 'star' }[] = [
   { status: 'todo', title: 'Por jugar', sprite: 'qblock' },
@@ -46,6 +48,7 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
     <article
       id={`tarea-${task.id}`}
       className={cx('task', `task--${task.priority}`, task.status === 'done' && 'is-done', boss && hp.hp === 0 && 'is-defeated', ready && 'is-ready', highlighted && 'is-target')}
+      data-flip-id={task.id}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData('text/plain', task.id);
@@ -61,7 +64,7 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
         ) : (
           <span className="kicker">{courseName}</span>
         )}
-        <span className="xp-text">+{task.xp}</span>
+        <span className="task__xp">+{task.xp} XP</span>
       </div>
       <h3 className="task__title">
         {task.priority === 'boss' && <Sprite name={boss ? 'boss' : 'skull'} size={boss ? 22 : 16} />} {task.title}
@@ -88,9 +91,13 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
         {task.estimateMin > 0 && <span className="tag tag--plain">{task.estimateMin >= 60 ? `${+(task.estimateMin / 60).toFixed(1)} h` : `${task.estimateMin} min`}</span>}
         <span className="tag tag--plain">{PRIORITY_LABEL[task.priority]}</span>
         <AreaTag area={task.area} />
-        {nextBlock && task.status !== 'done' && <span className="tag tag--blue" title="Rato reservado en tu calendario">🕒 {slotLabel({ date: nextBlock.date, start: nextBlock.start ?? '00:00', minutes: nextBlock.minutes }, today())}</span>}
+        {nextBlock && task.status !== 'done' && <span className="tag tag--blue" title="Rato reservado en tu calendario">{slotLabel({ date: nextBlock.date, start: nextBlock.start ?? '00:00', minutes: nextBlock.minutes }, today())}</span>}
         {difficultyOf(task) !== 'normal' && <span className="tag tag--xp" title={difficultyInfo(difficultyOf(task)).hint}>{difficultyInfo(difficultyOf(task)).label}</span>}
-        {task.recurrence && <span className="tag tag--blue" title="Al completarla se crea la siguiente">↻ {recurrenceLabel(task.recurrence)}</span>}
+        {task.recurrence && (
+          <span className="tag tag--blue" title="Al completarla se crea la siguiente">
+            <Icon name="sync" size={10} /> {recurrenceLabel(task.recurrence)}
+          </span>
+        )}
         {task.subtasks.length > 0 && (
           <button type="button" className={cx('tag tag--btn', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open}>
             {doneSubs}/{task.subtasks.length} {boss ? 'golpes' : 'subtareas'} {open ? '−' : '+'}
@@ -109,11 +116,21 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
           ))}
         </ul>
       )}
-      {ready && <p className="task__ready">✔ Todo el desglose hecho: solo falta darla por terminada.</p>}
+      {ready && (
+        <p className="task__ready">
+          <Icon name="check" size={10} /> Todo el desglose hecho: solo falta darla por terminada.
+        </p>
+      )}
       <div className="task__actions">
         {/* Con el desglose terminado el siguiente paso ya no es «empezar», sino cerrarla. */}
         <Button variant={ready || task.status === 'doing' ? 'primary' : 'ghost'} small block onClick={() => setTaskStatus(task.id, ready ? 'done' : next.to)}>
-          {ready ? '✔ Completar' : next.label}
+          {ready ? (
+            <>
+              <Icon name="check" size={12} /> Completar
+            </>
+          ) : (
+            next.label
+          )}
         </Button>
         <Button small onClick={() => openModal({ type: 'task', id: task.id })} aria-label={`Editar ${task.title}`}>
           Editar
@@ -175,11 +192,15 @@ export default function Tareas() {
     visible
       .filter((t) => t.status === st)
       .sort((a, b) => dueKey(a).localeCompare(dueKey(b)) || b.xp - a.xp);
+  // Una tarea que cambia de columna (con su botón o arrastrándola) viaja hasta su sitio nuevo con Flip.
+  const boardRef = useRef<HTMLDivElement>(null);
+  const order = visible.map((t) => `${t.id}:${t.status}`).join('|');
+  const capture = useFlipReorder(boardRef, '.task', order);
 
   return (
     <div className="stack">
       <PageHead
-        kicker="// Tablero de contratos"
+        kicker="Tablero de contratos"
         title="Tareas"
         sprite="qblock"
         hint={CONCEPTS.tarea.hint}
@@ -197,7 +218,7 @@ export default function Tareas() {
             </select>
             <AreaFilterSelect value={areaFilter} onChange={setAreaFilter} used={usedAreas} />
             <Button variant="primary" onClick={() => openModal({ type: 'task' })}>
-              ＋ Nueva tarea
+              <Icon name="plus" size={12} /> Nueva tarea
             </Button>
           </>
         }
@@ -205,7 +226,7 @@ export default function Tareas() {
       <LateBanner />
       {tasks.length === 0 ? (
         <div className="panel">
-          <Empty sprite="qblock" title="Bloque ? sin romper">
+          <Empty sprite="qblock" title="Aún no hay contratos">
             <p>Una tarea es algo concreto que haces una vez y se termina: entregar un trabajo, resolver unos ejercicios. Cada una que completes te da XP y monedas.</p>
             <p className="muted small">¿Algo que repites cada día? Eso es un hábito. ¿Dudas? Pulsa «¿Cuál uso?».</p>
             <Button variant="primary" onClick={() => openModal({ type: 'task' })}>
@@ -214,7 +235,7 @@ export default function Tareas() {
           </Empty>
         </div>
       ) : (
-        <div className="board">
+        <div className="board" ref={boardRef} onClickCapture={capture} onDropCapture={capture}>
           {COLUMNS.map((col) => {
             const items = byStatus(col.status);
             return (
@@ -238,8 +259,8 @@ export default function Tareas() {
                 }}
               >
                 <h2 className="column__head">
-                  <Sprite name={col.sprite} size={18} />
-                  {col.title} <span className="column__n">[{items.length}]</span>
+                  <Sprite name={col.sprite} size={20} />
+                  {col.title} <span className="column__n">{items.length}</span>
                 </h2>
                 {items.length === 0 && <p className="muted small column__empty">{col.status === 'done' ? 'Aún no has superado ninguna.' : 'Vacío.'} Arrastra una tarea aquí.</p>}
                 {items.map((t) => (

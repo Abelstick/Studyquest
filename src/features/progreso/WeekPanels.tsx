@@ -59,7 +59,7 @@ export function WeeklyReport({ snap, onReview }: { snap: Snapshot; onReview: (we
 export function CityMini() {
   const city = useCity();
   return (
-    <Panel kicker="// Tu ciudad" title={city.title.name} right={<span className="kicker">{city.total} / {CITY_MAX}</span>}>
+    <Panel kicker="Tu ciudad" title={city.title.name} right={<span className="kicker">{city.total} / {CITY_MAX}</span>}>
       <Link to="/ciudad" className="citymini" aria-label="Ver mi ciudad">
         {city.states.map((s) => (
           <span key={s.building.id} className="citymini__b" title={`${s.building.name}: nivel ${s.level}`}>

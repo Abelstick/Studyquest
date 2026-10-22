@@ -1,9 +1,11 @@
-import { useId, useMemo, useState, type ReactNode } from 'react';
+import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useUi } from '@/state/ui';
 import { dayProgress, missionUrgency, taskBucket, type Mission, type TaskBucket } from '@/core/missions';
 import { Bar, Button, Empty, cx } from '@/ui/kit';
 import { FoldToggle, useFold } from '@/ui/Fold';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
+import { useFlipReorder } from '@/ui/motion';
 import { MissionCard } from './MissionCard';
 
 type MissionSort = 'urgency' | 'xp' | 'name';
@@ -37,13 +39,20 @@ function sortMissions(items: Mission[], sort: MissionSort): Mission[] {
   return [...items].sort((a, b) => Number(a.done) - Number(b.done) || by(a, b));
 }
 
-/** Lista con «Ver más / Ver menos»: enseña las primeras y esconde el resto sin perderlas. */
+/**
+ * Lista con «Ver más / Ver menos»: enseña las primeras y esconde el resto sin perderlas.
+ * Al completar una misión, baja al final de la lista: Flip la lleva cuadro a cuadro desde su sitio viejo,
+ * así se ve adónde fue en vez de desaparecer de golpe.
+ */
 function MissionList({ items, limit }: { items: Mission[]; limit: number }) {
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? items : items.slice(0, limit);
+  const listRef = useRef<HTMLUListElement>(null);
+  const order = shown.map((m) => `${m.id}:${Number(m.done)}`).join('|');
+  const capture = useFlipReorder(listRef, '.mission', order);
   return (
     <>
-      <ul className="missions">
+      <ul className="missions" ref={listRef} onClickCapture={capture}>
         {shown.map((m) => (
           <MissionCard key={m.id} m={m} />
         ))}
@@ -88,7 +97,7 @@ function LaneSection({ kind, title, done, total, addLabel, onAdd, shown, childre
           </FoldToggle>
         </h3>
         <button type="button" className="lane__add" onClick={onAdd} aria-label={addLabel} title={addLabel}>
-          ＋
+          <Icon name="plus" size={14} />
         </button>
         <Bar className="lane__bar" pct={total ? (done / total) * 100 : 0} tone={kind === 'habit' ? 'green' : 'blue'} segments={total} label={`${title} hechos hoy`} />
       </header>
@@ -158,7 +167,7 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
     <section className="today-board" aria-label="Misiones de hoy">
       <div className="today-board__bar">
         <div>
-          <p className="kicker">// Quest diaria</p>
+          <p className="kicker">Quest diaria</p>
           <h2 className="today-board__title">Tu misión de hoy</h2>
         </div>
         <div className="today-board__ctl">

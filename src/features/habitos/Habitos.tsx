@@ -46,7 +46,7 @@ export default function Habitos() {
   return (
     <div className="stack">
       <PageHead
-        kicker="// Habilidades pasivas equipadas"
+        kicker="Habilidades pasivas equipadas"
         title="Hábitos"
         sprite="flower"
         hint={CONCEPTS.habito.hint}

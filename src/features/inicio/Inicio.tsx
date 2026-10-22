@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
@@ -10,10 +10,12 @@ import { HabitAction, HabitMinimumButton, HabitRecovery } from '@/features/habit
 import { IfThenList } from '@/ui/IfThenList';
 import { LateBanner } from '@/features/tareas/LateBanner';
 import { activeEvents, canOpenChest, chestReward, type GameEvent } from '@/core/events';
-import type { Snapshot } from '@/core/domain';
+import type { Profile, Snapshot } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Empty, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
+import { Scramble, useInsertCoinTitle } from '@/ui/motion';
 import { DaySummary } from './DaySummary';
 import { MissionBoard } from './MissionBoard';
 import { FoldPanel } from '@/ui/Fold';
@@ -95,7 +97,7 @@ function DailyChest({ streak }: { streak: number }) {
   const open = canOpenChest(profile);
   const preview = chestReward(today(), streak);
   return (
-    <FoldPanel id="home-chest" kicker="// Botín del día" title="Cofre diario" badge={open ? '¡Por abrir!' : undefined}>
+    <FoldPanel id="home-chest" kicker="Botín del día" title="Cofre diario" badge={open ? '¡Por abrir!' : undefined}>
       <div className={cx('chestbox', !open && 'is-open')}>
         <Sprite name="chest" size={64} className={cx(open && 'chestbox__sprite')} />
         <div>
@@ -124,9 +126,11 @@ function QuickLog() {
   const logSession = useData((s) => s.logSession);
   const openModal = useUi((s) => s.openModal);
   return (
-    <FoldPanel id="home-quicklog" className="today-actions" kicker="// Registro rápido" title="Sesión de estudio">
+    <FoldPanel id="home-quicklog" className="today-actions" kicker="Registro rápido" title="Sesión de estudio">
       <div className="row">
-        <Button onClick={() => openModal({ type: 'session' })}>▶ Iniciar sesión</Button>
+        <Button onClick={() => openModal({ type: 'session' })}>
+          <Icon name="play" size={12} /> Iniciar sesión
+        </Button>
         <Link className="btn btn--ghost" to="/tareas">
           Ver todas las tareas
         </Link>
@@ -135,7 +139,7 @@ function QuickLog() {
         <span className="kicker">¿Ya estudiaste? Márcalo</span>
         {[5, 10, 20, 30].map((m) => (
           <button key={m} type="button" className="chip" onClick={() => logSession({ minutes: m, courseId: null })} title={`Registrar ${m} min de estudio ya hecho, sin abrir nada más`}>
-            ✔ {m} min
+            <Icon name="check" size={10} /> {m} min
           </button>
         ))}
       </div>
@@ -163,6 +167,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
   const openModal = useUi((s) => s.openModal);
   const toast = useUi((s) => s.toast);
   const courseName = (id: string | null) => (id ? courses.find((c) => c.id === id)?.title : undefined);
+  const ref = useRef<HTMLElement>(null);
 
   // Lo que acabas de cerrar desde aquí: se nombra unos segundos para que se vea qué pasó antes de saltar al siguiente.
   const [justDone, setJustDone] = useState<string | null>(null);
@@ -189,29 +194,32 @@ function NextStepCard({ step }: { step: NextStep | null }) {
   };
   const doneLine = justDone && (
     <p className="nextstep__done" role="status">
-      ✔ «{justDone}» hecho.{step ? ' Esto es lo siguiente:' : ''}
+      <Icon name="check" size={12} /> «{justDone}» hecho.{step ? ' Esto es lo siguiente:' : ''}
     </p>
   );
-  // Al cambiar de paso, el contenido entra con una pequeña animación (la clave fuerza a montarlo de nuevo).
+  // Cada paso nuevo entra con la animación protagonista: el título sube letra a letra, cuadro a cuadro.
   const stepKey = !step ? 'none' : step.kind === 'task-late' || step.kind === 'task-today' ? step.task.id : step.kind === 'habit' ? step.habit.id : step.kind === 'review' ? step.review.topicId : step.topic.id;
+  useInsertCoinTitle(ref, '.nextstep__title', stepKey);
 
   if (!step) {
     return (
-      <section className="panel nextstep nextstep--clear" aria-labelledby="nextstep-title">
-        <Sprite name="star" size={48} />
-        <div className="nextstep__body" key={stepKey}>
+      <section ref={ref} className="nextstep nextstep--clear" aria-labelledby="nextstep-title">
+        <Sprite name="star" size={56} />
+        <div className="nextstep__body">
           {doneLine}
           <p className="kicker">Siguiente paso</p>
           <h2 id="nextstep-title" className="nextstep__title">
             ¡Todo al día!
           </h2>
-          <p className="muted">No hay tareas, hábitos ni repasos pendientes para hoy. Si te apetece, adelanta algo con una sesión de enfoque.</p>
+          <p className="nextstep__detail">No hay tareas, hábitos ni repasos pendientes para hoy. Si te apetece, adelanta algo con una sesión de enfoque.</p>
         </div>
         <div className="nextstep__actions">
           <Link className="btn btn--primary" to="/pomodoro">
             <Sprite name="tomato" size={16} /> <span className="nextstep__long">Empezar </span>enfoque
           </Link>
-          <Button onClick={() => openModal({ type: 'task' })}>＋ Nueva tarea</Button>
+          <Button onClick={() => openModal({ type: 'task' })}>
+            <Icon name="plus" size={12} /> Nueva tarea
+          </Button>
         </div>
       </section>
     );
@@ -236,7 +244,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
             finish(t.title, () => setTaskStatus(t.id, before));
           }}
         >
-          ✔ Completar
+          <Icon name="check" size={14} /> Completar
         </Button>
       );
       break;
@@ -257,7 +265,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
               finish(h.title, () => setHabitValue(h.id, before));
             }}
           >
-            ✔ Registrar
+            <Icon name="check" size={14} /> Registrar
           </Button>
           <HabitMinimumButton habit={h} log={logFor(logs, h.id, today())} />
         </>
@@ -277,7 +285,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
       detail = `${r.course} · ${r.late > 0 ? `atrasado ${r.late} ${r.late === 1 ? 'día' : 'días'}` : 'toca hoy'}${step.pending > 1 ? ` · ${step.pending} temas por repasar` : ''}`;
       action = (
         <Link className="btn btn--primary" to={`/repaso?curso=${encodeURIComponent(r.courseId)}&tema=${encodeURIComponent(r.topicId)}`}>
-          ▶ Repasar
+          <Icon name="play" size={12} /> Repasar
         </Link>
       );
       break;
@@ -287,7 +295,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
       detail = `${step.course.title} · lo dejaste a medias`;
       action = (
         <Link className="btn btn--primary" to={`/cursos/${step.course.id}`}>
-          ▶ Continuar tema
+          <Icon name="play" size={12} /> Continuar tema
         </Link>
       );
       break;
@@ -295,14 +303,14 @@ function NextStepCard({ step }: { step: NextStep | null }) {
   }
 
   return (
-    <section className={cx('panel nextstep', `nextstep--${step.kind}`)} aria-labelledby="nextstep-title">
-      <div className="nextstep__body" key={stepKey}>
+    <section ref={ref} className={cx('nextstep', `nextstep--${step.kind}`)} aria-labelledby="nextstep-title">
+      <div className="nextstep__body">
         {doneLine}
         <p className="kicker">Siguiente paso · {STEP_KICKER[step.kind]}</p>
         <h2 id="nextstep-title" className="nextstep__title">
           {title}
         </h2>
-        <p className="muted">{detail}</p>
+        <p className="nextstep__detail">{detail}</p>
         {extra}
       </div>
       <div className="nextstep__actions">
@@ -311,6 +319,32 @@ function NextStepCard({ step }: { step: NextStep | null }) {
           <Sprite name="tomato" size={16} /> <span className="nextstep__long">Empezar </span>enfoque
         </Link>
       </div>
+    </section>
+  );
+}
+
+/**
+ * Ficha de nivel: un trozo de la caja carbón que asoma sobre el mundo. El número es el dato más grande de
+ * la pantalla después del siguiente paso, y sube por encima de la ficha hasta montarse en el cielo.
+ */
+function LevelCard({ profile }: { profile: Profile }) {
+  const lp = levelProgress(profile.xp);
+  return (
+    <section className="levelcard" aria-label={`Nivel ${lp.level}, ${rankFor(lp.level)}`}>
+      <div className="levelcard__level" aria-hidden="true">
+        <Scramble className="levelcard__num" value={String(lp.level)} />
+        <span className="levelcard__label">Nivel</span>
+      </div>
+      <div className="levelcard__hi">
+        <Avatar profile={profile} size={40} />
+        <h1 className="levelcard__name">Buenas, {profile.displayName}</h1>
+      </div>
+      <p className="levelcard__rank">{rankFor(lp.level)}</p>
+      <Bar pct={lp.pct} tone="yellow" label="Progreso al siguiente nivel" />
+      <p className="levelcard__meta">
+        Faltan <b>{lp.left.toLocaleString('en-US')} XP</b> para el nivel {lp.level + 1}
+      </p>
+      <HowToButton label="Cómo usar la app" />
     </section>
   );
 }
@@ -343,22 +377,15 @@ export default function Inicio() {
   const advice = useMemo(() => tips(snap), [snap]);
   const streak = useMemo(() => computeStreak(xpEvents, profile.frozenDates), [xpEvents, profile.frozenDates]);
 
-  const lp = levelProgress(profile.xp);
   const isEmpty = !tasks.length && !habits.length && !courses.length;
 
   return (
     <div className="stack home">
-      <header className="today-head">
-        <Avatar profile={profile} size={48} />
-        <div className="today-head__text">
-          <h1 className="today-head__hi">Buenas, {profile.displayName}</h1>
-          <p className="muted small">
-            Nivel {lp.level} — <b>{rankFor(lp.level)}</b> · faltan {lp.left.toLocaleString('en-US')} XP para el nivel {lp.level + 1}
-          </p>
-          <HowToButton label="Cómo usar la app" />
-        </div>
-        <Bar pct={lp.pct} tone="yellow" className="today-head__bar" label="Progreso al siguiente nivel" />
-      </header>
+      {/* Apoyados en el horizonte del mundo: lo que toca hacer (8 columnas) y dónde estás (4). */}
+      <div className="home__hero">
+        {!isEmpty && <NextStepCard step={step} />}
+        <LevelCard profile={profile} />
+      </div>
 
       {isEmpty ? (
         <>
@@ -382,13 +409,12 @@ export default function Inicio() {
               el contexto del día. Cada panel se pliega, así nada empuja lo demás hacia abajo sin permiso. */}
           <div className="home__grid">
             <div className="stack home__main">
-              <NextStepCard step={step} />
               <LateBanner />
               <ConflictBanner />
               <ReviewNudge />
               <Events events={events} />
               {missions.length === 0 ? (
-                <Panel kicker="// Quest diaria" title="Tu misión de hoy">
+                <Panel kicker="Quest diaria" title="Tu misión de hoy">
                   <Empty sprite="star" title="¡Nivel despejado!">
                     <p>No hay nada pendiente para hoy.</p>
                   </Empty>
@@ -404,7 +430,7 @@ export default function Inicio() {
               <QuickLog />
               <StreakCalendar />
               <DailyChest streak={streak.current} />
-              <FoldPanel id="home-tips" kicker="// Inteligencia táctica" title="Consejos del Toad" badge={advice.length} defaultOpen={false}>
+              <FoldPanel id="home-tips" kicker="Inteligencia táctica" title="Consejos del Toad" badge={advice.length} defaultOpen={false}>
                 <ul className="tips">
                   {advice.map((t) => (
                     <li key={t.title} className="tip">

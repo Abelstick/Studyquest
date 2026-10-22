@@ -11,6 +11,7 @@ import type { HabitChain, Priority } from '@/core/domain';
 import { HabitAction, HabitMinimumButton, HabitRecovery } from '@/features/habitos/HabitAction';
 import { Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 
 /** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
 const NO_CHAINS: HabitChain[] = [];
@@ -42,7 +43,7 @@ function ChainLine({ habitId }: { habitId: string }) {
   const link = now.links.find((l) => l.habit.id === habitId);
   return (
     <p className="mission__chain">
-      🔗 {chain.name} · {now.doneCount}/{now.dueCount}
+      Rutina {chain.name} · {now.doneCount}/{now.dueCount}
       {link?.after && <> · sigue a {link.after.title}</>}
     </p>
   );
@@ -100,7 +101,7 @@ export function MissionCard({ m }: { m: Mission }) {
   const dueTone = m.kind === 'task' && m.task.dueDate === today() ? 'dark' : 'plain';
 
   return (
-    <li className={cx('mission', `mission--${m.kind}`, m.done && 'is-done', late && 'is-late', ready && 'is-ready', fx && 'is-fx')}>
+    <li className={cx('mission', `mission--${m.kind}`, m.done && 'is-done', late && 'is-late', ready && 'is-ready', fx && 'is-fx')} data-flip-id={m.id}>
       <button
         type="button"
         className="mission__check"
@@ -110,7 +111,7 @@ export function MissionCard({ m }: { m: Mission }) {
         title={ready ? '¡Todo listo! Pulsa para darla por terminada' : undefined}
         onClick={toggle}
       >
-        {m.done ? '✔' : ''}
+        {m.done ? <Icon name="check" size={16} /> : null}
       </button>
       <div className="mission__body">
         <button type="button" className="mission__open" onClick={openDetail} aria-haspopup="dialog" aria-label={`Ver detalle: ${m.title}`}>

@@ -26,7 +26,7 @@ export default function Metas() {
   if (!goal) {
     return (
       <div className="stack">
-        <PageHead kicker="// Árbol de habilidades" title="Metas" sprite="flag" hint={CONCEPTS.meta.hint} right={<GuideButton />} />
+        <PageHead kicker="Árbol de habilidades" title="Metas" sprite="flag" hint={CONCEPTS.meta.hint} right={<GuideButton />} />
         <div className="panel">
           <Empty sprite="flag" title="Ninguna bandera a la vista">
             <p>Una meta es lo que quieres lograr a largo plazo, por ejemplo «aprender análisis de datos». Se divide en hitos (Excel, SQL, Python…): cada uno da XP y te acerca a la recompensa final.</p>
@@ -55,7 +55,7 @@ export default function Metas() {
   return (
     <div className="stack">
       <PageHead
-        kicker="// Árbol de habilidades"
+        kicker="Árbol de habilidades"
         title={goal.title}
         sprite="flag"
         hint="Tu meta: lo que quieres lograr a largo plazo. Avanzas cumpliendo sus hitos."
@@ -138,7 +138,7 @@ export default function Metas() {
         </ol>
 
         <aside className="stack">
-          <Panel tone="yellow" kicker="// Recompensa final">
+          <Panel tone="yellow" kicker="Recompensa final">
             <div className="reward-final">
               <Sprite name="trophy" size={48} className={cx(!complete && 'is-locked')} />
               <h2 className="panel__title">{goal.rewardTitle}</h2>

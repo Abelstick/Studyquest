@@ -143,7 +143,7 @@ export function HabitModal({ id, goalId: presetGoal }: { id?: string; goalId?: s
   };
 
   return (
-    <Modal title={editing ? (quit ? 'Editar mal hábito' : 'Editar hábito') : quit ? 'Dejar un mal hábito' : 'Nuevo hábito'} kicker={quit ? '// Romper la maldición' : '// Habilidad pasiva'} onClose={close} wide>
+    <Modal title={editing ? (quit ? 'Editar mal hábito' : 'Editar hábito') : quit ? 'Dejar un mal hábito' : 'Nuevo hábito'} kicker={quit ? 'Romper la maldición' : 'Habilidad pasiva'} onClose={close} wide>
       <form onSubmit={submit} className="form">
         {!editing && <ConceptHint id="habito" />}
         {!editing && (

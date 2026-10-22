@@ -60,7 +60,7 @@ export function ConflictsModal({ from, to }: Readonly<{ from?: string; to?: stri
   const movable = shown.filter((c) => moves.get(c.key)).length;
 
   return (
-    <Modal title="Cruces de horario" kicker="// Que nada se pise" onClose={close} wide>
+    <Modal title="Cruces de horario" kicker="Que nada se pise" onClose={close} wide>
       <div className="form">
         {shown.length === 0 ? (
           <Empty sprite="star" title="Sin cruces">

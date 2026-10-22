@@ -82,7 +82,7 @@ export function StartGuide({ always }: Readonly<{ always?: boolean }>) {
     <section className="panel startguide" aria-labelledby="startguide-title">
       <div className="split">
         <div>
-          <p className="kicker">// Empieza aquí · {done} de {steps.length}</p>
+          <p className="kicker">Empieza aquí · {done} de {steps.length}</p>
           <h2 id="startguide-title" className="panel__title">
             ¿Por dónde empiezo?
           </h2>

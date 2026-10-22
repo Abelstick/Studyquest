@@ -171,7 +171,7 @@ export function WeekReviewPanel({ week, onClose }: Readonly<{ week: ISODate; onC
   return (
     <Panel
       className="rv"
-      kicker={`// Revisión semanal · del ${shortDate(data.from)} al ${shortDate(data.to)}`}
+      kicker={`Revisión semanal · del ${shortDate(data.from)} al ${shortDate(data.to)}`}
       title="¿Cómo fue tu semana?"
       right={
         <Button small variant="ghost" onClick={onClose}>

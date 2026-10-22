@@ -10,29 +10,28 @@ html {
 html[data-theme='dark'] {
   color-scheme: dark;
 }
+/*
+ * La caja de la máquina: carbón con grano. El decorado del mundo ya no empapela la página (competía con
+ * el contenido): vive en su propia pantalla, arriba (ui/WorldStage). El texto suelto va en crema; los
+ * paneles devuelven el color de texto a la tinta.
+ */
 body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  /*
-   * El fondo es un decorado por capas, de delante hacia atrás: patrón suelto (nubes, estrellas,
-   * burbujas), detalle cercano, silueta lejana y cielo. Todas fijas, así el decorado se queda
-   * quieto mientras el contenido pasa por encima.
-   */
-  background:
-    var(--near, none) 0 100% / auto auto repeat-x fixed,
-    var(--far, none) 0 100% / auto auto repeat-x fixed,
-    var(--skybits, none) 0 0 / auto auto repeat-x fixed,
-    var(--sky, none) 0 0 / 100% 100% no-repeat fixed,
-    var(--page);
-  color: var(--text);
+  background: var(--grain), var(--page);
+  color: var(--on-page);
   font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.4;
+  font-size: var(--fs-md);
+  font-weight: 400;
+  line-height: 1.5;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
+}
+b,
+strong {
+  font-weight: 700;
 }
 h1,
 h2,
@@ -74,20 +73,13 @@ svg {
   flex: none;
 }
 /*
- * Foco de teclado en DOS anillos. Con uno solo, el azul desaparecía sobre el ladrillo rojo de la
- * barra lateral (1.15:1) y no se veía dónde estabas. Con el par, siempre contrasta uno de los dos.
+ * Foco de teclado en DOS anillos: amarillo por dentro y carbón por fuera. El amarillo se ve sobre la caja
+ * oscura; el carbón, sobre la crema. Siempre contrasta uno de los dos, esté donde esté.
  */
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
   box-shadow: 0 0 0 6px var(--focus-ink);
-}
-/* Sobre el ladrillo y el HUD el amarillo manda: contrasta con ambos y es el color del mundo. */
-.sidebar :focus-visible,
-.hud :focus-visible,
-.bottom-nav :focus-visible {
-  --focus: var(--yellow);
-  --focus-ink: var(--ink);
 }
 
 /* ===== Barra de scroll con aspecto de riel de nivel ===== */
@@ -138,9 +130,8 @@ svg {
   background: var(--yellow);
   color: var(--ink);
   padding: 10px 14px;
-  border: var(--bw) solid var(--line);
-  font-family: var(--font-pixel);
-  font-size: 10px;
+  border: var(--bw) solid var(--ink);
+  font-weight: 700;
 }
 .skip:focus {
   top: 8px;
@@ -156,86 +147,6 @@ svg {
   }
 }
 
-/* ===== Layout general ===== */
-.shell {
-  display: grid;
-  grid-template-columns: var(--side-w) minmax(0, 1fr);
-  min-height: 100vh;
-  min-height: 100dvh;
-  align-items: start;
-}
-.shell__main {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-.page {
-  flex: 1;
-  padding: 26px 28px 40px;
-  max-width: 1320px;
-  width: 100%;
-  margin: 0 auto;
-  /* Red de seguridad: cualquier texto del contenido (títulos de tareas, hábitos, cursos…) parte en vez de desbordar. */
-  overflow-wrap: anywhere;
-}
-/* El césped del suelo cambia con el mundo: hierba, arena, hielo, piedra… */
-.ground {
-  height: 32px;
-  border-top: var(--bw) solid var(--line);
-  background:
-    linear-gradient(var(--turf) 0 8px, var(--turf-2) 8px 12px, transparent 12px),
-    repeating-linear-gradient(90deg, transparent 0 30px, rgba(0, 0, 0, 0.35) 30px 32px),
-    repeating-linear-gradient(0deg, transparent 0 14px, rgba(0, 0, 0, 0.35) 14px 16px),
-    var(--side);
-}
-
-/* ===== Sidebar de ladrillos ===== */
-.sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100dvh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  color: var(--side-text);
-  gap: 14px;
-  padding: 16px 12px 14px;
-  border-right: 2px solid var(--line);
-  overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
-  /* Siempre oscuro, sea cual sea el mundo: así el contraste del texto no depende del tema. */
-  background:
-    radial-gradient(120% 40% at 0% 0%, color-mix(in srgb, var(--accent, var(--violet)) 26%, transparent), transparent 70%),
-    linear-gradient(180deg, color-mix(in srgb, var(--side) 30%, #0b0b1c), color-mix(in srgb, var(--side-2) 26%, #05050f));
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-}
-.brand__build {
-  margin-bottom: 4px;
-  color: #d4d4ec;
-}
-.brand__name {
-  font-family: var(--font-pixel);
-  font-size: 13px;
-  color: #fff;
-  letter-spacing: -0.02em;
-}
-.brand__name span {
-  /* Solo el logotipo se tiñe con el acento del mundo: va sobre el HUD casi negro y ahí contrasta.
-   El rango del jugador se queda amarillo, que es el único que aguanta los siete mundos. */
-  color: color-mix(in srgb, var(--accent) 45%, var(--yellow));
-}
-.brand__coin {
-  animation: spin-coin 2.4s steps(6) infinite;
-}
 @keyframes spin-coin {
   0%,
   100% {
@@ -245,164 +156,7 @@ svg {
     transform: scaleX(0.25);
   }
 }
-.player {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-}
-.player__text {
-  min-width: 0;
-}
-.player__name {
-  font-weight: 900;
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.player__rank {
-  margin-top: 5px;
-  color: var(--yellow);
-}
-.player__rank--sub {
-  color: #f0e9ff;
-  margin-top: 4px;
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 800;
-}
-.nav {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-/*
- * Cada destino es un bloque del muro: tiene su propia placa para que el texto no flote sobre la
- * textura de ladrillo, se levanta al pasar por encima y se hunde al pulsarlo.
- */
-.nav__link {
-  position: relative;
-  display: flex;
-  align-items: center;
-  line-height: 1.4;
-  /* Cinco secciones: nombre real en grande y, debajo, las pantallas que contiene. Filas táctiles de 44px o más. */
-  gap: 11px;
-  min-height: 52px;
-  padding: 8px 10px;
-  border: 2px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 800;
-  text-transform: none;
-  letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.86);
-  transition: background-color 0.08s steps(2), transform 0.08s steps(2);
-}
-.nav__link .sprite {
-  transition: transform 0.12s steps(3);
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5));
-}
-.nav__link:hover .sprite {
-  transform: translateY(-2px);
-}
-.nav__link:active {
-  box-shadow: none;
-}
-/* El bloque activo se golpea una vez al llegar, como un bloque «?». */
-.nav__link.is-active .sprite {
-  animation: block-hit 0.28s steps(4) 1;
-}
-@keyframes block-hit {
-  0% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-6px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-.challenge {
-  margin-top: auto;
-  padding: 12px;
-  display: grid;
-  gap: 8px;
-}
-.challenge__title {
-  font-size: 13px;
-  font-weight: 800;
-}
-.challenge__title b {
-  color: var(--yellow);
-}
-.challenge__meta {
-  color: #e8e0ff;
-  line-height: 1.6;
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-.scrim {
-  display: none;
-}
 
-/* ===== HUD superior (como el marcador de Mario) ===== */
-.hud {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 20px;
-  min-height: var(--hud-h);
-  background: var(--hud);
-  color: var(--hud-text);
-  border-bottom: var(--bw) solid var(--line);
-  border-bottom-color: var(--line);
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25), inset 0 -3px 0 color-mix(in srgb, var(--accent) 45%, transparent);
-}
-.hud__title {
-  flex: 1 1 200px;
-  min-width: 0;
-}
-.hud__h {
-  font-size: 17px;
-  font-weight: 900;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.icon-btn.hud__menu {
-  display: none;
-}
-.hud__stats {
-  display: flex;
-  gap: 8px;
-}
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 9px;
-  border: 2px solid var(--hud-edge);
-  background: var(--hud-2);
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  white-space: nowrap;
-}
-.stat__k {
-  color: #9a9ac0;
-}
-.stat--fire .stat__v {
-  color: #ff8a3c;
-}
 .search {
   position: relative;
   display: flex;
@@ -412,19 +166,19 @@ svg {
   min-width: 0;
   flex: 0 1 260px;
   background: var(--hud-2);
-  border: 2px solid var(--hud-edge);
+  border: var(--bw) solid var(--hud-edge);
 }
 .search__input {
   flex: 1;
   min-width: 0;
   background: transparent;
   border: 0;
-  color: #fff;
-  font-size: 13px;
+  color: var(--hud-text);
+  font-size: var(--fs-sm);
   padding: 9px 0;
 }
 .search__input::placeholder {
-  color: #a8a8c8;
+  color: var(--on-page-muted);
 }
 .search__input:focus-visible {
   outline: none;
@@ -457,28 +211,14 @@ svg {
 .search__results button:hover,
 .search__results button:focus-visible {
   background: var(--panel-2);
+  color: var(--text);
 }
 .search__empty {
   padding: 12px;
   color: var(--muted);
   font-size: 13px;
 }
-.icon-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  background: var(--hud-2);
-  color: #fff;
-  border: 2px solid var(--hud-edge);
-  font-size: 15px;
-}
-.icon-btn:hover {
-  border-color: var(--yellow);
-}
+
 .icon-btn--sm {
   width: 28px;
   height: 28px;
@@ -491,182 +231,16 @@ svg {
   color: var(--text);
   border-color: var(--line);
 }
-.badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--red);
-  color: #fff;
-  border: 2px solid var(--line);
-  font-family: var(--font-pixel);
-}
-.kicker {
-  font-family: var(--font-pixel);
-  line-height: 1.5;
-  text-transform: uppercase;
-  color: var(--red-text);
-  letter-spacing: 0.02em;
-}
-.kicker--light {
-  color: var(--yellow);
-}
-
-/* ===== Navegación móvil ===== */
-.bottom-nav,
-.icon-btn.hud__quick {
-  display: none;
-}
 
 @media (max-width: 1100px) {
   .search {
     flex-basis: 160px;
   }
-  .stat__k {
-    display: none;
-  }
 }
 
 @media (max-width: 900px) {
-  .shell {
-    display: block;
-  }
-  .sidebar {
-    position: fixed;
-    z-index: 60;
-    left: 0;
-    top: 0;
-    width: min(290px, 86vw);
-    transform: translateX(-102%);
-    visibility: hidden;
-    transition: transform 0.18s steps(6), visibility 0s linear 0.18s;
-  }
-  .sidebar.is-open {
-    transform: none;
-    visibility: visible;
-    transition-delay: 0s;
-  }
-  .scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 55;
-    background: rgba(5, 5, 20, 0.6);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s linear;
-  }
-  .scrim.is-on {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .hud {
-    padding: 8px 12px;
-    gap: 8px;
-  /* Una sola fila: ☰, título, racha y accesos. XP y monedas siguen en el menú y en Hoy; tema y sonido, en el menú. */
-  flex-wrap: nowrap;
-  }
-  .icon-btn.hud__menu {
-    display: inline-flex;
-  }
-  .hud__title {
-    flex: 1 1 0;
-  }
-  .hud__h {
-    font-size: 15px;
-  }
   .search {
     display: none;
-  }
-  .btn.hud__new {
-    display: none;
-  }
-  .hud .kicker {
-    display: none;
-  }
-  .stat--desk,
-  .icon-btn.hud__pref {
-    display: none;
-  }
-  /* El título puede ir en dos líneas (nunca más), así la barra no crece. */
-  .hud .hud__h {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    font-size: 14px;
-  }
-  .icon-btn.hud__quick {
-    display: inline-flex;
-    background: var(--yellow);
-    color: var(--ink);
-    font-weight: 900;
-  }
-  .page {
-    padding: 18px 14px calc(96px + env(safe-area-inset-bottom));
-  }
-  .ground {
-    display: none;
-  }
-  .bottom-nav {
-    position: fixed;
-    z-index: 40;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    padding-bottom: env(safe-area-inset-bottom);
-    background: var(--hud);
-    border-top: var(--bw) solid var(--line);
-  }
-  .bottom-nav__link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    min-width: 0;
-    min-height: 56px;
-    padding: 7px 2px 6px;
-    color: #c8c8e4;
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 800;
-    white-space: nowrap;
-    border-top: 3px solid transparent;
-  }
-  .bottom-nav__icon {
-    position: relative;
-    display: inline-flex;
-  }
-  /* Contador de lo accionable hoy: blanco sobre fondo oscuro o rojo, siempre por encima de 4.5:1. */
-  .bottom-nav__badge {
-    position: absolute;
-    top: -6px;
-    right: -12px;
-    min-width: 18px;
-    padding: 0 4px;
-    border: 2px solid var(--line);
-    background: var(--ink);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 900;
-    line-height: 14px;
-    text-align: center;
-  }
-  .bottom-nav__badge--warn {
-    background: var(--alert);
-  }
-  .bottom-nav__link.is-active {
-    color: var(--yellow);
-    border-top-color: var(--yellow);
-    background: rgba(255, 210, 63, 0.1);
   }
 }
 @keyframes bob {

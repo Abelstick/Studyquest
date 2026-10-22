@@ -59,7 +59,7 @@ export function Plot({ state, selected, fresh, onSelect, size = 132 }: { state: 
 function Detail({ state }: { state: BuildingState }) {
   const { building: b, level, value, next, pct, left } = state;
   return (
-    <Panel kicker={`// ${b.area}`} title={`${b.name} · ${level === 0 ? 'Solar en obras' : b.levelNames[level - 1]}`} tone="yellow">
+    <Panel kicker={`${b.area}`} title={`${b.name} · ${level === 0 ? 'Solar en obras' : b.levelNames[level - 1]}`} tone="yellow">
       <p>{b.what}</p>
       <div className="citybar">
         <Bar pct={pct} tone="yellow" tall label={`Progreso de ${b.name}`} />
@@ -116,9 +116,9 @@ export default function Ciudad() {
 
   return (
     <div className="stack">
-      <PageHead kicker="// Progreso visual" title="Tu ciudad" sprite="house" hint="Cada área de estudio es un edificio que crece con lo que haces de verdad: hábitos, cursos, proyectos, retos y logros. No hay que registrar nada más." />
+      <PageHead kicker="Progreso visual" title="Tu ciudad" sprite="house" hint="Cada área de estudio es un edificio que crece con lo que haces de verdad: hábitos, cursos, proyectos, retos y logros. No hay que registrar nada más." />
 
-      <Panel kicker={`// ${city.total} de ${CITY_MAX} mejoras`} title={city.title.name} right={<span className="tag tag--xp">👥 {city.people.toLocaleString('en-US')} habitantes</span>}>
+      <Panel kicker={`${city.total} de ${CITY_MAX} mejoras`} title={city.title.name} right={<span className="tag tag--xp">👥 {city.people.toLocaleString('en-US')} habitantes</span>}>
         <Bar pct={(city.total / CITY_MAX) * 100} tone="green" tall label="Progreso total de la ciudad" />
         <p className="muted small">
           {city.title.next ? (

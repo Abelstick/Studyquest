@@ -68,7 +68,7 @@ export default function Arsenal() {
   return (
     <div className="stack">
       <PageHead
-        kicker="// Tienda de Toad"
+        kicker="Tienda de Toad"
         title="Recompensas y logros"
         sprite="mushroom"
         hint={

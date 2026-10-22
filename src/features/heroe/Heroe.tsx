@@ -65,7 +65,7 @@ function RacePicker({ current, onDone }: { current?: Hero; onDone: () => void })
 
       <section className="panel hero-pick__form">
         <fieldset className="races">
-          <legend className="kicker">// Elige tu raza</legend>
+          <legend className="kicker">Elige tu raza</legend>
           {RACES.map((x) => (
             <label key={x.id} className={cx('race', x.id === race && 'is-on')}>
               <input type="radio" name="race" value={x.id} checked={x.id === race} onChange={() => setRace(x.id)} />
@@ -259,7 +259,7 @@ export default function Heroe() {
     return (
       <div className="stack">
         <PageHead
-          kicker="// Tu personaje"
+          kicker="Tu personaje"
           title={hero ? 'Cambiar raza o nombre' : 'Crea tu héroe'}
           sprite="knight"
           right={wallet}
@@ -286,7 +286,7 @@ export default function Heroe() {
 
   return (
     <div className="stack">
-      <PageHead kicker="// Tu personaje" title="Héroe 3D" sprite="knight" right={wallet} />
+      <PageHead kicker="Tu personaje" title="Héroe 3D" sprite="knight" right={wallet} />
 
       <div className="hero-page">
         <section className="panel hero-card" aria-labelledby="hero-name">

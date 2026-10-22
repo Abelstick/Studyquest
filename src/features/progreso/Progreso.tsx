@@ -144,7 +144,7 @@ export default function Progreso() {
 
   return (
     <div className="stack dash">
-      <PageHead kicker="// Hoja de personaje" title="Progreso" sprite="star" right={<Segmented label="Rango de fechas" value={range} options={RANGES} onChange={setRange} />} />
+      <PageHead kicker="Hoja de personaje" title="Progreso" sprite="star" right={<Segmented label="Rango de fechas" value={range} options={RANGES} onChange={setRange} />} />
       <div className="cols">
         <WeeklyReport snap={snap} onReview={setReviewWeek} />
         <CityMini />
@@ -226,7 +226,7 @@ export default function Progreso() {
         </ChartCard>
       </div>
 
-      <Panel kicker="// Medallas" right={<span className="kicker">{view.unlocked.length} / {ACHIEVEMENTS.length} desbloqueadas</span>}>
+      <Panel kicker="Medallas" right={<span className="kicker">{view.unlocked.length} / {ACHIEVEMENTS.length} desbloqueadas</span>}>
         {view.unlocked.length === 0 ? (
           <p className="muted">Aún no tienes medallas. Completa una tarea para conseguir la primera.</p>
         ) : (
@@ -242,7 +242,7 @@ export default function Progreso() {
       </Panel>
 
       <Panel
-        kicker="// Mapa de actividad — 20 semanas"
+        kicker="Mapa de actividad — 20 semanas"
         right={
           <div className="legend" aria-hidden="true">
             <span className="kicker">Menos</span>

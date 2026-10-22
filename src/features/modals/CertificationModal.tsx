@@ -49,7 +49,7 @@ export function CertificationModal({ id }: { id?: string }) {
   };
 
   return (
-    <Modal title={editing ? 'Editar certificación' : 'Nueva certificación'} kicker="// Trofeo" onClose={close}>
+    <Modal title={editing ? 'Editar certificación' : 'Nueva certificación'} kicker="Trofeo" onClose={close}>
       <form onSubmit={submit} className="form">
         <Field label="Nombre de la certificación">
           {(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="AWS Cloud Practitioner" required maxLength={120} />}

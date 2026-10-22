@@ -40,7 +40,7 @@ export function SessionModal({ courseId: initialCourse, minutes: initialMinutes 
   };
 
   return (
-    <Modal title="Sesión de estudio" kicker="// Tiempo" onClose={close}>
+    <Modal title="Sesión de estudio" kicker="Tiempo" onClose={close}>
       <div className="form">
         <Field label="¿Qué vas a estudiar?">
           {(fid) => (

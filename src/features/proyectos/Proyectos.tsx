@@ -48,7 +48,7 @@ export default function Proyectos() {
   return (
     <div className="stack">
       <PageHead
-        kicker="// Operaciones personales"
+        kicker="Operaciones personales"
         title="Proyectos"
         sprite="chest"
         hint={CONCEPTS.proyecto.hint}

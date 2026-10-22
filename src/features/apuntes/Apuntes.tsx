@@ -55,7 +55,7 @@ function Detail({ note, onClose }: { note: Note; onClose: () => void }) {
 
   return (
     <Panel
-      kicker={course ? `// ${course.title}${topic ? ` · ${topic.title}` : ''}` : '// Apunte suelto'}
+      kicker={course ? `${course.title}${topic ? ` · ${topic.title}` : ''}` : 'Apunte suelto'}
       title={editing ? 'Editando' : note.title || 'Sin título'}
       right={
         <div className="row">
@@ -193,7 +193,7 @@ export default function Apuntes() {
   return (
     <div className="stack">
       <PageHead
-        kicker="// Cuaderno"
+        kicker="Cuaderno"
         title="Apuntes"
         sprite="note"
         hint="Lo que aprendes, escrito con tus palabras. Cada apunte puede colgar de un curso o ir suelto, y todos suman a tu biblioteca."
@@ -324,7 +324,7 @@ export default function Apuntes() {
                 <Detail key={open.id} note={open} onClose={() => setOpenId(null)} />
               </div>
             ) : (
-              <Panel kicker="// Cuaderno" title="Elige un apunte">
+              <Panel kicker="Cuaderno" title="Elige un apunte">
                 <p className="muted">Pulsa uno de la izquierda para leerlo, o crea uno nuevo. Se guarda solo en cuanto pulses «Guardar».</p>
               </Panel>
             )}

@@ -6,7 +6,7 @@ import { AiSetup } from '../ai/AiSetup';
 export function AiKeyModal() {
   const close = useUi((s) => s.closeModal);
   return (
-    <Modal title="Funciones inteligentes" kicker="// Activar la IA" onClose={close}>
+    <Modal title="Funciones inteligentes" kicker="Activar la IA" onClose={close}>
       <AiSetup onDone={close} />
     </Modal>
   );

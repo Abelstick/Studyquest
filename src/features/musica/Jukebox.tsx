@@ -17,7 +17,7 @@ export function Jukebox() {
   const now = TRACKS[track];
 
   return (
-    <Panel kicker="// Banda sonora" title="Reproductor" right={<Sprite name="note" size={26} className={cx(playing && 'idle idle--bob')} />}>
+    <Panel kicker="Banda sonora" title="Reproductor" right={<Sprite name="note" size={26} className={cx(playing && 'idle idle--bob')} />}>
       {!sound && (
         <p className="form__error" role="status">
           El sonido está apagado, así que no oirás nada.{' '}

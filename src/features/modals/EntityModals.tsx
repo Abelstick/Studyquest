@@ -54,7 +54,7 @@ export function CourseModal({ id }: { id?: string }) {
   };
 
   return (
-    <Modal title={editing ? 'Editar curso' : 'Nuevo curso'} kicker="// Mundo" onClose={close}>
+    <Modal title={editing ? 'Editar curso' : 'Nuevo curso'} kicker="Mundo" onClose={close}>
       <form onSubmit={submit} className="form">
         <Field label="Nombre del curso">{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Análisis de Datos" required maxLength={80} />}</Field>
         <div className="form__row">
@@ -166,7 +166,7 @@ export function GoalModal({ id }: { id?: string }) {
   };
 
   return (
-    <Modal title={editing ? 'Editar meta' : 'Nueva meta'} kicker="// Árbol de habilidades" onClose={close}>
+    <Modal title={editing ? 'Editar meta' : 'Nueva meta'} kicker="Árbol de habilidades" onClose={close}>
       <form onSubmit={submit} className="form">
         {!editing && <ConceptHint id="meta" />}
         <Field label="Meta" hint="Concreta: qué quieres lograr, no un tema general.">
@@ -237,7 +237,7 @@ export function ProjectModal() {
   };
 
   return (
-    <Modal title="Nuevo proyecto" kicker="// Mazmorra" onClose={close}>
+    <Modal title="Nuevo proyecto" kicker="Mazmorra" onClose={close}>
       <form onSubmit={submit} className="form">
         <ConceptHint id="proyecto" />
         <Field label="Nombre">{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Crear mi primer portafolio" required maxLength={100} />}</Field>
@@ -284,7 +284,7 @@ export function RewardModal() {
   };
 
   return (
-    <Modal title="Recompensa personal" kicker="// Premio de la vida real" onClose={close}>
+    <Modal title="Recompensa personal" kicker="Premio de la vida real" onClose={close}>
       <form onSubmit={submit} className="form">
         <Field label="Premio">{(fid) => <TextInput id={fid} className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ver una película sin culpa" required maxLength={100} />}</Field>
         <Field label="Condición">{(fid) => <TextInput id={fid} className="input" value={condition} onChange={(e) => setCondition(e.target.value)} placeholder="Si completo 5 días seguidos de estudio" />}</Field>

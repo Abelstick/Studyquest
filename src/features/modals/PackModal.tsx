@@ -118,7 +118,7 @@ export function PackModal() {
   };
 
   return (
-    <Modal title="Importar con IA" kicker="// Pack de aprendizaje" onClose={close} wide>
+    <Modal title="Importar con IA" kicker="Pack de aprendizaje" onClose={close} wide>
       <div className="stack">
         <p className="muted small">
           Cuéntame qué quieres lograr y la IA arma de golpe el curso, la meta con su plazo, los hábitos (con versión mínima) y las tareas, ya enlazados entre sí. Antes de crear nada lo revisas.

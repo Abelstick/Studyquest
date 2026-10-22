@@ -77,7 +77,7 @@ export function ExportModal({ from: from0, to: to0, ids }: { from: ISODate; to: 
   };
 
   return (
-    <Modal title="Exportar a tu calendario" kicker="// Archivo .ics" onClose={close} wide>
+    <Modal title="Exportar a tu calendario" kicker="Archivo .ics" onClose={close} wide>
       <div className="form">
         <div className="chips" aria-label="Rangos rápidos">
           {PRESETS.map((p) => {

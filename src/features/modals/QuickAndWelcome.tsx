@@ -21,7 +21,7 @@ const ACTIONS: { label: string; sprite: SpriteName; modal: Exclude<ModalState, n
 export function QuickSheet() {
   const { closeModal, openModal } = useUi();
   return (
-    <Modal title="Buscar o crear" kicker="// ¿Qué hacemos?" onClose={closeModal}>
+    <Modal title="Buscar o crear" kicker="¿Qué hacemos?" onClose={closeModal}>
       <SearchBox inline onNavigate={closeModal} />
       <div className="quick">
         {ACTIONS.map((a) => (
@@ -53,7 +53,7 @@ export function WelcomeModal() {
   };
 
   return (
-    <Modal title="¡Bienvenido a StudyQuest!" kicker="// Press start" onClose={closeModal}>
+    <Modal title="¡Bienvenido a StudyQuest!" kicker="Press start" onClose={closeModal}>
       <div className="welcome">
         <div className="welcome__sprites" aria-hidden="true">
           <Sprite name="mushroom" size={34} />

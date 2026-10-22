@@ -43,7 +43,7 @@ export function ChainModal({ id }: { id?: string }) {
   };
 
   return (
-    <Modal title={editing ? 'Editar cadena' : 'Nueva cadena de hábitos'} kicker="// Rutina" onClose={close}>
+    <Modal title={editing ? 'Editar cadena' : 'Nueva cadena de hábitos'} kicker="Rutina" onClose={close}>
       <form onSubmit={submit} className="form">
         <p className="form__info">
           Pon tus hábitos en orden: cada uno será la señal del siguiente. No se bloquea nada — puedes registrar cualquiera cuando quieras — y si completas la cadena entera en un día ganas <b>+{CHAIN_BONUS_XP} XP</b>.

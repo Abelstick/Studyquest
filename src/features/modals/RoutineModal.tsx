@@ -79,7 +79,7 @@ export function RoutineModal() {
   };
 
   return (
-    <Modal title="Mi semana" kicker="// Tu horario de verdad" onClose={close} wide>
+    <Modal title="Mi semana" kicker="Tu horario de verdad" onClose={close} wide>
       <div className="form">
         <section className="rt__sec" aria-labelledby="rt-horario">
           <h3 id="rt-horario" className="rv__title">1 · ¿Trabajas?</h3>

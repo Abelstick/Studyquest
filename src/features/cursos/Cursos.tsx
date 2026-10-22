@@ -33,7 +33,7 @@ export default function Cursos() {
   return (
     <div className="stack">
       <PageHead
-        kicker="// Campañas activas"
+        kicker="Campañas activas"
         title="Mis cursos"
         sprite="pipe"
         right={

@@ -9,6 +9,9 @@ import { Avatar } from '@/ui/Avatar';
 import { Loader } from '@/ui/Loader';
 import { Bar, Button, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
+import { Scramble } from '@/ui/motion';
+import { WorldStage } from '@/ui/WorldStage';
 import { SectionTabs, sectionTabId } from '@/ui/SectionTabs';
 import { SECTIONS, navFor, newKindFor, rememberTab, sectionHref, tabsOf, type SectionId } from './nav';
 import { useShortcuts } from './useShortcuts';
@@ -163,11 +166,11 @@ function Sidebar() {
         <div className="brand">
           <Sprite name="coin" size={26} className="brand__coin" />
           <div>
-            <p className="brand__build">
-              // v{__APP_VERSION__} <span className="brand__beta">β</span>
-            </p>
             <p className="brand__name">
-              STUDY<span>QUEST</span>
+              Study<span>Quest</span>
+            </p>
+            <p className="brand__build">
+              v{__APP_VERSION__} <span className="brand__beta">beta</span>
             </p>
           </div>
         </div>
@@ -234,19 +237,23 @@ function Sidebar() {
               Reclamar bono
             </Button>
           )}
-          {claimed && <p className="challenge__meta">Bono reclamado ✔</p>}
+          {claimed && (
+            <p className="challenge__meta">
+              <Icon name="check" size={10} /> Bono reclamado
+            </p>
+          )}
         </div>
 
         <div className="sysbar">
           <span className="sysbar__label">Ajustes</span>
           <button type="button" className="icon-btn" onClick={() => openModal({ type: 'howto' })} aria-label="Guía de uso" title="Guía de uso: cómo empezar y qué hacer">
-            <span aria-hidden="true">❓</span>
+            <Icon name="help" />
           </button>
           <button type="button" className="icon-btn sysbar__keys" onClick={() => openModal({ type: 'shortcuts' })} aria-label="Atajos de teclado" title="Atajos de teclado (?)">
-            <span aria-hidden="true">⌨</span>
+            <Icon name="keys" />
           </button>
           <button type="button" className="icon-btn" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Silenciar efectos' : 'Activar efectos de sonido'} title="Efectos de sonido">
-            <span aria-hidden="true">{sound ? '♪' : '✕'}</span>
+            <Icon name={sound ? 'sound' : 'mute'} />
           </button>
           <button type="button" className="icon-btn" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'} title="Día / noche">
             <Sprite name={theme === 'dark' ? 'star' : 'ghost'} size={18} />
@@ -301,21 +308,21 @@ function Hud() {
   return (
     <header className="hud">
       <button type="button" className="icon-btn hud__menu" aria-label="Abrir menú" onClick={() => setNavOpen(true)}>
-        <span aria-hidden="true">☰</span>
+        <Icon name="menu" size={16} />
       </button>
       <div className="hud__title">
-        <p className="kicker kicker--light">// {item.kicker}</p>
+        <p className="kicker kicker--light">{item.kicker}</p>
         <p className="hud__h">{title}</p>
       </div>
       <SearchBox id="busqueda" />
       <div className="hud__stats" aria-label="Marcadores">
-        <span className="stat stat--desk" title="Puntos de experiencia totales">
+        <span className="stat stat--desk stat--xp" title="Puntos de experiencia totales">
           <span className="stat__k">XP</span>
-          <span className="stat__v">{String(profile.xp).padStart(6, '0')}</span>
+          <Scramble className="stat__v" value={String(profile.xp).padStart(6, '0')} />
         </span>
         <span className="stat stat--desk" title="Monedas">
           <Sprite name="coin" size={16} />
-          <span className="stat__v">×{profile.credits.toLocaleString('en-US')}</span>
+          <Scramble className="stat__v" value={profile.credits.toLocaleString('en-US')} />
         </span>
         <span className="stat stat--fire" title="Racha de días">
           <Sprite name="fire" size={16} />
@@ -326,14 +333,14 @@ function Hud() {
       {!online && <span className="tag tag--red" title="Sin conexión: tus cambios se guardan en el dispositivo y se enviarán al volver la red">OFFLINE</span>}
       {pending > 0 && (
         <button type="button" className="tag tag--xp tag--btn" onClick={() => void dataLayer.sync?.flush()} title="Cambios guardados en el dispositivo que aún no están en la nube. Pulsa para reintentar.">
-          ⏳ {pending} {pending === 1 ? 'pendiente' : 'pendientes'}
+          <Icon name="sync" size={12} /> {pending} {pending === 1 ? 'pendiente' : 'pendientes'}
         </button>
       )}
       <button type="button" className="icon-btn hud__pref" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'} title="Día / noche">
         <Sprite name={theme === 'dark' ? 'star' : 'ghost'} size={18} />
       </button>
       <button type="button" className="icon-btn hud__pref" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Silenciar efectos' : 'Activar efectos de sonido'} title="Sonido">
-        <span aria-hidden="true">{sound ? '♪' : '✕'}</span>
+        <Icon name={sound ? 'sound' : 'mute'} />
       </button>
       <button type="button" className="icon-btn hud__bell" onClick={() => setNotifOpen(true)} aria-label={`Notificaciones${unread ? `, ${unread} sin leer` : ''}`}>
         <Sprite name="heart" size={18} />
@@ -341,10 +348,10 @@ function Hud() {
       </button>
       {/* En móvil, crear o registrar vive aquí (antes era un botón flotante que tapaba el contenido). */}
       <button type="button" className="icon-btn hud__quick" aria-label="Crear o registrar" title="Crear o registrar" onClick={() => openModal({ type: 'quick' })}>
-        <span aria-hidden="true">＋</span>
+        <Icon name="plus" size={16} />
       </button>
       <Button variant="primary" className="hud__new" onClick={openNew}>
-        <span aria-hidden="true">＋</span> Nuevo
+        <Icon name="plus" size={12} /> Nuevo
       </Button>
     </header>
   );
@@ -411,7 +418,8 @@ export function AppShell() {
       <Sidebar />
       <div className="shell__main">
         <Hud />
-        <main className="page" id="contenido">
+        <WorldStage tall={item.to === '/'} />
+        <main className={cx('page', item.to === '/' && 'page--home')} id="contenido">
           {showTabs && <SectionTabs tabs={tabs} current={item.to} label={`Pestañas de ${section.label}`} panelId="contenido-panel" />}
           <div id="contenido-panel" role={showTabs ? 'tabpanel' : undefined} aria-labelledby={showTabs ? sectionTabId(item.to) : undefined}>
             <Suspense
@@ -425,7 +433,6 @@ export function AppShell() {
             </Suspense>
           </div>
         </main>
-        <footer className="ground" aria-hidden="true" />
       </div>
       <MobileNav />
       <Overlays />

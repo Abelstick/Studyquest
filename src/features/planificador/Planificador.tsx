@@ -184,7 +184,7 @@ export default function Planificador() {
 
   return (
     <div className="stack">
-      <PageHead kicker="// Estratega" title="Planificador inteligente" sprite="sword" right={<Button onClick={() => openModal({ type: 'pack' })}>✨ Importar pack de IA</Button>} />
+      <PageHead kicker="Estratega" title="Planificador inteligente" sprite="sword" right={<Button onClick={() => openModal({ type: 'pack' })}>✨ Importar pack de IA</Button>} />
 
       <ol className="wizard" aria-label="Pasos">
         {STEPS.map((s, i) => (
@@ -197,7 +197,7 @@ export default function Planificador() {
       </ol>
 
       {step === 0 && (
-        <Panel kicker="// Paso 1" title="¿Qué quieres aprender?">
+        <Panel kicker="Paso 1" title="¿Qué quieres aprender?">
           <div className="form">
             <Field label="Tu objetivo" hint="Escríbelo con tus palabras: «Aprender análisis de datos», «Inglés B1», «Crear mi portafolio web»…">
               {(id) => <TextInput id={id} className="input" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Quiero aprender análisis de datos" maxLength={120} autoFocus />}
@@ -228,7 +228,7 @@ export default function Planificador() {
 
       {step === 1 && (
         <div className="cols cols--side">
-          <Panel kicker="// Paso 2" title="¿Cuánto tiempo tienes?">
+          <Panel kicker="Paso 2" title="¿Cuánto tiempo tienes?">
             <p className="muted small">Marca cuánto puedes estudiar cada día de la semana. Los días en «libre» no se planifican.</p>
             <WorksQuestion />
             <div className="presets">
@@ -280,12 +280,12 @@ export default function Planificador() {
           </Panel>
 
           <div className="stack">
-            <Panel kicker="// Agenda actual" title="Lo que ya tienes">
+            <Panel kicker="Agenda actual" title="Lo que ya tienes">
               <p className="muted small">
                 Tus tareas con fecha y tus hábitos medidos en minutos ya ocupan <b>{hours(busyTotal)}</b> de aquí al plazo. El plan los descuenta para no saturarte.
               </p>
             </Panel>
-            <Panel kicker="// Paso 3" title="Elige cómo crear tu ruta" tone="yellow">
+            <Panel kicker="Paso 3" title="Elige cómo crear tu ruta" tone="yellow">
               {error && (
                 <div className="form__error" role="alert">
                   <p>
@@ -380,7 +380,7 @@ export default function Planificador() {
         <div className="cols cols--side">
           <div className="stack">
             <Panel
-              kicker={source === 'ai' ? '// Ruta generada con IA' : source === 'manual' ? '// Tu ruta' : '// Ruta de plantilla'}
+              kicker={source === 'ai' ? 'Ruta generada con IA' : source === 'manual' ? 'Tu ruta' : 'Ruta de plantilla'}
               title="Edita tu ruta"
               right={<Tag tone={source === 'ai' ? 'green' : 'plain'}>{source === 'ai' ? `✨ ${modelName(lastUsed ?? model)}` : source === 'manual' ? '✍ Hecha por ti' : 'Plantilla'}</Tag>}
             >
@@ -389,7 +389,7 @@ export default function Planificador() {
               <RouteEditor roadmap={roadmap} onChange={setRoadmap} />
             </Panel>
 
-            <Panel kicker="// Calendario" title="Tu línea de tiempo">
+            <Panel kicker="Calendario" title="Tu línea de tiempo">
               {!schedule ? (
                 <p className="muted">Completa la ruta (a la izquierda) para ver tu calendario.</p>
               ) : schedule.ok ? (
@@ -418,7 +418,7 @@ export default function Planificador() {
           </div>
 
           <div className="stack">
-            <Panel kicker="// Resumen" title="Tu plan">
+            <Panel kicker="Resumen" title="Tu plan">
               {!schedule && (
                 <>
                   <ul className="planner__problems" role="status">

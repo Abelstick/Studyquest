@@ -111,7 +111,7 @@ function Quiz() {
 export function ConceptGuide() {
   const { closeModal, openModal } = useUi();
   return (
-    <Modal title="¿Tarea, hábito, meta o proyecto?" kicker="// Guía rápida" onClose={closeModal} wide>
+    <Modal title="¿Tarea, hábito, meta o proyecto?" kicker="Guía rápida" onClose={closeModal} wide>
       <div className="guide">
         <p>
           Todo se decide con una pregunta: <b>¿qué quieres conseguir y cómo?</b> Aquí tienes las cuatro opciones, con varios ejemplos de cada una, lo que <b>no</b> es, ejemplos completos y un mini test para practicar.

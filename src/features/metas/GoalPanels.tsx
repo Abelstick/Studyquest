@@ -26,7 +26,7 @@ export function GoalSmartPanel({ goal }: Readonly<{ goal: Goal }>) {
   const missing = items.filter((i) => !i.ok);
 
   return (
-    <Panel kicker="// Meta SMART" title={`${score} de 5 criterios`} right={<AreaTag area={goal.area} />}>
+    <Panel kicker="Meta SMART" title={`${score} de 5 criterios`} right={<AreaTag area={goal.area} />}>
       {goal.deadline ? (
         <div className="goalpace">
           <div className="split">
@@ -101,7 +101,7 @@ export function GoalActionsPanel({ goal }: Readonly<{ goal: Goal }>) {
   const empty = actions.tasks.length + actions.habits.length === 0;
 
   return (
-    <Panel kicker="// Acciones" title="Lo que la hace avanzar">
+    <Panel kicker="Acciones" title="Lo que la hace avanzar">
       {empty ? (
         <p className="muted small">Una meta se cumple con acciones: tareas con fecha y hábitos que repites. Crea la primera ya enlazada a esta meta.</p>
       ) : (
@@ -162,7 +162,7 @@ export function GoalActionsPanel({ goal }: Readonly<{ goal: Goal }>) {
 export function GoalIfThenPanel({ goal }: Readonly<{ goal: Goal }>) {
   if (!goal.ifThen?.length) return null;
   return (
-    <Panel kicker="// Si… entonces…" title="Tu plan para los imprevistos">
+    <Panel kicker="Si… entonces…" title="Tu plan para los imprevistos">
       <IfThenList plans={goal.ifThen} />
     </Panel>
   );

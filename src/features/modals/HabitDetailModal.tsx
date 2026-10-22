@@ -74,7 +74,7 @@ export function HabitDetailModal({ id }: { id: string }) {
   ];
 
   return (
-    <Modal title={habit.title} kicker={quit ? '// Mal hábito a dejar' : '// Hábito'} onClose={close} wide>
+    <Modal title={habit.title} kicker={quit ? 'Mal hábito a dejar' : 'Hábito'} onClose={close} wide>
       <div className="detail__status">
         <Tag tone={status.tone}>{state === 'done' ? `✔ ${doneText}` : status.label}</Tag>
         <Tag tone="xp">+{habit.xp} XP</Tag>

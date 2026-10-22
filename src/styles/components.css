@@ -29,7 +29,6 @@
 }
 .muted {
   color: var(--muted);
-  font-weight: 700;
 }
 .small {
   font-size: 12px;
@@ -49,36 +48,51 @@
   background: none;
   border: 0;
   padding: 0;
-  color: var(--blue);
-  font-weight: 900;
+  color: inherit;
+  font-weight: 700;
   text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 .back {
   align-self: flex-start;
-  display: inline-block;
-  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 12px;
   background: var(--hud);
-  color: #fff;
-  border: var(--bw) solid var(--line);
-  font-family: var(--font-pixel);
+  color: var(--hud-text);
+  border: var(--bw) solid var(--hud-edge);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
 }
 .back:hover {
-  color: var(--yellow);
+  border-color: var(--on-page-muted);
 }
+/* Rótulo suelto sobre la caja carbón: texto crema con una raya amarilla, sin placa. */
 .stack > .kicker,
 .section-title {
   align-self: flex-start;
-  display: inline-block;
-  padding: 6px 10px;
-  margin-bottom: 4px;
-  background: var(--hud);
-  color: var(--yellow);
-  border: var(--bw) solid var(--line);
-  font-family: var(--font-pixel);
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-1);
+  color: var(--on-page);
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   line-height: 1.5;
+}
+.stack > .kicker::before,
+.section-title::before {
+  content: '';
+  width: 24px;
+  height: 2px;
+  background: var(--yellow);
 }
 .section-title {
   margin-bottom: 14px;
@@ -121,45 +135,47 @@
   gap: 8px;
 }
 
-/* ===== Paneles ===== */
+/* ===== Paneles: etiquetas crema pegadas sobre la caja. Borde de 1 px, sin sombra ===== */
 .panel {
   background: var(--panel);
+  color: var(--text);
   border: var(--bw) solid var(--line);
-  box-shadow: var(--sh);
-  padding: 18px;
+  padding: var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--sp-4);
   min-width: 0;
 }
+/* El tono va en una franja superior fina: identifica sin pintar el panel entero. */
 .panel--yellow {
-  background: linear-gradient(var(--panel), var(--panel)) padding-box;
-  border-top: 8px solid var(--yellow);
+  border-top: 4px solid var(--yellow);
 }
 .panel--green {
-  border-top: 8px solid var(--green);
+  border-top: 4px solid var(--green);
 }
 .panel--red {
-  border-top: 8px solid var(--red);
+  border-top: 4px solid var(--red);
 }
 .panel__head {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 12px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
-  padding-bottom: 12px;
-  border-bottom: 2px dashed var(--line-soft);
+  padding-bottom: var(--sp-3);
+  border-bottom: var(--bw) solid var(--line-soft);
 }
 .panel__title {
-  font-family: var(--font-pixel);
-  font-size: 12px;
-  line-height: 1.5;
-  text-transform: uppercase;
-  margin-top: 4px;
+  margin-top: 2px;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
 }
 .panel__title--big {
-  font-size: 16px;
+  font-size: var(--fs-xl);
 }
 
 /* ===== Secciones plegables (ui/Fold.tsx) ===== */
@@ -226,13 +242,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: var(--sp-4);
   flex-wrap: wrap;
-  padding: 16px 18px;
+  padding: var(--sp-5);
   background: var(--panel);
+  color: var(--text);
   border: var(--bw) solid var(--line);
-  box-shadow: var(--sh);
-  border-left: 10px solid var(--red);
+  border-top: 4px solid var(--yellow);
 }
 .page-head--big {
   align-items: flex-end;
@@ -261,14 +277,16 @@
 .page-title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-family: var(--font-pixel);
-  font-size: 18px;
-  line-height: 1.4;
-  text-transform: uppercase;
+  gap: var(--sp-3);
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: clamp(28px, 3.4vw, 44px);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
 }
 .page-title--big {
-  font-size: 22px;
+  font-size: clamp(32px, 4.4vw, 56px);
   align-items: flex-start;
 }
 .big-num {
@@ -284,97 +302,111 @@
   gap: 6px;
 }
 
-/* ===== Botones (estilo NES: sombra dura + pulsación) ===== */
+/*
+ * ===== Botones =====
+ * Rótulo condensado en mayúsculas. Los secundarios son planos con borde de 1 px; solo la acción principal
+ * (amarilla) es un botón físico de máquina: tiene sombra dura y se hunde al pulsarlo. Esa diferencia es la
+ * jerarquía: en cada pantalla, lo único que «se puede apretar» de verdad es lo que importa.
+ */
 .btn {
-  --bg: var(--panel);
-  --fg: var(--text);
+  --bg: transparent;
+  --fg: currentColor;
+  --edge: currentColor;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: 10px 16px;
   background: var(--bg);
   color: var(--fg);
-  border: var(--bw) solid var(--line);
-  box-shadow: 0 4px 0 var(--shadow);
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  line-height: 1.3;
+  border: var(--bw) solid var(--edge);
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   text-align: center;
-  transition: transform 0.07s steps(2), box-shadow 0.07s steps(2), filter 0.07s steps(2);
+  transition:
+    transform var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out);
 }
 a.btn {
   color: var(--fg);
 }
-/* Gramática de todo el juego: al pasar por encima el bloque se levanta, al pulsarlo se hunde. */
 .btn:hover:not(:disabled) {
-  filter: brightness(1.08);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 var(--shadow);
+  background-color: color-mix(in srgb, currentColor 8%, var(--bg));
 }
 .btn:active:not(:disabled) {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 var(--shadow);
-  filter: brightness(0.96);
-}
-.btn--plain:hover:not(:disabled),
-.btn--plain:active:not(:disabled) {
-  box-shadow: none;
+  transform: translateY(1px);
 }
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.btn--primary {
-  --bg: var(--red);
-  --fg: var(--on-red);
-}
+.btn--primary,
 .btn--coin {
   --bg: var(--yellow);
   --fg: var(--on-yellow);
+  --edge: var(--ink);
+  box-shadow: var(--sh-press);
+}
+.btn--primary:hover:not(:disabled),
+.btn--coin:hover:not(:disabled) {
+  background-color: var(--yellow);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 var(--ink);
+}
+.btn--primary:active:not(:disabled),
+.btn--coin:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--ink);
 }
 .btn--green {
   --bg: var(--green);
   --fg: var(--on-green);
+  --edge: var(--green);
 }
 .btn--danger {
-  --bg: transparent;
   --fg: var(--red-text);
-  border-color: var(--red-text);
-  box-shadow: 0 3px 0 var(--red-text);
+  --edge: var(--red-text);
 }
 .btn--ink {
   --bg: var(--ink);
-  --fg: #ffd23f;
-  padding: 14px 20px;
+  --fg: var(--yellow);
+  --edge: var(--ink);
+  padding: 14px 22px;
 }
 .btn--sm {
-  padding: 7px 10px;
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 13px;
 }
 .btn--block {
   width: 100%;
 }
 .btn--plain {
-  box-shadow: none;
+  --edge: transparent;
 }
 
 /* ===== Barras de progreso segmentadas ===== */
+/* La barra avanza a saltos (steps): se llena como un medidor de juego, no como una barra de carga. */
 .bar {
-  height: 16px;
+  height: 12px;
   background: var(--bar-bg);
   border: var(--bw) solid var(--line);
-  padding: 2px;
   position: relative;
 }
 .bar--tall {
-  height: 26px;
+  height: 20px;
 }
 .bar__fill {
   height: 100%;
   min-width: 0;
   transition: width 0.45s steps(12);
-  background-image: repeating-linear-gradient(90deg, transparent 0 9px, rgba(0, 0, 0, 0.25) 9px 11px);
 }
 .bar__fill--green {
   background-color: var(--green);
@@ -404,12 +436,15 @@ a.btn {
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 7px;
-  font-family: var(--font-pixel);
+  gap: var(--sp-1);
+  padding: 3px 7px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
   line-height: 1.3;
   text-transform: uppercase;
-  border: 2px solid var(--line);
+  border: var(--bw) solid var(--line);
   white-space: nowrap;
   background: var(--panel-2);
   color: var(--text);
@@ -417,22 +452,26 @@ a.btn {
 .tag--xp {
   background: var(--yellow);
   color: var(--on-yellow);
+  border-color: var(--ink);
+  font-family: var(--font-num);
+  font-size: 13px;
+  letter-spacing: 0.02em;
 }
 .tag--green {
   background: var(--green);
-  color: #fff;
+  color: var(--on-green);
 }
 .tag--red {
-  background: var(--red);
-  color: #fff;
+  background: var(--alert);
+  color: var(--on-red);
 }
 .tag--blue {
   background: var(--blue);
-  color: #fff;
+  color: var(--on-red);
 }
 .tag--dark {
   background: var(--hud);
-  color: #fff;
+  color: var(--hud-text);
 }
 .tag--plain {
   background: transparent;
@@ -457,29 +496,32 @@ a.btn {
   gap: 6px;
 }
 .chip {
-  padding: 7px 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 12px;
   background: transparent;
-  border: 2px solid var(--line-soft);
+  border: var(--bw) solid var(--line-soft);
   color: var(--muted);
-  font-weight: 800;
-  font-size: 13px;
-  transition: transform 0.07s steps(2), border-color 0.07s steps(2), color 0.07s steps(2), box-shadow 0.07s steps(2);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  transition:
+    border-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
 }
 .chip:hover {
   border-color: var(--line);
   color: var(--text);
-  transform: translateY(-2px);
-  box-shadow: var(--sh-sm);
 }
 .chip:active {
   transform: translateY(1px);
-  box-shadow: none;
 }
 .chip.is-on {
   background: var(--yellow);
-  border-color: var(--line);
+  border-color: var(--ink);
   color: var(--on-yellow);
-  box-shadow: var(--sh-sm);
 }
 .chip--sm {
   padding: 4px 8px;
@@ -488,20 +530,23 @@ a.btn {
   display: flex;
   border: var(--bw) solid var(--line);
   background: var(--panel);
+  color: var(--text);
 }
+/* Selector segmentado: la opción elegida es una placa de tinta, como una tecla bajada. */
 .seg__opt {
   flex: 1;
+  min-height: 40px;
   padding: 8px 12px;
   background: transparent;
   border: 0;
-  font-family: var(--font-pixel);
-  text-transform: uppercase;
+  font-size: var(--fs-sm);
+  font-weight: 700;
   color: var(--muted);
   white-space: nowrap;
-  transition: background-color 0.07s steps(2), color 0.07s steps(2);
+  transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
 }
 .seg__opt + .seg__opt {
-  border-left: 2px solid var(--line-soft);
+  border-left: var(--bw) solid var(--line-soft);
 }
 .seg__opt:hover:not(.is-on) {
   background: var(--panel-3);
@@ -511,8 +556,12 @@ a.btn {
   transform: translateY(1px);
 }
 .seg__opt.is-on {
-  background: var(--red);
-  color: #fff;
+  background: var(--ink);
+  color: var(--cream);
+}
+:root[data-theme='dark'] .seg__opt.is-on {
+  background: var(--cream);
+  color: var(--ink);
 }
 
 /* ===== Formularios ===== */
@@ -531,17 +580,19 @@ a.btn {
 }
 .form__error {
   padding: 10px 12px;
-  border: 2px solid var(--red);
+  border: var(--bw) solid var(--red);
+  border-left-width: 4px;
   color: var(--red-text);
   background: var(--panel-2);
-  font-weight: 800;
+  font-weight: 700;
 }
 .form__info {
   padding: 10px 12px;
-  border: 2px solid var(--green);
+  border: var(--bw) solid var(--green);
+  border-left-width: 4px;
   color: var(--green-text);
   background: var(--panel-2);
-  font-weight: 800;
+  font-weight: 700;
 }
 .field {
   display: flex;
@@ -550,13 +601,15 @@ a.btn {
   min-width: 0;
 }
 .field__label {
-  font-family: var(--font-pixel);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--muted);
   line-height: 1.5;
 }
 .field__hint {
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--muted);
 }
 .input {
@@ -565,19 +618,20 @@ a.btn {
   background: var(--field);
   color: var(--text);
   border: var(--bw) solid var(--line);
-  font-weight: 700;
   border-radius: 0;
   min-height: 44px;
 }
+/* El campo activo lleva el mismo foco de dos tonos que el resto: un contorno no basta sobre la crema. */
 .input:focus-visible {
-  outline: none;
-  border-color: var(--focus);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
+  outline: 3px solid var(--focus);
+  outline-offset: 0;
+  box-shadow: 0 0 0 6px var(--focus-ink);
 }
 .input--xp {
   background: var(--yellow);
   color: var(--ink);
-  font-weight: 900;
+  font-family: var(--font-num);
+  font-size: 18px;
 }
 .input--inline {
   width: auto;
@@ -589,7 +643,7 @@ textarea.input {
   min-height: 84px;
 }
 .fieldset {
-  border: 2px dashed var(--line-soft);
+  border: var(--bw) solid var(--line-soft);
   padding: 12px 14px 14px;
   margin: 0;
   display: flex;
@@ -612,17 +666,22 @@ textarea.input {
   gap: 4px;
 }
 .weekdays__day {
-  padding: 10px 0;
+  min-height: 40px;
+  padding: 8px 0;
   background: transparent;
-  border: 2px solid var(--line-soft);
-  font-family: var(--font-pixel);
-  font-size: 10px;
+  border: var(--bw) solid var(--line-soft);
+  font-size: var(--fs-sm);
+  font-weight: 700;
   color: var(--muted);
 }
 .weekdays__day.is-on {
-  background: var(--red);
-  border-color: var(--line);
-  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--cream);
+}
+:root[data-theme='dark'] .weekdays__day.is-on {
+  background: var(--cream);
+  color: var(--ink);
 }
 .counter {
   display: flex;
@@ -633,9 +692,8 @@ textarea.input {
 .counter__value {
   flex: 1;
   text-align: center;
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  text-transform: uppercase;
+  font-family: var(--font-num);
+  font-size: 16px;
 }
 
 /* ===== Modal ===== */
@@ -657,9 +715,10 @@ textarea.input {
 .modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(5, 5, 20, 0.72);
-  animation: fade 0.15s linear;
+  background: rgba(15, 17, 21, 0.78);
+  animation: fade var(--dur-micro) var(--ease-out);
 }
+/* Un modal es una etiqueta grande con cabecera de carcasa: borde de tinta, sin sombra difusa. */
 .modal {
   position: relative;
   width: 560px;
@@ -667,9 +726,9 @@ textarea.input {
   max-height: calc(100dvh - 32px);
   overflow: auto;
   background: var(--panel);
-  border: var(--bw) solid var(--line);
-  box-shadow: 8px 8px 0 var(--shadow);
-  animation: pop 0.2s steps(5);
+  color: var(--text);
+  border: var(--bw) solid var(--ink);
+  animation: pop 0.3s var(--ease-out);
 }
 .modal--wide {
   width: 660px;
@@ -681,34 +740,36 @@ textarea.input {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
   background: var(--hud);
-  color: #fff;
-  border-bottom: var(--bw) solid var(--line);
+  color: var(--hud-text);
+  border-bottom: var(--bw) solid var(--ink);
 }
 .modal__head .kicker {
-  color: var(--yellow);
+  color: var(--on-page-muted);
 }
 .modal__title {
-  font-family: var(--font-pixel);
-  font-size: 13px;
-  text-transform: uppercase;
-  margin-top: 6px;
-  line-height: 1.4;
+  margin-top: 2px;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
 }
 .modal__body {
-  padding: 20px 18px 22px;
+  padding: var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
 }
 .modal__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 16px;
-  border-top: 2px dashed var(--line-soft);
+  gap: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: var(--bw) solid var(--line-soft);
 }
 .modal__actions--center {
   justify-content: center;
@@ -721,12 +782,13 @@ textarea.input {
   height: 100%;
   overflow: auto;
   background: var(--panel);
-  border-left: var(--bw) solid var(--line);
-  animation: slide-in 0.2s steps(6);
+  color: var(--text);
+  border-left: var(--bw) solid var(--ink);
+  animation: slide-in 0.3s var(--ease-out);
 }
 .drawer__bar {
   padding: 10px 18px;
-  border-bottom: 2px dashed var(--line-soft);
+  border-bottom: var(--bw) solid var(--line-soft);
 }
 .drawer__empty {
   padding: 24px 18px;
@@ -742,11 +804,11 @@ textarea.input {
   border-bottom: 1px solid var(--line-soft);
 }
 .notif.is-unread {
-  background: color-mix(in srgb, var(--yellow) 16%, transparent);
-  box-shadow: inset 4px 0 0 var(--red);
+  background: var(--panel-2);
+  box-shadow: inset 4px 0 0 var(--yellow);
 }
 .notif__title {
-  font-weight: 900;
+  font-weight: 700;
   margin: 3px 0;
 }
 @keyframes fade {
@@ -757,7 +819,7 @@ textarea.input {
 @keyframes pop {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: translateY(12px);
   }
 }
 @keyframes slide-in {
@@ -778,26 +840,26 @@ textarea.input {
   align-items: flex-end;
   pointer-events: none;
 }
+/* Aviso: placa de carcasa con una franja de color a la izquierda que dice de qué tipo es. */
 .toast {
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   max-width: min(92vw, 380px);
   padding: 12px 16px;
   text-align: left;
   background: var(--hud);
-  color: #fff;
-  border: var(--bw) solid var(--yellow);
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  color: var(--hud-text);
+  border: var(--bw) solid var(--hud-edge);
+  border-left: 4px solid var(--yellow);
   animation: toast-in 0.3s steps(6);
 }
 .toast--error {
-  border-color: var(--red);
+  border-left-color: var(--red);
 }
 .toast--reminder {
-  border-color: var(--orange);
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(240, 138, 28, 0.35);
+  border-left-color: var(--orange);
 }
 .toast__shake {
   animation: shake 0.6s steps(6) 3;
@@ -811,11 +873,11 @@ textarea.input {
   }
 }
 .toast--info {
-  border-color: var(--blue);
+  border-left-color: var(--blue);
 }
 .toast__xp {
-  font-family: var(--font-pixel);
-  font-size: 18px;
+  font-family: var(--font-num);
+  font-size: 24px;
   color: var(--yellow);
   animation: coin-jump 0.5s steps(6);
 }
@@ -825,20 +887,20 @@ textarea.input {
   min-width: 0;
 }
 .toast__title {
-  font-family: var(--font-pixel);
-  text-transform: uppercase;
-  line-height: 1.5;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.4;
 }
 .toast__body {
-  font-size: 12px;
-  color: #cfcfe8;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  color: var(--on-page-muted);
 }
 .toast__coins {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-family: var(--font-pixel);
+  font-family: var(--font-num);
+  font-size: 16px;
   color: var(--yellow);
   margin-left: auto;
 }
@@ -873,6 +935,7 @@ textarea.input {
 }
 
 /* ===== Subida de nivel ===== */
+/* La entrada la anima GSAP (ui/motion · useLevelUpIntro): aquí solo el estado final. */
 .levelup {
   position: fixed;
   inset: 0;
@@ -880,52 +943,52 @@ textarea.input {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  background: rgba(5, 5, 20, 0.85);
-  animation: fade 0.2s linear;
+  padding: var(--sp-4);
+  background: rgba(15, 17, 21, 0.86);
 }
+/* Es el único momento en que el amarillo ocupa una superficie entera: subir de nivel es el gran premio. */
 .levelup__card {
   position: relative;
   width: 520px;
   max-width: 100%;
-  padding: 26px 26px 28px;
+  padding: var(--sp-6);
   background: var(--yellow);
   color: var(--ink);
-  border: 5px solid var(--ink);
-  box-shadow: 8px 8px 0 #000;
-  text-align: center;
-  animation: pop 0.35s steps(6);
+  border: var(--bw-strong) solid var(--ink);
+  box-shadow: 8px 8px 0 var(--ink);
 }
 .levelup__blink {
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  animation: blink 1s steps(2) infinite;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
 }
 .levelup__level {
-  font-family: var(--font-pixel);
-  font-size: 38px;
-  margin: 16px 0 8px;
-  text-transform: uppercase;
-  text-shadow: 4px 4px 0 #fff;
+  margin: var(--sp-2) 0 var(--sp-1);
+  font-family: var(--font-num);
+  font-size: var(--fs-mega);
+  font-weight: 700;
+  line-height: 0.85;
 }
 .levelup__rank {
-  font-weight: 900;
-  font-size: 20px;
-  margin-bottom: 18px;
+  margin-bottom: var(--sp-5);
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  line-height: 1;
 }
 .levelup__list {
   display: grid;
-  gap: 8px;
-  margin-bottom: 20px;
-  text-align: left;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
 }
 .levelup__list li {
   display: flex;
-  gap: 12px;
+  gap: var(--sp-3);
   align-items: center;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 3px solid var(--ink);
+  border: var(--bw) solid var(--ink);
 }
 .levelup__list b {
   display: block;
@@ -990,10 +1053,11 @@ textarea.input {
   animation: bob 1.6s steps(4) infinite;
 }
 .empty__title {
-  font-family: var(--font-pixel);
-  font-size: 11px;
-  text-transform: uppercase;
-  line-height: 1.6;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  line-height: 1.1;
 }
 .empty__body {
   display: grid;
@@ -1103,6 +1167,7 @@ textarea.input {
   gap: 8px;
   padding: 16px 8px;
   background: var(--panel-2);
+  color: var(--text);
   border: var(--bw) solid var(--line);
   box-shadow: 0 4px 0 var(--shadow);
   font-family: var(--font-pixel);
@@ -1137,6 +1202,7 @@ textarea.input {
   gap: 10px;
   padding: 12px;
   background: var(--panel-2);
+  color: var(--text);
   border: 2px solid var(--line-soft);
 }
 .session__question {

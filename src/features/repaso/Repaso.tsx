@@ -158,7 +158,7 @@ export default function Repaso() {
   return (
     <div className="stack">
       <PageHead
-        kicker="// Repaso espaciado"
+        kicker="Repaso espaciado"
         title="Flashcards"
         sprite="note"
         right={
@@ -240,7 +240,7 @@ export default function Repaso() {
         </div>
 
         <div className="stack">
-          <Panel kicker="// Agenda" title="Próximos repasos">
+          <Panel kicker="Agenda" title="Próximos repasos">
             {upcoming.length === 0 ? (
               <p className="muted">
                 No hay repasos agendados.{' '}
@@ -262,7 +262,7 @@ export default function Repaso() {
               </ul>
             )}
           </Panel>
-          <Panel kicker="// Cómo funciona" title="1 · 3 · 7 · 14">
+          <Panel kicker="Cómo funciona" title="1 · 3 · 7 · 14">
             <p className="muted small">
               Cada tema marcado reaparece al día siguiente y, si lo recuerdas, a los <b>3</b>, <b>7</b> y <b>14 días</b>. Si fallas, empieza de nuevo. Al superar los cuatro escalones queda <b>dominado</b> y ganas un bonus de XP.
             </p>

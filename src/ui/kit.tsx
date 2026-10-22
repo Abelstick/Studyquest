@@ -336,7 +336,7 @@ export function ConfirmModal({ title, body, confirmLabel, onConfirm, extra }: { 
   // Una acción opcional que va con el borrado; se decide aquí, no a tus espaldas.
   const [marcado, setMarcado] = useState(extra?.defaultChecked ?? true);
   return (
-    <Modal title={title} kicker="// ¿Seguro?" onClose={close}>
+    <Modal title={title} kicker="¿Seguro?" onClose={close}>
       <p className="muted">{body}</p>
       {extra && (
         <label className="stepcheck confirm__extra">

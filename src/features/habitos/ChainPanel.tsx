@@ -26,7 +26,7 @@ export function Chain({ chain }: { chain: HabitChain }) {
     <section className={cx('chain', st.complete && 'is-complete')}>
       <div className="split">
         <div>
-          <p className="kicker">// Cadena de hábitos</p>
+          <p className="kicker">Cadena de hábitos</p>
           <h2 className="panel__title">{chain.name}</h2>
         </div>
         <div className="chain__head">
@@ -90,7 +90,7 @@ export function Chains() {
       <section className="panel chain__empty">
         <div className="split">
           <div>
-            <p className="kicker">// Cadena de hábitos</p>
+            <p className="kicker">Cadena de hábitos</p>
             <h2 className="panel__title">Conecta tus hábitos</h2>
           </div>
           <Sprite name="fire" size={26} />

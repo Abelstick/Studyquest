@@ -63,7 +63,7 @@ export default function HabitoDetalle() {
       </Link>
       <header className="page-head page-head--big">
         <div className="page-head__text">
-          <p className="kicker">// Habilidad pasiva · nivel {level}</p>
+          <p className="kicker">Habilidad pasiva · nivel {level}</p>
           <h1 className="page-title page-title--big">{habit.title}</h1>
           <p className="muted upper">
             {frequencyLabel(habit.frequency)} — {goalLabel(habit)} — +{habit.xp} XP
@@ -77,7 +77,7 @@ export default function HabitoDetalle() {
 
       <div className="cols">
         <div className="stack">
-          <Panel kicker="// Subtareas de la sesión">
+          <Panel kicker="Subtareas de la sesión">
             {habit.steps.length === 0 ? (
               <p className="muted">
                 Sin pasos definidos. Edita el hábito para añadir una lista (ver clase, tomar apuntes…) y tacharla en cada sesión.
@@ -106,21 +106,21 @@ export default function HabitoDetalle() {
 
           <HabitRecovery habit={habit} logs={logs} />
           {habit.ifThen && habit.ifThen.length > 0 && (
-            <Panel kicker="// Si… entonces…">
+            <Panel kicker="Si… entonces…">
               <IfThenList plans={habit.ifThen} />
             </Panel>
           )}
 
-          <Panel kicker="// Esta semana · pulsa un día para registrar avance">
+          <Panel kicker="Esta semana · pulsa un día para registrar avance">
             <HabitPeriod habit={habit} logs={logs} now={now} />
             <HabitWeek habit={habit} logs={logs} now={now} />
           </Panel>
 
-          <Panel kicker="// Historial por semanas">
+          <Panel kicker="Historial por semanas">
             <HabitHistory habit={habit} logs={logs} now={now} />
           </Panel>
 
-          <Panel kicker="// Últimas 12 semanas">
+          <Panel kicker="Últimas 12 semanas">
             <div className="heat heat--habit" role="img" aria-label={`${stats.completions} veces cumplido en total`}>
               {heat.map((c) => (
                 <span key={c.date} title={c.value > 0 ? `${c.date} · ${c.value}/${habit.target}${c.done ? '' : ' (a medias)'}` : c.date} className={cx('heat__cell', c.done && 'is-3', c.partial && 'is-partial', c.future && 'is-future')} />
@@ -136,7 +136,7 @@ export default function HabitoDetalle() {
         </div>
 
         <div className="stack">
-          <Panel kicker="// Configuración">
+          <Panel kicker="Configuración">
             <dl className="kv">
               {config.map(([k, v]) => (
                 <div key={k}>

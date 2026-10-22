@@ -107,7 +107,7 @@ export function TodayPriorities() {
   if (priorities.length < 2) return null;
 
   return (
-    <FoldPanel id="home-priorities" className="tprio" kicker="// Lo que más importa" title={`Tus ${priorities.length} prioridades de hoy`}>
+    <FoldPanel id="home-priorities" className="tprio" kicker="Lo que más importa" title={`Tus ${priorities.length} prioridades de hoy`}>
       <ul className="missions">
         {priorities.map((p) => (
           <PriorityRow key={p.task.id} p={p} />
@@ -132,7 +132,7 @@ export function TodayAgenda() {
     <FoldPanel
       id="home-agenda"
       className="tagenda"
-      kicker="// Calendario"
+      kicker="Calendario"
       title="Tu agenda de hoy"
       badge={upcoming.length}
       right={

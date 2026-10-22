@@ -97,7 +97,7 @@ export function PaceModal({ courseId }: Readonly<{ courseId?: string }>) {
   if (courseId && !course) return null;
   const nothing = lateTasks.length === 0 && pending === 0;
   return (
-    <Modal title="Ajustar plazos" kicker={`// ${course ? course.title : 'Todas las tareas'}`} onClose={close}>
+    <Modal title="Ajustar plazos" kicker={`${course ? course.title : 'Todas las tareas'}`} onClose={close}>
       <div className="stack">
         {nothing ? (
           <p className="muted">{course ? 'Este curso no tiene' : 'No tienes'} tareas pendientes con fecha. Crea tareas con fecha (o importa un pack) para poder ajustar el ritmo.</p>

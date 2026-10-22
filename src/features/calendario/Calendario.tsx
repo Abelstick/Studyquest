@@ -165,7 +165,7 @@ export default function Calendario() {
   return (
     <div className="stack">
       <PageHead
-        kicker="// Mapa del mundo"
+        kicker="Mapa del mundo"
         title="Calendario"
         sprite="flag"
         right={
@@ -319,7 +319,7 @@ export default function Calendario() {
 
         <div className="stack">
           <Panel
-            kicker={selected === now ? '// Hoy' : '// Día elegido'}
+            kicker={selected === now ? 'Hoy' : 'Día elegido'}
             title={longDate(selected)}
             right={
               <div className="row">
@@ -426,7 +426,7 @@ export default function Calendario() {
           </Panel>
 
           <Panel
-            kicker="// Bandeja"
+            kicker="Bandeja"
             title="Por programar"
             right={
               overdue.length > 0 ? (

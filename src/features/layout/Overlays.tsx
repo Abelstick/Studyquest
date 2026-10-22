@@ -6,6 +6,7 @@ import { agoLabel } from '@/core/dates';
 import type { AppNotification } from '@/core/domain';
 import { Button, ConfirmModal, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { useLevelUpIntro } from '@/ui/motion';
 import type { SpriteName } from '@/ui/sprites';
 import { TaskModal } from '../modals/TaskModal';
 import { HabitModal } from '../modals/HabitModal';
@@ -182,6 +183,8 @@ function LevelUp() {
   const info = waiting ? null : levelUp;
   const show = useUi((s) => s.showLevelUp);
   const btn = useRef<HTMLButtonElement>(null);
+  const scope = useRef<HTMLDivElement>(null);
+  useLevelUpIntro(scope, info !== null);
   useEffect(() => {
     if (!info) return;
     btn.current?.focus();
@@ -191,12 +194,12 @@ function LevelUp() {
   }, [info, show]);
   if (!info) return null;
   return (
-    <div className="levelup" role="alertdialog" aria-modal="true" aria-labelledby="lu-title">
+    <div ref={scope} className="levelup" role="alertdialog" aria-modal="true" aria-labelledby="lu-title">
       <CoinRain />
       <div className="levelup__card">
-        <p className="levelup__blink">★ ¡Subida de nivel! ★</p>
-        <h2 id="lu-title" className="levelup__level">
-          Nivel {info.level}
+        <p className="levelup__blink">¡Subida de nivel!</p>
+        <h2 id="lu-title" className="levelup__level" aria-label={`Nivel ${info.level}`}>
+          {info.level}
         </h2>
         <p className="levelup__rank">{info.rank}</p>
         <ul className="levelup__list">
@@ -317,7 +320,7 @@ function NotificationsDrawer() {
       <aside className="drawer" role="dialog" aria-modal="true" aria-label="Notificaciones">
         <div className="modal__head">
           <div>
-            <p className="kicker">// {unread} sin leer</p>
+            <p className="kicker">{unread} sin leer</p>
             <h2 className="modal__title">Mensajes</h2>
           </div>
           <button type="button" className="icon-btn" onClick={() => setOpen(false)} aria-label="Cerrar">

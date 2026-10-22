@@ -1,63 +1,222 @@
-/* ===== Hoy: panel de control del día =====
- * Cada color tiene una función: verde = hábitos (constancia), azul = tareas (plazos), rojo = vencido,
- * amarillo = XP y progreso. Lo hecho se marca con ✔ y verde. Los tonos salen de tokens.css (--habit, --task, --late). */
+/*
+ * ===== Inicio: el panel de mandos del día =====
+ * Rejilla de 12 columnas usada de forma asimétrica:
+ *   - Arriba, apoyados en el horizonte del mundo: el siguiente paso (8 columnas) y el nivel (4).
+ *   - Debajo, el resumen con casillas de tamaños distintos (6 + 2 + 2 + 2): el avance del día manda.
+ *   - Después, lo que se hace (8) y el contexto del día (4).
+ * Cada color tiene una función: amarillo = XP y la acción principal; verde = hábitos; azul = tareas;
+ * rojo = vencido. Ninguno decora.
+ */
 
-/* Inicio usa todo el ancho de la pantalla: la página se ensancha solo aquí. */
-.page:has(> .home) {
-  max-width: 1760px;
-}
 .home {
   container-type: inline-size;
+  gap: var(--sp-5);
 }
+.home__hero,
+.daysum,
 .home__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 22px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--sp-4);
   align-items: start;
+}
+.home__grid {
+  gap: var(--sp-5);
 }
 /* Cada columna es un contenedor: «Ahora» y la agenda se compactan según su columna, no según la pantalla. */
 .home__main,
 .home__rail {
   container-type: inline-size;
 }
+.home__main {
+  grid-column: 1 / span 8;
+}
+.home__rail {
+  grid-column: 9 / -1;
+}
 /* Una sola columna: el riel se funde con la principal y «Ahora» sube arriba del todo. */
-@media (max-width: 1199px) {
+@container (max-width: 940px) {
+  /* Selectores con dos clases: ganan a la columna fija de .nextstep y .levelcard, declarada más abajo. */
+  .home__hero > .nextstep,
+  .home__hero > .levelcard,
+  .home__main,
+  .home__rail {
+    grid-column: 1 / -1;
+  }
   .home__main,
   .home__rail {
     display: contents;
+  }
+  .home__grid {
+    grid-template-columns: minmax(0, 1fr);
   }
   .home__rail > .nowstrip {
     order: -1;
   }
 }
-@media (min-width: 1200px) {
-  .home__grid {
-    grid-template-columns: minmax(0, 1fr) 340px;
-  }
-}
-@media (min-width: 1680px) {
-  .home__grid {
-    grid-template-columns: minmax(0, 1fr) 400px;
-  }
-}
 
-/* ---------- Resumen del día ---------- */
-.daysum {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.daysum__tile {
+/* ---------- Siguiente paso: la etiqueta grande que se sale de la pantalla ---------- */
+.nextstep {
   --tone: var(--yellow);
+  grid-column: 1 / span 8;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
+  padding: var(--sp-6) var(--sp-6) var(--sp-5);
+  background: var(--panel);
+  color: var(--text);
+  border: var(--bw) solid var(--ink);
+  border-top: 6px solid var(--tone);
+}
+.nextstep--task-late {
+  --tone: var(--red);
+}
+.nextstep--task-today {
+  --tone: var(--task);
+}
+.nextstep--habit {
+  --tone: var(--habit);
+}
+.nextstep--clear {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 2px 10px;
-  padding: 10px 12px;
+}
+.nextstep--clear > .nextstep__actions {
+  grid-column: 1 / -1;
+}
+.nextstep__body {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+/* El dato protagonista de la app: rótulo condensado enorme. Máximo tres líneas, nunca se corta a media palabra. */
+.nextstep__title {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: var(--fs-display);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+.nextstep__detail {
+  font-size: var(--fs-md);
+  color: var(--muted);
+}
+.nextstep__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+  padding-top: var(--sp-4);
+  border-top: var(--bw) solid var(--line-soft);
+}
+.nextstep__done {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: var(--bw) solid var(--green);
+  color: var(--green-text);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+/* ---------- Ficha de nivel: un trozo de la caja carbón que asoma sobre el mundo ---------- */
+.levelcard {
+  grid-column: 9 / -1;
+  align-self: end;
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  background: var(--grain), var(--hud);
+  color: var(--hud-text);
+  border: var(--bw) solid var(--hud-edge);
+}
+.levelcard__hi {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.levelcard__name {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.levelcard__level {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-3);
+  /* El número sube por encima de la ficha y se monta sobre el cielo: el contorno de tinta lo hace legible
+     sobre cualquier mundo. */
+  margin-top: calc(-1 * clamp(48px, 7vw, 92px));
+}
+.levelcard__num {
+  font-family: var(--font-num);
+  font-size: var(--fs-mega);
+  font-weight: 700;
+  line-height: 0.8;
+  color: var(--yellow);
+  -webkit-text-stroke: 3px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 5px 5px 0 var(--ink);
+}
+.levelcard__label {
+  padding-bottom: var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--on-page-muted);
+}
+.levelcard__rank {
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  line-height: 1;
+}
+.levelcard__meta {
+  font-family: var(--font-num);
+  font-size: 15px;
+  color: var(--on-page-muted);
+}
+.levelcard__meta b {
+  font-weight: 700;
+  color: var(--yellow);
+}
+.levelcard .bar {
+  border-color: var(--hud-edge);
+  background: var(--hud-2);
+}
+.levelcard .link {
+  justify-self: start;
+  font-size: var(--fs-sm);
+  color: var(--on-page-muted);
+}
+
+/* ---------- Resumen del día: casillas de tamaños distintos ---------- */
+.daysum__tile {
+  --tone: var(--yellow);
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--sp-1) var(--sp-3);
+  min-height: 112px;
+  padding: var(--sp-4);
   background: var(--panel);
-  border: 2px solid var(--line);
-  border-top: 5px solid var(--tone);
-  box-shadow: var(--sh-sm);
+  color: var(--text);
+  border: var(--bw) solid var(--line);
+  border-top: 4px solid var(--tone);
+}
+.daysum__tile--main {
+  grid-column: span 6;
 }
 .daysum__tile--habit {
   --tone: var(--habit);
@@ -69,84 +228,90 @@
   --tone: var(--orange);
 }
 .daysum__tile.is-alert.daysum__tile--task {
-  --tone: var(--late);
-}
-.daysum__tile.is-clear {
-  background: color-mix(in srgb, var(--tone) 14%, var(--panel));
+  --tone: var(--red);
 }
 .daysum__text {
   min-width: 0;
 }
+.daysum__sprite {
+  align-self: start;
+  grid-column: 2;
+  grid-row: 1;
+}
 .daysum__k {
   margin: 0;
-  font-family: var(--font-pixel);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--muted);
 }
 .daysum__v {
-  margin: 2px 0 0;
-  font-size: 20px;
-  font-weight: 900;
-  line-height: 1.15;
+  margin: var(--sp-1) 0 0;
+  font-family: var(--font-num);
+  font-size: var(--fs-xl);
+  line-height: 1;
+}
+.daysum__tile--main .daysum__v {
+  font-size: clamp(40px, 4.6vw, 64px);
 }
 .daysum__note {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 800;
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 .daysum__tile.is-alert .daysum__note {
   color: var(--late);
+  font-weight: 700;
+}
+.daysum__tile.is-clear .daysum__v {
+  color: var(--green-text);
 }
 .daysum__bar {
   grid-column: 1 / -1;
-  height: 14px;
-  margin-top: 6px;
-}
-@media (max-width: 700px) {
-  .daysum {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-  .daysum__tile {
-    grid-column: span 2;
-    grid-template-columns: minmax(0, 1fr);
-    padding: 8px 10px;
-  }
-  .daysum__tile--main {
-    grid-column: 1 / -1;
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-  .daysum__tile:not(.daysum__tile--main) .daysum__sprite {
-    display: none;
-  }
-  .daysum__v {
-    font-size: 18px;
-  }
+  margin-top: var(--sp-2);
 }
 
 /* ---------- Tablero de misiones ---------- */
 .today-board {
   display: grid;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 .today-board__bar {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 8px 16px;
+  gap: var(--sp-2) var(--sp-4);
+}
+.today-board__bar .kicker {
+  color: var(--on-page-muted);
 }
 .today-board__title {
   margin: 0;
-  font-size: 20px;
-  font-weight: 900;
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--on-page);
 }
 .today-board__ctl {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 16px;
+  gap: var(--sp-2) var(--sp-4);
+  color: var(--on-page);
+}
+.today-board__xp {
+  font-family: var(--font-num);
+  font-size: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.today-board .today-board__xp {
+  color: var(--yellow);
 }
 .btn.mtools__toggle {
   display: none;
@@ -155,13 +320,16 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 16px;
+  gap: var(--sp-2) var(--sp-4);
+}
+.mtools .muted {
+  color: var(--on-page-muted);
 }
 .mtools__sort,
 .mtools__check {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 .mtools__sort .input {
   width: auto;
@@ -173,29 +341,31 @@
 .tabs__alert {
   min-width: 22px;
   padding: 0 6px;
-  border: 2px solid var(--line);
+  border: var(--bw) solid var(--alert);
   background: var(--alert);
-  color: var(--hud-text);
-  font-size: 12px;
+  color: var(--on-red);
+  font-family: var(--font-num);
+  font-size: 13px;
   text-align: center;
 }
 
 .lanes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-  gap: 16px;
+  gap: var(--sp-4);
   align-items: start;
 }
 .lane {
   --tone: var(--habit);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-3);
   min-width: 0;
-  padding-bottom: 12px;
-  background: color-mix(in srgb, var(--tone) 7%, var(--panel));
+  padding-bottom: var(--sp-4);
+  background: var(--panel);
+  color: var(--text);
   border: var(--bw) solid var(--line);
-  box-shadow: var(--sh);
+  border-top: 4px solid var(--tone);
 }
 .lane--task {
   --tone: var(--task);
@@ -206,8 +376,8 @@
 .lane__body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-inline: 12px;
+  gap: var(--sp-2);
+  margin-inline: var(--sp-4);
 }
 .lane__body[hidden] {
   display: none;
@@ -216,61 +386,53 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: color-mix(in srgb, var(--tone) 55%, var(--ink));
-  color: var(--hud-text);
-  border-bottom: 2px solid var(--line);
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) 0;
 }
 .lane__title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   margin: 0;
-  font-family: var(--font-pixel);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: var(--fs-lg);
+  font-weight: 800;
 }
 .lane__count {
-  padding: 2px 6px;
-  background: color-mix(in srgb, var(--ink) 40%, transparent);
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0;
+  font-family: var(--font-num);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--muted);
 }
 .lane__add {
-  width: 32px;
-  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  background: var(--yellow);
-  color: var(--on-yellow);
-  border: 2px solid var(--line);
-  box-shadow: 0 2px 0 var(--shadow);
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 1;
+  background: transparent;
+  color: var(--text);
+  border: var(--bw) solid var(--line);
   cursor: pointer;
-  transition: transform 0.07s steps(2), box-shadow 0.07s steps(2);
+  transition: background-color var(--dur-micro) var(--ease-out);
 }
 .lane__add:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 0 var(--shadow);
-}
-.lane__add:active {
-  transform: translateY(2px);
-  box-shadow: none;
+  background: var(--yellow);
+  color: var(--on-yellow);
 }
 .lane__bar {
   grid-column: 1 / -1;
-  height: 14px;
 }
 .lane__sub {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 4px 0 -2px;
-  font-family: var(--font-pixel);
+  gap: var(--sp-2);
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -278,27 +440,26 @@
   color: var(--late);
 }
 .lane__subn {
-  padding: 1px 6px;
-  border: 2px solid currentColor;
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 900;
+  font-family: var(--font-num);
+  font-size: 14px;
+  letter-spacing: 0;
 }
 .lane__empty {
-  margin-block: 4px;
+  margin-block: var(--sp-1);
 }
 
 .missions {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .missions__more {
   align-self: flex-start;
-  margin-top: 8px;
+  margin-top: var(--sp-2);
 }
 
 /* ---------- Tarjeta de misión ---------- */
@@ -308,45 +469,32 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
-  gap: 4px 12px;
-  padding: 10px 12px;
-  background: var(--panel);
-  border: 2px solid var(--line-soft);
-  border-left: 6px solid var(--tone);
+  gap: var(--sp-1) var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--field);
+  color: var(--text);
+  border: var(--bw) solid var(--line-soft);
+  border-left: 4px solid var(--tone);
   cursor: pointer;
-  transition: transform 0.08s steps(2), box-shadow 0.08s steps(2), background-color 0.08s steps(2), border-color 0.08s steps(2);
+  transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out);
 }
 .mission--task {
   --tone: var(--task);
 }
 .mission.is-late {
-  --tone: var(--late);
+  --tone: var(--red);
 }
 .mission:hover {
-  background: var(--panel-2);
   border-color: var(--line);
   border-left-color: var(--tone);
-  box-shadow: var(--sh-sm);
-  transform: translate(-1px, -1px);
 }
-.mission:active {
-  box-shadow: none;
-  transform: none;
-}
-/* Hecha: verde y tachada, pero con el mismo contraste (no se apaga con opacidad). */
+/* Hecha: tachada y con la casilla verde, pero con el mismo contraste (no se apaga con opacidad). */
 .mission.is-done {
   --tone: var(--green);
-  background: color-mix(in srgb, var(--green) 10%, var(--panel));
-}
-.mission.is-done:hover {
-  border-color: var(--line);
-  border-left-color: var(--tone);
+  background: var(--panel);
 }
 .mission.is-ready {
   border-color: var(--green);
-}
-.mission.is-fx {
-  animation: mission-clear 0.7s steps(7) 1;
 }
 .mission__body {
   display: grid;
@@ -384,8 +532,8 @@
   box-shadow: 0 0 0 6px var(--focus-ink);
 }
 .mission__title {
-  font-size: 15px;
-  font-weight: 900;
+  font-size: var(--fs-md);
+  font-weight: 700;
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
@@ -396,14 +544,14 @@
 .mission__sub,
 .mission__chain {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.35;
+  font-size: var(--fs-xs);
+  line-height: 1.4;
 }
 .mission__sub {
   color: var(--muted);
 }
 .mission__chain {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--xp-text);
 }
 .mission__meta {
@@ -419,7 +567,7 @@
   width: 100%;
   height: 6px;
   background: var(--bar-bg);
-  border: 1px solid var(--line-soft);
+  border: var(--bw) solid var(--line-soft);
 }
 .mission__meter > i {
   display: block;
@@ -428,8 +576,8 @@
 }
 .mission__ready {
   grid-column: 2 / -1;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--fs-xs);
+  font-weight: 700;
   color: var(--green-text);
 }
 .mission__subs {
@@ -455,8 +603,7 @@
   position: relative;
   z-index: 1;
 }
-
-/* La casilla es un bloque «?» esperando el golpe; en los hábitos es redonda (se repite), en las tareas cuadrada (se cierra). */
+/* La casilla: vacía espera el golpe; al pasar por encima se enciende en amarillo (es una acción principal). */
 .mission__check {
   flex: none;
   display: flex;
@@ -465,47 +612,31 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  background: var(--yellow);
-  border: var(--bw) solid var(--line);
-  box-shadow: 0 3px 0 var(--shadow);
+  background: transparent;
+  border: var(--bw-strong) solid var(--ink);
   color: var(--on-green);
-  font-size: 16px;
-  font-weight: 900;
   cursor: pointer;
-  transition: transform 0.07s steps(2), box-shadow 0.07s steps(2), filter 0.07s steps(2);
+  transition: background-color var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out);
 }
-.mission--habit .mission__check {
-  border-radius: 50%;
-}
-.mission__check:empty::after {
-  content: '?';
-  font-family: var(--font-pixel);
-  font-size: 12px;
-  color: var(--ink);
+:root[data-theme='dark'] .mission__check {
+  border-color: var(--text);
 }
 .mission__check:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 0 var(--shadow);
+  background: var(--yellow);
 }
 .mission__check:active {
-  transform: translateY(3px);
-  box-shadow: none;
+  transform: translateY(2px);
 }
 .mission__check:not(:empty) {
   background: var(--green);
-  box-shadow: none;
-  transform: translateY(3px);
-}
-:root[data-theme='dark'] .mission__check:not(:empty) {
-  color: var(--ink);
+  border-color: var(--green);
 }
 .mission.is-fx .mission__check {
-  animation: stamp 0.18s steps(3) 1;
+  animation: stamp 0.25s steps(3) 1;
 }
 .mission.is-ready .mission__check {
+  background: color-mix(in srgb, var(--green) 20%, transparent);
   border-color: var(--green);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 30%, transparent);
 }
 
 /* Prioridad como señal de cobertura: 1, 2 o 3 barras; el jefe final lleva calavera. */
@@ -542,51 +673,98 @@
   --p: var(--red);
 }
 
-@keyframes mission-clear {
-  from {
-    box-shadow: 0 0 0 5px var(--yellow);
-  }
-  to {
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-
 /* ---------- Fichas de detalle (hábito y tarea) ---------- */
 .detail__status {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-}
-:root[data-theme='dark'] .detail__status .tag--green,
-:root[data-theme='dark'] .detail__status .tag--blue {
-  color: var(--ink);
+  gap: var(--sp-2);
 }
 .detail__today {
   display: grid;
   gap: 10px;
-  padding: 12px;
+  padding: var(--sp-3);
   background: var(--panel-2);
-  border: 2px solid var(--line-soft);
+  color: var(--text);
+  border: var(--bw) solid var(--line-soft);
 }
 .detail__today.is-done {
   background: color-mix(in srgb, var(--green) 12%, var(--panel));
   border-color: var(--green);
 }
 
-/* ---------- Pantallas pequeñas: una columna a la vez y controles táctiles ---------- */
+/* ---------- Pantallas medianas: la ficha de nivel pasa arriba, a lo ancho ---------- */
+@container (max-width: 940px) {
+  .levelcard {
+    order: -1;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: var(--sp-5);
+  }
+  .levelcard > :not(.levelcard__level) {
+    grid-column: 2;
+  }
+  .levelcard__level {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    margin-top: calc(-1 * clamp(40px, 9vw, 72px));
+  }
+  .daysum__tile--main {
+    grid-column: 1 / -1;
+  }
+  .daysum__tile:not(.daysum__tile--main) {
+    grid-column: span 4;
+  }
+}
+
+/* ---------- Móvil: una columna a la vez y controles táctiles ---------- */
 @media (max-width: 700px) {
-  /* Lo importante sube: menos aire entre bloques y los eventos del día pasan al final. */
   .home,
   .home__grid {
-    gap: 14px;
+    gap: var(--sp-4);
   }
   .home__main > .events-line {
     order: 1;
   }
+  .nextstep {
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  }
+  .nextstep__title {
+    font-size: clamp(32px, 9vw, 44px);
+  }
+  .nextstep__long {
+    display: none;
+  }
+  .nextstep--clear > .sprite {
+    display: none;
+  }
+  .nextstep--clear {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nextstep__actions > * {
+    flex: 1 1 auto;
+  }
+  .levelcard {
+    padding: var(--sp-4);
+  }
+  .daysum__tile {
+    min-height: 0;
+  }
+  .daysum__tile:not(.daysum__tile--main) {
+    grid-column: span 4;
+  }
+  .daysum__tile:not(.daysum__tile--main) .daysum__sprite {
+    display: none;
+  }
+  .daysum__v {
+    font-size: 22px;
+  }
   /* El XP en juego ya está en el resumen de arriba. */
   .today-board__xp {
     display: none;
+  }
+  .today-board__title {
+    font-size: var(--fs-xl);
   }
   .btn.mtools__toggle {
     display: inline-flex;
@@ -609,10 +787,7 @@
   .lane:not(.is-shown) {
     display: none;
   }
-  .lane__add {
-    width: 44px;
-    height: 44px;
-  }
+  .lane__add,
   .mission__check {
     width: 44px;
     height: 44px;
@@ -634,7 +809,6 @@
   .lane__add {
     transition: none;
   }
-  .mission.is-fx,
   .mission.is-fx .mission__check {
     animation: none;
   }

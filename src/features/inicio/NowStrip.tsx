@@ -61,7 +61,7 @@ export function NowStrip() {
         {toClock(nowMin)}
       </div>
       <div className="nowstrip__body">
-        <p className="kicker">// Ahora {state.kind === 'block' ? '· ocupado' : state.kind === 'free' ? '· libre' : ''}</p>
+        <p className="kicker">Ahora {state.kind === 'block' ? '· ocupado' : state.kind === 'free' ? '· libre' : ''}</p>
         <h2 className="nowstrip__title">{headline}</h2>
         <p className="muted">{detail}</p>
         {next && (

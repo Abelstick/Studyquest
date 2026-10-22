@@ -80,7 +80,7 @@ export default function Certificaciones() {
   return (
     <div className="stack">
       <PageHead
-        kicker="// Vitrina de credenciales"
+        kicker="Vitrina de credenciales"
         title="Certificaciones"
         sprite="trophy"
         hint="Guarda aquí los certificados que consigues, con su enlace para abrirlos o verificarlos cuando te los pidan. Cada uno suma una pieza a tu museo."

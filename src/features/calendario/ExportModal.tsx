@@ -7,6 +7,7 @@ import { findConflicts } from '@/core/conflicts';
 import { buildCalendarIcs, isValidTimeZone, selectExport, type ExportItem } from '@/core/ics';
 import { Button, Field, Modal, cx } from '@/ui/kit';
 import { downloadText } from '@/ui/download';
+import { Icon } from '@/ui/Icon';
 
 const PRESETS: { id: string; label: string; range: (now: ISODate) => [ISODate, ISODate] }[] = [
   { id: 'today', label: 'Hoy', range: (n) => [n, n] },
@@ -128,7 +129,7 @@ export function ExportModal({ from: from0, to: to0, ids }: { from: ISODate; to: 
                 <label className="stepcheck">
                   <input type="checkbox" checked={!skipped.has(g.id)} onChange={() => setSkipped((s) => { const n = new Set(s); if (n.has(g.id)) n.delete(g.id); else n.add(g.id); return n; })} />
                   <span>
-                    {g.kind === 'deadline' ? '⚑' : g.count > 1 || g.repeats ? '↻' : '•'} {g.title}{' '}
+                    {g.kind === 'deadline' ? <Icon name="flag" size={10} /> : g.count > 1 || g.repeats ? <Icon name="sync" size={10} /> : '•'} {g.title}{' '}
                     <span className="muted small">
                       · {g.kind === 'deadline' ? `vence ${shortDate(g.first)}` : g.count > 1 ? `${g.count} veces, del ${shortDate(g.first)} al ${shortDate(g.last)}` : g.repeats ? `se repite desde ${shortDate(g.first)}` : shortDate(g.first)}
                     </span>
@@ -157,7 +158,7 @@ export function ExportModal({ from: from0, to: to0, ids }: { from: ISODate; to: 
         {conflicts > 0 && (
           <div className="form__info" role="alert">
             <p>
-              ⚠ Hay {conflicts} {conflicts === 1 ? 'cruce de horario' : 'cruces de horario'} en este rango: saldrían así en tu calendario.
+              Hay {conflicts} {conflicts === 1 ? 'cruce de horario' : 'cruces de horario'} en este rango: saldrían así en tu calendario.
             </p>
             <Button small variant="primary" onClick={() => openModal({ type: 'conflicts', from, to })}>
               Resolver los cruces
@@ -171,7 +172,7 @@ export function ExportModal({ from: from0, to: to0, ids }: { from: ISODate; to: 
 
         <div className="modal__actions">
           <Button variant="primary" onClick={download} disabled={!picked.length}>
-            📅 Descargar .ics
+            Descargar .ics
           </Button>
           <Button onClick={close}>Cancelar</Button>
         </div>

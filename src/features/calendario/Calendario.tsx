@@ -10,6 +10,7 @@ import { DAY_MIN, durationLabel, freeMinutes, occurrencesBetween, segmentsOn, to
 import { Button, PageHead, Panel, cx } from '@/ui/kit';
 import { findConflicts } from '@/core/conflicts';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 import { TimeGrid } from './TimeGrid';
 import { AgendaList } from './AgendaList';
 import { DayHabitRow, HabitDot, TaskChip, eventClass, hoursLabel, kindIcon, occurrenceLabel, rangeLabel } from './parts';
@@ -43,12 +44,12 @@ function OccurrenceRow({ o, onOpen }: { o: Occurrence; onOpen: (o: Occurrence) =
       {/* Los bloques de un hábito o tarea se dan por hechos desde el hábito o la tarea: aquí solo se cancelan. */}
       {o.status === 'pending' && !linked && (
         <Button small onClick={() => setStatus(o.event.id, o.original, 'done')} aria-label={`Marcar hecha: ${o.title}`}>
-          ✔
+          <Icon name="check" size={12} />
         </Button>
       )}
       {o.status !== 'pending' && o.exception?.status && (
         <Button small onClick={() => setStatus(o.event.id, o.original, null)} aria-label={`Volver a pendiente: ${o.title}`}>
-          ↺
+          <Icon name="sync" size={12} />
         </Button>
       )}
     </li>
@@ -204,14 +205,14 @@ export default function Calendario() {
             </Button>
             {conflictCount > 0 && (
               <Button small variant="danger" onClick={() => openModal({ type: 'conflicts' })} title="Ratos reservados que se pisan con otra cosa">
-                ⚠ {conflictCount} {conflictCount === 1 ? 'cruce' : 'cruces'}
+                {conflictCount} {conflictCount === 1 ? 'cruce' : 'cruces'}
               </Button>
             )}
             <Button small onClick={() => openModal({ type: 'routine' })} title="Tu horario de trabajo, la hora de tus hábitos y la exportación">
-              🗓 Mi semana
+              Mi semana
             </Button>
             <Button small onClick={exportVisible} title="Descarga un .ics para Google Calendar, Outlook o Apple">
-              📅 Exportar
+              Exportar
             </Button>
           </>
         }
@@ -291,12 +292,12 @@ export default function Calendario() {
                         {(e?.tasks.length ?? 0) > MAX_CHIPS && <li className="calday__more">+{(e?.tasks.length ?? 0) - MAX_CHIPS} más</li>}
                         {!!e?.upcoming.length && (
                           <li className="chip-task chip-task--ghost" title={e.upcoming.map((t) => t.title).join(', ')}>
-                            ↻ {e.upcoming.length === 1 ? e.upcoming[0].title : `${e.upcoming.length} repetidas`}
+                            <Icon name="sync" size={10} /> {e.upcoming.length === 1 ? e.upcoming[0].title : `${e.upcoming.length} repetidas`}
                           </li>
                         )}
                         {!!e?.reviews.length && (
                           <li className="chip-task chip-task--review" title="Repasos">
-                            ♪ {e.reviews.length} {e.reviews.length === 1 ? 'repaso' : 'repasos'}
+                            <Icon name="cards" size={10} /> {e.reviews.length} {e.reviews.length === 1 ? 'repaso' : 'repasos'}
                           </li>
                         )}
                       </ul>
@@ -310,7 +311,7 @@ export default function Calendario() {
           <p className="muted small calgrid__legend">
             <span className="agev agev--study agev--legend">Estudio</span> <span className="agev agev--work agev--legend">Trabajo</span> <span className="agev agev--meeting agev--legend">Reunión</span>{' '}
             <span className="agev agev--health agev--legend">Salud</span> <span className="agev agev--meal agev--legend">Comida</span> <span className="agev agev--rest agev--legend">Descanso</span>{' '}
-            <span className="agev agev--personal agev--legend">Personal</span> · ✿ hábito · ▣ tarea · ⚑ fecha límite · ↻ se repite ·{' '}
+            <span className="agev agev--personal agev--legend">Personal</span> · <Icon name="habit" size={10} /> hábito · <Icon name="task" size={10} /> tarea · <Icon name="flag" size={10} /> fecha límite · <Icon name="sync" size={10} /> se repite ·{' '}
             {view === 'week' || view === 'day'
               ? 'Pulsa una hora libre para crear. Con ratón, arrastra un bloque para moverlo o su borde inferior para cambiar la duración.'
               : 'Arrastra una tarea a otro día para cambiar su fecha. Doble clic en un día para ver sus horas.'}
@@ -342,7 +343,9 @@ export default function Calendario() {
               <p className="muted">Día libre. ¡Aprovéchalo o planifica algo!</p>
             ) : (
               <>
-                {entry.minutes > 0 && <p className="dayminutes">📚 Estudiaste {hoursLabel(entry.minutes)}</p>}
+                {entry.minutes > 0 && <p className="dayminutes">
+                    <Icon name="book" size={12} /> Estudiaste {hoursLabel(entry.minutes)}
+                  </p>}
                 {dayOccs.length > 0 && (
                   <>
                     <p className="kicker">Horario</p>
@@ -386,7 +389,7 @@ export default function Calendario() {
                         </Link>
                         {t.status !== 'done' && (
                           <Button small onClick={() => openModal({ type: 'event', taskId: t.id, date: selected })} title="Reservar tiempo en el calendario para hacerla">
-                            ⏱ Agendar
+                            Agendar
                           </Button>
                         )}
                       </div>
@@ -395,7 +398,9 @@ export default function Calendario() {
                   {entry.upcoming.map((t) => (
                     <li key={`up-${t.id}`} className="list__row">
                       <div>
-                        <p className="list__title">↻ {t.title}</p>
+                        <p className="list__title">
+                          <Icon name="sync" size={11} /> {t.title}
+                        </p>
                         <p className="muted small">Se repetirá este día · {t.recurrence ? recurrenceLabel(t.recurrence) : ''}</p>
                       </div>
                     </li>
@@ -403,7 +408,8 @@ export default function Calendario() {
                   {entry.reviews.length > 0 && (
                     <li className="list__row">
                       <div>
-                        <p className="list__title">♪ {entry.reviews.length} {entry.reviews.length === 1 ? 'repaso' : 'repasos'} de flashcards</p>
+                        <p className="list__title">
+                          <Icon name="cards" size={11} /> {entry.reviews.length} {entry.reviews.length === 1 ? 'repaso' : 'repasos'} de flashcards</p>
                         <p className="muted small">
                           {entry.reviews.map((r, i) => (
                             <span key={r.topicId}>

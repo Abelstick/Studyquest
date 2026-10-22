@@ -1,6 +1,8 @@
 import { AREAS, areaInfo, type AreaFilter } from '@/core/areas';
 import type { AreaId } from '@/core/domain';
 import { cx } from './kit';
+import { Icon } from './Icon';
+import { AREA_ICON } from './domainIcons';
 
 /** Etiqueta pequeña con el área de una tarea, hábito o meta. */
 export function AreaTag({ area, className }: Readonly<{ area?: AreaId; className?: string }>) {
@@ -8,7 +10,7 @@ export function AreaTag({ area, className }: Readonly<{ area?: AreaId; className
   const info = areaInfo(area);
   return (
     <span className={cx('tag tag--plain area-tag', className)} title={`Área: ${info.label}`}>
-      <span aria-hidden="true">{info.icon}</span> {info.label}
+      <Icon name={AREA_ICON[area]} size={10} /> {info.label}
     </span>
   );
 }
@@ -22,7 +24,7 @@ export function AreaChips({ value, onChange, label = 'Área de la vida' }: Reado
       </button>
       {AREAS.map((a) => (
         <button key={a.id} type="button" role="radio" aria-checked={value === a.id} className={cx('chip chip--sm', value === a.id && 'is-on')} onClick={() => onChange(a.id)} title={a.hint}>
-          <span aria-hidden="true">{a.icon}</span> {a.label}
+          <Icon name={AREA_ICON[a.id]} size={10} /> {a.label}
         </button>
       ))}
     </div>
@@ -37,7 +39,7 @@ export function AreaFilterSelect({ value, onChange, used, className }: Readonly<
       <option value="all">Todas las áreas</option>
       {AREAS.filter((a) => used.has(a.id)).map((a) => (
         <option key={a.id} value={a.id}>
-          {a.icon} {a.label}
+          {a.label}
         </option>
       ))}
       <option value="none">Sin área</option>

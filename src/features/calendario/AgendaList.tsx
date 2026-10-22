@@ -4,6 +4,7 @@ import { addDays, longDate } from '@/core/dates';
 import type { ISODate } from '@/core/domain';
 import { dueTimeOf } from '@/core/tasks';
 import { cx } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 import { eventClass, kindIcon, occurrenceLabel, rangeLabel } from './parts';
 
 interface Props {
@@ -42,7 +43,7 @@ export function AgendaList({ from, to, occs, entries, now, onOpen, onOpenTask, o
             {r.habits.length > 0 && (
               <span className="muted small">
                 {' '}
-                · ✿ {r.habits.filter((h) => h.done).length}/{r.habits.length} hábitos
+                · <Icon name="habit" size={10} /> {r.habits.filter((h) => h.done).length}/{r.habits.length} hábitos
               </span>
             )}
           </button>
@@ -53,9 +54,16 @@ export function AgendaList({ from, to, occs, entries, now, onOpen, onOpenTask, o
                   <span className="agev__time">{rangeLabel(o)}</span>
                   <span className="agev__title">
                     {kindIcon(o)} {o.title}
-                    {o.recurring && ' ↻'}
+                    {o.recurring && (
+                      <>
+                        {' '}
+                        <Icon name="sync" size={10} />
+                      </>
+                    )}
                   </span>
-                  {o.event.location && <span className="muted small">📍 {o.event.location}</span>}
+                  {o.event.location && <span className="muted small">
+                      <Icon name="pin" size={10} /> {o.event.location}
+                    </span>}
                 </button>
               </li>
             ))}
@@ -63,7 +71,9 @@ export function AgendaList({ from, to, occs, entries, now, onOpen, onOpenTask, o
               <li key={t.id}>
                 <button type="button" className="agenda__deadline" onClick={() => onOpenTask(t.id)}>
                   <span className="agev__time">{dueTimeOf(t) ? `Vence ${dueTimeOf(t)}` : 'Fecha límite'}</span>
-                  <span className="agev__title">⚑ {t.title}</span>
+                  <span className="agev__title">
+                    <Icon name="flag" size={11} /> {t.title}
+                  </span>
                 </button>
               </li>
             ))}

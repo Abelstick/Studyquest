@@ -7,6 +7,7 @@ import { Sprite } from '@/ui/Sprite';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { GoalActionsPanel, GoalIfThenPanel, GoalSmartPanel } from './GoalPanels';
+import { Icon } from '@/ui/Icon';
 
 export default function Metas() {
   const goals = useData((s) => s.goals);
@@ -33,12 +34,12 @@ export default function Metas() {
             <p className="muted small">Las metas se cumplen avanzando con tareas y hábitos. ¿Dudas? Pulsa «¿Cuál uso?».</p>
             <div className="row">
               <Button variant="primary" onClick={() => openModal({ type: 'goal' })}>
-                ＋ Crear mi primera meta
+                <Icon name="plus" size={12} /> Crear mi primera meta
               </Button>
               <Link className="btn btn--ghost" to="/planificador">
-                ✨ Planificar con el asistente
+                Planificar con el asistente
               </Link>
-              <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
+              <Button onClick={() => openModal({ type: 'pack' })}>Importar con IA</Button>
             </div>
           </Empty>
         </div>
@@ -71,9 +72,9 @@ export default function Metas() {
               </span>
             </div>
             <Button onClick={() => openModal({ type: 'goal', id: goal.id })}>Editar meta</Button>
-            <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
+            <Button onClick={() => openModal({ type: 'pack' })}>Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'goal' })}>
-              ＋ Nueva meta
+              <Icon name="plus" size={12} /> Nueva meta
             </Button>
           </>
         }
@@ -96,7 +97,7 @@ export default function Metas() {
             return (
               <li key={m.id} className={cx('path__item', `path__item--${state}`)}>
                 <div className="path__node" aria-hidden="true">
-                  {m.done ? '✔' : i + 1}
+                  {m.done ? <Icon name="check" size={16} /> : i + 1}
                 </div>
                 <div className="path__card">
                   <div className="split split--top">
@@ -115,7 +116,7 @@ export default function Metas() {
                           <div className="chips">
                             {m.skills.map((k) => (
                               <button key={k.id} type="button" aria-pressed={k.done} className={cx('chip chip--sm', k.done && 'is-on')} onClick={() => toggleSkill(goal.id, m.id, k.id)}>
-                                {k.label} {k.done ? '✔' : ''}
+                                {k.label} {k.done && <Icon name="check" size={10} />}
                               </button>
                             ))}
                           </div>

@@ -126,9 +126,9 @@ describe('ficha de la meta', () => {
     expect(screen.getByText('API en Node')).toBeTruthy();
     expect(screen.getByText('Estudiar')).toBeTruthy();
     expect(screen.queryByText('Otra cosa')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: '＋ Tarea' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tarea' }));
     expect(useUi.getState().modal).toEqual({ type: 'task', goalId: 'g1' });
-    fireEvent.click(screen.getByRole('button', { name: '＋ Hábito' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hábito' }));
     expect(useUi.getState().modal).toEqual({ type: 'habit', goalId: 'g1' });
   });
 });

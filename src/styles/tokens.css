@@ -143,6 +143,8 @@
   --sh: none;
   --sh-sm: none;
   --sh-press: 0 4px 0 var(--ink); /* el botón de la máquina: se hunde al pulsarlo */
+  /* Marca de verificación pixel para usar como máscara en CSS (mismo dibujo que ui/icons · check). */
+  --icon-check: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%207%207'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'6'%20y%3D'1'%20width%3D'1'%20height%3D'1'%2F%3E%3Crect%20x%3D'5'%20y%3D'2'%20width%3D'2'%20height%3D'1'%2F%3E%3Crect%20x%3D'0'%20y%3D'3'%20width%3D'1'%20height%3D'1'%2F%3E%3Crect%20x%3D'4'%20y%3D'3'%20width%3D'2'%20height%3D'1'%2F%3E%3Crect%20x%3D'0'%20y%3D'4'%20width%3D'2'%20height%3D'1'%2F%3E%3Crect%20x%3D'3'%20y%3D'4'%20width%3D'2'%20height%3D'1'%2F%3E%3Crect%20x%3D'1'%20y%3D'5'%20width%3D'3'%20height%3D'1'%2F%3E%3Crect%20x%3D'2'%20y%3D'6'%20width%3D'1'%20height%3D'1'%2F%3E%3C%2Fsvg%3E");
   /* Grano sutil, como el vinilo de una recreativa. Va en el fondo, nunca encima del texto. */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 

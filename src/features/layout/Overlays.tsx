@@ -7,6 +7,7 @@ import type { AppNotification } from '@/core/domain';
 import { Button, ConfirmModal, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { useLevelUpIntro } from '@/ui/motion';
+import { Icon } from '@/ui/Icon';
 import type { SpriteName } from '@/ui/sprites';
 import { TaskModal } from '../modals/TaskModal';
 import { HabitModal } from '../modals/HabitModal';
@@ -249,7 +250,7 @@ function Victory() {
     <div className="levelup victory" role="alertdialog" aria-modal="true" aria-labelledby="vic-title">
       <CoinRain />
       <div className="levelup__card victory__card">
-        <p className="levelup__blink">★ ¡Victoria! ★</p>
+        <p className="levelup__blink">¡Victoria!</p>
         <div className="victory__stage" aria-hidden="true">
           <span className="victory__boss">
             <Sprite name="boss" size={84} />
@@ -324,7 +325,7 @@ function NotificationsDrawer() {
             <h2 className="modal__title">Mensajes</h2>
           </div>
           <button type="button" className="icon-btn" onClick={() => setOpen(false)} aria-label="Cerrar">
-            <span aria-hidden="true">✕</span>
+            <Icon name="close" size={12} />
           </button>
         </div>
         {unread > 0 && (

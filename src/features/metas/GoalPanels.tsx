@@ -8,6 +8,7 @@ import { PACE_TEXT, actionsSummary, goalActions, goalPace, smartChecklist, smart
 import { AreaTag } from '@/ui/Area';
 import { Bar, Button, Panel, Tag, cx } from '@/ui/kit';
 import { IfThenList } from '@/ui/IfThenList';
+import { Icon } from '@/ui/Icon';
 
 const PACE_TONE: Record<PaceState, 'plain' | 'green' | 'xp' | 'red'> = { none: 'plain', done: 'green', ahead: 'green', 'on-track': 'green', behind: 'xp', overdue: 'red' };
 /** Cuántas tareas abiertas se enseñan antes de remitir a Tareas. */
@@ -148,10 +149,10 @@ export function GoalActionsPanel({ goal }: Readonly<{ goal: Goal }>) {
       )}
       <div className="row">
         <Button small onClick={() => openModal({ type: 'task', goalId: goal.id })}>
-          ＋ Tarea
+          <Icon name="plus" size={12} /> Tarea
         </Button>
         <Button small onClick={() => openModal({ type: 'habit', goalId: goal.id })}>
-          ＋ Hábito
+          <Icon name="plus" size={12} /> Hábito
         </Button>
       </div>
     </Panel>

@@ -153,7 +153,7 @@ export function MissionCard({ m }: { m: Mission }) {
       <Tag className="mission__xp" tone={m.done ? 'plain' : 'xp'}>
         +{m.xp} XP
       </Tag>
-      {ready && <span className="mission__ready">¡Todo listo! Pulsa ✔ para terminarla.</span>}
+      {ready && <span className="mission__ready">¡Todo listo! Pulsa la casilla para terminarla.</span>}
       {open && parts.length > 0 && (
         <ul className="subtasks mission__subs">
           {parts.map((p) => (

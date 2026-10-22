@@ -4,7 +4,7 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, today } from '@/core/dates';
 import { useMinuteOfDay } from './useMinuteOfDay';
-import { categoryInfo, toClock } from '@/core/agenda';
+import { toClock } from '@/core/agenda';
 import { deadlineText } from '@/core/missions';
 import { PRIORITY_REASON_TEXT, agendaToday, topPriorities, type AgendaItem, type TodayPriority } from '@/core/today';
 import { reviewOf, reviewWeekFor } from '@/core/weekReview';
@@ -12,6 +12,8 @@ import { findConflicts } from '@/core/conflicts';
 import { Button, Tag, cx } from '@/ui/kit';
 import { FoldPanel } from '@/ui/Fold';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
+import { CATEGORY_ICON } from '@/ui/domainIcons';
 
 /** Bloques de la agenda que se enseñan de entrada; el resto está en el calendario. */
 const SHOW_AGENDA = 4;
@@ -64,7 +66,6 @@ function AgendaRow({ item }: Readonly<{ item: AgendaItem }>) {
   const setEventStatus = useData((s) => s.setEventStatus);
   const openModal = useUi((s) => s.openModal);
   const { occ } = item;
-  const cat = categoryInfo(occ.event.category);
   const start = occ.start as number;
   const range = occ.minutes > 0 ? `${toClock(start)}–${toClock(start + occ.minutes)}` : toClock(start);
   const done = occ.status === 'done';
@@ -76,7 +77,7 @@ function AgendaRow({ item }: Readonly<{ item: AgendaItem }>) {
       <span className="tagenda__time">{range}</span>
       <span className="tagenda__what">
         <button type="button" className="link" onClick={() => openModal({ type: 'event', id: occ.event.id, original: occ.original })}>
-          <span aria-hidden="true">{cat.icon}</span> {occ.title}
+          <Icon name={CATEGORY_ICON[occ.event.category]} size={11} /> {occ.title}
         </button>
         {tag && <Tag tone={tag.tone}>{tag.label}</Tag>}
         {item.linked && <span className="muted small">{item.linked === 'habit' ? 'se registra en el hábito' : 'se cierra en la tarea'}</span>}
@@ -90,7 +91,7 @@ function AgendaRow({ item }: Readonly<{ item: AgendaItem }>) {
         {/* Los bloques de un hábito o una tarea nunca registran progreso por su cuenta: se cierran en su hábito o tarea. */}
         {!item.linked && (
           <Button small variant={done ? 'ghost' : 'plain'} aria-pressed={done} onClick={() => setEventStatus(occ.event.id, occ.original, done ? null : 'done')} aria-label={`${done ? 'Desmarcar' : 'Marcar como hecho'}: ${occ.title}`}>
-            {done ? '↩' : '✔'}
+            <Icon name={done ? 'sync' : 'check'} size={12} />
           </Button>
         )}
       </span>

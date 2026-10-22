@@ -7,6 +7,8 @@ import { shortDate } from '@/core/dates';
 import type { Equipped } from '@/core/domain';
 import { Bar, Button, Empty, PageHead, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
+import { Scramble } from '@/ui/motion';
 
 const EQUIP_KEY: Partial<Record<ShopItem['kind'], keyof Equipped>> = { avatar: 'avatar', frame: 'frame', world: 'world' };
 
@@ -24,7 +26,13 @@ function ShopCard({ item }: { item: ShopItem }) {
   else if (owned && !item.consumable && slot)
     cta = (
       <Button small variant={equipped ? 'green' : 'primary'} onClick={() => equip(slot, equipped ? null : item.id)} aria-pressed={equipped}>
-        {equipped ? '✔ Equipado' : 'Equipar'}
+        {equipped ? (
+            <>
+              <Icon name="check" size={12} /> Equipado
+            </>
+          ) : (
+            'Equipar'
+          )}
       </Button>
     );
   else if (owned && !item.consumable) cta = <span className="tag tag--green">En tu colección</span>;
@@ -79,8 +87,10 @@ export default function Arsenal() {
         right={
           <div className="wallet" aria-label={`${profile.credits} monedas`}>
             <Sprite name="coin" size={22} />
-            <span className="wallet__n">{profile.credits.toLocaleString('en-US')}</span>
-            {profile.streakFreezes > 0 && <span className="tag tag--blue">❄ ×{profile.streakFreezes}</span>}
+            <Scramble className="wallet__n" value={profile.credits.toLocaleString('en-US')} />
+            {profile.streakFreezes > 0 && <span className="tag tag--blue">
+            <Sprite name="snowflake" size={12} /> ×{profile.streakFreezes}
+          </span>}
           </div>
         }
       />
@@ -134,7 +144,7 @@ export default function Arsenal() {
                       </p>
                     </div>
                     <button type="button" className="icon-btn icon-btn--sm" aria-label={`Borrar ${r.title}`} onClick={() => deleteReward(r.id)}>
-                      ✕
+                      <Icon name="close" size={10} />
                     </button>
                   </div>
                   <Bar pct={(r.current / r.target) * 100} tone={ready ? 'green' : 'yellow'} label={`Avance de ${r.title}`} />
@@ -160,7 +170,9 @@ export default function Arsenal() {
               );
             })}
           </ul>
-          <Button onClick={() => openModal({ type: 'reward' })}>＋ Crear recompensa personal</Button>
+          <Button onClick={() => openModal({ type: 'reward' })}>
+              <Icon name="plus" size={12} /> Crear recompensa personal
+            </Button>
         </section>
       </div>
     </div>

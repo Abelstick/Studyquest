@@ -78,9 +78,16 @@
 .agev.is-done {
   opacity: 0.62;
 }
+/* Hecho: una marca de verificación pixel (el mismo dibujo que ui/icons · check), en el color del texto verde. */
 .agev.is-done .agev__title::after {
-  content: ' ✔';
-  color: var(--green-text);
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-left: 5px;
+  background: var(--green-text);
+  -webkit-mask: var(--icon-check) center / contain no-repeat;
+  mask: var(--icon-check) center / contain no-repeat;
 }
 .agev.is-cancelled {
   opacity: 0.5;
@@ -92,7 +99,7 @@
 .agev--legend {
   display: inline-block;
   padding: 0 6px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: default;
 }
 .agev--chip,
@@ -104,7 +111,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .agev--row {
   flex: 1;
@@ -116,13 +123,13 @@
 }
 .agev__time {
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .agev__title {
   min-width: 0;
-  font-weight: 800;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
@@ -134,13 +141,13 @@
   min-width: 0;
   background: var(--panel);
   color: var(--text);
-  border: 2px solid var(--line-soft);
+  border: var(--bw) solid var(--line-soft);
 }
 .tgrid__frame {
   /* Reserva el hueco de la barra de desplazamiento para que las cabeceras cuadren con las columnas. */
   overflow-y: hidden;
   scrollbar-gutter: stable;
-  border-bottom: 2px solid var(--line-soft);
+  border-bottom: var(--bw) solid var(--line-soft);
 }
 .tgrid__row {
   display: grid;
@@ -153,7 +160,7 @@
   align-self: center;
   padding: 0 4px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--muted);
   text-align: right;
 }
@@ -172,8 +179,9 @@
   cursor: pointer;
 }
 .tgrid__wd {
-  font-family: var(--font-pixel);
-  font-size: 10px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
   /* «DOM» no se parte aunque la columna de hoy lleve el número resaltado. */
   white-space: nowrap;
   color: var(--muted);
@@ -181,13 +189,17 @@
 }
 .tgrid__num {
   white-space: nowrap;
-  font-size: 18px;
-  font-weight: 900;
+  font-family: var(--font-num);
+  font-size: 20px;
 }
 .tgrid__dayname.is-today .tgrid__num {
   padding: 0 6px;
-  color: #fff;
-  background: var(--red);
+  color: var(--cream);
+  background: var(--ink);
+}
+:root[data-theme='dark'] .tgrid__dayname.is-today .tgrid__num {
+  color: var(--ink);
+  background: var(--cream);
 }
 .tgrid__dayname.is-selected {
   background: color-mix(in srgb, var(--yellow) 26%, transparent);
@@ -235,7 +247,7 @@
   right: 6px;
   transform: translateY(-50%);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
@@ -273,7 +285,6 @@
   overflow: hidden;
   font-size: 12px;
   line-height: 1.2;
-  box-shadow: 1px 1px 0 color-mix(in srgb, var(--shadow) 35%, transparent);
   user-select: none;
   touch-action: manipulation;
 }
@@ -284,7 +295,7 @@
 .agev--slot.is-dragging {
   z-index: 4;
   opacity: 0.85;
-  box-shadow: var(--sh);
+  outline: var(--bw-strong) solid var(--line);
   cursor: grabbing;
 }
 .agev--slot .agev__title {
@@ -302,10 +313,10 @@
   -webkit-line-clamp: 1;
 }
 .agev--slot.is-continued {
-  border-top: 2px dashed var(--ag);
+  border-top: var(--bw) dashed var(--ag);
 }
 .agev--slot.is-continues {
-  border-bottom: 2px dashed var(--ag);
+  border-bottom: var(--bw) dashed var(--ag);
 }
 /* Recordatorio: una pastilla centrada en su hora, sin ocupar tiempo. */
 .agev--point {
@@ -352,11 +363,11 @@
   text-align: right;
   font: inherit;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--red-text);
   background: transparent;
   border: 0;
-  border-top: 2px solid var(--red);
+  border-top: var(--bw) solid var(--red);
   cursor: pointer;
 }
 .tgrid__deadline.is-done {
@@ -431,11 +442,11 @@
   padding: 4px 0;
   text-align: left;
   font: inherit;
-  font-weight: 900;
+  font-weight: 700;
   color: inherit;
   background: transparent;
   border: 0;
-  border-bottom: 2px dashed var(--line-soft);
+  border-bottom: var(--bw) dashed var(--line-soft);
   cursor: pointer;
 }
 .agenda__day.is-today .agenda__date {
@@ -473,7 +484,7 @@
 }
 .more summary {
   padding: 4px 0;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 }
 .more[open] summary {
@@ -518,5 +529,5 @@
   padding: 8px;
   overflow-y: auto;
   list-style: none;
-  border: 2px dashed var(--line-soft);
+  border: var(--bw) dashed var(--line-soft);
 }

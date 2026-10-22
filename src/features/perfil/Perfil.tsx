@@ -14,6 +14,7 @@ import { useAi } from '@/ai/store';
 import { describeInvalidVapidKey, disablePush, enablePush, getPushState, showTestNotification, type PushState } from '@/pwa/push';
 import { backupFileName, buildBackup, parseBackup, summarize } from '@/core/backup';
 import type { Snapshot } from '@/core/domain';
+import { Icon } from '@/ui/Icon';
 
 const PUSH_HELP: Record<Exclude<PushState, 'off' | 'on'>, string> = {
   insecure: 'Estás en una dirección no segura (http://…). Los push solo funcionan en https o en http://localhost. Abre la app desde localhost o desde tu web https de Render.',
@@ -72,7 +73,7 @@ function PushPanel() {
       <div className="row">
         {state === 'off' && (
           <Button small variant="primary" disabled={busy} onClick={() => void run(() => enablePush(push.save), 'Recordatorios activados en este dispositivo')}>
-            🔔 Activar recordatorios
+            <Icon name="bell" size={12} /> Activar recordatorios
           </Button>
         )}
         {state === 'on' && (

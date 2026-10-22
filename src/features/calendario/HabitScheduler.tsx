@@ -8,6 +8,7 @@ import { validateEvent } from '@/core/agenda';
 import { habitBlockDrafts, habitBlocks, suggestHabitTimes } from '@/core/routine';
 import { frequencyLabel } from '@/core/game';
 import { Button, Tag } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 const PER_DAY = [1, 2, 3];
 
@@ -36,7 +37,9 @@ export function HabitScheduler({ habit }: Readonly<{ habit: Habit }>) {
     const times = [...new Set(existing.map((e) => e.start).filter((s): s is string => !!s))].sort();
     return (
       <p className="sched sched--done">
-        <Tag tone="green">✔ Con hora</Tag> {times.join(' · ')} <span className="muted small">({frequencyLabel(habit.frequency)}). Cámbiala en el </span>
+        <Tag tone="green">
+          <Icon name="check" size={10} /> Con hora
+        </Tag> {times.join(' · ')} <span className="muted small">({frequencyLabel(habit.frequency)}). Cámbiala en el </span>
         <Link to="/calendario">calendario</Link>.
       </p>
     );

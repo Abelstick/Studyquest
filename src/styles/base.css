@@ -72,6 +72,12 @@ svg {
   image-rendering: pixelated;
   flex: none;
 }
+/* Íconos de interfaz (ui/Icon): van en línea con el texto, centrados en la altura de la letra. */
+.icon {
+  display: inline-block;
+  flex: none;
+  vertical-align: -0.1em;
+}
 /*
  * Foco de teclado en DOS anillos: amarillo por dentro y carbón por fuera. El amarillo se ve sobre la caja
  * oscura; el carbón, sobre la crema. Siempre contrasta uno de los dos, esté donde esté.

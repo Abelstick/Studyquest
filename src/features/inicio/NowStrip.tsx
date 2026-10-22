@@ -7,6 +7,7 @@ import { durationLabel, toClock } from '@/core/agenda';
 import { freeTimeIdeas, nowState, type Idea } from '@/core/routine';
 import { Button } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 import { useMinuteOfDay } from './useMinuteOfDay';
 
 function IdeaChip({ idea }: Readonly<{ idea: Idea }>) {
@@ -15,7 +16,7 @@ function IdeaChip({ idea }: Readonly<{ idea: Idea }>) {
   return (
     <li>
       <button type="button" className="chip chip--sm" onClick={open} aria-haspopup="dialog">
-        {idea.kind === 'habit' ? '🌱' : '📌'} {idea.title}
+        <Icon name={idea.kind === 'habit' ? 'habit' : 'pin'} size={11} /> {idea.title}
         {idea.at ? ` · ${idea.at}` : idea.minutes ? ` · ${idea.minutes} min` : ''}
       </button>
     </li>

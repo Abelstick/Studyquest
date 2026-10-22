@@ -12,6 +12,7 @@ import { isCounter, logFor, stepForCounter } from '@/core/game';
 import { buildEventIcs } from '@/core/ics';
 import { Button, Field, Modal, Segmented, TextInput, cx } from '@/ui/kit';
 import { downloadText } from '@/ui/download';
+import { Icon } from '@/ui/Icon';
 import { ScopeChoice } from './ScopeChoice';
 
 type Kind = 'block' | 'habit' | 'task' | 'reminder';
@@ -375,7 +376,7 @@ export function EventModal(props: Props) {
                 <select id={fid} className="input" value={category} onChange={(e) => setCategory(e.target.value as AgendaCategory)}>
                   {CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value}>
-                      {c.icon} {c.label}
+                      {c.label}
                     </option>
                   ))}
                 </select>
@@ -479,7 +480,7 @@ export function EventModal(props: Props) {
                   <select id={fid} className="input" value={category} onChange={(e) => setCategory(e.target.value as AgendaCategory)}>
                     {CATEGORIES.map((c) => (
                       <option key={c.value} value={c.value}>
-                        {c.icon} {c.label}
+                        {c.label}
                       </option>
                     ))}
                   </select>
@@ -524,27 +525,28 @@ export function EventModal(props: Props) {
                   variant="primary"
                   onClick={() => setHabitValueOn(habit.id, occDate, isCounter(habit) ? (log?.value ?? 0) + stepForCounter(habit) : (log?.value ?? 0) >= habit.target ? 0 : habit.target)}
                 >
-                  {isCounter(habit) ? `＋ Registrar en «${habit.title}» (${log?.value ?? 0}/${habit.target})` : (log?.value ?? 0) >= habit.target ? '↺ Desmarcar hábito' : '✔ Marcar hábito'}
+                  <Icon name={isCounter(habit) ? 'plus' : (log?.value ?? 0) >= habit.target ? 'sync' : 'check'} size={12} />{' '}
+                  {isCounter(habit) ? `Registrar en «${habit.title}» (${log?.value ?? 0}/${habit.target})` : (log?.value ?? 0) >= habit.target ? 'Desmarcar hábito' : 'Marcar hábito'}
                 </Button>
               )}
               {task && (
                 <Button small variant={task.status === 'done' ? 'ghost' : 'primary'} onClick={() => setTaskStatus(task.id, task.status === 'done' ? 'todo' : 'done')}>
-                  {task.status === 'done' ? '↺ Reabrir tarea' : '✔ Completar tarea'}
+                  <Icon name={task.status === 'done' ? 'sync' : 'check'} size={12} /> {task.status === 'done' ? 'Reabrir tarea' : 'Completar tarea'}
                 </Button>
               )}
               {!habit && !task && occ.status !== 'done' && (
                 <Button small onClick={() => setEventStatus(editing.id, occ.original, 'done')}>
-                  ✔ Marcar hecha
+                  <Icon name="check" size={12} /> Marcar hecha
                 </Button>
               )}
               {occ.status !== 'cancelled' && (
                 <Button small onClick={() => setEventStatus(editing.id, occ.original, 'cancelled')}>
-                  ✕ Cancelar este día
+                  <Icon name="close" size={10} /> Cancelar este día
                 </Button>
               )}
               {occ.exception?.status && (
                 <Button small onClick={() => setEventStatus(editing.id, occ.original, null)}>
-                  ↺ Volver a pendiente
+                  <Icon name="sync" size={12} /> Volver a pendiente
                 </Button>
               )}
             </div>
@@ -565,7 +567,7 @@ export function EventModal(props: Props) {
           {editing && (
             <>
               <Button onClick={exportOne} title="Descarga esta actividad (con su repetición) como .ics">
-                📅 .ics
+                Descargar .ics
               </Button>
               <Button
                 variant="danger"

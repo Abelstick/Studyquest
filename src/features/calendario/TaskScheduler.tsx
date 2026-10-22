@@ -37,7 +37,7 @@ export function TaskScheduler({ task }: Readonly<{ task: Task }>) {
         <ul className="sched__list">
           {blocks.slice(0, 4).map((b) => (
             <li key={b.id}>
-              <Tag tone="green">🕒</Tag> {slotLabel({ date: b.date, start: b.start ?? '00:00', minutes: b.minutes }, now)}
+              <Tag tone="green">Reservado</Tag> {slotLabel({ date: b.date, start: b.start ?? '00:00', minutes: b.minutes }, now)}
             </li>
           ))}
         </ul>
@@ -78,7 +78,7 @@ export function TaskScheduler({ task }: Readonly<{ task: Task }>) {
         <>
           <ul className="sched__list">
             {plan.slots.map((s) => (
-              <li key={`${s.date}${s.start}`}>🕒 {slotLabel(s, now)}</li>
+              <li key={`${s.date}${s.start}`}>{slotLabel(s, now)}</li>
             ))}
           </ul>
           <div className="row">
@@ -90,7 +90,7 @@ export function TaskScheduler({ task }: Readonly<{ task: Task }>) {
       ) : (
         <p className="muted small">No encuentro un rato libre antes de su plazo. Libera tiempo en el calendario o muévele la fecha.</p>
       )}
-      {plan && plan.unplaced.length > 0 && plan.slots.length > 0 && <p className="muted small">⚠ No cabe todo antes del plazo: faltarían {plan.unplaced[0].left} min. Considera moverle la fecha.</p>}
+      {plan && plan.unplaced.length > 0 && plan.slots.length > 0 && <p className="muted small">No cabe todo antes del plazo: faltarían {plan.unplaced[0].left} min. Considera moverle la fecha.</p>}
     </div>
   );
 }

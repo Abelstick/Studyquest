@@ -9,6 +9,7 @@ import { PHASE_LABEL, formatClock, phaseMinutes } from '@/core/pomodoro';
 import { Bar, Button, ChipGroup, Field, PageHead, Panel, cx } from '@/ui/kit';
 import { Jukebox } from '@/features/musica/Jukebox';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 
 const FOCUS = [15, 25, 40, 50].map((v) => ({ value: v, label: `${v} min` }));
 const SHORT = [3, 5, 10].map((v) => ({ value: v, label: `${v} min` }));
@@ -102,20 +103,22 @@ export default function Pomodoro() {
           <div className="modal__actions modal__actions--center">
             {p.status === 'idle' && (
               <Button variant="primary" onClick={p.start}>
-                ▶ {p.phase === 'focus' ? 'Empezar a estudiar' : 'Empezar descanso'}
+                <Icon name="play" size={12} /> {p.phase === 'focus' ? 'Empezar a estudiar' : 'Empezar descanso'}
               </Button>
             )}
-            {p.status === 'running' && <Button onClick={p.pause}>⏸ Pausar</Button>}
+            {p.status === 'running' && <Button onClick={p.pause}>
+                <Icon name="pause" size={12} /> Pausar
+              </Button>}
             {p.status === 'paused' && (
               <Button variant="primary" onClick={p.resume}>
-                ▶ Continuar
+                <Icon name="play" size={12} /> Continuar
               </Button>
             )}
             <Button onClick={p.skip} title={p.phase === 'focus' ? 'Saltar a un descanso (este enfoque no cuenta)' : 'Saltar al siguiente enfoque'}>
-              ⏭ Saltar
+              <Icon name="skip" size={12} /> Saltar
             </Button>
             <Button variant="danger" onClick={p.reset} disabled={p.status === 'idle' && p.phase === 'focus' && p.doneInRound === 0}>
-              ↺ Reiniciar
+              <Icon name="sync" size={12} /> Reiniciar
             </Button>
           </div>
           {p.phase === 'focus' && <p className="muted small pomo__hint">Al terminar el enfoque ganas <b className="xp-text">+{p.config.focus * SESSION_XP_PER_MIN} XP</b> y se registra como sesión de estudio.</p>}
@@ -155,10 +158,10 @@ export default function Pomodoro() {
               <Field label={`Descanso largo (cada ${p.config.every} Pomodoros)`}>{() => <ChipGroup label="Duración del descanso largo" value={p.config.long} options={LONG} onChange={(v) => p.setConfig({ long: v })} />}</Field>
               <div className="row">
                 <Button small aria-pressed={music} onClick={toggleMusic}>
-                  ♫ Música 8-bit: {music ? 'sí' : 'no'}
+                  Música 8-bit: {music ? 'sí' : 'no'}
                 </Button>
                 <Button small aria-pressed={sound} onClick={toggleSound}>
-                  ♪ Efectos: {sound ? 'sí' : 'no'}
+                  <Icon name="sound" size={12} /> Efectos: {sound ? 'sí' : 'no'}
                 </Button>
               </div>
               <p className="muted small">La música suena mientras el temporizador corre (una melodía animada para estudiar y otra tranquila para descansar). Sigue funcionando si cambias de pantalla.</p>

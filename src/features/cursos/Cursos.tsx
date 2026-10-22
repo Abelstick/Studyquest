@@ -7,6 +7,7 @@ import { courseHours } from '@/core/stats';
 import type { Course, Snapshot } from '@/core/domain';
 import { Bar, Button, Empty, PageHead, Tag } from '@/ui/kit';
 import { CoursesInPlay } from './CoursesInPlay';
+import { Icon } from '@/ui/Icon';
 
 const TONES = ['red', 'green', 'blue', 'yellow'] as const;
 
@@ -41,9 +42,9 @@ export default function Cursos() {
             <span className="kicker">
               {Math.round(totalHours)} h · {totalXp.toLocaleString('en-US')} XP
             </span>
-            <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
+            <Button onClick={() => openModal({ type: 'pack' })}>Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'course' })}>
-              ＋ Nuevo curso
+              <Icon name="plus" size={12} /> Nuevo curso
             </Button>
           </>
         }
@@ -52,7 +53,7 @@ export default function Cursos() {
         <div className="panel">
           <Empty sprite="pipe" title="Ninguna tubería a la vista">
             <p>Cada curso es un mundo con módulos y temas. Crea el primero.</p>
-            <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
+            <Button onClick={() => openModal({ type: 'pack' })}>Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'course' })}>
               Crear curso
             </Button>

@@ -7,6 +7,8 @@ import { frequencyLabel, goalLabel, habitCreditXp, habitProgress, isDueOn, isHab
 import { Bar, Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
 import { totalPending } from '@/core/catchup';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
+import { Scramble } from '@/ui/motion';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { Chains } from './ChainPanel';
@@ -58,7 +60,7 @@ export default function Habitos() {
               {doneToday} de {cards.length} registrados hoy
             </span>
             <Button variant="primary" onClick={() => openModal({ type: 'habit' })}>
-              ＋ Nuevo hábito
+              <Icon name="plus" size={12} /> Nuevo hábito
             </Button>
           </>
         }
@@ -98,7 +100,7 @@ export default function Habitos() {
                   <p className="kicker">
                     {isQuit(h) ? 'Mal hábito a dejar' : `${frequencyLabel(h.frequency)} · ${goalLabel(h)}`}
                     {difficultyOf(h) !== 'normal' && ` · ${difficultyInfo(difficultyOf(h)).label}`}
-                    {h.area && ` · ${areaInfo(h.area).icon} ${areaInfo(h.area).label}`}
+                    {h.area && ` · ${areaInfo(h.area).label}`}
                   </p>
                 </div>
                 <Tag tone={done ? 'green' : 'xp'}>{!done && credit > 0 ? `+${credit} / ${h.xp} XP` : `+${h.xp} XP`}</Tag>
@@ -116,13 +118,13 @@ export default function Habitos() {
               <HabitSteps habit={h} log={log} />
               <div className="split">
                 <span className="kicker">Cumplimiento mensual</span>
-                <b>{pct}%</b>
+                <Scramble className="habit__pct" value={`${pct}%`} />
               </div>
               <Bar pct={pct} tone={pct >= 75 ? 'green' : pct >= 40 ? 'yellow' : 'red'} label={`Cumplimiento mensual de ${h.title}`} />
               <HabitRecovery habit={h} logs={logs} />
               {!isQuit(h) && habitBlocks(events, h.id).length === 0 && (
                 <Button small variant="ghost" onClick={() => openModal({ type: 'habit-detail', id: h.id })}>
-                  🕒 Ponle hora
+                  Ponle hora
                 </Button>
               )}
               <div className="habit__actions">

@@ -13,6 +13,8 @@ import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
 import { Bar, Button, Panel, Tag, cx, TextInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
+import { Scramble } from '@/ui/motion';
 
 /** «hoy», «mañana», «en 3 d» para el próximo repaso de un tema. */
 const when = (due: string | null) => {
@@ -72,17 +74,19 @@ export default function CursoDetalle() {
         <div className="page-head__right page-head__right--col">
           <div className="split">
             <span className="kicker">Progreso de campaña · Rango {courseRank(p.pct)}</span>
-            <span className="big-num">{p.pct}%</span>
+            <Scramble className="big-num" value={`${p.pct}%`} />
           </div>
           <Bar pct={p.pct} tone="green" tall label="Progreso del curso" />
           <div className="row">
-            <Button onClick={() => openModal({ type: 'session', courseId: course.id })}>▶ Estudiar</Button>
+            <Button variant="primary" onClick={() => openModal({ type: 'session', courseId: course.id })}>
+              <Icon name="play" size={12} /> Estudiar
+            </Button>
             {safeUrl(course.link ?? '') && (
               <a className="btn btn--ghost" href={safeUrl(course.link ?? '') as string} target="_blank" rel="noopener noreferrer">
-                ↗ Abrir en {linkLabel(course.link ?? '')}
+                Abrir en {linkLabel(course.link ?? '')}
               </a>
             )}
-            <Button onClick={() => openModal({ type: 'pace', courseId: course.id })}>{overdue ? `⏱ Ajustar plazos (${overdue} atrasadas)` : '⏱ Ajustar plazos'}</Button>
+            <Button onClick={() => openModal({ type: 'pace', courseId: course.id })}>{overdue ? `Ajustar plazos (${overdue} atrasadas)` : 'Ajustar plazos'}</Button>
             <Button onClick={() => openModal({ type: 'course', id: course.id })}>Editar</Button>
           </div>
         </div>
@@ -98,7 +102,7 @@ export default function CursoDetalle() {
               return (
                 <li key={m.id}>
                   <button type="button" className={cx('module', `module--${st}`, i === idx && 'is-picked')} onClick={() => setPicked(m.id)} aria-pressed={i === idx}>
-                    <span className="module__n">{st === 'locked' ? '🔒' : i + 1}</span>
+                    <span className="module__n">{st === 'locked' ? <Icon name="lock" size={16} /> : i + 1}</span>
                     <span className="module__text">
                       <span className="module__title">
                         {m.title} <Tag tone={st === 'active' ? 'xp' : 'plain'}>{STATE_LABEL[st]}</Tag>
@@ -148,22 +152,22 @@ export default function CursoDetalle() {
                 {mod.topics.map((t) => (
                   <li key={t.id} className={cx('topic', `topic--${t.status}`)}>
                     <button type="button" className="topic__dot" onClick={() => setTopicStatus(course.id, t.id, TOPIC_NEXT[t.status])} aria-label={`${t.title}: ${TOPIC_LABEL[t.status]}. Cambiar estado`} title={`${TOPIC_LABEL[t.status]} (clic para avanzar)`}>
-                      {t.status === 'done' ? '✔' : t.status === 'doing' ? '▶' : ''}
+                      {t.status === 'done' ? <Icon name="check" size={14} /> : t.status === 'doing' ? <Icon name="play" size={12} /> : null}
                     </button>
                     <div className="topic__main">
                       <p className="topic__title">{t.title}</p>
                       <div className="topic__actions">
                         <span className="topic__state">+{topicXp(mod)} XP</span>
                         <button type="button" className={cx('chip chip--sm', t.review && 'is-on')} aria-pressed={t.review} onClick={() => toggleTopicReview(course.id, t.id)} title={t.review ? 'Repasos a 1, 3, 7 y 14 días' : 'Agenda repasos a 1, 3, 7 y 14 días'}>
-                          {t.review ? `⚑ Repaso ${when(reviewDueDate(t))}` : 'Necesito repasar'}
+                          {t.review ? `Repaso ${when(reviewDueDate(t))}` : 'Necesito repasar'}
                         </button>
                         <button type="button" className={cx('chip chip--sm', !!t.cards?.length && 'is-on')} onClick={() => openModal({ type: 'cards', courseId: course.id, topicId: t.id })} aria-label={`Tarjetas de ${t.title}`}>
-                          ♪ Tarjetas{t.cards?.length ? ` (${t.cards.length})` : ''}
+                          Tarjetas{t.cards?.length ? ` (${t.cards.length})` : ''}
                         </button>
                         {/* Las tarjetas del tema se repasan ya, sin esperar a que toque en la agenda. */}
                         {!!t.cards?.length && (
                           <Link className="chip chip--sm" to={`/repaso?curso=${encodeURIComponent(course.id)}&tema=${encodeURIComponent(t.id)}`} aria-label={`Repasar las tarjetas de ${t.title}`}>
-                            ▶ Repasar
+                            <Icon name="play" size={10} /> Repasar
                           </Link>
                         )}
                         {/* Apuntes del tema: abre el más reciente (o lo crea ya colgado de este tema) y filtra por el tema. */}
@@ -183,12 +187,12 @@ export default function CursoDetalle() {
                           }}
                           aria-label={`Apuntes de ${t.title}`}
                         >
-                          ✎ Apuntes{notesOfTopic(allNotes, t.id).length ? ` (${notesOfTopic(allNotes, t.id).length})` : ''}
+                          Apuntes{notesOfTopic(allNotes, t.id).length ? ` (${notesOfTopic(allNotes, t.id).length})` : ''}
                         </button>
                       </div>
                     </div>
                     <button type="button" className="icon-btn icon-btn--sm" aria-label={`Quitar ${t.title}`} onClick={() => removeTopic(course.id, t.id)}>
-                      ✕
+                      <Icon name="close" size={10} />
                     </button>
                   </li>
                 ))}
@@ -249,7 +253,7 @@ export default function CursoDetalle() {
                       <b className="grow">{c.title}</b>
                       {link && (
                         <a className="btn btn--sm" href={link} target="_blank" rel="noopener noreferrer">
-                          🔗 Ver
+                          Ver
                         </a>
                       )}
                       <Button small onClick={() => openModal({ type: 'certification', id: c.id })}>

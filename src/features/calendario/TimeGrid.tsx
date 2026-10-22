@@ -5,6 +5,7 @@ import { addDays, clockToMinutes, longDate, minutesOfDay, weekdayAbbr, weekdayIn
 import type { ISODate } from '@/core/domain';
 import { dueTimeOf } from '@/core/tasks';
 import { cx } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 import { TaskChip, eventClass, fmt, kindIcon, occurrenceLabel, rangeLabel } from './parts';
 
 /** Alto de una hora en píxeles. */
@@ -183,12 +184,12 @@ export function TimeGrid(p: Props) {
                 ))}
                 {habits.length > 0 && (
                   <button type="button" className={cx('chip-task chip-task--habits', done === habits.length && 'is-complete')} onClick={() => p.onSelectDay(date)} title={habits.map((h) => `${h.habit.title}${h.done ? ' ✔' : h.value ? ` ${fmt(h.value)}/${fmt(h.habit.target)}` : ''}`).join('\n')}>
-                    ✿ {done}/{habits.length} {habits.length === 1 ? 'hábito' : 'hábitos'}
+                    <Icon name="habit" size={10} /> {done}/{habits.length} {habits.length === 1 ? 'hábito' : 'hábitos'}
                   </button>
                 )}
                 {!!e?.reviews.length && (
                   <span className="chip-task chip-task--review" title={e.reviews.map((r) => r.title).join(', ')}>
-                    ♪ {e.reviews.length}
+                    <Icon name="cards" size={10} /> {e.reviews.length}
                   </span>
                 )}
               </div>
@@ -260,7 +261,12 @@ export function TimeGrid(p: Props) {
                       >
                         <span className="agev__time">
                           {preview ?? (tiny && o.start !== null ? toClock(o.start) : rangeLabel(o))}
-                          {o.recurring && ' ↻'}
+                          {o.recurring && (
+                            <>
+                              {' '}
+                              <Icon name="sync" size={9} />
+                            </>
+                          )}
                         </span>
                         <span className="agev__title">
                           {kindIcon(o)} {o.title}
@@ -273,7 +279,7 @@ export function TimeGrid(p: Props) {
                   })}
                   {timedDeadlines.map((t) => (
                     <button key={t.id} type="button" className={cx('tgrid__deadline', t.status === 'done' && 'is-done')} style={{ top: px(clockToMinutes(dueTimeOf(t) as string)) }} onClick={(e) => { e.stopPropagation(); p.onOpenTask(t.id); }} title={`Fecha límite a las ${dueTimeOf(t)}: ${t.title}`}>
-                      ⚑ {dueTimeOf(t)} {t.title}
+                      <Icon name="flag" size={10} /> {dueTimeOf(t)} {t.title}
                     </button>
                   ))}
                   {date === p.now && <div className="tgrid__now" style={{ top: px(nowMin) }} aria-hidden="true" />}

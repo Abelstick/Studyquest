@@ -7,6 +7,8 @@ import { isCounter, stepForCounter } from '@/core/game';
 import { dueTimeOf, isOverdue } from '@/core/tasks';
 import { categoryInfo, durationLabel, eventKind, toClock, type Occurrence } from '@/core/agenda';
 import { Button, cx } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
+import { CATEGORY_ICON } from '@/ui/domainIcons';
 
 export const fmt = (n: number) => String(Math.round(n * 100) / 100);
 export const hoursLabel = (min: number) => (min >= 60 ? `${+(min / 60).toFixed(1)} h` : `${min} min`);
@@ -30,7 +32,8 @@ export const occurrenceLabel = (o: Occurrence) => {
   return `${o.title} · ${rangeLabel(o)}${o.minutes > 0 && o.start !== null ? ` (${durationLabel(o.minutes)})` : ''} · ${cat.label}${o.recurring ? ' · se repite' : ''}${state}`;
 };
 
-export const kindIcon = (o: Occurrence) => (o.event.habitId ? '✿' : o.event.taskId ? '▣' : o.minutes <= 0 && o.start !== null ? '⏰' : categoryInfo(o.event.category).icon);
+/** Ícono de una actividad: su vínculo (hábito, tarea), si es un recordatorio, o si no, su categoría. */
+export const kindIcon = (o: Occurrence) => <Icon name={o.event.habitId ? 'habit' : o.event.taskId ? 'task' : o.minutes <= 0 && o.start !== null ? 'bell' : CATEGORY_ICON[o.event.category]} size={11} />;
 
 /** Punto de un hábito: verde si está hecho, ámbar si va a medias, hueco si tocaba y no se hizo. */
 export function HabitDot({ hd }: { hd: HabitDay }) {
@@ -56,7 +59,11 @@ export function TaskChip({ t, now, onOpen, onSelect, style }: { t: Task; now: IS
       title={`Fecha límite: ${t.title}`}
       style={style}
     >
-      {t.recurrence && <span aria-hidden="true">↻ </span>}
+      {t.recurrence && (
+        <>
+          <Icon name="sync" size={10} />{' '}
+        </>
+      )}
       {dueTimeOf(t) && <b>{dueTimeOf(t)} </b>}
       {t.title}
     </button>
@@ -94,7 +101,13 @@ export function DayHabitRow({ hd, date, now }: { hd: HabitDay; date: ISODate; no
   } else if (editable) {
     control = (
       <Button small variant={hd.done ? 'ghost' : 'primary'} aria-pressed={hd.done} onClick={() => setValueOn(h.id, date, hd.done ? 0 : h.target)}>
-        {hd.done ? '✔ Hecho' : 'Marcar'}
+        {hd.done ? (
+          <>
+            <Icon name="check" size={12} /> Hecho
+          </>
+        ) : (
+          'Marcar'
+        )}
       </Button>
     );
   }

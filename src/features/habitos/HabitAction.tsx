@@ -7,6 +7,7 @@ import { today } from '@/core/dates';
 import { minimumOf } from '@/core/minimum';
 import { needsRecovery } from '@/core/catchup';
 import { Button, Tag } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 /** «5 min», «2 pág.»: la versión mínima dicha con la unidad del hábito. */
 export function minimumLabel(habit: Habit): string {
@@ -24,7 +25,11 @@ export function HabitMinimumButton({ habit, log }: Readonly<{ habit: Habit; log?
   const setHabitValue = useData((s) => s.setHabitValue);
   const min = minimumOf(habit);
   if (min === null || isHabitDone(habit, log)) return null;
-  if ((log?.value ?? 0) >= min) return <Tag tone="green">✔ Mínimo cumplido · tu racha sigue</Tag>;
+  if ((log?.value ?? 0) >= min) return (
+      <Tag tone="green">
+        <Icon name="check" size={10} /> Mínimo cumplido · tu racha sigue
+      </Tag>
+    );
   return (
     <Button small variant="ghost" onClick={() => setHabitValue(habit.id, min)} title="Un día malo también cuenta: lo mínimo mantiene tu racha">
       Solo lo mínimo ({minimumLabel(habit)})
@@ -38,7 +43,7 @@ export function HabitRecovery({ habit, logs }: Readonly<{ habit: Habit; logs: Ha
   const min = minimumOf(habit);
   return (
     <p className="habit-recover" role="note">
-      ↺ Ayer no pudo ser. {min === null ? 'Hoy basta con volver; no hace falta compensar.' : `Hoy basta con volver: ${minimumLabel(habit)} ya cuentan.`}
+      <Icon name="sync" size={12} /> Ayer no pudo ser. {min === null ? 'Hoy basta con volver; no hace falta compensar.' : `Hoy basta con volver: ${minimumLabel(habit)} ya cuentan.`}
     </p>
   );
 }
@@ -73,7 +78,7 @@ export function HabitAction({ habit, log }: { habit: Habit; log?: HabitLog }) {
     return (
       <div className="row">
         <Button variant={done ? 'ghost' : 'primary'} small onClick={() => setHabitValue(habit.id, done ? 0 : habit.target)} aria-pressed={done}>
-          {done ? '✔ Hoy resistí' : 'Hoy resistí'}
+          {done && <Icon name="check" size={12} />} Hoy resistí
         </Button>
         <Button small variant="danger" onClick={() => recordSlip(habit.id)}>
           Recaí
@@ -103,7 +108,13 @@ export function HabitAction({ habit, log }: { habit: Habit; log?: HabitLog }) {
     const label = habit.measure === 'minutes' || habit.measure === 'hours' ? `Registrar ${goalLabel(habit)}` : 'Registrar hoy';
     main = (
       <Button variant={done ? 'ghost' : 'primary'} small onClick={() => setHabitValue(habit.id, done ? 0 : habit.target)} aria-pressed={done}>
-        {done ? '✔ Registrado' : label}
+        {done ? (
+          <>
+            <Icon name="check" size={12} /> Registrado
+          </>
+        ) : (
+          label
+        )}
       </Button>
     );
   }

@@ -40,7 +40,7 @@ export function HabitPeriod({ habit, logs, now }: { habit: Habit; logs: HabitLog
   return (
     <div className={cx('hperiod', dueToday && 'is-tight')}>
       <p className="hperiod__next">
-        {next ? (dueToday ? '📅 Toca hoy' : `📅 Próxima: ${shortDate(next)} (${inDaysLabel(next, now)})`) : 'Sin próximas fechas'}
+        {next ? (dueToday ? 'Toca hoy' : `Próxima: ${shortDate(next)} (${inDaysLabel(next, now)})`) : 'Sin próximas fechas'}
       </p>
     </div>
   );

@@ -4,6 +4,7 @@ import type { Project } from '@/core/domain';
 import { Bar, Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
+import { Icon } from '@/ui/Icon';
 
 const progress = (p: Project) => {
   const total = p.checkpoints.reduce((a, c) => a + c.xp, 0);
@@ -21,7 +22,7 @@ function Track({ project }: { project: Project }) {
         return (
           <li key={c.id} className={cx('track__item', `track__item--${state}`)}>
             <button type="button" className="track__node" onClick={() => toggle(project.id, c.id)} aria-pressed={c.done} aria-label={`${c.done ? 'Desmarcar' : 'Completar'} checkpoint: ${c.title}`}>
-              {c.done ? '✔' : i + 1}
+              {c.done ? <Icon name="check" size={14} /> : i + 1}
             </button>
             <div className="track__line" aria-hidden="true" />
             <p className="track__title">{c.title}</p>
@@ -55,9 +56,9 @@ export default function Proyectos() {
         right={
           <>
             <GuideButton />
-            <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
+            <Button onClick={() => openModal({ type: 'pack' })}>Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'project' })}>
-              ＋ Nuevo proyecto
+              <Icon name="plus" size={12} /> Nuevo proyecto
             </Button>
           </>
         }
@@ -69,9 +70,9 @@ export default function Proyectos() {
             <p className="muted small">¿Es algo que quieres aprender o lograr? Eso es una meta. ¿Dudas? Pulsa «¿Cuál uso?».</p>
             <div className="row">
               <Button variant="primary" onClick={() => openModal({ type: 'project' })}>
-                ＋ Crear mi primer proyecto
+                <Icon name="plus" size={12} /> Crear mi primer proyecto
               </Button>
-              <Button onClick={() => openModal({ type: 'pack' })}>✨ Importar con IA</Button>
+              <Button onClick={() => openModal({ type: 'pack' })}>Importar con IA</Button>
             </div>
           </Empty>
         </div>

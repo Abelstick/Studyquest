@@ -100,11 +100,11 @@
   place-items: center;
   width: 26px;
   height: 26px;
-  border: 2px solid var(--line);
+  border: var(--bw) solid var(--line);
   background: var(--panel-3);
   color: var(--text);
-  font-family: var(--font-pixel);
-  font-size: 10px;
+  font-family: var(--font-num);
+  font-size: 14px;
 }
 .smart__item.is-ok .smart__letter {
   background: var(--green);
@@ -377,7 +377,7 @@
   color: var(--green-text);
 }
 .startguide__list li.is-now {
-  font-weight: 900;
+  font-weight: 700;
 }
 @media (max-width: 700px) {
   .startguide__now {
@@ -436,7 +436,7 @@
   display: grid;
   gap: 8px;
   padding: 10px 12px;
-  border-left: 6px solid var(--blue);
+  border-left: 4px solid var(--blue);
   background: color-mix(in srgb, var(--blue) 9%, var(--panel));
   color: var(--text);
 }
@@ -458,7 +458,7 @@
   padding: 10px 12px;
   background: color-mix(in srgb, var(--orange) 10%, var(--panel));
   color: var(--text);
-  border-left: 6px solid var(--orange);
+  border-left: 4px solid var(--orange);
 }
 .conflicts__what {
   margin: 0;

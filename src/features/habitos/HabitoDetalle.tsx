@@ -147,13 +147,13 @@ export default function HabitoDetalle() {
             </dl>
           </Panel>
           {weak ? (
-            <Panel tone="red" kicker="⚠ Racha en riesgo">
+            <Panel tone="red" kicker="Racha en riesgo">
               <p>
                 Los {DAYS_FULL[weak.day]} fallas el <b>{weak.missPct}%</b> de las veces. Prueba a moverlo a otro día u hora: el {weekdayAbbr(weak.day)} es tu punto débil.
               </p>
             </Panel>
           ) : (
-            <Panel tone="green" kicker="✔ Todo bajo control">
+            <Panel tone="green" kicker="Todo bajo control">
               <p>No hay ningún día de la semana donde falles de forma clara. Sigue así.</p>
             </Panel>
           )}

@@ -6,6 +6,7 @@ import { Bar, PageHead, Panel, cx } from '@/ui/kit';
 import { PixelArt } from '@/ui/PixelArt';
 import { Sprite } from '@/ui/Sprite';
 import { useCity } from './useCity';
+import { Icon } from '@/ui/Icon';
 
 const SEEN_KEY = 'sq:city-seen';
 
@@ -81,7 +82,7 @@ function Detail({ state }: { state: BuildingState }) {
         {b.levelNames.map((n, i) => (
           <li key={n} className={cx(i + 1 <= level && 'is-done', i + 1 === level + 1 && 'is-next')}>
             <span className="ladder__mark" aria-hidden="true">
-              {i + 1 <= level ? '✔' : i + 1}
+              {i + 1 <= level ? <Icon name="check" size={12} /> : i + 1}
             </span>
             <span className="ladder__name">{n}</span>
             <span className="muted small">{b.thresholds[i].toLocaleString('en-US')} {b.unit}</span>
@@ -98,7 +99,7 @@ function Detail({ state }: { state: BuildingState }) {
           <li key={s}>{s}</li>
         ))}
       </ul>
-      <p className="muted small">💡 {b.tip}</p>
+      <p className="muted small">{b.tip}</p>
       <Link className="btn btn--primary" to={b.to}>
         {b.cta}
       </Link>
@@ -118,7 +119,8 @@ export default function Ciudad() {
     <div className="stack">
       <PageHead kicker="Progreso visual" title="Tu ciudad" sprite="house" hint="Cada área de estudio es un edificio que crece con lo que haces de verdad: hábitos, cursos, proyectos, retos y logros. No hay que registrar nada más." />
 
-      <Panel kicker={`${city.total} de ${CITY_MAX} mejoras`} title={city.title.name} right={<span className="tag tag--xp">👥 {city.people.toLocaleString('en-US')} habitantes</span>}>
+      <Panel kicker={`${city.total} de ${CITY_MAX} mejoras`} title={city.title.name} right={<span className="tag tag--xp">
+            <Icon name="people" size={10} /> {city.people.toLocaleString('en-US')} habitantes</span>}>
         <Bar pct={(city.total / CITY_MAX) * 100} tone="green" tall label="Progreso total de la ciudad" />
         <p className="muted small">
           {city.title.next ? (

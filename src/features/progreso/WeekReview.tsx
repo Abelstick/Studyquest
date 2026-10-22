@@ -10,6 +10,8 @@ import { areaInfo } from '@/core/areas';
 import { PACE_TEXT } from '@/core/goals';
 import { COMMON_OBSTACLES, MAX_PRIORITIES, buildWeekReview, recurringObstacles, reviewOf, spreadTasks, type HabitReviewRow } from '@/core/weekReview';
 import { Button, Panel, Tag, cx } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
+import { CATEGORY_ICON } from '@/ui/domainIcons';
 
 const hours = (min: number) => `${+(min / 60).toFixed(1)} h`;
 
@@ -327,7 +329,7 @@ export function WeekReviewPanel({ week, onClose }: Readonly<{ week: ISODate; onC
           <ul className="rv__cats" aria-label="Horas por tipo de bloque">
             {cats.map(([cat, min]) => (
               <li key={cat}>
-                <span aria-hidden="true">{categoryInfo(cat as Parameters<typeof categoryInfo>[0]).icon}</span> {categoryInfo(cat as Parameters<typeof categoryInfo>[0]).label}: <b>{hours(min)}</b>
+                <Icon name={CATEGORY_ICON[cat as Parameters<typeof categoryInfo>[0]]} size={11} /> {categoryInfo(cat as Parameters<typeof categoryInfo>[0]).label}: <b>{hours(min)}</b>
               </li>
             ))}
           </ul>

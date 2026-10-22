@@ -5,6 +5,7 @@ import { useUi } from '@/state/ui';
 import { habitsWithoutTime } from '@/core/routine';
 import { Button, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 
 const HIDDEN_KEY = 'sq.start.hidden';
 
@@ -89,7 +90,7 @@ export function StartGuide({ always }: Readonly<{ always?: boolean }>) {
         </div>
         <div className="row">
           <Button small onClick={() => openModal({ type: 'howto' })}>
-            ❓ Guía completa
+            Guía completa
           </Button>
           {!always && (
             <Button small variant="ghost" onClick={hide}>
@@ -112,7 +113,7 @@ export function StartGuide({ always }: Readonly<{ always?: boolean }>) {
       <ol className="startguide__list" aria-label="Pasos">
         {steps.map((s) => (
           <li key={s.id} className={cx(s.done && 'is-done', s.id === current?.id && 'is-now')}>
-            <span aria-hidden="true">{s.done ? '✔' : s.id === current?.id ? '▶' : '○'}</span> {s.title}
+            {s.done ? <Icon name="check" size={11} /> : s.id === current?.id ? <Icon name="play" size={10} /> : <span aria-hidden="true">○</span>} {s.title}
             <span className="sr-only">{s.done ? ' (hecho)' : ''}</span>
           </li>
         ))}

@@ -5,6 +5,7 @@ import { useUi } from '@/state/ui';
 import { courseProgress, nextTopic } from '@/core/game';
 import { coursesInPlay } from '@/core/stats';
 import { Bar, Button, Panel } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 /** Cuántos cursos en marcha se destacan arriba de la lista. */
 const IN_PLAY = 3;
@@ -35,7 +36,7 @@ export function CoursesInPlay() {
                 </div>
               </div>
               <Button small onClick={() => openModal({ type: 'session', courseId: c.id })}>
-                ▶ Estudiar
+                <Icon name="play" size={10} /> Estudiar
               </Button>
             </li>
           );

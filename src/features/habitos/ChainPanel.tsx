@@ -6,6 +6,7 @@ import { CHAIN_BONUS_XP, chainState } from '@/core/chains';
 import type { HabitChain } from '@/core/domain';
 import { Bar, Button, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 import { HabitAction } from './HabitAction';
 
 /** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
@@ -45,7 +46,7 @@ export function Chain({ chain }: { chain: HabitChain }) {
         {st.links.map((l) => (
           <li key={l.habit.id} className={cx('chlink', l.done && 'is-done', l.isNext && 'is-next', !l.due && 'is-off')}>
             <span className="chlink__mark" aria-hidden="true">
-              {l.done ? '✔' : l.due ? '▸' : '·'}
+              {l.done ? <Icon name="check" size={12} /> : l.due ? <Icon name="play" size={10} /> : '·'}
             </span>
             <span className="chlink__text">
               <span className="chlink__title">{l.habit.title}</span>
@@ -99,7 +100,7 @@ export function Chains() {
           Encadena una rutina en orden —dormir temprano → levantarse → ejercicio → estudio— y cada hábito te recordará el siguiente. No bloquea nada: es una guía, y completarla entera en un día da <b>+{CHAIN_BONUS_XP} XP</b>.
         </p>
         <Button variant="primary" small onClick={() => openModal({ type: 'chain' })}>
-          ＋ Crear una cadena
+          <Icon name="plus" size={12} /> Crear una cadena
         </Button>
       </section>
     );
@@ -111,7 +112,7 @@ export function Chains() {
         <Chain key={c.id} chain={c} />
       ))}
       <Button small onClick={() => openModal({ type: 'chain' })}>
-        ＋ Nueva cadena
+        <Icon name="plus" size={12} /> Nueva cadena
       </Button>
     </>
   );

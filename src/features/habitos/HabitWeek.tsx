@@ -81,7 +81,7 @@ export function HabitWeek({ habit, logs, now }: { habit: Habit; logs: HabitLog[]
           </p>
           {isBool(habit) ? (
             <Button small variant={editDay.done ? 'ghost' : 'primary'} onClick={() => setValueOn(habit.id, editing, editDay.done ? 0 : target)} aria-pressed={editDay.done}>
-              {editDay.done ? '✔ Hecho (quitar)' : 'Marcar como hecho'}
+              {editDay.done ? 'Hecho (quitar)' : 'Marcar como hecho'}
             </Button>
           ) : (
             <div className="counter">

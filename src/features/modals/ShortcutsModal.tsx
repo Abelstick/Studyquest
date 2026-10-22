@@ -5,6 +5,7 @@ import { SECTIONS } from '@/features/layout/nav';
 const GENERAL: [string, string][] = [
   ['/', 'Buscar'],
   ['N', 'Crear (tarea, hábito, curso… según la pantalla)'],
+  ['[', 'Ocultar o mostrar el menú lateral'],
   ['?', 'Ver estos atajos'],
   ['Esc', 'Cerrar un modal o el menú'],
 ];

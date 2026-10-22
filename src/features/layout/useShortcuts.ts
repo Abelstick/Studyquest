@@ -11,7 +11,7 @@ const isTyping = (t: EventTarget | null) => t instanceof HTMLElement && (/^(INPU
 
 /**
  * Atajos de teclado globales:
- * «/» buscar · «n» crear (según la pantalla) · «g» + letra de sección · «?» ayuda.
+ * «/» buscar · «n» crear (según la pantalla) · «g» + letra de sección · «[» ocultar o mostrar el menú · «?» ayuda.
  * Se ignoran al escribir, con un modal abierto o con Ctrl/Alt/Cmd, para no chocar con el navegador
  * ni con los atajos propios de cada pantalla (Repaso usa 1-3 y espacio).
  */
@@ -47,6 +47,10 @@ export function useShortcuts() {
       } else if (key === 'n') {
         e.preventDefault();
         ui.openModal({ type: newKindFor(pathname) });
+      } else if (e.key === '[') {
+        // Oculta o muestra la barra lateral (en pantallas anchas).
+        e.preventDefault();
+        ui.toggleSide();
       } else if (e.key === '?') {
         e.preventDefault();
         ui.openModal({ type: 'shortcuts' });

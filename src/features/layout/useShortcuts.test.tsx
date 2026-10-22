@@ -93,4 +93,22 @@ describe('atajos de teclado', () => {
     press('/');
     expect(useUi.getState().modal).toEqual({ type: 'quick' });
   });
+
+  it('«[» oculta y muestra la barra lateral, y se recuerda en el dispositivo', () => {
+    useUi.setState({ sideHidden: false });
+    setup();
+    press('[');
+    expect(useUi.getState().sideHidden).toBe(true);
+    expect(localStorage.getItem('sq:side-hidden')).toBe('1');
+    press('[');
+    expect(useUi.getState().sideHidden).toBe(false);
+    expect(localStorage.getItem('sq:side-hidden')).toBe('0');
+  });
+
+  it('«[» no actúa mientras se escribe', () => {
+    useUi.setState({ sideHidden: false });
+    setup();
+    press('[', screen.getByLabelText('campo'));
+    expect(useUi.getState().sideHidden).toBe(false);
+  });
 });

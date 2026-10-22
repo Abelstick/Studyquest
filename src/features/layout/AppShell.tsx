@@ -110,6 +110,7 @@ function Sidebar() {
   const claim = useData((s) => s.claimWeeklyBonus);
   const navOpen = useUi((s) => s.navOpen);
   const setNavOpen = useUi((s) => s.setNavOpen);
+  const setSideHidden = useUi((s) => s.setSideHidden);
   const { level, into, needed, pct } = levelProgress(profile.xp);
   const sound = useUi((s) => s.sound);
   const toggleSound = useUi((s) => s.toggleSound);
@@ -162,7 +163,7 @@ function Sidebar() {
   return (
     <>
       <div className={cx('scrim', navOpen && 'is-on')} onClick={() => setNavOpen(false)} />
-      <aside ref={asideRef} className={cx('sidebar', navOpen && 'is-open')} aria-label="Menú principal" role={navOpen ? 'dialog' : undefined} aria-modal={navOpen || undefined}>
+      <aside ref={asideRef} id="menu-principal" className={cx('sidebar', navOpen && 'is-open')} aria-label="Menú principal" role={navOpen ? 'dialog' : undefined} aria-modal={navOpen || undefined}>
         <div className="brand">
           <Sprite name="coin" size={26} className="brand__coin" />
           <div>
@@ -173,6 +174,9 @@ function Sidebar() {
               v{__APP_VERSION__} <span className="brand__beta">beta</span>
             </p>
           </div>
+          <button type="button" className="icon-btn side__hide" onClick={() => setSideHidden(true)} aria-label="Ocultar el menú lateral" title="Ocultar el menú lateral ( [ )">
+            <Icon name="back" size={14} />
+          </button>
         </div>
 
         <div className="player">
@@ -291,6 +295,9 @@ function PomodoroChip() {
   );
 }
 
+/** ¿Pantalla estrecha, donde el menú es un cajón? En las anchas el botón oculta y muestra la barra lateral. */
+const isNarrow = (): boolean => typeof window !== 'undefined' && !!window.matchMedia?.('(max-width: 900px)').matches;
+
 function Hud() {
   const { pathname } = useLocation();
   const item = navFor(pathname);
@@ -299,7 +306,8 @@ function Hud() {
   const events = useData((s) => s.xpEvents);
   const unread = useData((s) => s.notifications.filter((n) => !n.read).length);
   const streak = useMemo(() => computeStreak(events, profile.frozenDates).current, [events, profile.frozenDates]);
-  const { theme, sound, toggleTheme, toggleSound, setNotifOpen, setNavOpen, openModal } = useUi();
+  const { theme, sound, toggleTheme, toggleSound, setNotifOpen, setNavOpen, openModal, sideHidden, toggleSide } = useUi();
+  const narrow = isNarrow();
   const online = useOnline();
   const pending = useSyncPending(dataLayer.sync);
 
@@ -307,7 +315,15 @@ function Hud() {
 
   return (
     <header className="hud">
-      <button type="button" className="icon-btn hud__menu" aria-label="Abrir menú" onClick={() => setNavOpen(true)}>
+      <button
+        type="button"
+        className="icon-btn hud__menu"
+        aria-label={narrow ? 'Abrir menú' : sideHidden ? 'Mostrar el menú lateral' : 'Ocultar el menú lateral'}
+        title={narrow ? undefined : 'Mostrar u ocultar el menú lateral ( [ )'}
+        aria-controls="menu-principal"
+        aria-expanded={narrow ? undefined : !sideHidden}
+        onClick={() => (isNarrow() ? setNavOpen(true) : toggleSide())}
+      >
         <Icon name="menu" size={16} />
       </button>
       <div className="hud__title">
@@ -404,6 +420,7 @@ export function AppShell() {
   useAiAccountSync();
   useShortcuts();
   useTour();
+  const sideHidden = useUi((s) => s.sideHidden);
   const { pathname, item, section, tabs, showTabs } = useSectionTabs();
   useEffect(() => {
     rememberTab(pathname);
@@ -414,7 +431,7 @@ export function AppShell() {
     window.scrollTo(0, 0);
   }, [pathname]);
   return (
-    <div className="shell">
+    <div className={cx('shell', sideHidden && 'shell--no-side')}>
       <Sidebar />
       <div className="shell__main">
         <Hud />

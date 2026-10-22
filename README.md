@@ -96,6 +96,8 @@ El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañ
 - **Revisión semanal** (Progreso, o el aviso de Hoy): lo planificado frente a lo hecho (tareas, hábitos, bloques, estudio), hábitos con **previstos / hechos / solo mínimo / omitidos** y tendencia (lo que no tocaba nunca cuenta como omisión), metas que avanzaron o no, equilibrio por área, y **lo pendiente sin culpas**: mover a otra fecha (la misma tarea, no una nueva), repartir en la semana siguiente, reducir o quitar. Registra obstáculos (avisa si uno se repite), lo que funcionó y el cambio de la próxima semana (convertible en tarea), muestra la carga de la semana siguiente y guarda **tus 3 prioridades**, que aparecen en Hoy durante esa semana. No da XP.
 - **Planificador.** La meta que crea nace con el plazo que elegiste y su indicador, y sus tareas y su hábito quedan enlazados a ella. Si ya existe un curso o una meta con ese nombre, pide confirmación antes de duplicarlo.
 
+- **Barra lateral ocultable.** En pantallas anchas, el botón ☰ de la barra superior (o la flecha de la barra lateral, o la tecla `[`) la oculta y el contenido ocupa todo el ancho; se recuerda en el dispositivo. Oculta, te mueves con ☰, el buscador y los atajos `G` + letra. En el móvil sigue siendo un cajón.
+
 ### Pantallas
 
 | Pantalla | Qué hace |

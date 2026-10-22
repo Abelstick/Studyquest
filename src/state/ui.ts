@@ -105,7 +105,22 @@ function writePrefs(p: Prefs) {
   }
 }
 
+const SIDE_KEY = 'sq:side-hidden';
+
+/** ¿La barra lateral se dejó oculta en este dispositivo? (Solo cuenta en pantallas anchas: en el móvil es un cajón.) */
+function readSideHidden(): boolean {
+  try {
+    return localStorage.getItem(SIDE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 interface UiState extends Prefs {
+  /** Barra lateral oculta en pantallas anchas, para ganar espacio. Se recuerda en el dispositivo. */
+  sideHidden: boolean;
+  setSideHidden: (hidden: boolean) => void;
+  toggleSide: () => void;
   toasts: Toast[];
   levelUp: LevelUpInfo | null;
   victory: VictoryInfo | null;
@@ -148,6 +163,16 @@ export const useUi = create<UiState>((set, get) => ({
   modal: null,
   notifOpen: false,
   navOpen: false,
+  sideHidden: readSideHidden(),
+  setSideHidden: (sideHidden) => {
+    set({ sideHidden });
+    try {
+      localStorage.setItem(SIDE_KEY, sideHidden ? '1' : '0');
+    } catch {
+      // Sin almacenamiento (modo privado): vale para esta sesión, solo no se recuerda.
+    }
+  },
+  toggleSide: () => get().setSideHidden(!get().sideHidden),
   toast: (t) => {
     const id = newId();
     set((s) => ({ toasts: [...s.toasts.slice(t.kind === 'reminder' ? -3 : -2), { ...t, id }] }));

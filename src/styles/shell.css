@@ -176,9 +176,13 @@
   border-color: var(--on-page-muted);
   background-color: var(--hud-2);
 }
-.icon-btn.hud__menu,
 .icon-btn.hud__quick {
   display: none;
+}
+/* El botón del menú siempre está: en pantallas anchas oculta o muestra la barra lateral; en el móvil abre el cajón. */
+.icon-btn.side__hide {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 .btn.hud__new {
   flex-shrink: 0;
@@ -435,6 +439,41 @@
   display: none;
 }
 
+/*
+ * Barra lateral oculta (solo en pantallas anchas): el contenido ocupa todo el ancho. Se anima a la vez la columna, que
+ * se cierra, y la barra, que se desliza hacia la izquierda mientras se desvanece: parece un solo movimiento. Mientras
+ * está fuera queda invisible e inerte (visibility), así el foco del teclado no se cuela en ella.
+ */
+@media (min-width: 901px) {
+  .shell {
+    /* Lenta y pareja de principio a fin (no la curva de arranque brusco del resto): así se nota el movimiento. */
+    --side-time: 0.7s;
+    --side-ease: cubic-bezier(0.65, 0, 0.35, 1);
+    transition: grid-template-columns var(--side-time) var(--side-ease);
+  }
+  .sidebar {
+    width: var(--side-w);
+    transition: transform var(--side-time) var(--side-ease), opacity var(--side-time) linear, visibility 0s linear 0s;
+  }
+  .shell--no-side {
+    grid-template-columns: 0px minmax(0, 1fr);
+  }
+  .shell--no-side .sidebar {
+    transform: translateX(-100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform var(--side-time) var(--side-ease), opacity var(--side-time) linear, visibility 0s linear var(--side-time);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shell,
+  .sidebar,
+  .shell--no-side .sidebar {
+    transition: none;
+  }
+}
+
 /* ===== Móvil: la barra lateral pasa a cajón y las secciones bajan a una barra inferior ===== */
 @media (max-width: 1100px) {
   .stat__k {
@@ -542,6 +581,10 @@
   }
   .icon-btn.hud__menu {
     display: inline-flex;
+  }
+  /* En el cajón del móvil no hace falta: se cierra con la X, el fondo o Escape. */
+  .icon-btn.side__hide {
+    display: none;
   }
   .icon-btn.hud__quick {
     display: inline-flex;

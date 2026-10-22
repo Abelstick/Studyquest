@@ -9,6 +9,7 @@ import { agoDays } from '@/core/dates';
 import { Button, Empty, Field, PageHead, Panel, Tag, TextInput, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { NoteBody } from './NoteBody';
+import { Icon } from '@/ui/Icon';
 
 /** Descarga el cuaderno entero como un .md, para llevártelo a Obsidian o a donde quieras. */
 function exportMarkdown(notes: Note[], courseName: (id: string) => string | undefined) {
@@ -60,10 +61,10 @@ function Detail({ note, onClose }: { note: Note; onClose: () => void }) {
       right={
         <div className="row">
           <Button small onClick={() => (editing ? save() : setEditing(true))} variant={editing ? 'primary' : 'ghost'}>
-            {editing ? '✔ Guardar' : '✎ Editar'}
+            <Icon name={editing ? 'check' : 'edit'} size={12} /> {editing ? 'Guardar' : 'Editar'}
           </Button>
           <Button small onClick={onClose} aria-label="Cerrar el apunte">
-            ✕
+            <Icon name="close" size={10} />
           </Button>
         </div>
       }
@@ -128,7 +129,7 @@ function Detail({ note, onClose }: { note: Note; onClose: () => void }) {
         <>
           {openLink && (
             <a className="btn btn--primary note__link" href={openLink} target="_blank" rel="noopener noreferrer">
-              ↗ Abrir en {linkLabel(note.link ?? '')}
+              Abrir en {linkLabel(note.link ?? '')}
             </a>
           )}
           <div className="tags">
@@ -145,7 +146,7 @@ function Detail({ note, onClose }: { note: Note; onClose: () => void }) {
               </span>
             ))}
           </div>
-          {note.body.trim() ? <NoteBody body={note.body} /> : !openLink && <p className="muted">Vacío. Pulsa «✎ Editar» para escribir algo o pegar un enlace.</p>}
+          {note.body.trim() ? <NoteBody body={note.body} /> : !openLink && <p className="muted">Vacío. Pulsa «Editar» para escribir algo o pegar un enlace.</p>}
         </>
       )}
     </Panel>
@@ -201,11 +202,11 @@ export default function Apuntes() {
           <>
             {notes.length > 0 && (
               <Button small onClick={() => exportMarkdown(notes, courseName)}>
-                ⬇ Exportar .md
+                Exportar .md
               </Button>
             )}
             <Button variant="primary" onClick={nuevo}>
-              ＋ Nuevo apunte
+              <Icon name="plus" size={12} /> Nuevo apunte
             </Button>
           </>
         }
@@ -229,7 +230,9 @@ export default function Apuntes() {
               <p className="kicker">
                 {notes.length} {notes.length === 1 ? 'apunte' : 'apuntes'}
               </p>
-              <Tag tone="xp">📚 {notes.length} puntos de biblioteca</Tag>
+              <Tag tone="xp">
+              <Icon name="book" size={10} /> {notes.length} puntos de biblioteca
+            </Tag>
             </div>
             {filterCourse && (
               <div className="row">
@@ -271,11 +274,11 @@ export default function Apuntes() {
                       </b>
                       <span className="muted small">{agoDays(n.updatedAt)}</span>
                     </span>
-                    <span className="muted small notecard__ex">{excerpt(n.body, 90) || (n.link ? '↗ Enlace externo' : 'Vacío')}</span>
+                    <span className="muted small notecard__ex">{excerpt(n.body, 90) || (n.link ? 'Enlace externo' : 'Vacío')}</span>
                     <span className="tags">
                       {n.link && (
                         <span className="tag tag--blue" title={n.link}>
-                          ↗ {linkLabel(n.link)}
+                          {linkLabel(n.link)}
                         </span>
                       )}
                       {n.courseId && <span className="tag tag--plain">{courseName(n.courseId) ?? 'Curso borrado'}</span>}
@@ -294,7 +297,7 @@ export default function Apuntes() {
                     aria-label={n.pinned ? `Dejar de fijar ${n.title}` : `Fijar ${n.title} arriba`}
                     title={n.pinned ? 'Fijado arriba' : 'Fijar arriba'}
                   >
-                    {n.pinned ? '★' : '☆'}
+                    <Icon name="pin" size={12} />
                   </button>
                 </li>
               ))}

@@ -139,7 +139,7 @@ function BackupPanel() {
     <>
       <div className="row">
         <Button small onClick={exportNow}>
-          ⬇ Exportar copia (.json)
+          Exportar copia (.json)
         </Button>
         <Button small onClick={() => fileRef.current?.click()}>
           ⬆ Importar copia

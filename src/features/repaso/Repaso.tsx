@@ -7,6 +7,7 @@ import { diffDays, longDate, today } from '@/core/dates';
 import { REVIEW_INTERVALS, RATINGS, dueReviews, focusedReviews, scheduledReviews, type DueReview, type Rating } from '@/core/review';
 import { coursesInPlay } from '@/core/stats';
 import { Bar, Button, Empty, PageHead, Panel, cx } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 /** Los cuatro escalones 1 · 3 · 7 · 14 días, con el actual marcado. */
 function Steps({ stage }: { stage: number }) {
@@ -219,7 +220,7 @@ export default function Repaso() {
                 <div className="row">
                   {rated === 0 && courses.length === 0 ? (
                     <Button variant="primary" onClick={() => openModal({ type: 'course' })}>
-                      ＋ Crear un curso
+                      <Icon name="plus" size={12} /> Crear un curso
                     </Button>
                   ) : focusCourse && allDue > 0 ? (
                     <Link className="btn btn--primary" to="/repaso">

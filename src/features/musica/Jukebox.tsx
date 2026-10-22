@@ -3,6 +3,7 @@ import { useUi } from '@/state/ui';
 import { TRACKS, TRACK_LIST } from '@/audio/music';
 import { Button, Panel, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 
 /**
  * Reproductor de la música de fondo, sintetizada con Web Audio: no hay archivos que descargar,
@@ -44,13 +45,13 @@ export function Jukebox() {
           ⏮
         </Button>
         <Button variant="primary" onClick={toggle} aria-label={playing ? 'Pausar' : 'Reproducir'} aria-pressed={playing}>
-          {playing ? '⏸ Pausa' : '▶ Reproducir'}
+          <Icon name={playing ? 'pause' : 'play'} size={12} /> {playing ? 'Pausa' : 'Reproducir'}
         </Button>
         <Button small onClick={next} aria-label="Canción siguiente">
           ⏭
         </Button>
         <Button small onClick={toggleShuffle} aria-pressed={shuffle} aria-label="Orden aleatorio" className={cx(shuffle && 'is-on')}>
-          🔀 {shuffle ? 'Aleatorio' : 'En orden'}
+          {shuffle ? 'Aleatorio' : 'En orden'}
         </Button>
       </div>
 
@@ -67,7 +68,7 @@ export function Jukebox() {
           return (
             <li key={id}>
               <button type="button" className={cx('jb__track', active && 'is-on')} onClick={() => play(id)} aria-current={active || undefined}>
-                <span className="jb__n">{active && playing ? '♪' : i + 1}</span>
+                <span className="jb__n">{active && playing ? <Icon name="sound" size={12} /> : i + 1}</span>
                 <span className="grow">
                   <b>{t.title}</b>
                   <span className="muted small"> · {t.mood}</span>

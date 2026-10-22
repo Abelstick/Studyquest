@@ -5,6 +5,7 @@ import { useUi } from '@/state/ui';
 import { usePomodoro } from '@/state/pomodoro';
 import { SESSION_XP_PER_MIN } from '@/core/game';
 import { Button, ChipGroup, Field, Modal, NumberInput } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 const MINUTES = [5, 10, 20, 30, 45, 60].map((m) => ({ value: m, label: `${m} min` }));
 
@@ -75,10 +76,10 @@ export function SessionModal({ courseId: initialCourse, minutes: initialMinutes 
           <p className="session__question">¿Vas a estudiar ahora, o ya terminaste?</p>
           <div className="modal__actions">
             <Button variant="primary" onClick={startPomodoro} title="Abre el Pomodoro con este curso y esta duración de enfoque ya puestos">
-              ▶ Voy a estudiar: abrir el Pomodoro
+              <Icon name="play" size={12} /> Voy a estudiar: abrir el Pomodoro
             </Button>
             <Button variant="green" onClick={logNow} title="Marca estos minutos como estudiados ahora mismo, sin temporizador">
-              ✔ Ya estudié: registrar {minutes} min
+              <Icon name="check" size={12} /> Ya estudié: registrar {minutes} min
             </Button>
           </div>
           <p className="muted small">

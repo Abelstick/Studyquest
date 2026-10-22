@@ -1,4 +1,4 @@
-import type { AgendaCategory, AreaId } from '@/core/domain';
+import type { AgendaCategory, AreaId, TaskStatus } from '@/core/domain';
 import type { IconName } from './icons';
 
 /**
@@ -14,6 +14,13 @@ export const CATEGORY_ICON: Record<AgendaCategory, IconName> = {
   rest: 'rest',
   personal: 'home',
   other: 'pin',
+};
+
+/** Ícono del botón principal de una tarea según su estado actual (acompaña a NEXT_STATUS de core/tasks). */
+export const NEXT_STATUS_ICON: Record<TaskStatus, IconName> = {
+  todo: 'play',
+  doing: 'check',
+  done: 'sync',
 };
 
 export const AREA_ICON: Record<AreaId, IconName> = {

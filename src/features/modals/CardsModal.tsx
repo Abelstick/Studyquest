@@ -8,6 +8,7 @@ import { useUi } from '@/state/ui';
 import { newId } from '@/core/dates';
 import { cleanCards, parseCards } from '@/core/review';
 import { Button, Modal, TextInput } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 interface Draft {
   id: string;
@@ -73,11 +74,11 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
           <div className="row">
             {apiKey ? (
               <Button small loading={busy} onClick={() => void generate()}>
-                {busy ? 'Creando tarjetas' : '✨ Generar 5 con IA'}
+                {busy ? 'Creando tarjetas' : 'Generar 5 con IA'}
               </Button>
             ) : (
               <Button small onClick={() => openModal({ type: 'ai' })}>
-                {remote === 'encrypted' ? '🔓 Desbloquear IA' : '🔑 Activar IA'}
+                {remote === 'encrypted' ? 'Desbloquear IA' : 'Activar IA'}
               </Button>
             )}
           </div>
@@ -98,7 +99,7 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
                 <div className="fcard__head">
                   <span className="kicker">Tarjeta {i + 1}</span>
                   <button type="button" className="icon-btn icon-btn--sm" aria-label={`Quitar tarjeta ${i + 1}`} onClick={() => remove(d.id)}>
-                    ✕
+                    <Icon name="close" size={10} />
                   </button>
                 </div>
                 <label className="fcard__side">
@@ -116,7 +117,7 @@ export function CardsModal({ courseId, topicId }: { courseId: string; topicId: s
 
         <div className="row">
           <Button small onClick={() => setDrafts((list) => [...list, { id: newId(), q: '', a: '' }])}>
-            ＋ Añadir tarjeta
+            <Icon name="plus" size={12} /> Añadir tarjeta
           </Button>
           <Button small variant="ghost" onClick={() => setBulkOpen(!bulkOpen)} aria-expanded={bulkOpen}>
             {bulkOpen ? 'Ocultar pegado rápido' : 'Pegar varias de golpe'}

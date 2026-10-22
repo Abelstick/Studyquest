@@ -15,6 +15,7 @@ import { IfThenList } from '@/ui/IfThenList';
 import { HabitScheduler } from '@/features/calendario/HabitScheduler';
 import { HabitWeek } from '@/features/habitos/HabitWeek';
 import { Bar, Button, Modal, Tag, cx } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 /** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
 const NO_CHAINS: HabitChain[] = [];
@@ -76,7 +77,13 @@ export function HabitDetailModal({ id }: { id: string }) {
   return (
     <Modal title={habit.title} kicker={quit ? 'Mal hábito a dejar' : 'Hábito'} onClose={close} wide>
       <div className="detail__status">
-        <Tag tone={status.tone}>{state === 'done' ? `✔ ${doneText}` : status.label}</Tag>
+        <Tag tone={status.tone}>{state === 'done' ? (
+            <>
+              <Icon name="check" size={10} /> {doneText}
+            </>
+          ) : (
+            status.label
+          )}</Tag>
         <Tag tone="xp">+{habit.xp} XP</Tag>
         {minMet && <Tag tone="green">Mínimo cumplido</Tag>}
         {stats.current > 0 && <Tag tone="plain">Racha {stats.current}</Tag>}

@@ -96,7 +96,7 @@ export function HabitScheduler({ habit }: Readonly<{ habit: Habit }>) {
           </p>
         </>
       ) : (
-        <p className="muted small">No encuentro un hueco libre casi ningún día. Libera un rato en el calendario o crea el bloque a mano desde «＋ Actividad».</p>
+        <p className="muted small">No encuentro un hueco libre casi ningún día. Libera un rato en el calendario o crea el bloque a mano desde «Actividad».</p>
       )}
     </div>
   );

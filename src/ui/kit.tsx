@@ -3,6 +3,7 @@ import { useUi } from '@/state/ui';
 import { sfx } from '@/audio/sfx';
 import { Sprite } from './Sprite';
 import { Spinner } from './Spinner';
+import { Icon } from './Icon';
 import type { SpriteName } from './sprites';
 
 export const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' ');
@@ -315,7 +316,7 @@ export function Modal({ title, kicker, onClose, children, wide }: { title: strin
             </h2>
           </div>
           <button type="button" className="icon-btn" onClick={onClose} aria-label="Cerrar">
-            <span aria-hidden="true">✕</span>
+            <Icon name="close" size={12} />
           </button>
         </div>
         <div className="modal__body">{children}</div>

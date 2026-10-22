@@ -7,6 +7,7 @@ import { certState, daysToExpiry, linkLabel, safeUrl, sortCertifications } from 
 import { shortDate } from '@/core/dates';
 import { Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 
 /** Aviso de caducidad, solo cuando hay algo que decir. */
 function Expiry({ cert }: { cert: Certification }) {
@@ -46,7 +47,7 @@ function Card({ cert, courseName }: { cert: Certification; courseName?: string }
       <div className="cert__actions">
         {link ? (
           <a className="btn btn--primary btn--sm" href={link} target="_blank" rel="noopener noreferrer">
-            🔗 Ver certificado
+            Ver certificado
           </a>
         ) : (
           <span className="muted small">Sin enlace</span>
@@ -86,7 +87,7 @@ export default function Certificaciones() {
         hint="Guarda aquí los certificados que consigues, con su enlace para abrirlos o verificarlos cuando te los pidan. Cada uno suma una pieza a tu museo."
         right={
           <Button variant="primary" onClick={() => openModal({ type: 'certification' })}>
-            ＋ Nueva certificación
+            <Icon name="plus" size={12} /> Nueva certificación
           </Button>
         }
       />
@@ -107,7 +108,9 @@ export default function Certificaciones() {
               <p className="kicker">
                 {certifications.length} {certifications.length === 1 ? 'certificación' : 'certificaciones'}
               </p>
-              <Tag tone="xp">🏅 {certifications.length} piezas del museo</Tag>
+              <Tag tone="xp">
+          <Sprite name="trophy" size={12} /> {certifications.length} piezas del museo
+        </Tag>
             </div>
             {(expiring.length > 0 || expired.length > 0) && (
               <p className="muted small">

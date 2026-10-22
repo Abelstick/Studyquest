@@ -7,6 +7,7 @@ import { findConflicts } from '@/core/conflicts';
 import { findRoutine, freeWindows, habitsWithoutTime, planTaskSlots, routineDrafts, routineOf, slotLabel, taskBlockDrafts, tasksWithoutTime, validateRoutine, type RoutineInput } from '@/core/routine';
 import { Button, ChipGroup, Field, Modal, Tag, cx } from '@/ui/kit';
 import { HabitScheduler } from '../calendario/HabitScheduler';
+import { Icon } from '@/ui/Icon';
 
 const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const hm = (m: number) => toClock(m);
@@ -127,13 +128,13 @@ export function RoutineModal() {
 
         <section className="rt__sec" aria-labelledby="rt-habitos">
           <h3 id="rt-habitos" className="rv__title">
-            2 · A qué hora haces tus hábitos {without.length === 0 && habits.length > 0 && <Tag tone="green">✔ Todos con hora</Tag>}
+            2 · A qué hora haces tus hábitos {without.length === 0 && habits.length > 0 && <Tag tone="green"><Icon name="check" size={10} /> Todos con hora</Tag>}
           </h3>
           {habits.length === 0 ? (
             <p className="muted small">
               Aún no tienes hábitos. Crea uno pequeño (por ejemplo, estudiar 20 minutos) y vuelve aquí para ponerle hora.{' '}
               <Button small onClick={() => openModal({ type: 'habit' })}>
-                ＋ Crear un hábito
+                <Icon name="plus" size={12} /> Crear un hábito
               </Button>
             </p>
           ) : (
@@ -151,7 +152,7 @@ export function RoutineModal() {
 
         <section className="rt__sec" aria-labelledby="rt-tareas">
           <h3 id="rt-tareas" className="rv__title">
-            3 · Cuándo haces tus tareas {pending.length === 0 && tasks.some((t) => t.status !== 'done') && <Tag tone="green">✔ Con hora</Tag>}
+            3 · Cuándo haces tus tareas {pending.length === 0 && tasks.some((t) => t.status !== 'done') && <Tag tone="green"><Icon name="check" size={10} /> Con hora</Tag>}
           </h3>
           {!events.length ? (
             <p className="muted small">Guarda primero tu horario (arriba) y te propongo un rato libre para cada tarea con fecha.</p>
@@ -168,13 +169,13 @@ export function RoutineModal() {
                   return (
                     <li key={t.id}>
                       <p className="rv__name">{t.title}</p>
-                      <p className="muted small">{mine.length ? `🕒 ${slotLabel(mine[0], today())}${mine.length > 1 ? ` y ${mine.length - 1} sesión${mine.length > 2 ? 'es' : ''} más` : ''}` : 'No encuentro un rato libre antes de su plazo.'}</p>
+                      <p className="muted small">{mine.length ? `${slotLabel(mine[0], today())}${mine.length > 1 ? ` y ${mine.length - 1} sesión${mine.length > 2 ? 'es' : ''} más` : ''}` : 'No encuentro un rato libre antes de su plazo.'}</p>
                     </li>
                   );
                 })}
               </ul>
               {pending.length > 6 && <p className="muted small">…y {pending.length - 6} más.</p>}
-              {taskPlan && taskPlan.unplaced.length > 0 && <p className="form__info">⚠ {taskPlan.unplaced.length} no caben del todo antes de su plazo: conviene moverles la fecha.</p>}
+              {taskPlan && taskPlan.unplaced.length > 0 && <p className="form__info">{taskPlan.unplaced.length} no caben del todo antes de su plazo: conviene moverles la fecha.</p>}
               <div className="row">
                 <Button variant="primary" onClick={reserveAll} disabled={!taskPlan?.slots.length}>
                   Reservar tiempo para mis tareas
@@ -190,7 +191,7 @@ export function RoutineModal() {
             Se descarga un archivo <b>.ics</b> con tu trabajo, tus bloques y tus hábitos con hora (las series se exportan como repetición). En Google Calendar:
             «Configuración → Importar y exportar → Importar». Es una copia del momento: si cambias algo aquí, vuelve a exportar (no duplica; actualiza).
           </p>
-          <Button onClick={() => openModal({ type: 'export', from: today(), to: addDays(today(), 29) })}>📅 Exportar los próximos 30 días</Button>
+          <Button onClick={() => openModal({ type: 'export', from: today(), to: addDays(today(), 29) })}>Exportar los próximos 30 días</Button>
         </section>
 
         <div className="modal__actions">

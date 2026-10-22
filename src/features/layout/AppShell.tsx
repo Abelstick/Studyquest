@@ -286,7 +286,7 @@ function PomodoroChip() {
   return (
     <Link to="/pomodoro" className="tag tag--xp pomo-chip" title={`${PHASE_LABEL[phase]}${status === 'paused' ? ' (en pausa)' : ''}`}>
       <Sprite name="tomato" size={14} /> {formatClock(left)}
-      {status === 'paused' && ' ⏸'}
+      {status === 'paused' && <Icon name="pause" size={10} />}
     </Link>
   );
 }

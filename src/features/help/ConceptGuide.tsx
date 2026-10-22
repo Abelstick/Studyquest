@@ -4,6 +4,7 @@ import { CONCEPTS, CONCEPT_ORDER, EXAMPLE_CHAINS, FAQ, QUIZ, type ConceptId } fr
 import { useUi, type ModalState } from '@/state/ui';
 import { Button, Modal, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 
 const CREATE: Record<ConceptId, Exclude<ModalState, null>> = {
   tarea: { type: 'task' },
@@ -17,7 +18,7 @@ export function GuideButton({ label = '¿Cuál uso?' }: { label?: string }) {
   const openModal = useUi((s) => s.openModal);
   return (
     <Button small onClick={() => openModal({ type: 'guide' })} title="Diferencia entre tareas, hábitos, metas y proyectos">
-      <span aria-hidden="true">❓</span> {label}
+      <Icon name="help" size={12} /> {label}
     </Button>
   );
 }
@@ -46,7 +47,7 @@ function Chains() {
           </button>
         ))}
       </div>
-      <p className="guide__ambition">💭 {chain.ambition}</p>
+      <p className="guide__ambition">{chain.ambition}</p>
       <ul>
         <li>{chain.meta}</li>
         <li>{chain.habito}</li>
@@ -87,7 +88,7 @@ function Quiz() {
               </div>
               {picked && (
                 <p className="quiz__why" role="status">
-                  {picked === q.answer ? '✔ ¡Correcto! ' : `✘ Es ${CONCEPTS[q.answer].name.toLowerCase()}. `}
+                  {picked === q.answer ? '¡Correcto! ' : `No: es ${CONCEPTS[q.answer].name.toLowerCase()}. `}
                   {q.why}
                 </p>
               )}
@@ -149,7 +150,7 @@ export function ConceptGuide() {
                   </ul>
                 </details>
                 <Button small onClick={() => openModal(CREATE[id])}>
-                  ＋ Crear {c.name.toLowerCase()}
+                  <Icon name="plus" size={12} /> Crear {c.name.toLowerCase()}
                 </Button>
               </article>
             );
@@ -174,7 +175,7 @@ export function ConceptGuide() {
 
         <div className="modal__actions">
           <Link className="btn btn--primary" to="/planificador" onClick={closeModal}>
-            ✨ Que el Planificador lo arme por mí
+            Que el Planificador lo arme por mí
           </Link>
           <Button onClick={closeModal}>Entendido</Button>
         </div>

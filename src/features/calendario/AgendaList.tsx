@@ -31,7 +31,7 @@ export function AgendaList({ from, to, occs, entries, now, onOpen, onOpenTask, o
     }))
     .filter((r) => r.items.length || r.deadlines.length);
 
-  if (!rows.length) return <p className="muted">No hay actividades ni fechas límite en los próximos días. Crea una con «＋ Actividad» o pulsa una hora libre en la vista Día.</p>;
+  if (!rows.length) return <p className="muted">No hay actividades ni fechas límite en los próximos días. Crea una con «Actividad» o pulsa una hora libre en la vista Día.</p>;
 
   return (
     <ol className="agenda">

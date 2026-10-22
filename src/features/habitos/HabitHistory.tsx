@@ -3,6 +3,7 @@ import { addDays, shortDate, WEEKDAYS_SHORT } from '@/core/dates';
 import { weekSummary } from '@/core/game';
 import type { Habit, HabitLog, ISODate } from '@/core/domain';
 import { Bar, Button, cx } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 const fmt = (n: number) => String(Math.round(n * 100) / 100);
 const WEEKS_PER_PAGE = 6;
@@ -31,7 +32,7 @@ export function HabitHistory({ habit, logs, now }: { habit: Habit; logs: HabitLo
             </div>
             <div className="hhist__days" role="img" aria-label={`Semana del ${shortDate(w.from)}: ${w.pct}% cumplido`}>
               {w.days.map((d, i) => {
-                const text = d.done ? (habit.target <= 1 ? '✔' : fmt(d.value)) : d.value > 0 ? fmt(d.value) : '';
+                const text = d.done ? (habit.target <= 1 ? <Icon name="check" size={10} /> : fmt(d.value)) : d.value > 0 ? fmt(d.value) : '';
                 return (
                   <span
                     key={d.date}

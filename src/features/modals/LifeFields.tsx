@@ -5,6 +5,7 @@ import type { AreaId, IfThen } from '@/core/domain';
 import { MAX_IF_THEN } from '@/core/ifthen';
 import { AreaChips } from '@/ui/Area';
 import { Button, Field } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 /** Bloque plegable de un formulario: lo opcional queda recogido para que lo frecuente sea corto. */
 export function Fold({ summary, open, children }: Readonly<{ summary: string; open?: boolean; children: ReactNode }>) {
@@ -71,7 +72,7 @@ export function IfThenEditor({ value, onChange }: Readonly<{ value: IfThen[]; on
       ))}
       {value.length < MAX_IF_THEN && (
         <Button small onClick={() => onChange([...value, { id: newId(), when: '', then: '' }])}>
-          ＋ Añadir plan «si… entonces…»
+          <Icon name="plus" size={12} /> Añadir plan «si… entonces…»
         </Button>
       )}
     </div>

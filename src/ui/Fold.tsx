@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import { useUi } from '@/state/ui';
 import { cx } from './kit';
+import { Icon } from './Icon';
 
 /** Abierto o cerrado de una sección plegable. Se recuerda por id entre visitas; sin elección, usa `defaultOpen`. */
 export function useFold(id: string, defaultOpen = true) {
@@ -23,7 +24,7 @@ export function FoldToggle({ open, onToggle, controls, children, className }: Re
   return (
     <button type="button" className={cx('fold__toggle', className)} aria-expanded={open} aria-controls={controls} onClick={onToggle}>
       <span className="fold__chev" aria-hidden="true">
-        {open ? '▾' : '▸'}
+        <Icon name={open ? 'down' : 'play'} size={10} />
       </span>
       {children}
     </button>

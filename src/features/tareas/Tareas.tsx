@@ -16,6 +16,7 @@ import { matchesArea, type AreaFilter } from '@/core/areas';
 import type { AreaId } from '@/core/domain';
 import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
+import { NEXT_STATUS_ICON } from '@/ui/domainIcons';
 import { useFlipReorder } from '@/ui/motion';
 
 const COLUMNS: { status: TaskStatus; title: string; sprite: 'qblock' | 'flower' | 'star' }[] = [
@@ -124,13 +125,7 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
       <div className="task__actions">
         {/* Con el desglose terminado el siguiente paso ya no es «empezar», sino cerrarla. */}
         <Button variant={ready || task.status === 'doing' ? 'primary' : 'ghost'} small block onClick={() => setTaskStatus(task.id, ready ? 'done' : next.to)}>
-          {ready ? (
-            <>
-              <Icon name="check" size={12} /> Completar
-            </>
-          ) : (
-            next.label
-          )}
+          <Icon name={ready ? 'check' : NEXT_STATUS_ICON[task.status]} size={12} /> {ready ? 'Completar' : next.label}
         </Button>
         <Button small onClick={() => openModal({ type: 'task', id: task.id })} aria-label={`Editar ${task.title}`}>
           Editar

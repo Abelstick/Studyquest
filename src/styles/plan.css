@@ -379,6 +379,14 @@
 .startguide__list li.is-now {
   font-weight: 700;
 }
+/* Paso pendiente: un cuadrado hueco del tamaño de los íconos (radio 0, como todo). */
+.startguide__dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border: var(--bw) solid currentColor;
+  vertical-align: -0.05em;
+}
 @media (max-width: 700px) {
   .startguide__now {
     grid-template-columns: auto minmax(0, 1fr);

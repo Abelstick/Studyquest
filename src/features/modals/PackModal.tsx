@@ -153,7 +153,7 @@ export function PackModal() {
             ) : (
               <div className="row">
                 <Button variant="primary" disabled={topic.trim().length < 3} onClick={() => void generate()}>
-                  ✨ Generar aquí con Gemini
+                  Generar aquí con Gemini
                 </Button>
                 <span className="muted small">Usa tu clave · modelo {model.replace(/^models\//, '')}</span>
               </div>
@@ -247,7 +247,7 @@ export function PackModal() {
                 </p>
               </div>
             )}
-            {result.warnings.map((w) => <p key={w} className="field__hint">⚠ {w}</p>)}
+            {result.warnings.map((w) => <p key={w} className="field__hint">{w}</p>)}
           </div>
         )}
 

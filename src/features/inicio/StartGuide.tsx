@@ -113,7 +113,7 @@ export function StartGuide({ always }: Readonly<{ always?: boolean }>) {
       <ol className="startguide__list" aria-label="Pasos">
         {steps.map((s) => (
           <li key={s.id} className={cx(s.done && 'is-done', s.id === current?.id && 'is-now')}>
-            {s.done ? <Icon name="check" size={11} /> : s.id === current?.id ? <Icon name="play" size={10} /> : <span aria-hidden="true">○</span>} {s.title}
+            {s.done ? <Icon name="check" size={11} /> : s.id === current?.id ? <Icon name="play" size={10} /> : <span className="startguide__dot" aria-hidden="true" />} {s.title}
             <span className="sr-only">{s.done ? ' (hecho)' : ''}</span>
           </li>
         ))}

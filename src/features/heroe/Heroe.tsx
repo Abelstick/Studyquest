@@ -9,6 +9,7 @@ import {
 import { Bar, Button, Field, PageHead, Segmented, TextInput, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { ItemIcon, PaletteSwatch } from './ItemIcon';
+import { Icon } from '@/ui/Icon';
 
 // three.js pesa: solo se descarga al abrir esta pantalla.
 const HeroViewer = lazy(() => import('./HeroViewer'));
@@ -126,7 +127,7 @@ function Evolution({ hero, level, xp, onEvolve }: { hero: Hero; level: number; x
       </ol>
       {ready ? (
         <Button variant="coin" block className="evo__go" onClick={onEvolve}>
-          ⚡ ¡Evolucionar a {r.stageNames[hero.stage + 1]}!
+          ¡Evolucionar a {r.stageNames[hero.stage + 1]}!
         </Button>
       ) : next ? (
         <p className="small evo__next">
@@ -152,7 +153,7 @@ function ItemCard({ item, hero, previewing, onPreview }: { item: HeroItem; hero:
   if (state === 'equipped')
     cta = (
       <Button small variant="green" aria-pressed onClick={() => equipHero(item.slot, null)}>
-        ✔ Puesto
+        <Icon name="check" size={12} /> Puesto
       </Button>
     );
   else if (state === 'owned')
@@ -164,7 +165,7 @@ function ItemCard({ item, hero, previewing, onPreview }: { item: HeroItem; hero:
   else if (state === 'locked')
     cta = (
       <Button small disabled>
-        🔒 {stageName(hero.race, item.stage)}
+        <Icon name="lock" size={10} /> {stageName(hero.race, item.stage)}
       </Button>
     );
   else if (state === 'poor')
@@ -227,7 +228,13 @@ function OriginalSkin({ hero, previewing, onPreview }: { hero: Hero; previewing:
           </Button>
         )}
         <Button small variant={on ? 'green' : 'primary'} aria-pressed={on} onClick={() => !on && equipHero('skin', null)}>
-          {on ? '✔ Puesta' : 'Usar'}
+          {on ? (
+                <>
+                  <Icon name="check" size={12} /> Puesta
+                </>
+              ) : (
+                'Usar'
+              )}
         </Button>
       </div>
     </li>
@@ -324,7 +331,7 @@ export default function Heroe() {
           <section className="panel" aria-labelledby="hero-stats">
             <div className="split">
               <h2 id="hero-stats" className="section-title">
-                // Estadísticas
+                Estadísticas
               </h2>
               <p className="hpower">
                 Poder <strong>{stats.power}</strong>
@@ -360,7 +367,7 @@ export default function Heroe() {
           <section className="panel" aria-labelledby="hero-shop">
             <div className="split hero-shop__head">
               <h2 id="hero-shop" className="section-title">
-                // Tienda del héroe
+                Tienda del héroe
               </h2>
               <Segmented label="Tipo de objeto" value={slot} options={(['weapon', 'power', 'skin'] as HeroSlot[]).map((s) => ({ value: s, label: SLOT_LABEL[s] }))} onChange={setSlot} />
             </div>

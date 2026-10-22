@@ -5,6 +5,7 @@ import { newId } from '@/core/dates';
 import type { HabitChain } from '@/core/domain';
 import { CHAIN_BONUS_XP, MAX_CHAIN_LINKS, looseHabits } from '@/core/chains';
 import { Button, Field, Modal, TextInput } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 /** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
 const NO_CHAINS: HabitChain[] = [];
@@ -70,7 +71,7 @@ export function ChainModal({ id }: { id?: string }) {
                     ↓
                   </button>
                   <button type="button" className="icon-btn icon-btn--sm" onClick={() => toggle(hid)} aria-label={`Quitar ${title(hid)} de la cadena`}>
-                    ✕
+                    <Icon name="close" size={10} />
                   </button>
                 </li>
               ))}
@@ -83,7 +84,7 @@ export function ChainModal({ id }: { id?: string }) {
             <div className="chips">
               {available.filter((h) => !picked.includes(h.id)).map((h) => (
                 <button key={h.id} type="button" className="chip" onClick={() => toggle(h.id)} disabled={picked.length >= MAX_CHAIN_LINKS}>
-                  ＋ {h.title}
+                  <Icon name="plus" size={10} /> {h.title}
                 </button>
               ))}
               {available.every((h) => picked.includes(h.id)) && <p className="muted small">No quedan hábitos libres: los demás ya están en otra cadena.</p>}

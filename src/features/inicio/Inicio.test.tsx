@@ -166,7 +166,7 @@ describe('ficha de tarea', () => {
 
   it('el botón principal avanza el estado y Editar abre el formulario', () => {
     open(late);
-    fireEvent.click(screen.getByRole('button', { name: '▶ Empezar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Empezar' }));
     expect(spies.setTaskStatus).toHaveBeenCalledWith('t1', 'doing');
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
     expect(useUi.getState().modal).toEqual({ type: 'task', id: 't1' });
@@ -174,13 +174,13 @@ describe('ficha de tarea', () => {
 
   it('con todo el desglose hecho el botón pasa a completar', () => {
     open(task('t4', 'Con pasos', { subtasks: [{ id: 's1', title: 'Uno', done: true }] }));
-    fireEvent.click(screen.getByRole('button', { name: '✔ Completar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Completar' }));
     expect(spies.setTaskStatus).toHaveBeenCalledWith('t4', 'done');
   });
 
   it('una tarea hecha ofrece reabrirla y no deja tocar las subtareas', () => {
     open(task('t5', 'Cerrada', { status: 'done', completedAt: today(), subtasks: [{ id: 's1', title: 'Uno', done: true }] }));
-    expect(screen.getByRole('button', { name: '↩ Reabrir' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Reabrir' })).toBeTruthy();
     expect((screen.getByRole('checkbox', { name: 'Uno' }) as HTMLInputElement).disabled).toBe(true);
   });
 });

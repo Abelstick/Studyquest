@@ -1,18 +1,19 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useData } from '@/state';
 import { shortDate, WEEKDAYS_SHORT } from '@/core/dates';
 import { MEASURE_LABEL, isCounter, stepForCounter, weekStrip, habitProgress, logFor } from '@/core/game';
 import { catchUpDay } from '@/core/catchup';
 import type { Habit, HabitLog, ISODate } from '@/core/domain';
 import { Button, cx } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 const isBool = (h: Habit) => h.measure === 'boolean' || h.target <= 1;
 const stepFor = (h: Habit) => (isCounter(h) ? stepForCounter(h) : h.measure === 'hours' ? 0.5 : h.measure === 'minutes' ? 5 : 1);
 const fmt = (n: number) => String(Math.round(n * 100) / 100);
 
-/** Lo que se ve dentro del día: «6/10» si hay avance, ✔ si está completo, nada si está en blanco. */
-function cellText(h: Habit, value: number, done: boolean): string {
-  if (done) return isBool(h) ? '✔' : `${fmt(value)}/${fmt(h.target)}`;
+/** Lo que se ve dentro del día: «6/10» si hay avance, una marca si está completo, nada si está en blanco. */
+function cellText(h: Habit, value: number, done: boolean): ReactNode {
+  if (done) return isBool(h) ? <Icon name="check" size={10} /> : `${fmt(value)}/${fmt(h.target)}`;
   return value > 0 ? `${fmt(value)}/${fmt(h.target)}` : '';
 }
 

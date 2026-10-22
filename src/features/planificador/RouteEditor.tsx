@@ -97,7 +97,7 @@ export function RouteEditor({ roadmap, onChange }: Props) {
                   ↓
                 </button>
                 <button type="button" className="icon-btn icon-btn--sm" aria-label={`Quitar ${m.title || `módulo ${i + 1}`}`} onClick={() => onChange({ ...roadmap, modules: roadmap.modules.filter((_, j) => j !== i) })}>
-                  ✕
+                  <Icon name="close" size={10} />
                 </button>
               </span>
             </div>

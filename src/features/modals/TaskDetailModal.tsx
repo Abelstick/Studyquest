@@ -7,6 +7,8 @@ import { deadlineText } from '@/core/missions';
 import { NEXT_STATUS, PRIORITY_LABEL, STATUS_LABEL, bossHp, isBoss, isOverdue, recurrenceLabel, taskReward, timeLeftLabel } from '@/core/tasks';
 import type { TaskStatus } from '@/core/domain';
 import { Bar, Button, Modal, Tag, cx } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
+import { NEXT_STATUS_ICON } from '@/ui/domainIcons';
 import { TaskScheduler } from '@/features/calendario/TaskScheduler';
 
 const STATUS_TONE: Record<TaskStatus, 'plain' | 'blue' | 'green'> = { todo: 'plain', doing: 'blue', done: 'green' };
@@ -82,7 +84,9 @@ export function TaskDetailModal({ id }: { id: string }) {
               </li>
             ))}
           </ul>
-          {ready && <p className="task__ready">✔ Todo el desglose hecho: solo falta darla por terminada.</p>}
+          {ready && <p className="task__ready">
+          <Icon name="check" size={10} /> Todo el desglose hecho: solo falta darla por terminada.
+        </p>}
         </section>
       )}
 
@@ -101,7 +105,7 @@ export function TaskDetailModal({ id }: { id: string }) {
 
       <div className="modal__actions">
         <Button variant={ready || task.status === 'doing' ? 'primary' : 'ghost'} onClick={() => setTaskStatus(task.id, ready ? 'done' : next.to)}>
-          {ready ? '✔ Completar' : next.label}
+          <Icon name={ready ? 'check' : NEXT_STATUS_ICON[task.status]} size={12} /> {ready ? 'Completar' : next.label}
         </Button>
         <Button onClick={() => openModal({ type: 'task', id: task.id })}>Editar</Button>
         <Link className="btn btn--ghost" to={`/tareas?tarea=${encodeURIComponent(task.id)}`} onClick={close}>

@@ -201,7 +201,7 @@ export default function Calendario() {
               Hoy
             </Button>
             <Button small variant="primary" onClick={() => createAt(view === 'day' ? cursor : selected)}>
-              ＋ Actividad
+              <Icon name="plus" size={12} /> Actividad
             </Button>
             {conflictCount > 0 && (
               <Button small variant="danger" onClick={() => openModal({ type: 'conflicts' })} title="Ratos reservados que se pisan con otra cosa">
@@ -325,10 +325,10 @@ export default function Calendario() {
             right={
               <div className="row">
                 <Button small variant="primary" onClick={() => createAt(selected)}>
-                  ＋ Actividad
+                  <Icon name="plus" size={12} /> Actividad
                 </Button>
                 <Button small onClick={() => openModal({ type: 'task', dueDate: selected })}>
-                  ＋ Tarea
+                  <Icon name="plus" size={12} /> Tarea
                 </Button>
               </div>
             }

@@ -1217,7 +1217,6 @@
   background: var(--panel);
   color: var(--text);
   border: var(--bw) solid var(--line);
-  box-shadow: var(--sh);
 }
 .fcard__head {
   display: flex;
@@ -1234,7 +1233,9 @@
   background: color-mix(in srgb, var(--yellow) 16%, var(--field));
 }
 .fcard__label {
-  font-family: var(--font-pixel);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--muted);
 }

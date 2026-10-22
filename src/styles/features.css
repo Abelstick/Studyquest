@@ -162,9 +162,11 @@
   gap: 16px;
 }
 .flash__topic {
-  font-size: 20px;
-  font-weight: 900;
-  line-height: 1.25;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  line-height: 1.05;
 }
 .flash__progress {
   display: flex;
@@ -223,7 +225,6 @@
   padding: 22px;
   overflow: auto;
   border: var(--bw) solid var(--line);
-  box-shadow: var(--sh);
   backface-visibility: hidden;
   transition: transform 0.45s steps(7);
 }
@@ -242,11 +243,15 @@
 .flashcard.is-flipped .flashcard__back {
   transform: rotateY(0);
 }
+/* La pregunta es el dato de la pantalla: rótulo condensado grande, centrado en la tarjeta. */
 .flashcard__text {
-  font-size: 21px;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-size: clamp(24px, 3.2vw, 36px);
   font-weight: 800;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
+  line-height: 1.1;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 .flashcard__hint {
   font-size: 12px;
@@ -266,7 +271,6 @@
   color: var(--text);
   background: var(--panel-2);
   border: var(--bw) solid var(--line);
-  box-shadow: var(--sh-sm);
   cursor: pointer;
 }
 .rate__btn span {
@@ -2476,14 +2480,15 @@ select.input {
   text-align: left;
   background: var(--panel);
   border: var(--bw) solid var(--line);
-  box-shadow: var(--sh-sm);
   color: var(--text);
   font: inherit;
   transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
 }
 .notecard:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: var(--sh);
+  border-color: var(--ink);
+}
+:root[data-theme='dark'] .notecard:hover {
+  border-color: var(--text);
 }
 .notecard.is-on {
   background: var(--panel-2);
@@ -2508,10 +2513,11 @@ select.input {
   width: 28px;
   height: 28px;
   background: transparent;
-  border: 2px solid var(--line-soft);
-  color: var(--xp-text);
-  font-size: 14px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--bw) solid var(--line-soft);
+  color: var(--muted);
 }
 .notecard__pin[aria-pressed='true'] {
   background: var(--yellow);
@@ -2525,13 +2531,14 @@ select.input {
   overflow-wrap: anywhere;
 }
 .note__h1 {
-  font-family: var(--font-pixel);
-  font-size: 13px;
-  line-height: 1.5;
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  line-height: 1.05;
 }
 .note__h2 {
-  font-weight: 900;
+  font-weight: 700;
   font-size: 15px;
 }
 .note__ul,
@@ -2640,10 +2647,10 @@ select.input {
   height: clamp(300px, 52vh, 460px);
   border: var(--bw) solid var(--line);
   overflow: hidden;
+  /* El estudio del héroe es una escena nocturna como las del resto de la app (antes era un degradado morado). */
   background:
-    radial-gradient(ellipse 55% 35% at 50% 88%, rgba(255, 255, 255, 0.22), transparent 70%),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 6px),
-    linear-gradient(#141033, #2f2766 55%, #5a4aa8);
+    radial-gradient(ellipse 55% 35% at 50% 88%, color-mix(in srgb, var(--cream) 20%, transparent), transparent 70%),
+    linear-gradient(var(--scene-night-1), var(--scene-night-2));
 }
 @media (max-width: 560px) {
   .hero3d {
@@ -2678,9 +2685,12 @@ select.input {
   gap: 10px;
 }
 .hero3d__hint {
-  font-family: var(--font-pixel);
-  color: #ffffff;
-  text-shadow: 1px 1px 0 #000000;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--cream);
+  text-shadow: 1px 1px 0 var(--ink);
   white-space: nowrap;
 }
 .hero3d--off {
@@ -2696,10 +2706,12 @@ select.input {
   color: #e6e1ff;
 }
 .hero3d__off {
-  font-family: var(--font-pixel);
-  font-size: 10px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
   line-height: 1.6;
-  color: #ffffff;
+  color: var(--cream);
 }
 .hero-preview {
   position: absolute;
@@ -2715,8 +2727,7 @@ select.input {
   padding: 6px 8px;
   background: var(--panel);
   color: var(--text);
-  border: 2px solid var(--line);
-  box-shadow: var(--sh-sm);
+  border: var(--bw) solid var(--line);
   font-size: 13px;
 }
 .hero-card__id {
@@ -2728,8 +2739,10 @@ select.input {
 }
 .hero-card__name {
   margin: 4px 0 8px;
-  font-family: var(--font-pixel);
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 800;
+  font-size: var(--fs-xl);
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -2752,7 +2765,7 @@ select.input {
   text-align: center;
   background: var(--panel-2);
   color: var(--text);
-  border: 2px solid var(--line-soft);
+  border: var(--bw) solid var(--line-soft);
 }
 .evo__step.is-done {
   background: color-mix(in srgb, var(--yellow) 28%, var(--panel));
@@ -2763,21 +2776,21 @@ select.input {
   background: var(--yellow);
 }
 .evo__step.is-ready {
-  border: 2px dashed var(--xp-text);
+  border: var(--bw) dashed var(--xp-text);
   animation: evo-ready 0.9s steps(2) infinite;
 }
 .evo__n {
-  font-family: var(--font-pixel);
-  font-size: 12px;
+  font-family: var(--font-num);
+  font-size: 14px;
 }
 .evo__name {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
 .evo__lv {
-  font-family: var(--font-pixel);
+  font-family: var(--font-num);
   color: var(--muted);
 }
 .evo__step.is-now .evo__lv {
@@ -2803,7 +2816,10 @@ select.input {
 /* Estadísticas */
 .hpower {
   margin: 0;
-  font-family: var(--font-pixel);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
   white-space: nowrap;
 }
 .hpower strong {
@@ -2832,7 +2848,7 @@ select.input {
 }
 .hstat dt {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .hstat dd {
   display: flex;
@@ -2846,15 +2862,15 @@ select.input {
 }
 .hstat__n {
   min-width: 4.5em;
-  font-family: var(--font-pixel);
-  font-size: 10px;
+  font-family: var(--font-num);
+  font-size: 14px;
   text-align: right;
   white-space: nowrap;
 }
 .hstat__bonus {
   font-family: var(--font-body);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--green-text);
 }
 
@@ -2879,7 +2895,6 @@ select.input {
   background: var(--panel);
   color: var(--text);
   border: var(--bw) solid var(--line);
-  box-shadow: var(--sh-sm);
   transition: transform 0.07s steps(2);
 }
 .hitem:hover {
@@ -2906,14 +2921,14 @@ select.input {
   height: 56px;
   background: var(--panel-2);
   color: var(--text);
-  border: 2px solid var(--line);
+  border: var(--bw) solid var(--line);
 }
 .hitem__body {
   min-width: 0;
 }
 .hitem__title {
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.25;
   text-transform: uppercase;
   overflow-wrap: anywhere;
@@ -2953,7 +2968,7 @@ select.input {
 .swatch4 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 2px solid var(--line);
+  border: var(--bw) solid var(--line);
 }
 .swatch4 i {
   display: block;
@@ -2998,7 +3013,6 @@ select.input {
 .race.is-on {
   background: var(--yellow);
   border-color: var(--line);
-  box-shadow: var(--sh-sm);
 }
 /* El radio se oculta a la vista pero sigue siendo el control: el foco se dibuja en la tarjeta. */
 .race input {
@@ -3025,8 +3039,10 @@ select.input {
   min-width: 0;
 }
 .race__name {
-  font-family: var(--font-pixel);
-  font-size: 10px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
   line-height: 1.5;
 }
 .race__arch {
@@ -3950,15 +3966,11 @@ a.chip {
 .bigstats__delta,
 .bars__v,
 .bars__axis,
-.evo__lv,
-.hpower,
 .jb__n,
 .plot__plate b,
 .pwd__toggle,
 .chainpick__n,
-.hero3d__hint,
-.dashhero__levelhead span,
-.fcard__label{
+.dashhero__levelhead span{
   font-size: 10px;
 }
 .chip--sm,

@@ -11,6 +11,7 @@ import { sfx } from '@/audio/sfx';
 import { Button, Field, cx } from '@/ui/kit';
 import { PasswordInput } from '@/ui/PasswordInput';
 import { Sprite } from '@/ui/Sprite';
+import { Icon } from '@/ui/Icon';
 
 const MODES: { value: StorageMode; title: string; body: string }[] = [
   { value: 'device', title: 'Solo en este dispositivo', body: 'La opción más privada. En otro dispositivo tendrás que pegarla de nuevo.' },
@@ -149,7 +150,7 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
         )}
         <div className="row">
           <Button type="submit" variant="primary" loading={busy} disabled={!unlockPass}>
-            {busy ? 'Descifrando' : '🔓 Desbloquear'}
+            {busy ? 'Descifrando' : 'Desbloquear'}
           </Button>
           <Button small variant="danger" disabled={busy} onClick={() => void deleteFromAccount()} title="Borra la copia cifrada de tu cuenta para poder pegar una clave nueva">
             Olvidé mi frase
@@ -200,8 +201,8 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
         </details>
         {secrets && (
           <p className="muted small">
-            {remote === 'encrypted' && '🔒 También guardada en tu cuenta, cifrada: la tienes en todos tus dispositivos con tu frase.'}
-            {remote === 'plain' && '☁ También guardada en tu cuenta: se activa sola al iniciar sesión.'}
+            {remote === 'encrypted' && 'También guardada en tu cuenta, cifrada: la tienes en todos tus dispositivos con tu frase.'}
+            {remote === 'plain' && 'También guardada en tu cuenta: se activa sola al iniciar sesión.'}
             {remote === 'none' && 'Guardada solo en este dispositivo.'}
           </p>
         )}
@@ -212,7 +213,7 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
         )}
         {okMsg && (
           <p className="form__info" role="status">
-            ✔ {okMsg}
+            <Icon name="check" size={12} /> {okMsg}
           </p>
         )}
         {saving && (
@@ -317,7 +318,7 @@ export function AiSetup({ onDone }: { onDone?: () => void }) {
         </p>
       )}
       <Button type="submit" variant="primary" loading={busy} disabled={!draft.trim()}>
-        {busy ? 'Comprobando con Google' : '🔑 Probar y activar'}
+        {busy ? 'Comprobando con Google' : 'Probar y activar'}
       </Button>
       <ul className="ai__notes muted small">
         <li>La clave se comprueba con Google sin gastar cuota, y nunca aparece en las copias de seguridad.</li>

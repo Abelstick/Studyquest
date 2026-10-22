@@ -11,6 +11,7 @@ import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
 import { Button, Field, Modal, Segmented, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
 import { Fold, OrganizeFields } from './LifeFields';
+import { Sprite } from '@/ui/Sprite';
 
 const PRIORITIES: { value: Priority; label: string }[] = [
   { value: 'low', label: 'Baja' },
@@ -125,7 +126,7 @@ export function TaskModal({ id, dueDate, goalId: presetGoal }: { id?: string; du
         </Field>
         {priority === 'boss' && (
           <p className="form__info">
-            ☠ Un jefe final tiene una vida por subtarea: cada una que completes le quita una. Al caer el último golpe ganas su XP y un botín extra de <b>+{BOSS_BONUS_XP} XP</b>. Añade subtareas abajo para darle vida.
+            <Sprite name="skull" size={14} /> Un jefe final tiene una vida por subtarea: cada una que completes le quita una. Al caer el último golpe ganas su XP y un botín extra de <b>+{BOSS_BONUS_XP} XP</b>. Añade subtareas abajo para darle vida.
           </p>
         )}
         <div className="form__row">
@@ -158,7 +159,7 @@ export function TaskModal({ id, dueDate, goalId: presetGoal }: { id?: string; du
             ) : (
               <p className="muted small">No encuentro un rato libre antes del plazo; revisa la fecha o libera tiempo en el calendario.</p>
             )}
-            {plan.unplaced.length > 0 && plan.slots.length > 0 && <p className="muted small">⚠ No cabe todo antes del plazo (faltarían {plan.unplaced[0].left} min).</p>}
+            {plan.unplaced.length > 0 && plan.slots.length > 0 && <p className="muted small">No cabe todo antes del plazo (faltarían {plan.unplaced[0].left} min).</p>}
           </div>
         )}
         {!events.length && !editing && <WorksQuestion />}

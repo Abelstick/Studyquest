@@ -10,6 +10,7 @@ import { cleanMinimum } from '@/core/minimum';
 import { cleanIfThen } from '@/core/ifthen';
 import { isQuit } from '@/core/quit';
 import { DIFFICULTIES, HABIT_BASE_XP, difficultyInfo, difficultyOf, xpForDifficulty } from '@/core/difficulty';
+import { Icon } from '@/ui/Icon';
 
 const FREQS: { value: Frequency['type']; label: string }[] = [
   { value: 'daily', label: 'Todos los días' },
@@ -179,7 +180,7 @@ export function HabitModal({ id, goalId: presetGoal }: { id?: string; goalId?: s
                   {dates.length === 0 && <span className="muted small">Ninguna fecha todavía.</span>}
                   {dates.map((d) => (
                     <button key={d} type="button" className="chip chip--sm is-on" aria-label={`Quitar ${d}`} onClick={() => setDates(dates.filter((x) => x !== d))}>
-                      {shortDate(d)} ✕
+                      {shortDate(d)} <Icon name="close" size={9} />
                     </button>
                   ))}
                 </div>

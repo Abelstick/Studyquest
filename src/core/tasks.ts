@@ -5,11 +5,11 @@ import { addDays, addMonths, clockToMinutes, daysLeftLabel, diffDays, isClockTim
 /** Cómo se nombran la prioridad y el estado de una tarea en toda la app. */
 export const PRIORITY_LABEL: Record<Priority, string> = { low: 'Baja', mid: 'Media', high: 'Alta', boss: 'Jefe final' };
 export const STATUS_LABEL: Record<TaskStatus, string> = { todo: 'Por jugar', doing: 'En juego', done: 'Superada' };
-/** Qué hace el botón principal de una tarea en cada estado. */
+/** Qué hace el botón principal de una tarea en cada estado. Solo el texto: el ícono lo pone la interfaz (ui/domainIcons). */
 export const NEXT_STATUS: Record<TaskStatus, { to: TaskStatus; label: string }> = {
-  todo: { to: 'doing', label: '▶ Empezar' },
-  doing: { to: 'done', label: '✔ Completar' },
-  done: { to: 'todo', label: '↩ Reabrir' },
+  todo: { to: 'doing', label: 'Empezar' },
+  doing: { to: 'done', label: 'Completar' },
+  done: { to: 'todo', label: 'Reabrir' },
 };
 
 /* ---------- Hora límite ---------- */

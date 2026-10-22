@@ -4,6 +4,7 @@ import { useUi } from '@/state/ui';
 import { Button, Modal, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import type { SpriteName } from '@/ui/sprites';
+import { Icon } from '@/ui/Icon';
 
 interface Action {
   label: string;
@@ -98,7 +99,7 @@ const CHAPTERS: Chapter[] = [
     title: 'Si te pierdes',
     lead: 'Siempre hay una salida.',
     points: [
-      'El botón ❓ de arriba abre esta guía en cualquier momento. «¿Cuál uso?» aparece en Tareas, Hábitos y Metas.',
+      'El botón de ayuda (?) de arriba abre esta guía en cualquier momento. «¿Cuál uso?» aparece en Tareas, Hábitos y Metas.',
       'Pulsa ? en el teclado para ver los atajos; / busca cualquier cosa y N crea.',
       'Nada es definitivo: puedes editar, deshacer, exportar una copia y reiniciar la partida desde Perfil.',
     ],
@@ -171,7 +172,7 @@ export function HowToButton({ label = 'Guía' }: Readonly<{ label?: string }>) {
   const open = useUi((s) => s.openModal);
   return (
     <Button small onClick={() => open({ type: 'howto' })} title="Cómo usar StudyQuest paso a paso">
-      <span aria-hidden="true">❓</span> {label}
+      <Icon name="help" size={12} /> {label}
     </Button>
   );
 }

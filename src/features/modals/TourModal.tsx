@@ -77,10 +77,10 @@ const STEPS: Step[] = [
     body: (
       <>
         <p>
-          En el ordenador, el buscador de arriba lleva directo a la tarea, el apunte o la meta, y <b>＋ Nuevo</b> crea lo propio de cada pantalla. Atajos: <kbd>/</kbd> buscar, <kbd>N</kbd> crear, <kbd>?</kbd> ver todos.
+          En el ordenador, el buscador de arriba lleva directo a la tarea, el apunte o la meta, y <b>Nuevo</b> crea lo propio de cada pantalla. Atajos: <kbd>/</kbd> buscar, <kbd>N</kbd> crear, <kbd>?</kbd> ver todos.
         </p>
         <p>
-          En el móvil, el botón <b>＋</b> de arriba hace las dos cosas: buscar y crear.
+          En el móvil, el botón <b>+</b> de arriba hace las dos cosas: buscar y crear.
         </p>
       </>
     ),

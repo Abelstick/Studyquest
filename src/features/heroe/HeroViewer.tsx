@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { BoxGeometry, DirectionalLight, Group, HemisphereLight, Mesh, MeshLambertMaterial, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { BONES, buildHeroModel, type Bone, type HeroLook, type HeroModel } from '@/core/hero';
+import { Icon } from '@/ui/Icon';
 
 /*
  * Visor 3D del héroe. Este archivo (y three.js con él) solo se descarga al abrir la pantalla
@@ -280,13 +281,13 @@ export default function HeroViewer({ look, label, celebrate = 0 }: { look: HeroL
       <canvas ref={canvas} className="hero3d__canvas" role="img" aria-label={label} tabIndex={0} onKeyDown={onKey} />
       <div className="hero3d__turn">
         <button type="button" className="icon-btn icon-btn--sm" aria-label="Girar a la izquierda" onClick={() => engine.current?.turn(-0.6)}>
-          ◀
+          <Icon name="back" size={12} />
         </button>
         <span className="hero3d__hint" aria-hidden="true">
           arrastra para girar
         </span>
         <button type="button" className="icon-btn icon-btn--sm" aria-label="Girar a la derecha" onClick={() => engine.current?.turn(0.6)}>
-          ▶
+          <Icon name="play" size={12} />
         </button>
       </div>
     </div>

@@ -104,7 +104,7 @@ export default function Arsenal() {
       <div className="cols">
         <section aria-labelledby="logros">
           <h2 id="logros" className="section-title">
-            // Logros — {unlocked.size} de {ACHIEVEMENTS.length}
+            Logros — {unlocked.size} de {ACHIEVEMENTS.length}
           </h2>
           <div className="grid grid--badges">
             {ACHIEVEMENTS.map((a) => {
@@ -124,7 +124,7 @@ export default function Arsenal() {
 
         <section aria-labelledby="personales">
           <h2 id="personales" className="section-title">
-            // Recompensas personales
+            Recompensas personales
           </h2>
           {rewards.length === 0 && (
             <Empty sprite="heart" title="Sin premios todavía">

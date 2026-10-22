@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FREE_MODELS, isFreeModel, isModelId } from '@/ai/models';
 import { useAi } from '@/ai/store';
 import { cx, TextInput } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
 
 /**
  * Elegir el modelo de Gemini y si se cambia solo a otro cuando se agota la cuota. Solo se ofrecen los modelos con
@@ -62,7 +63,7 @@ export function ModelSettings() {
           <div className="models__chips">
             {FREE_MODELS.filter((m) => m.id !== model).map((m) => (
               <button key={m.id} type="button" role="checkbox" aria-checked={fallbacks.includes(m.id)} className={cx('chip chip--sm', fallbacks.includes(m.id) && 'is-on')} onClick={() => toggle(m.id)}>
-                {fallbacks.includes(m.id) ? '✔ ' : ''}
+                {fallbacks.includes(m.id) && <><Icon name="check" size={10} /> </>}
                 {m.name.replace('Gemini ', '')}
               </button>
             ))}

@@ -80,7 +80,7 @@ function TodayLinks({ courseId }: Readonly<{ courseId: string }>) {
       ))}
       {mine.map(({ habit, done }) => (
         <li key={habit.id}>
-          <button type="button" className={cx('chip chip--sm', done && 'is-on')} onClick={() => openModal({ type: 'habit-detail', id: habit.id })} aria-haspopup="dialog">
+          <button type="button" className={cx('chip chip--sm', done && 'is-on')} onClick={() => openModal({ type: 'habit-detail', id: habit.id })} aria-haspopup="dialog" aria-label={`${habit.title} (${done ? 'hecho hoy' : 'pendiente'})`}>
             <Icon name={done ? 'check' : 'habit'} size={10} /> {habit.title}
           </button>
         </li>
@@ -106,7 +106,7 @@ function CourseRow({ row }: Readonly<{ row: Row }>) {
           </Link>
           <StatusTag week={week} />
         </div>
-        <DeadlineLine d={deadline} onSet={() => openModal({ type: 'course', id: course.id })} />
+        <DeadlineLine d={deadline} course={course.title} onSet={() => openModal({ type: 'course', id: course.id })} />
         <p className="hcourse__week">
           {week.target > 0 ? (
             <>
@@ -125,7 +125,7 @@ function CourseRow({ row }: Readonly<{ row: Row }>) {
                 Esta semana: <b>{plural(week.days, 'día', 'días')}</b>
                 {week.days > 0 && ` · ${minutes}`}
               </span>
-              <button type="button" className="link" onClick={() => openModal({ type: 'course', id: course.id })}>
+              <button type="button" className="link" onClick={() => openModal({ type: 'course', id: course.id })} aria-label={`Fijar meta semanal de ${course.title}`}>
                 Fijar meta semanal
               </button>
             </>
@@ -152,7 +152,7 @@ function CourseRow({ row }: Readonly<{ row: Row }>) {
           </p>
         )}
       </div>
-      <Button small variant={week.dueToday ? 'primary' : undefined} onClick={() => openModal({ type: 'session', courseId: course.id })}>
+      <Button small variant={week.dueToday ? 'primary' : undefined} onClick={() => openModal({ type: 'session', courseId: course.id })} aria-label={`Estudiar ${course.title}`}>
         <Icon name="play" size={10} /> Estudiar
       </Button>
     </li>

@@ -7,6 +7,7 @@ import { certState, daysToExpiry, linkLabel, safeUrl, sortCertifications } from 
 import { shortDate } from '@/core/dates';
 import { Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
 import { ListSearch } from '@/ui/ListSearch';
+import { ResultCount } from '@/ui/ResultCount';
 import { LIST_SEARCH_FROM, matchesQuery } from '@/core/search';
 import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
@@ -31,7 +32,7 @@ function Card({ cert, courseName }: { cert: Certification; courseName?: string }
         <Sprite name={state === 'expired' ? 'skull' : 'trophy'} size={26} />
       </span>
       <div className="cert__text">
-        <h3 className="cert__title">{cert.title}</h3>
+        <h2 className="cert__title">{cert.title}</h2>
         <p className="muted small">
           {cert.issuer || 'Sin emisor'} · {shortDate(cert.date)}
         </p>
@@ -131,6 +132,7 @@ export default function Certificaciones() {
             )}
           </section>
 
+          <ResultCount count={shown.length} what="certificaciones" active={q.trim() !== ''} />
           <div className="certs">
             {shown.map((c) => (
               <Card key={c.id} cert={c} courseName={c.courseId ? courseName.get(c.courseId) : undefined} />

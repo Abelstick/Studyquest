@@ -28,7 +28,7 @@ interface TileProps {
 
 function Tile({ tone, sprite, label, value, note, alert, clear, bar, children }: Readonly<TileProps>) {
   return (
-    <div className={cx('daysum__tile', `daysum__tile--${tone}`, clear && 'is-clear', alert && 'is-alert')} role="group" aria-label={`${label}: ${value}${note ? `. ${note}` : ''}`}>
+    <div className={cx('daysum__tile', `daysum__tile--${tone}`, clear && 'is-clear', alert && 'is-alert')} role="group" aria-label={`${label}: ${value === '—' ? 'sin datos' : value}${note ? `. ${note}` : ''}`}>
       <div className="daysum__text">
         <p className="daysum__k">{label}</p>
         <p className="daysum__v">
@@ -129,7 +129,7 @@ export function DaySummary({ progress, scopes, habitWeek, streak }: Readonly<Pro
         alert={week.late > 0}
         clear={week.total > 0 && week.done === week.total}
       >
-        <dl className="daysum__sub" aria-label="Tareas por periodo">
+        <dl className="daysum__sub">
           <div>
             <dt>Hoy</dt>
             <dd>{ratio(scopes.day)}</dd>

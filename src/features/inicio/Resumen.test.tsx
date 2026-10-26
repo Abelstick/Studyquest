@@ -55,7 +55,7 @@ describe('resumen del día', () => {
     renderSummary([task('hoy', TODAY), task('vie', '2026-09-18'), task('sin', null), task('dic', '2026-12-01'), task('hecha', '2026-09-14', { status: 'done', completedAt: '2026-09-14' })]);
     const tile = screen.getByRole('group', { name: /^Tareas · esta semana/ });
     expect(within(tile).getAllByText('1/3').length).toBeGreaterThan(0);
-    const sub = within(tile).getByLabelText('Tareas por periodo');
+    const sub = within(tile).getByText('Abiertas').closest('dl') as HTMLElement;
     expect(within(sub).getByText('Abiertas').nextSibling?.textContent).toBe('4');
     expect(within(sub).getByText('Hoy').nextSibling?.textContent).toBe('0/1');
   });
@@ -119,7 +119,7 @@ describe('cursos de esta semana (Inicio)', () => {
         <CoursesToday />
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Fijar meta semanal' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Fijar meta semanal de SQL' }));
     expect(useUi.getState().modal).toEqual({ type: 'course', id: 'SQL' });
     expect(screen.getByText(/1 día/)).toBeTruthy();
   });

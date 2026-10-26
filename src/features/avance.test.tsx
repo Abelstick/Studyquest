@@ -131,6 +131,43 @@ describe('Inicio: lo vinculado al curso', () => {
   });
 });
 
+describe('accesibilidad de lo nuevo', () => {
+  it('el gráfico de horas tiene su tabla para lectores de pantalla y las barras no se leen dos veces', () => {
+    useData.setState({ courses: [course([{}])], sessions: [session('2026-09-15', 60), session(TODAY, 30)] });
+    const { container } = detail();
+    const table = screen.getByRole('table', { name: /Horas de estudio por semana/ });
+    expect(within(table).getAllByRole('row')).toHaveLength(9);
+    expect(within(table).getByText('1.5 h')).toBeTruthy();
+    expect(container.querySelector('.rbars')?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('sin datos se dice con palabras, no con una raya', () => {
+    useData.setState({ courses: [course([{}, {}])] });
+    detail();
+    expect(screen.getAllByText('Sin datos todavía')).toHaveLength(2);
+  });
+
+  it('cada curso tiene sus propios botones con nombre distinto', () => {
+    useData.setState({ courses: [course([{}]), { ...course([{}]), id: 'c2', title: 'Python' }], sessions: [] });
+    wrap(<CoursesToday />);
+    expect(screen.getByRole('button', { name: 'Estudiar SQL' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Estudiar Python' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Fijar meta semanal de Python' })).toBeTruthy();
+  });
+
+  it('el estado de un hábito del curso también se dice con texto, no solo con color', () => {
+    useData.setState({ courses: [course([{}])], habits: [habit({ courseId: 'c1' })], habitLogs: [] });
+    wrap(<CoursesToday />);
+    expect(screen.getByRole('button', { name: /Practicar SQL \(pendiente\)/ })).toBeTruthy();
+  });
+
+  it('«termina pronto» y la tendencia tienen texto además del color', () => {
+    useData.setState({ courses: [course([{}], { dueDate: '2026-09-20' })] });
+    detail();
+    expect(screen.getAllByText('Termina pronto.').length).toBeGreaterThan(0);
+  });
+});
+
 describe('qué tema avanzaste', () => {
   it('ofrece primero lo empezado, y marca terminado o en progreso', () => {
     useData.setState({ courses: [course([{}, { status: 'doing' }, { status: 'done' }])] });
@@ -140,7 +177,7 @@ describe('qué tema avanzaste', () => {
     expect(within(items[0]).getByText('Tema 1')).toBeTruthy();
     fireEvent.click(within(items[0]).getByRole('button', { name: /Terminé/ }));
     expect(spies.setTopicStatus).toHaveBeenCalledWith('c1', 't1', 'done');
-    fireEvent.click(within(items[1]).getByRole('button', { name: 'Voy por aquí' }));
+    fireEvent.click(within(items[1]).getByRole('button', { name: 'Voy por aquí: Tema 0' }));
     expect(spies.setTopicStatus).toHaveBeenCalledWith('c1', 't0', 'doing');
   });
 

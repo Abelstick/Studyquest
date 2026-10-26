@@ -140,7 +140,7 @@ export function MissionCard({ m }: { m: Mission }) {
         )}
         {m.kind === 'habit' && !m.done && <HabitRecovery habit={m.habit} logs={logs} />}
         {parts.length > 0 && (
-          <button type="button" className={cx('tag tag--btn mission__more', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${open ? 'Ocultar' : 'Ver'} ${noun} de ${m.title}`}>
+          <button type="button" className={cx('tag tag--btn mission__more', ready ? 'tag--green' : 'tag--plain')} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${doneParts}/${parts.length} ${noun} de ${m.title}`}>
             {doneParts}/{parts.length} {noun} {open ? '−' : '+'}
           </button>
         )}

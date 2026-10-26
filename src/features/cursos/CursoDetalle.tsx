@@ -83,7 +83,7 @@ export default function CursoDetalle() {
           <p className="muted upper">
             {course.modules.length} módulos · {hours.toFixed(0)} h · {p.xp.toLocaleString('en-US')} XP · racha {streak} {streak === 1 ? 'día' : 'días'}
           </p>
-          <DeadlineLine d={deadline} onSet={() => openModal({ type: 'course', id: course.id })} />
+          <DeadlineLine d={deadline} course={course.title} onSet={() => openModal({ type: 'course', id: course.id })} />
         </div>
         <div className="page-head__right page-head__right--col">
           <div className="split">
@@ -317,30 +317,6 @@ export default function CursoDetalle() {
                 })}
               </ul>
             )}
-          </Panel>
-          <Panel kicker="Telemetría">
-            <dl className="kv">
-              <div>
-                <dt>Tiempo invertido</dt>
-                <dd>{hours.toFixed(1)} h</dd>
-              </div>
-              <div>
-                <dt>Temas completados</dt>
-                <dd>
-                  {p.done} / {p.total}
-                </dd>
-              </div>
-              <div>
-                <dt>Temas a repasar</dt>
-                <dd>{course.modules.flatMap((m) => m.topics).filter((t) => t.review).length}</dd>
-              </div>
-              <div>
-                <dt>Racha en el curso</dt>
-                <dd>
-                  <Sprite name="fire" size={16} /> {streak} {streak === 1 ? 'día' : 'días'}
-                </dd>
-              </div>
-            </dl>
           </Panel>
         </div>
       </div>

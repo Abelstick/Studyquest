@@ -91,7 +91,7 @@
   --xp-text: #7a5600; /* el amarillo hecho texto legible sobre crema: 5.1:1 */
   --red: #d2452b;
   --red-text: #a3301a; /* 5.6:1 sobre crema */
-  --green: #3e8e57;
+  --green: #2f7d49; /* texto crema encima: 4,7:1 (con #3e8e57 eran 3,7:1) */
   --green-text: #23633a;
   --blue: #3566a0;
   --violet: #6d4fa0;
@@ -104,6 +104,7 @@
   --on-red: #fbf6ea;
   --on-yellow: #17191f;
   --on-green: #fbf6ea;
+  --on-blue: #fbf6ea;
 
   /* --- La caja de la máquina: HUD y barra lateral, siempre oscuros --- */
   --hud: #0f1115;
@@ -184,6 +185,8 @@
   --red: #e0553a;
   --red-text: #ff9a80;
   --green: #4fae6a;
+  --on-green: #17191f; /* texto sobre el verde claro del modo oscuro */
+  --on-blue: #17191f;
   --green-text: #7fd497;
   --blue: #6f9fd8;
   --violet: #a58bd6;

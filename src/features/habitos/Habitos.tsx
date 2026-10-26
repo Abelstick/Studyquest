@@ -24,6 +24,7 @@ import { isQuit } from '@/core/quit';
 import { difficultyInfo, difficultyOf } from '@/core/difficulty';
 import { HabitPeriod } from './HabitPeriod';
 import { ListSearch } from '@/ui/ListSearch';
+import { ResultCount } from '@/ui/ResultCount';
 import { matchesQuery } from '@/core/search';
 import { ListTools } from '@/ui/ListTools';
 import { HABIT_SORTS, sortHabitCards, type HabitSort } from '@/core/listOrder';
@@ -87,6 +88,7 @@ export default function Habitos() {
           <AreaFilterSelect value={areaFilter} onChange={setAreaFilter} used={usedAreas} />
         </ListTools>
       )}
+      <ResultCount count={cards.length} what="hábitos" active={query.trim() !== '' || areaFilter !== 'all'} />
       {habits.length === 0 ? (
         <div className="panel">
           <Empty sprite="flower" title="Sin power-ups equipados">

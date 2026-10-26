@@ -50,7 +50,7 @@ export function Jukebox() {
         <Button small onClick={next} aria-label="Canción siguiente">
           ⏭
         </Button>
-        <Button small onClick={toggleShuffle} aria-pressed={shuffle} aria-label="Orden aleatorio" className={cx(shuffle && 'is-on')}>
+        <Button small onClick={toggleShuffle} aria-label={`Orden de reproducción: ${shuffle ? 'Aleatorio' : 'En orden'}`} className={cx(shuffle && 'is-on')}>
           {shuffle ? 'Aleatorio' : 'En orden'}
         </Button>
       </div>

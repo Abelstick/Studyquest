@@ -75,7 +75,7 @@ describe('tablero de Hoy', () => {
 
   it('tocar el desglose no abre la ficha y marca la subtarea', () => {
     board();
-    fireEvent.click(screen.getByRole('button', { name: /Ver subtareas de Preparar examen/ }));
+    fireEvent.click(screen.getByRole('button', { name: /0\/1 subtareas de Preparar examen/ }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Repasar' }));
     expect(spies.toggleSubtask).toHaveBeenCalledWith('t2', 's1');
     expect(useUi.getState().modal).toBeNull();

@@ -472,7 +472,7 @@ a.btn {
 }
 .tag--blue {
   background: var(--blue);
-  color: var(--on-red);
+  color: var(--on-blue);
 }
 .tag--dark {
   background: var(--hud);

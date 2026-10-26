@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cx } from './kit';
 import { Icon } from './Icon';
 import { Sprite } from './Sprite';
@@ -18,20 +18,29 @@ interface Props {
 export function ListSearch({ value, onChange, what, className }: Readonly<Props>) {
   const [open, setOpen] = useState(value !== '');
   const inputRef = useRef<HTMLInputElement>(null);
-  const id = useId();
+  const openRef = useRef<HTMLButtonElement>(null);
+  // Al ocultar el buscador desaparece el elemento con el foco: se devuelve al botón que lo abre (WCAG 2.4.3).
+  const [restoreFocus, setRestoreFocus] = useState(false);
+  useEffect(() => {
+    if (!open && restoreFocus) {
+      openRef.current?.focus();
+      setRestoreFocus(false);
+    }
+  }, [open, restoreFocus]);
 
   const hide = () => {
     onChange('');
     setOpen(false);
+    setRestoreFocus(true);
   };
 
   if (!open) {
     return (
       <button
+        ref={openRef}
         type="button"
         className={cx('btn btn--ghost lsearch__open', className)}
         aria-expanded={false}
-        aria-controls={id}
         onClick={() => {
           setOpen(true);
           // El campo aún no existe en este render: se enfoca cuando ya está.
@@ -44,7 +53,7 @@ export function ListSearch({ value, onChange, what, className }: Readonly<Props>
   }
 
   return (
-    <div className={cx('lsearch', className)} id={id}>
+    <div className={cx('lsearch', className)}>
       <Sprite name="ring" size={14} />
       <input
         ref={inputRef}

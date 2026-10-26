@@ -387,6 +387,10 @@
 .startguide {
   border-left: 10px solid var(--yellow);
 }
+.startguide__now .kicker,
+.startguide__now .muted {
+  color: var(--text);
+}
 .startguide__now {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;

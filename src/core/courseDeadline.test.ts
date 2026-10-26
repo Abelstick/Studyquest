@@ -43,6 +43,12 @@ describe('plazo de un curso', () => {
     expect(d).toMatchObject({ state: 'soon', perWeek: 5 });
   });
 
+  it('con menos de una semana por delante dice los temas y los días, no «por semana»', () => {
+    expect(paceText(courseDeadline(course(0, 11, { dueDate: '2026-09-19' }), [], NOW))).toBe('11 temas en 3 días');
+    expect(paceText(courseDeadline(course(0, 1, { dueDate: '2026-09-17' }), [], NOW))).toBe('1 tema en 1 día');
+    expect(paceText(courseDeadline(course(0, 2, { dueDate: NOW }), [], NOW))).toBe('2 temas hoy');
+  });
+
   it('vencido sin terminar: estado «late» y sin ritmo', () => {
     const d = courseDeadline(course(1, 4, { dueDate: '2026-09-10' }), [], NOW);
     expect(d).toMatchObject({ state: 'late', daysLeft: -6, perWeek: null });

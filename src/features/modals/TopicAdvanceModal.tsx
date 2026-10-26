@@ -38,11 +38,11 @@ export function TopicAdvanceModal({ courseId }: Readonly<{ courseId: string }>) 
                   </div>
                   {topic.status === 'doing' && <Tag tone="blue">En progreso</Tag>}
                   {topic.status === 'todo' && (
-                    <Button small onClick={() => setTopicStatus(course.id, topic.id, 'doing')}>
+                    <Button small onClick={() => setTopicStatus(course.id, topic.id, 'doing')} aria-label={`Voy por aquí: ${topic.title}`}>
                       Voy por aquí
                     </Button>
                   )}
-                  <Button small variant="green" onClick={() => setTopicStatus(course.id, topic.id, 'done')} title={`Terminar el tema: +${topicXp(module)} XP`}>
+                  <Button small variant="green" onClick={() => setTopicStatus(course.id, topic.id, 'done')} title={`Terminar el tema: +${topicXp(module)} XP`} aria-label={`Terminé: ${topic.title}`}>
                     <Icon name="check" size={10} /> Terminé
                   </Button>
                 </li>

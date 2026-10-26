@@ -24,7 +24,8 @@ export function CoursesInPlay() {
   const tasks = useData((s) => s.tasks);
   const openModal = useUi((s) => s.openModal);
   const shown = useMemo(() => coursesInPlay({ courses, sessions }).filter((c) => nextTopic(c)).slice(0, IN_PLAY), [courses, sessions]);
-  if (shown.length === 0) return null;
+  // Con pocos cursos la lista de abajo ya los muestra todos, con lo mismo: este panel solo estorbaría.
+  if (shown.length === 0 || courses.length <= IN_PLAY) return null;
 
   const list = (
     <ul className="hcourses">
@@ -48,7 +49,7 @@ export function CoursesInPlay() {
                 )}
                 {last ? `estudiado ${agoDays(last)}` : 'aún sin estudiar'}
               </p>
-              <DeadlineLine d={deadline} />
+              <DeadlineLine d={deadline} course={c.title} />
               <div className="hcourse__bar">
                 <Bar pct={p.pct} tone="yellow" label={`Progreso de ${c.title}`} />
                 <span className="kicker">
@@ -68,7 +69,7 @@ export function CoursesInPlay() {
                 )}
               </p>
             </div>
-            <Button small onClick={() => openModal({ type: 'session', courseId: c.id })}>
+            <Button small onClick={() => openModal({ type: 'session', courseId: c.id })} aria-label={`Estudiar ${c.title}`}>
               <Icon name="play" size={10} /> Estudiar
             </Button>
           </li>

@@ -113,10 +113,12 @@ describe('cursos y tareas', () => {
 
   it('En marcha (Cursos) muestra el próximo tema, la última vez y lo que debe en tareas', () => {
     withTasks();
+    // «En marcha» solo aparece con más cursos de los que caben en él; con pocos, la lista de abajo ya los muestra.
+    useData.setState({ courses: [course('Álgebra', 1, 3), course('B', 0, 2), course('C', 0, 2), course('D', 0, 2)] });
     wrap(<CoursesInPlay />);
     const panel = screen.getByRole('heading', { name: 'En marcha' }).closest('section') as HTMLElement;
-    expect(within(panel).getByText('Tema 1')).toBeTruthy();
-    expect(within(panel).getByText('aún sin estudiar', { exact: false })).toBeTruthy();
+    expect(within(panel).getAllByText('Tema 1').length).toBeGreaterThan(0);
+    expect(within(panel).getAllByText('aún sin estudiar', { exact: false }).length).toBeGreaterThan(0);
     expect(within(panel).getByText('2 abiertas · 1 vencida')).toBeTruthy();
     expect(within(panel).getByText('Atrasado')).toBeTruthy();
   });
@@ -128,13 +130,19 @@ describe('cursos y tareas', () => {
     expect(screen.getAllByText(/Siguiente: Entregar guía/).length).toBeGreaterThan(0);
   });
 
+  it('con pocos cursos no repite «En marcha» sobre la lista', () => {
+    useData.setState({ courses: [course('Álgebra', 1, 3), course('B', 0, 2)] });
+    wrap(<CoursesInPlay />);
+    expect(screen.queryByRole('heading', { name: 'En marcha' })).toBeNull();
+  });
+
   it('las tarjetas y la ficha dicen hasta cuándo tienes para terminar el curso', () => {
     useData.setState({ courses: [{ ...course('Álgebra', 1, 5), dueDate: addDays(today(), 20) }, course('Libre', 0, 2)], tasks: [] });
     wrap(<Cursos />);
     // Sale en la tarjeta y en «En marcha».
     expect(screen.getAllByText(/faltan 20 días/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/≈ 2 temas por semana para llegar/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Fijar plazo' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Fijar plazo de Libre' })).toBeTruthy();
     cleanup();
     render(
       <MemoryRouter initialEntries={['/cursos/Álgebra']}>

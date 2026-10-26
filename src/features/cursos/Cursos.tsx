@@ -9,6 +9,7 @@ import { Bar, Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
 import { CoursesInPlay } from './CoursesInPlay';
 import { Icon } from '@/ui/Icon';
 import { ListSearch } from '@/ui/ListSearch';
+import { ResultCount } from '@/ui/ResultCount';
 import { matchesQuery } from '@/core/search';
 import { ListTools } from '@/ui/ListTools';
 import { courseTasks, courseTasksLabel } from '@/core/courseTasks';
@@ -103,7 +104,7 @@ export default function Cursos() {
         </div>
       ) : (
         <>
-          <dl className="cstats" aria-label="Resumen de tus cursos">
+          <dl className="cstats">
             <div>
               <dt>Cursos</dt>
               <dd>
@@ -148,6 +149,7 @@ export default function Cursos() {
               </select>
             </label>
           </ListTools>
+          <ResultCount count={shown.length} what="cursos" active={narrowed} />
           {shown.length === 0 && (
             <div className="panel">
               <Empty sprite="pipe" title="Ningún curso coincide">
@@ -199,7 +201,7 @@ export default function Cursos() {
                     <div>
                       <dt>Plazo</dt>
                       <dd>
-                        <DeadlineLine d={deadline} onSet={() => openModal({ type: 'course', id: c.id })} />
+                        <DeadlineLine d={deadline} course={c.title} onSet={() => openModal({ type: 'course', id: c.id })} />
                       </dd>
                     </div>
                     <div>
@@ -216,20 +218,25 @@ export default function Cursos() {
                         <Link className={t.late > 0 ? 'link tasklate' : 'link'} to={`/tareas?curso=${encodeURIComponent(c.id)}`}>
                           {courseTasksLabel(t)}
                         </Link>
+                        {t.next && (
+                          <span className="card__sub">
+                            Siguiente: {t.next.title} · {deadlineText(t.next)}
+                          </span>
+                        )}
                       </dd>
-                      {t.next && (
-                        <p className="muted small">
-                          Siguiente: {t.next.title} · {deadlineText(t.next)}
-                        </p>
-                      )}
                     </div>
-                    <p className="muted small">{hours.toFixed(0)} h invertidas</p>
+                    <div>
+                      <dt>Tiempo invertido</dt>
+                      <dd>{hours.toFixed(0)} h</dd>
+                    </div>
                   </dl>
                   <div className="card__actions">
-                    <Link className="btn btn--primary" to={`/cursos/${c.id}`}>
+                    <Link className="btn btn--primary" to={`/cursos/${c.id}`} aria-label={`Continuar ${c.title}`}>
                       Continuar
                     </Link>
-                    <Button onClick={() => openModal({ type: 'session', courseId: c.id })}>Estudiar</Button>
+                    <Button onClick={() => openModal({ type: 'session', courseId: c.id })} aria-label={`Estudiar ${c.title}`}>
+                      Estudiar
+                    </Button>
                   </div>
                 </article>
               );

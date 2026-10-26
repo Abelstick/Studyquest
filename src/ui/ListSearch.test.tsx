@@ -46,3 +46,17 @@ describe('buscador de listas', () => {
     expect(screen.queryByRole('searchbox')).toBeNull();
   });
 });
+
+describe('accesibilidad del buscador', () => {
+  it('al ocultarlo devuelve el foco al botón que lo abre, no lo deja perdido', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: /Buscar/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar buscador de hábitos' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /Buscar/ }));
+  });
+
+  it('el botón plegado no apunta a un elemento que no existe', () => {
+    render(<Harness />);
+    expect(screen.getByRole('button', { name: /Buscar/ }).hasAttribute('aria-controls')).toBe(false);
+  });
+});

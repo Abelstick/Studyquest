@@ -11,6 +11,7 @@ import { Sprite } from '@/ui/Sprite';
 import { NoteBody } from './NoteBody';
 import { Icon } from '@/ui/Icon';
 import { ListSearch } from '@/ui/ListSearch';
+import { ResultCount } from '@/ui/ResultCount';
 
 /** Descarga el cuaderno entero como un .md, para llevártelo a Obsidian o a donde quieras. */
 function exportMarkdown(notes: Note[], courseName: (id: string) => string | undefined) {
@@ -264,6 +265,7 @@ export default function Apuntes() {
             )}
           </section>
 
+          <ResultCount count={shown.length} what="apuntes" active={q.trim() !== '' || !!tag} />
           <div className={cx('cols cols--wide notes-split', open && 'has-open')}>
             <ul className="notes">
               {shown.map((n) => (

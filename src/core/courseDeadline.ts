@@ -67,9 +67,15 @@ export function deadlineSummary(d: CourseDeadline): string {
 
 const fmt = (n: number) => String(n).replace('.', ',');
 
-/** Ritmo para llegar: «≈ 3 temas por semana para llegar · llevas 1,5», o null si no hay nada que decir. */
+/**
+ * Ritmo para llegar: «≈ 3 temas por semana para llegar · llevas 1,5». Con menos de una semana por delante, «por semana»
+ * engaña (11 temas en 3 días no son 11 por semana): se dice tal cual, «11 temas en 3 días».
+ */
 export function paceText(d: CourseDeadline): string | null {
   if (d.perWeek === null) return null;
-  const need = `≈ ${d.perWeek} ${d.perWeek === 1 ? 'tema' : 'temas'} por semana para llegar`;
+  const short = d.daysLeft !== null && d.daysLeft < 7;
+  const need = short
+    ? `${d.topicsLeft} ${d.topicsLeft === 1 ? 'tema' : 'temas'} ${d.daysLeft === 0 ? 'hoy' : `en ${d.daysLeft} ${d.daysLeft === 1 ? 'día' : 'días'}`}`
+    : `≈ ${d.perWeek} ${d.perWeek === 1 ? 'tema' : 'temas'} por semana para llegar`;
   return d.actualPerWeek === null ? need : `${need} · llevas ${fmt(d.actualPerWeek)}`;
 }

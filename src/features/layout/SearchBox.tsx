@@ -62,8 +62,6 @@ export function SearchBox({ inline, onNavigate, autoFocus, id }: Props) {
         type="search"
         placeholder="Buscar tareas, cursos…"
         aria-label="Buscar"
-        aria-expanded={open}
-        aria-controls={listId}
         autoFocus={autoFocus}
         value={q}
         onChange={(e) => setQ(e.target.value)}

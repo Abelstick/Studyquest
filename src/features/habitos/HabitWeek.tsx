@@ -42,12 +42,15 @@ export function HabitWeek({ habit, logs, now }: { habit: Habit; logs: HabitLog[]
           const c = catchUpDay(habit, logs, d.date, now);
           const text = cellText(habit, d.value, c.done);
           const estado = c.done ? 'hecho' : d.progress > 0 ? `a medias, ${fmt(d.value)} de ${fmt(target)}` : 'sin marcar';
-          const etiqueta = `${WEEKDAYS_SHORT[i]} ${shortDate(d.date)}: ${estado}`;
+          // El nombre empieza por lo que se ve en la casilla (letra del día y valor), para que quien dicta «pulsar L 20/20» acierte.
+          const shown = typeof text === 'string' || typeof text === 'number' ? String(text).trim() : '';
+          const visible = `${WEEKDAYS_SHORT[i]}${shown ? ` ${shown}` : ''}`;
+          const etiqueta = `${visible}, ${shortDate(d.date)}: ${estado}`;
           const cls = cx('week__day', 'week__day--rich', `is-${d.state}`, !c.editable && !c.done && d.progress === 0 && 'is-off', d.progress > 0 && !c.done && 'is-partial', editing === d.date && 'is-editing');
           const style = { '--p': `${Math.round(d.progress * 100)}%` } as React.CSSProperties;
           const inner = (
             <>
-              <span className="week__name">{WEEKDAYS_SHORT[i]}</span>
+              <span className="week__name">{WEEKDAYS_SHORT[i]}</span>{' '}
               <span className="week__val">{text || ' '}</span>
             </>
           );

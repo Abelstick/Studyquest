@@ -7,6 +7,7 @@ import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { Icon } from '@/ui/Icon';
 import { ListSearch } from '@/ui/ListSearch';
+import { ResultCount } from '@/ui/ResultCount';
 import { LIST_SEARCH_FROM, matchesQuery } from '@/core/search';
 
 const progress = (p: Project) => {
@@ -24,7 +25,7 @@ function Track({ project }: { project: Project }) {
         const state = c.done ? 'done' : i === firstOpen ? 'active' : 'locked';
         return (
           <li key={c.id} className={cx('track__item', `track__item--${state}`)}>
-            <button type="button" className="track__node" onClick={() => toggle(project.id, c.id)} aria-pressed={c.done} aria-label={`${c.done ? 'Desmarcar' : 'Completar'} checkpoint: ${c.title}`}>
+            <button type="button" className="track__node" onClick={() => toggle(project.id, c.id)} aria-pressed={c.done} aria-label={`${c.done ? 'Desmarcar' : 'Completar'} checkpoint ${i + 1}: ${c.title}`}>
               {c.done ? <Icon name="check" size={14} /> : i + 1}
             </button>
             <div className="track__line" aria-hidden="true" />
@@ -84,6 +85,7 @@ export default function Proyectos() {
         </div>
       )}
 
+      <ResultCount count={visible.length} what="proyectos" active={query.trim() !== ''} />
       {projects.length > 0 && visible.length === 0 && (
         <div className="panel">
           <Empty sprite="chest" title="Ningún proyecto coincide">

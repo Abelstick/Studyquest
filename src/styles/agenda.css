@@ -206,6 +206,9 @@
 .tgrid__dayname.is-selected {
   background: color-mix(in srgb, var(--yellow) 26%, transparent);
 }
+.tgrid__dayname.is-selected .tgrid__wd {
+  color: var(--text);
+}
 .tgrid__allday {
   border-top: 1px solid var(--line-soft);
 }

@@ -29,7 +29,9 @@ export function ActivityYear() {
     heat.weeks.forEach((w, i) => {
       const m = Number(w[0].date.slice(5, 7)) - 1;
       if (m !== prev) {
-        if (!out.length || i - out[out.length - 1].col >= 3) out.push({ col: i, label: MONTHS[m] });
+        // Un mes que empieza a menos de 3 semanas del anterior lo reemplaza: el primero suele ser un mes a medias.
+        if (out.length && i - out[out.length - 1].col < 3) out.pop();
+        out.push({ col: i, label: MONTHS[m] });
         prev = m;
       }
     });
@@ -53,7 +55,7 @@ export function ActivityYear() {
         {heat.activeDays} {heat.activeDays === 1 ? 'día activo' : 'días activos'} en el último año
         {heat.best > 0 && ` · tu mejor día fue de ${heat.best.toLocaleString('es')} XP`}. Más oscuro desde {HEAT_STEPS[1]} XP.
       </p>
-      <div className="yheat" role="img" aria-label={`Mapa de actividad del último año: ${heat.activeDays} días activos`}>
+      <div className="yheat" tabIndex={0} role="img" aria-label={`Mapa de actividad del último año: ${heat.activeDays} días activos`}>
         <div className="yheat__months" aria-hidden="true">
           {months.map((m) => (
             <span key={m.col} style={{ gridColumn: `${m.col + 2} / span 4` }}>

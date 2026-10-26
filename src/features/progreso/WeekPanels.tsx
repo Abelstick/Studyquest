@@ -60,10 +60,12 @@ export function CityMini() {
   const city = useCity();
   return (
     <Panel kicker="Tu ciudad" title={city.title.name} right={<span className="kicker">{city.total} / {CITY_MAX}</span>}>
-      <Link to="/ciudad" className="citymini" aria-label="Ver mi ciudad">
+      {/* El nombre del enlace sale de su contenido: cada edificio dice cómo se llama y su nivel (WCAG 2.5.3). */}
+      <Link to="/ciudad" className="citymini">
         {city.states.map((s) => (
           <span key={s.building.id} className="citymini__b" title={`${s.building.name}: nivel ${s.level}`}>
             <PixelArt rows={buildingRows(s.building.id, s.level)} size={64} />
+            <span className="sr-only">{s.building.name}: </span>
             <span className="citymini__lv">{s.level === 0 ? '—' : `Nv ${s.level}`}</span>
           </span>
         ))}

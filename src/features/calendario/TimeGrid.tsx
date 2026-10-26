@@ -142,9 +142,9 @@ export function TimeGrid(p: Props) {
               type="button"
               className={cx('tgrid__dayname', d === p.now && 'is-today', d === p.selected && 'is-selected')}
               onClick={() => (single ? p.onSelectDay(d) : (p.onOpenDay ?? p.onSelectDay)(d))}
-              aria-label={`${longDate(d)}${single ? '' : '. Ver el día'}`}
+              aria-label={`${weekdayAbbr(weekdayIndex(d))} ${Number(d.slice(8))}, ${longDate(d)}${single ? '' : '. Ver el día'}`}
             >
-              <span className="tgrid__wd">{weekdayAbbr(weekdayIndex(d))}</span>
+              <span className="tgrid__wd">{weekdayAbbr(weekdayIndex(d))}</span>{' '}
               <span className="tgrid__num">{Number(d.slice(8))}</span>
             </button>
           ))}
@@ -199,7 +199,7 @@ export function TimeGrid(p: Props) {
       </div>
 
       {/* Horas */}
-      <div className="tgrid__scroll" ref={scrollRef}>
+      <div className="tgrid__scroll" ref={scrollRef} tabIndex={0} role="region" aria-label="Horario por horas (desplázate con las flechas)">
         <div className="tgrid__row tgrid__body" style={{ height: px(DAY_MIN) }}>
           <div className="tgrid__gutter tgrid__hours" aria-hidden="true">
             {Array.from({ length: 24 }, (_, h) => (
@@ -214,6 +214,7 @@ export function TimeGrid(p: Props) {
               return (
                 <div
                   key={date}
+                  role="group"
                   className={cx('tgrid__col', date === p.now && 'is-today', date < p.now && 'is-past')}
                   onClick={(e) => {
                     if (e.target !== e.currentTarget) return;

@@ -463,6 +463,9 @@
 .lane__empty {
   margin-block: var(--sp-1);
 }
+.lane__off {
+  margin-top: var(--sp-2);
+}
 
 .missions {
   position: relative;

@@ -18,6 +18,10 @@ import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
 import { NEXT_STATUS_ICON } from '@/ui/domainIcons';
 import { useFlipReorder } from '@/ui/motion';
+import { ListSearch } from '@/ui/ListSearch';
+import { matchesQuery } from '@/core/search';
+import { ListTools } from '@/ui/ListTools';
+import { DONE_SHOWN, byRecentlyDone } from '@/core/listOrder';
 
 const COLUMNS: { status: TaskStatus; title: string; sprite: 'qblock' | 'flower' | 'star' }[] = [
   { status: 'todo', title: 'Por jugar', sprite: 'qblock' },
@@ -141,6 +145,8 @@ export default function Tareas() {
   const openModal = useUi((s) => s.openModal);
   const [filter, setFilter] = useState('all');
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
+  const [query, setQuery] = useState('');
+  const [allDone, setAllDone] = useState(false);
   const [over, setOver] = useState<TaskStatus | null>(null);
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const [params, setParams] = useSearchParams();
@@ -152,6 +158,8 @@ export default function Tareas() {
   useEffect(() => {
     if (!target || !targetExists) return;
     setFilter('all');
+    setQuery('');
+    setAllDone(true);
     setHighlight(target);
     setParams(
       (prev) => {
@@ -180,13 +188,16 @@ export default function Tareas() {
   const courseName = (id: string | null) => courses.find((c) => c.id === id)?.title ?? 'Side quest';
   const usedAreas = useMemo(() => new Set<AreaId>(tasks.flatMap((t) => (t.area ? [t.area] : []))), [tasks]);
   const visible = useMemo(
-    () => tasks.filter((t) => (filter === 'all' || (filter === 'none' ? !t.courseId : t.courseId === filter)) && matchesArea(t, areaFilter)),
-    [tasks, filter, areaFilter],
+    () => tasks.filter((t) => (filter === 'all' || (filter === 'none' ? !t.courseId : t.courseId === filter)) && matchesArea(t, areaFilter) && matchesQuery([t.title, courses.find((c) => c.id === t.courseId)?.title, ...t.subtasks.map((s) => s.title)], query)),
+    [tasks, courses, filter, areaFilter, query],
   );
   const byStatus = (st: TaskStatus) =>
     visible
       .filter((t) => t.status === st)
-      .sort((a, b) => dueKey(a).localeCompare(dueKey(b)) || b.xp - a.xp);
+      // Las superadas, la última primero; las demás, por vencimiento.
+      .sort(st === 'done' ? byRecentlyDone : (a, b) => dueKey(a).localeCompare(dueKey(b)) || b.xp - a.xp);
+  // Buscar o filtrar enseña todas las que coinciden: limitar la lista ahí haría pensar que faltan.
+  const filtering = query.trim() !== '' || filter !== 'all' || areaFilter !== 'all';
   // Una tarea que cambia de columna (con su botón o arrastrándola) viaja hasta su sitio nuevo con Flip.
   const boardRef = useRef<HTMLDivElement>(null);
   const order = visible.map((t) => `${t.id}:${t.status}`).join('|');
@@ -202,22 +213,27 @@ export default function Tareas() {
         right={
           <>
             <GuideButton />
-            <select className="input input--inline" aria-label="Filtrar por curso" value={filter} onChange={(e) => setFilter(e.target.value)}>
-              <option value="all">Todos los cursos</option>
-              <option value="none">Side quests</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-            <AreaFilterSelect value={areaFilter} onChange={setAreaFilter} used={usedAreas} />
+            <ListSearch value={query} onChange={setQuery} what="tareas" />
             <Button variant="primary" onClick={() => openModal({ type: 'task' })}>
               <Icon name="plus" size={12} /> Nueva tarea
             </Button>
           </>
         }
       />
+      {tasks.length > 0 && (
+        <ListTools active={filter !== 'all' || areaFilter !== 'all'}>
+          <select className="input input--inline" aria-label="Filtrar por curso" value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="all">Todos los cursos</option>
+            <option value="none">Side quests</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+          <AreaFilterSelect value={areaFilter} onChange={setAreaFilter} used={usedAreas} />
+        </ListTools>
+      )}
       <LateBanner />
       {tasks.length === 0 ? (
         <div className="panel">
@@ -230,9 +246,17 @@ export default function Tareas() {
           </Empty>
         </div>
       ) : (
+        <>
+        {query.trim() !== '' && (
+          <p className="muted small" role="status">
+            {visible.length === 0 ? 'Ninguna tarea coincide con' : `${visible.length} ${visible.length === 1 ? 'tarea coincide' : 'tareas coinciden'} con`} «{query.trim()}».
+          </p>
+        )}
         <div className="board" ref={boardRef} onClickCapture={capture} onDropCapture={capture}>
           {COLUMNS.map((col) => {
-            const items = byStatus(col.status);
+            const all = byStatus(col.status);
+            const limited = col.status === 'done' && !allDone && !filtering && all.length > DONE_SHOWN;
+            const items = limited ? all.slice(0, DONE_SHOWN) : all;
             return (
               <section
                 key={col.status}
@@ -255,16 +279,22 @@ export default function Tareas() {
               >
                 <h2 className="column__head">
                   <Sprite name={col.sprite} size={20} />
-                  {col.title} <span className="column__n">{items.length}</span>
+                  {col.title} <span className="column__n">{all.length}</span>
                 </h2>
-                {items.length === 0 && <p className="muted small column__empty">{col.status === 'done' ? 'Aún no has superado ninguna.' : 'Vacío.'} Arrastra una tarea aquí.</p>}
+                {all.length === 0 && <p className="muted small column__empty">{col.status === 'done' ? 'Aún no has superado ninguna.' : 'Vacío.'} Arrastra una tarea aquí.</p>}
                 {items.map((t) => (
                   <TaskCard key={t.id} task={t} courseName={courseName(t.courseId)} highlighted={t.id === highlight} />
                 ))}
+                {col.status === 'done' && !filtering && all.length > DONE_SHOWN && (
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAllDone(!allDone)} aria-expanded={allDone}>
+                    {allDone ? 'Ver menos' : `Ver ${all.length - items.length} más antiguas`}
+                  </button>
+                )}
               </section>
             );
           })}
         </div>
+        </>
       )}
     </div>
   );

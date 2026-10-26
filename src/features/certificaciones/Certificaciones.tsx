@@ -6,6 +6,8 @@ import type { Certification } from '@/core/domain';
 import { certState, daysToExpiry, linkLabel, safeUrl, sortCertifications } from '@/core/certifications';
 import { shortDate } from '@/core/dates';
 import { Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
+import { ListSearch } from '@/ui/ListSearch';
+import { LIST_SEARCH_FROM, matchesQuery } from '@/core/search';
 import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
 
@@ -70,9 +72,7 @@ export default function Certificaciones() {
   const courseName = useMemo(() => new Map(courses.map((c) => [c.id, c.title])), [courses]);
   const sorted = useMemo(() => sortCertifications(certifications), [certifications]);
   const shown = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return sorted;
-    return sorted.filter((c) => `${c.title} ${c.issuer} ${c.credentialId} ${c.notes}`.toLowerCase().includes(needle));
+    return sorted.filter((c) => matchesQuery([c.title, c.issuer, c.credentialId, c.notes], q));
   }, [sorted, q]);
 
   const expiring = certifications.filter((c) => certState(c) === 'soon');
@@ -86,9 +86,12 @@ export default function Certificaciones() {
         sprite="trophy"
         hint="Guarda aquí los certificados que consigues, con su enlace para abrirlos o verificarlos cuando te los pidan. Cada uno suma una pieza a tu museo."
         right={
-          <Button variant="primary" onClick={() => openModal({ type: 'certification' })}>
-            <Icon name="plus" size={12} /> Nueva certificación
-          </Button>
+          <>
+            {certifications.length >= LIST_SEARCH_FROM && <ListSearch value={q} onChange={setQ} what="certificaciones" />}
+            <Button variant="primary" onClick={() => openModal({ type: 'certification' })}>
+              <Icon name="plus" size={12} /> Nueva certificación
+            </Button>
+          </>
         }
       />
 
@@ -125,16 +128,6 @@ export default function Certificaciones() {
                   </>
                 )}
               </p>
-            )}
-            {certifications.length > 4 && (
-              <input
-                className="input"
-                type="search"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Buscar por nombre, emisor o ID…"
-                aria-label="Buscar certificaciones"
-              />
             )}
           </section>
 

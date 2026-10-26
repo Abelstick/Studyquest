@@ -37,6 +37,17 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('tablero de Hoy', () => {
+  it('enseña todos los hábitos de hoy, sin cortar la lista, y avisa de los que no tocan', () => {
+    const many = Array.from({ length: 9 }, (_, i): Habit => ({ ...habit, id: `d${i}`, title: `Hábito ${i}` }));
+    const off: Habit = { ...habit, id: 'x1', title: 'Solo lunes', frequency: { type: 'dates', dates: ['2000-01-01'] } };
+    board([...many, off], []);
+    const habitos = screen.getByRole('region', { name: /^Hábitos/ });
+    for (const h of many) expect(within(habitos).getByText(h.title)).toBeTruthy();
+    expect(within(habitos).queryByText('Solo lunes')).toBeNull();
+    expect(within(habitos).getByText(/1 hábito más no toca hoy/)).toBeTruthy();
+    expect(within(habitos).queryByRole('button', { name: /Ver \d+ más/ })).toBeNull();
+  });
+
   it('separa hábitos y tareas y pone las vencidas en su propio grupo', () => {
     board();
     const tareas = screen.getByRole('region', { name: /^Tareas/ });

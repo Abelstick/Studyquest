@@ -632,6 +632,77 @@ a.btn {
   outline-offset: 0;
   box-shadow: 0 0 0 6px var(--focus-ink);
 }
+/* Orden y filtros de una lista: una fila bajo el título; en móvil, plegada tras un botón. */
+.ltools__toggle {
+  display: none;
+}
+.ltools__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+}
+.ltools__body > label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.ltools__body .input--inline {
+  min-width: 140px;
+}
+@media (max-width: 700px) {
+  .ltools__toggle {
+    display: inline-flex;
+  }
+  .ltools__body {
+    display: none;
+    margin-top: var(--sp-2);
+  }
+  .ltools.is-open .ltools__body {
+    display: flex;
+  }
+}
+/* Buscador de una lista: parece un campo, con la lupa dentro y la ✕ para ocultarlo. */
+.lsearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 220px;
+  max-width: 320px;
+  min-height: 40px;
+  padding: 0 4px 0 10px;
+  background: var(--field);
+  color: var(--text);
+  border: var(--bw) solid var(--line);
+}
+.lsearch:focus-within {
+  outline: 3px solid var(--focus);
+  box-shadow: 0 0 0 6px var(--focus-ink);
+}
+.lsearch__input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  background: transparent;
+  color: inherit;
+  border: 0;
+}
+.lsearch__input:focus-visible {
+  outline: none;
+}
+.lsearch__close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  cursor: pointer;
+}
+.lsearch__close:hover {
+  color: var(--text);
+}
 .input--xp {
   background: var(--yellow);
   color: var(--ink);

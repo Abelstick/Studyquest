@@ -5,11 +5,12 @@ import { useUi } from '@/state/ui';
 import type { Note } from '@/core/domain';
 import { allTags, blankNote, excerpt, readingMinutes, searchNotes, sortNotes, toMarkdown, wordCount } from '@/core/notes';
 import { linkLabel, safeUrl } from '@/core/certifications';
-import { agoDays } from '@/core/dates';
+import { agoDays, today } from '@/core/dates';
 import { Button, Empty, Field, PageHead, Panel, Tag, TextInput, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { NoteBody } from './NoteBody';
 import { Icon } from '@/ui/Icon';
+import { ListSearch } from '@/ui/ListSearch';
 
 /** Descarga el cuaderno entero como un .md, para llevártelo a Obsidian o a donde quieras. */
 function exportMarkdown(notes: Note[], courseName: (id: string) => string | undefined) {
@@ -17,7 +18,7 @@ function exportMarkdown(notes: Note[], courseName: (id: string) => string | unde
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `apuntes-${new Date().toISOString().slice(0, 10)}.md`;
+  a.download = `apuntes-${today()}.md`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -200,6 +201,7 @@ export default function Apuntes() {
         hint="Lo que aprendes, escrito con tus palabras. Cada apunte puede colgar de un curso o ir suelto, y todos suman a tu biblioteca."
         right={
           <>
+            {notes.length > 0 && <ListSearch value={q} onChange={setQ} what="apuntes" />}
             {notes.length > 0 && (
               <Button small onClick={() => exportMarkdown(notes, courseName)}>
                 Exportar .md
@@ -248,7 +250,6 @@ export default function Apuntes() {
                 </Link>
               </div>
             )}
-            <input className="input" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar en tus apuntes…" aria-label="Buscar apuntes" />
             {tags.length > 0 && (
               <div className="chips" aria-label="Filtrar por etiqueta">
                 <button type="button" className={cx('chip', !tag && 'is-on')} onClick={() => setTag('')} aria-pressed={!tag}>

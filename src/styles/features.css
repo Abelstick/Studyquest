@@ -996,7 +996,7 @@
 }
 .tstep__val.is-off {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .planner__total {
   margin-bottom: 14px;
@@ -4047,6 +4047,7 @@ a.chip {
 }
 .search--inline .search__input {
   min-height: 44px;
+  color: var(--text);
 }
 .search--inline .search__results {
   position: static;
@@ -4169,9 +4170,6 @@ kbd {
   .tour__sprite {
     display: none;
   }
-}
-.search--inline .search__input {
-  color: var(--text);
 }
 .search--inline .search__input:focus-visible {
   outline: none;

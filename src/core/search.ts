@@ -11,8 +11,23 @@ export interface SearchHit {
 
 export type SearchSource = Pick<Snapshot, 'courses' | 'tasks' | 'habits' | 'notes' | 'goals' | 'projects'>;
 
+/** Desde cuántos elementos una pantalla ofrece buscar en su lista: con menos se ve todo de un vistazo. */
+export const LIST_SEARCH_FROM = 4;
+
 /** Mínimo de letras para buscar: con una sola casi todo coincide. */
 export const SEARCH_MIN = 2;
+
+/**
+ * Filtro de una lista: ¿alguno de los textos contiene lo escrito? Ignora tildes y mayúsculas y entiende varias
+ * palabras en cualquier orden. Con el campo vacío todo coincide. Aquí basta una letra (no aplica SEARCH_MIN):
+ * se filtra una lista ya visible, no se busca en toda la app.
+ */
+export function matchesQuery(texts: (string | undefined | null)[], query: string): boolean {
+  const words = fold(query.trim()).split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  const hay = fold(texts.filter(Boolean).join(' '));
+  return words.every((w) => hay.includes(w));
+}
 
 const q = encodeURIComponent;
 

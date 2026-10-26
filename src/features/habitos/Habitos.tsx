@@ -23,6 +23,10 @@ import { QuitStatus } from './QuitStatus';
 import { isQuit } from '@/core/quit';
 import { difficultyInfo, difficultyOf } from '@/core/difficulty';
 import { HabitPeriod } from './HabitPeriod';
+import { ListSearch } from '@/ui/ListSearch';
+import { matchesQuery } from '@/core/search';
+import { ListTools } from '@/ui/ListTools';
+import { HABIT_SORTS, sortHabitCards, type HabitSort } from '@/core/listOrder';
 
 export default function Habitos() {
   const habits = useData((s) => s.habits);
@@ -31,16 +35,19 @@ export default function Habitos() {
   const openModal = useUi((s) => s.openModal);
   const now = today();
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<HabitSort>('today');
   const usedAreas = useMemo(() => new Set<AreaId>(habits.flatMap((h) => (h.area ? [h.area] : []))), [habits]);
 
-  const cards = useMemo(
-    () =>
-      habits.filter((h) => matchesArea(h, areaFilter)).map((h) => {
+  const cards = useMemo(() => {
+    const list = habits
+      .filter((h) => matchesArea(h, areaFilter) && matchesQuery([h.title], query))
+      .map((h) => {
         const log = logFor(logs, h.id, now);
         return { h, log, pct: monthlyCompliance(h, logs, now), due: isDueOn(h, now, logs), done: isHabitDone(h, log), progress: habitProgress(h, log), credit: habitCreditXp(h, log) };
-      }),
-    [habits, logs, now, areaFilter],
-  );
+      });
+    return sortHabitCards(list, sort);
+  }, [habits, logs, now, areaFilter, query, sort]);
   const doneToday = cards.filter((c) => c.done).length;
   // Días que tocaban, ya pasaron y siguen sin marcar: el olvido que esta pantalla ayuda a arreglar.
   const olvidos = useMemo(() => totalPending(habits, logs, now), [habits, logs, now]);
@@ -55,7 +62,7 @@ export default function Habitos() {
         right={
           <>
             <GuideButton />
-            <AreaFilterSelect value={areaFilter} onChange={setAreaFilter} used={usedAreas} />
+            <ListSearch value={query} onChange={setQuery} what="hábitos" />
             <span className="kicker">
               {doneToday} de {cards.length} registrados hoy
             </span>
@@ -65,7 +72,22 @@ export default function Habitos() {
           </>
         }
       />
-      {cards.length === 0 ? (
+      {habits.length > 0 && (
+        <ListTools active={sort !== 'today' || areaFilter !== 'all'}>
+          <label>
+            <span className="muted small">Ordenar</span>
+            <select className="input input--inline" aria-label="Ordenar hábitos" value={sort} onChange={(e) => setSort(e.target.value as HabitSort)}>
+              {HABIT_SORTS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <AreaFilterSelect value={areaFilter} onChange={setAreaFilter} used={usedAreas} />
+        </ListTools>
+      )}
+      {habits.length === 0 ? (
         <div className="panel">
           <Empty sprite="flower" title="Sin power-ups equipados">
             <p>Un hábito es algo que repites con regularidad, como leer 20 minutos al día. Cuenta tus días y tu racha, y rinde XP cada vez que lo cumples.</p>
@@ -89,6 +111,22 @@ export default function Habitos() {
             </section>
           )}
           <Chains />
+          {cards.length === 0 && (
+            <div className="panel">
+              <Empty sprite="flower" title="Ningún hábito coincide">
+                <p className="muted small">Prueba con otra palabra o cambia el filtro de área.</p>
+                <Button
+                  small
+                  onClick={() => {
+                    setQuery('');
+                    setAreaFilter('all');
+                  }}
+                >
+                  Quitar filtros
+                </Button>
+              </Empty>
+            </div>
+          )}
           <div className="grid grid--cards">
           {cards.map(({ h, log, pct, due, done, progress, credit }) => (
             <article key={h.id} className={cx('habit', done ? 'habit--done' : due && 'habit--due')}>

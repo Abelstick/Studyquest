@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Course, Goal, Habit, Note, Project, Task } from './domain';
-import { searchAll, type SearchSource } from './search';
+import { matchesQuery, searchAll, type SearchSource } from './search';
 
 const task = (id: string, title: string, status: Task['status'] = 'todo'): Task => ({ id, title, courseId: null, priority: 'mid', status, dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null });
 const note = (id: string, title: string, body = ''): Note => ({ id, title, body, courseId: null, topicId: null, tags: [], pinned: false, link: null, createdAt: '', updatedAt: '' });
@@ -45,5 +45,27 @@ describe('búsqueda global', () => {
   it('respeta el límite', () => {
     const tasks = Array.from({ length: 20 }, (_, i) => task(`t${i}`, `Tarea ${i}`));
     expect(searchAll(src({ tasks }), 'tarea')).toHaveLength(8);
+  });
+});
+
+describe('filtro de listas', () => {
+  it('con el campo vacío todo coincide', () => {
+    expect(matchesQuery(['Leer'], '')).toBe(true);
+    expect(matchesQuery(['Leer'], '   ')).toBe(true);
+  });
+
+  it('ignora tildes y mayúsculas, y basta una letra', () => {
+    expect(matchesQuery(['Repaso de Álgebra'], 'ALGEBRA')).toBe(true);
+    expect(matchesQuery(['Leer'], 'l')).toBe(true);
+    expect(matchesQuery(['Leer'], 'z')).toBe(false);
+  });
+
+  it('exige todas las palabras, en cualquier orden y repartidas entre los textos', () => {
+    expect(matchesQuery(['Ejercicios', 'SQL básico'], 'sql ejercicios')).toBe(true);
+    expect(matchesQuery(['Ejercicios', 'SQL básico'], 'sql python')).toBe(false);
+  });
+
+  it('ignora textos vacíos o ausentes', () => {
+    expect(matchesQuery([undefined, null, '', 'Correr'], 'correr')).toBe(true);
   });
 });

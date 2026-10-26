@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import type { Project } from '@/core/domain';
@@ -5,6 +6,8 @@ import { Bar, Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { Icon } from '@/ui/Icon';
+import { ListSearch } from '@/ui/ListSearch';
+import { LIST_SEARCH_FROM, matchesQuery } from '@/core/search';
 
 const progress = (p: Project) => {
   const total = p.checkpoints.reduce((a, c) => a + c.xp, 0);
@@ -40,8 +43,10 @@ export default function Proyectos() {
   const deleteProject = useData((s) => s.deleteProject);
   const openModal = useUi((s) => s.openModal);
 
-  const main = projects.find((p) => p.kind === 'main');
-  const others = projects.filter((p) => p !== main);
+  const [query, setQuery] = useState('');
+  const visible = projects.filter((p) => matchesQuery([p.title, p.summary, ...p.checkpoints.map((c) => c.title)], query));
+  const main = visible.find((p) => p.kind === 'main');
+  const others = visible.filter((p) => p !== main);
   const mp = main && progress(main);
 
   const remove = (p: Project) => openModal({ type: 'confirm', title: 'Borrar proyecto', body: `Se eliminará "${p.title}".`, confirmLabel: 'Borrar', onConfirm: () => deleteProject(p.id) });
@@ -56,6 +61,7 @@ export default function Proyectos() {
         right={
           <>
             <GuideButton />
+            {projects.length >= LIST_SEARCH_FROM && <ListSearch value={query} onChange={setQuery} what="proyectos" />}
             <Button onClick={() => openModal({ type: 'pack' })}>Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'project' })}>
               <Icon name="plus" size={12} /> Nuevo proyecto
@@ -74,6 +80,17 @@ export default function Proyectos() {
               </Button>
               <Button onClick={() => openModal({ type: 'pack' })}>Importar con IA</Button>
             </div>
+          </Empty>
+        </div>
+      )}
+
+      {projects.length > 0 && visible.length === 0 && (
+        <div className="panel">
+          <Empty sprite="chest" title="Ningún proyecto coincide">
+            <p className="muted small">Se busca en el título, el resumen y los checkpoints.</p>
+            <Button small onClick={() => setQuery('')}>
+              Quitar búsqueda
+            </Button>
           </Empty>
         </div>
       )}

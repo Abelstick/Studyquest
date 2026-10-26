@@ -5,7 +5,7 @@
  */
 import type { Habit, HabitChain, Snapshot } from './domain';
 import { defaultProfile } from './game';
-import { isClockTime, newId } from './dates';
+import { isClockTime, newId, toISODate, today } from './dates';
 import { safeUrl } from './certifications';
 import { cleanChains } from './chains';
 import { sanitizeHero } from './hero';
@@ -25,7 +25,7 @@ export interface BackupFile {
   data: Snapshot;
 }
 
-export const backupFileName = (now = new Date()) => `studyquest-${now.toISOString().slice(0, 10)}.json`;
+export const backupFileName = (now = new Date()) => `studyquest-${toISODate(now)}.json`;
 
 export function buildBackup(data: Snapshot, now = new Date()): BackupFile {
   return { app: BACKUP_APP, version: BACKUP_VERSION, exportedAt: now.toISOString(), data };
@@ -223,7 +223,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     if (!str(o.title)) return null;
     const courseId = ref(o.courseId);
     return {
-      id: fixId(o.id), title: str(o.title), issuer: str(o.issuer), date: DATE.test(str(o.date)) ? str(o.date) : new Date().toISOString().slice(0, 10),
+      id: fixId(o.id), title: str(o.title), issuer: str(o.issuer), date: DATE.test(str(o.date)) ? str(o.date) : today(),
       // El enlace se guarda solo si es http(s): así una copia manipulada no puede meter un «javascript:» en la app.
       url: safeUrl(str(o.url)) ?? '', credentialId: str(o.credentialId), expiresAt: DATE.test(str(o.expiresAt)) ? str(o.expiresAt) : null,
       courseId: courseId && courseIds.has(courseId) ? courseId : null, notes: str(o.notes), createdAt: str(o.createdAt, new Date().toISOString()),

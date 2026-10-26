@@ -1,4 +1,6 @@
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { dayProgress, missionUrgency, taskBucket, type Mission, type TaskBucket } from '@/core/missions';
 import { Bar, Button, Empty, cx } from '@/ui/kit';
@@ -7,6 +9,8 @@ import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
 import { useFlipReorder } from '@/ui/motion';
 import { MissionCard } from './MissionCard';
+import { ListSearch } from '@/ui/ListSearch';
+import { matchesQuery } from '@/core/search';
 
 type MissionSort = 'urgency' | 'xp' | 'name';
 type Lane = 'habit' | 'task';
@@ -16,8 +20,10 @@ const SORTS: { value: MissionSort; label: string }[] = [
   { value: 'xp', label: 'Más XP' },
   { value: 'name', label: 'A–Z' },
 ];
-/** Cuántas misiones se enseñan de entrada en cada grupo; el resto queda tras «Ver más». */
-const SHOW_HABITS = 6;
+/**
+ * Cuántas tareas se enseñan de entrada en cada grupo; el resto queda tras «Ver más». Los hábitos de hoy se
+ * enseñan todos: son pocos y cada uno es una casilla que marcar, esconder alguno parece que se perdió.
+ */
 const SHOW_URGENT = 6;
 const SHOW_OTHER = 3;
 
@@ -140,23 +146,28 @@ interface MissionBoardProps {
  */
 export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<MissionBoardProps>) {
   const openModal = useUi((s) => s.openModal);
+  const habitsTotal = useData((s) => s.habits.length);
   const progress = useMemo(() => dayProgress(missions), [missions]);
   // En móvil, si hay tareas vencidas se abre directamente en Tareas: es lo que más apremia.
   const [lane, setLane] = useState<Lane>(() => (progress.late > 0 ? 'task' : 'habit'));
   const [sort, setSort] = useState<MissionSort>('urgency');
   const [onlyPending, setOnlyPending] = useState(false);
+  const [query, setQuery] = useState('');
   // En móvil, ordenar y filtrar quedan plegados: casi nunca se tocan y empujan la lista hacia abajo.
   const [toolsOpen, setToolsOpen] = useState(false);
 
-  const pick = (kind: Mission['kind']) => sortMissions(missions.filter((m) => m.kind === kind && (!onlyPending || !m.done)), sort);
+  const pick = (kind: Mission['kind']) => sortMissions(missions.filter((m) => m.kind === kind && (!onlyPending || !m.done) && matchesQuery([m.title, m.subtitle], query)), sort);
   const habits = pick('habit');
   const tasks = pick('task');
   // Las tareas se agrupan por cuándo tocan, para ver de un vistazo qué es de hoy y qué puede esperar.
   const taskGroups = BUCKETS.map((b) => ({ ...b, items: tasks.filter((m) => m.kind === 'task' && taskBucket(m.task) === b.id) })).filter((g) => g.items.length > 0);
 
+  // Hábitos creados que hoy no tocan (por su frecuencia): no están en la misión, pero se avisa en vez de callarlo.
+  const habitsOff = Math.max(0, habitsTotal - missions.filter((m) => m.kind === 'habit').length);
   const habitEmpty = !hasHabits ? 'none' : progress.habitsTotal === 0 ? 'off' : 'clear';
   const taskEmpty = !hasTasks ? 'none' : progress.tasksTotal === 0 ? 'off' : 'clear';
-  const toolsActive = onlyPending || sort !== 'urgency';
+  const searching = query.trim() !== '';
+  const toolsActive = onlyPending || sort !== 'urgency' || searching;
 
   const switcher: { id: Lane; label: string; sprite: 'flower' | 'qblock'; count: string; alert?: number }[] = [
     { id: 'habit', label: 'Hábitos', sprite: 'flower', count: `${progress.habitsDone}/${progress.habitsTotal}` },
@@ -186,6 +197,7 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
                 ))}
               </select>
             </label>
+            <ListSearch value={query} onChange={setQuery} what="hábitos y tareas" />
             <label className="mtools__check">
               <input type="checkbox" checked={onlyPending} onChange={(e) => setOnlyPending(e.target.checked)} /> <span className="small">Solo pendientes</span>
             </label>
@@ -212,17 +224,22 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
       <div className="lanes">
         <LaneSection kind="habit" title="Hábitos" done={progress.habitsDone} total={progress.habitsTotal} addLabel="Nuevo hábito" onAdd={() => openModal({ type: 'habit' })} shown={lane === 'habit'}>
           {habits.length > 0 ? (
-            <MissionList key={`habit-${sort}-${onlyPending}`} items={habits} limit={SHOW_HABITS} />
+            <MissionList key={`habit-${sort}-${onlyPending}-${query}`} items={habits} limit={habits.length} />
           ) : (
-            <LaneEmpty kind="habit" state={habitEmpty} onCreate={() => openModal({ type: 'habit' })} />
+            <LaneEmpty kind="habit" state={habitEmpty} query={searching ? query.trim() : ''} onCreate={() => openModal({ type: 'habit' })} />
+          )}
+          {habitsOff > 0 && (
+            <p className="muted small lane__off">
+              {habitsOff} {habitsOff === 1 ? 'hábito más no toca' : 'hábitos más no tocan'} hoy. <Link to="/habitos">Ver todos los hábitos</Link>
+            </p>
           )}
         </LaneSection>
 
         <LaneSection kind="task" title="Tareas" done={progress.tasksDone} total={progress.tasksTotal} addLabel="Nueva tarea" onAdd={() => openModal({ type: 'task' })} shown={lane === 'task'}>
           {taskGroups.length > 0 ? (
-            taskGroups.map((g, i) => <TaskGroup key={g.id} id={g.id} label={g.label} items={g.items} first={i === 0} listKey={`${g.id}-${sort}-${onlyPending}`} />)
+            taskGroups.map((g, i) => <TaskGroup key={g.id} id={g.id} label={g.label} items={g.items} first={i === 0} listKey={`${g.id}-${sort}-${onlyPending}-${query}`} />)
           ) : (
-            <LaneEmpty kind="task" state={taskEmpty} onCreate={() => openModal({ type: 'task' })} />
+            <LaneEmpty kind="task" state={taskEmpty} query={searching ? query.trim() : ''} onCreate={() => openModal({ type: 'task' })} />
           )}
         </LaneSection>
       </div>
@@ -231,8 +248,10 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
 }
 
 /** Qué decir cuando una columna no tiene nada que enseñar: no hay ninguno creado, hoy no toca, o ya está todo hecho. */
-function LaneEmpty({ kind, state, onCreate }: { kind: Lane; state: 'none' | 'off' | 'clear'; onCreate: () => void }) {
+function LaneEmpty({ kind, state, query, onCreate }: { kind: Lane; state: 'none' | 'off' | 'clear'; query: string; onCreate: () => void }) {
   const habit = kind === 'habit';
+  // Con una búsqueda activa, lo único cierto es que nada coincide; lo demás sigue ahí.
+  if (query && state !== 'none') return <p className="lane__empty muted">Ningún {habit ? 'hábito' : 'tarea'} de hoy coincide con «{query}».</p>;
   if (state === 'none') {
     return (
       <Empty sprite={habit ? 'flower' : 'qblock'} title={habit ? 'Aún no tienes hábitos' : 'Aún no tienes tareas'}>

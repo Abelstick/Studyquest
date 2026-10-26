@@ -1,23 +1,49 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { courseProgress, courseRank, nextTopic } from '@/core/game';
 import { courseHours } from '@/core/stats';
 import type { Course, Snapshot } from '@/core/domain';
-import { Bar, Button, Empty, PageHead, Tag } from '@/ui/kit';
+import { Bar, Button, Empty, PageHead, Tag, cx } from '@/ui/kit';
 import { CoursesInPlay } from './CoursesInPlay';
 import { Icon } from '@/ui/Icon';
+import { ListSearch } from '@/ui/ListSearch';
+import { matchesQuery } from '@/core/search';
+import { ListTools } from '@/ui/ListTools';
+import { COURSE_FILTERS, COURSE_SORTS, arrangeCourses, type CourseFilter, type CourseSort } from '@/core/listOrder';
 
 const TONES = ['red', 'green', 'blue', 'yellow'] as const;
 
 export const lastTopic = (c: Course) => [...c.modules.flatMap((m) => m.topics)].reverse().find((t) => t.status === 'done');
 
+/** Un bloque por módulo, lleno según sus temas hechos: enseña por dónde va el curso, no solo cuánto lleva. */
+function ModuleStrip({ course }: Readonly<{ course: Course }>) {
+  if (course.modules.length === 0) return null;
+  return (
+    <div className="mods" role="img" aria-label={`Módulos de ${course.title}: ${course.modules.filter((m) => m.topics.length > 0 && m.topics.every((t) => t.status === 'done')).length} de ${course.modules.length} completos`}>
+      {course.modules.map((m) => {
+        const done = m.topics.filter((t) => t.status === 'done').length;
+        const pct = m.topics.length ? Math.round((done / m.topics.length) * 100) : 0;
+        return (
+          <span key={m.id} className={cx('mods__seg', pct === 100 && 'is-full')} title={`${m.title}: ${done}/${m.topics.length} temas`}>
+            <i style={{ width: `${pct}%` }} />
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Cursos() {
   const courses = useData((s) => s.courses);
   const sessions = useData((s) => s.sessions);
   const openModal = useUi((s) => s.openModal);
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<CourseFilter>('all');
+  const [sort, setSort] = useState<CourseSort>('recent');
 
+  // El color se asigna por posición de creación, no de pantalla: un curso conserva su color al ordenar o filtrar.
   const rows = useMemo(
     () =>
       courses.map((c, i) => ({
@@ -30,6 +56,16 @@ export default function Cursos() {
   );
   const totalHours = rows.reduce((a, r) => a + r.hours, 0);
   const totalXp = rows.reduce((a, r) => a + r.p.xp, 0);
+  const totalTopics = rows.reduce((a, r) => a + r.p.total, 0);
+  const doneTopics = rows.reduce((a, r) => a + r.p.done, 0);
+  const finished = rows.filter((r) => r.p.total > 0 && r.p.done === r.p.total).length;
+  const shown = useMemo(() => {
+    const order = new Map(arrangeCourses(courses, sessions, filter, sort).map((c, i) => [c.id, i]));
+    return rows
+      .filter((r) => order.has(r.c.id) && matchesQuery([r.c.title, r.c.professor, r.c.field, ...r.c.modules.map((m) => m.title)], query))
+      .sort((a, b) => (order.get(a.c.id) ?? 0) - (order.get(b.c.id) ?? 0));
+  }, [rows, courses, sessions, filter, sort, query]);
+  const narrowed = query.trim() !== '' || filter !== 'all';
 
   return (
     <div className="stack">
@@ -42,6 +78,7 @@ export default function Cursos() {
             <span className="kicker">
               {Math.round(totalHours)} h · {totalXp.toLocaleString('en-US')} XP
             </span>
+            <ListSearch value={query} onChange={setQuery} what="cursos" />
             <Button onClick={() => openModal({ type: 'pack' })}>Importar con IA</Button>
             <Button variant="primary" onClick={() => openModal({ type: 'course' })}>
               <Icon name="plus" size={12} /> Nuevo curso
@@ -61,9 +98,69 @@ export default function Cursos() {
         </div>
       ) : (
         <>
-          <CoursesInPlay />
+          <dl className="cstats" aria-label="Resumen de tus cursos">
+            <div>
+              <dt>Cursos</dt>
+              <dd>
+                {rows.length} <small>{finished} {finished === 1 ? 'completo' : 'completos'}</small>
+              </dd>
+            </div>
+            <div>
+              <dt>Temas</dt>
+              <dd>
+                {doneTopics}/{totalTopics} <small>{totalTopics ? Math.round((doneTopics / totalTopics) * 100) : 0}%</small>
+              </dd>
+            </div>
+            <div>
+              <dt>Horas</dt>
+              <dd>{Math.round(totalHours)} h</dd>
+            </div>
+            <div>
+              <dt>XP de cursos</dt>
+              <dd>{totalXp.toLocaleString('en-US')}</dd>
+            </div>
+          </dl>
+          {!narrowed && sort === 'recent' && <CoursesInPlay />}
+          <ListTools active={filter !== 'all' || sort !== 'recent'}>
+            <label>
+              <span className="muted small">Mostrar</span>
+              <select className="input input--inline" aria-label="Filtrar cursos por estado" value={filter} onChange={(e) => setFilter(e.target.value as CourseFilter)}>
+                {COURSE_FILTERS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="muted small">Ordenar</span>
+              <select className="input input--inline" aria-label="Ordenar cursos" value={sort} onChange={(e) => setSort(e.target.value as CourseSort)}>
+                {COURSE_SORTS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </ListTools>
+          {shown.length === 0 && (
+            <div className="panel">
+              <Empty sprite="pipe" title="Ningún curso coincide">
+                <p className="muted small">Prueba con otra palabra (se busca en el título, el profesor, el área y los módulos) o cambia el filtro de estado.</p>
+                <Button
+                  small
+                  onClick={() => {
+                    setQuery('');
+                    setFilter('all');
+                  }}
+                >
+                  Quitar filtros
+                </Button>
+              </Empty>
+            </div>
+          )}
           <div className="grid grid--cards">
-            {rows.map(({ c, p, hours, tone }) => {
+            {shown.map(({ c, p, hours, tone }) => {
               const next = nextTopic(c);
               const last = lastTopic(c);
               return (
@@ -86,6 +183,10 @@ export default function Cursos() {
                       <span className="xp-text">{p.xp.toLocaleString('en-US')} XP</span>
                     </div>
                     <Bar pct={p.pct} tone={tone} label={`Progreso de ${c.title}`} />
+                    <ModuleStrip course={c} />
+                    <p className="muted small">
+                      {p.done}/{p.total} {p.total === 1 ? 'tema' : 'temas'} · {c.modules.length} {c.modules.length === 1 ? 'módulo' : 'módulos'}
+                    </p>
                   </div>
                   <dl className="card__facts">
                     <div>
@@ -96,9 +197,7 @@ export default function Cursos() {
                       <dt>Próximo tema</dt>
                       <dd className="xp-text">{next?.title ?? '¡Mundo completado!'}</dd>
                     </div>
-                    <p className="muted small">
-                      {hours.toFixed(0)} h invertidas · {c.modules.length} {c.modules.length === 1 ? 'módulo' : 'módulos'}
-                    </p>
+                    <p className="muted small">{hours.toFixed(0)} h invertidas</p>
                   </dl>
                   <div className="card__actions">
                     <Link className="btn btn--primary" to={`/cursos/${c.id}`}>

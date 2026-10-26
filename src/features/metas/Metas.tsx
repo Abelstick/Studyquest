@@ -8,6 +8,8 @@ import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { GoalActionsPanel, GoalIfThenPanel, GoalSmartPanel } from './GoalPanels';
 import { Icon } from '@/ui/Icon';
+import { ListSearch } from '@/ui/ListSearch';
+import { LIST_SEARCH_FROM, matchesQuery } from '@/core/search';
 
 export default function Metas() {
   const goals = useData((s) => s.goals);
@@ -18,6 +20,7 @@ export default function Metas() {
   const wanted = params.get('meta');
   const [pickedId, setPickedId] = useState<string | null>(wanted);
   const [lastWanted, setLastWanted] = useState(wanted);
+  const [query, setQuery] = useState('');
   if (wanted !== lastWanted) {
     setLastWanted(wanted);
     if (wanted) setPickedId(wanted);
@@ -47,6 +50,8 @@ export default function Metas() {
     );
   }
 
+  // La meta abierta no desaparece al buscar; la búsqueda solo acota las pestañas que se pueden elegir.
+  const matched = goals.filter((g) => matchesQuery([g.title, ...g.milestones.flatMap((m) => [m.title, ...m.skills.map((k) => k.label)])], query));
   const done = goal.milestones.filter((m) => m.done).length;
   const totalXp = goal.milestones.reduce((a, m) => a + m.xp, 0);
   const earnedXp = goal.milestones.filter((m) => m.done).reduce((a, m) => a + m.xp, 0);
@@ -63,6 +68,7 @@ export default function Metas() {
         right={
           <>
             <GuideButton />
+            {goals.length >= LIST_SEARCH_FROM && <ListSearch value={query} onChange={setQuery} what="metas" />}
             <div className="big-stat">
               <span className="big-num">
                 {done} / {goal.milestones.length}
@@ -81,7 +87,8 @@ export default function Metas() {
       />
       {goals.length > 1 && (
         <div className="chips" role="tablist" aria-label="Metas">
-          {goals.map((g) => (
+          {query.trim() !== '' && matched.length === 0 && <span className="muted small">Ninguna meta coincide con «{query.trim()}».</span>}
+          {matched.map((g) => (
             <button key={g.id} type="button" role="tab" aria-selected={g.id === goal.id} className={cx('chip', g.id === goal.id && 'is-on')} onClick={() => setPickedId(g.id)}>
               {g.title}
             </button>

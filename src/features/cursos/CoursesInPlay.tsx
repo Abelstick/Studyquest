@@ -7,7 +7,6 @@ import { courseProgress, nextTopic } from '@/core/game';
 import { courseTasks, courseTasksLabel } from '@/core/courseTasks';
 import { coursesInPlay, courseLastStudied } from '@/core/stats';
 import { Bar, Button, Panel, Tag } from '@/ui/kit';
-import { FoldPanel } from '@/ui/Fold';
 import { Icon } from '@/ui/Icon';
 
 /** Cuántos cursos en marcha se destacan arriba de la lista. */
@@ -15,9 +14,9 @@ const IN_PLAY = 3;
 
 /**
  * Los cursos que estudiaste hace menos, con su próximo tema, cuándo fue la última vez, lo que te debe cada uno en
- * tareas y un botón para ponerte a estudiar. Vive en Cursos («En marcha») y en Inicio («Tus cursos»).
+ * tareas y un botón para ponerte a estudiar. Vive en Cursos («En marcha»); Inicio tiene su propia versión con el ritmo semanal.
  */
-export function CoursesInPlay({ where = 'cursos' }: Readonly<{ where?: 'cursos' | 'inicio' }>) {
+export function CoursesInPlay() {
   const courses = useData((s) => s.courses);
   const sessions = useData((s) => s.sessions);
   const tasks = useData((s) => s.tasks);
@@ -74,23 +73,6 @@ export function CoursesInPlay({ where = 'cursos' }: Readonly<{ where?: 'cursos' 
     </ul>
   );
 
-  if (where === 'inicio') {
-    return (
-      <FoldPanel
-        id="home-courses"
-        kicker="Lo que debes ir avanzando"
-        title="Tus cursos"
-        badge={shown.length}
-        right={
-          <Link className="btn btn--ghost btn--sm" to="/cursos">
-            Ver cursos
-          </Link>
-        }
-      >
-        {list}
-      </FoldPanel>
-    );
-  }
   return (
     <Panel kicker="Sigue donde lo dejaste" title="En marcha">
       {list}

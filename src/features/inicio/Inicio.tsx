@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { addDays, today, weekStart, WEEKDAYS_SHORT, shortDate } from '@/core/dates';
+import { today } from '@/core/dates';
 import { computeStreak, goalLabel, isCounter, levelProgress, logFor, rankFor } from '@/core/game';
 import { dailyMissions, dayProgress, deadlineText, tips } from '@/core/missions';
+import { habitWeek, taskScopes } from '@/core/overview';
 import { nextStep, type NextStep } from '@/core/nextStep';
 import { HabitAction, HabitMinimumButton, HabitRecovery } from '@/features/habitos/HabitAction';
 import { IfThenList } from '@/ui/IfThenList';
@@ -23,55 +24,7 @@ import { ConflictBanner, ReviewNudge, TodayAgenda, TodayPriorities } from './Tod
 import { NowStrip } from './NowStrip';
 import { StartGuide } from './StartGuide';
 import { HowToButton } from '@/features/help/HowToGuide';
-import { CoursesInPlay } from '@/features/cursos/CoursesInPlay';
-
-function StreakCalendar() {
-  const events = useData((s) => s.xpEvents);
-  const profile = useData((s) => s.profile);
-  const freeze = useData((s) => s.freezeToday);
-  const streak = useMemo(() => computeStreak(events, profile.frozenDates), [events, profile.frozenDates]);
-  const now = today();
-  const start = addDays(weekStart(now), -28);
-  const cells = Array.from({ length: 35 }, (_, i) => addDays(start, i));
-  const frozenToday = profile.frozenDates.includes(now);
-
-  return (
-    <FoldPanel
-      id="home-streak"
-      title={`Racha · ${streak.current} ${streak.current === 1 ? 'día' : 'días'}`}
-      right={<span className="kicker">Récord {streak.best}</span>}
-    >
-      <div className="cal" role="img" aria-label={`Calendario de las últimas 5 semanas. Racha actual de ${streak.current} días.`}>
-        {Array.from({ length: 7 }, (_, i) => (
-          <span key={i} className="cal__head">
-            {WEEKDAYS_SHORT[i]}
-          </span>
-        ))}
-        {cells.map((d) => {
-          const active = streak.days.has(d);
-          const frozen = profile.frozenDates.includes(d);
-          return <span key={d} title={shortDate(d)} className={cx('cal__cell', active && 'is-on', frozen && 'is-frozen', d === now && 'is-today', d > now && 'is-future')} />;
-        })}
-      </div>
-      <p className="muted small">
-        {profile.streakFreezes > 0 ? (
-          <>
-            Tienes <b>{profile.streakFreezes}</b> {profile.streakFreezes === 1 ? 'congelador' : 'congeladores'}.{' '}
-            {!frozenToday && !streak.activeToday && (
-              <button type="button" className="link" onClick={freeze}>
-                Congelar hoy
-              </button>
-            )}
-          </>
-        ) : (
-          <>
-            Compra <b>Congelar racha</b> en el <Link to="/arsenal">Arsenal</Link> por 200 monedas si el jueves se pone feo.
-          </>
-        )}
-      </p>
-    </FoldPanel>
-  );
-}
+import { CoursesToday } from './CoursesToday';
 
 /** Eventos de hoy (bonus de fin de semana, combo ×2) en una línea compacta dentro de la misión. */
 function Events({ events }: { events: GameEvent[] }) {
@@ -91,34 +44,33 @@ function Events({ events }: { events: GameEvent[] }) {
   );
 }
 
-/** Cofre diario: un botín distinto cada día, mejor cuanto más larga es la racha. */
+/**
+ * Cofre diario: un botín distinto cada día, mejor cuanto más larga es la racha. Ocupa una línea: con el cofre
+ * por abrir invita a abrirlo y, ya abierto, queda en una nota discreta (no hay nada más que hacer con él).
+ */
 function DailyChest({ streak }: { streak: number }) {
   const profile = useData((s) => s.profile);
   const openChest = useData((s) => s.openChest);
   const open = canOpenChest(profile);
   const preview = chestReward(today(), streak);
+  const total = profile.chests ?? 0;
+  if (!open) {
+    return (
+      <p className="chestline chestline--done muted small">
+        <Sprite name="chest" size={18} /> Cofre abierto hoy · {total} {total === 1 ? 'cofre' : 'cofres'} en total
+      </p>
+    );
+  }
   return (
-    <FoldPanel id="home-chest" kicker="Botín del día" title="Cofre diario" badge={open ? '¡Por abrir!' : undefined}>
-      <div className={cx('chestbox', !open && 'is-open')}>
-        <Sprite name="chest" size={64} className={cx(open && 'chestbox__sprite')} />
-        <div>
-          {open ? (
-            <>
-              <p className="muted small">Hay un cofre esperándote. Tu racha de {streak} {streak === 1 ? 'día' : 'días'} mejora el botín (+{Math.min(30, streak) * 2} monedas).</p>
-              <Button variant="coin" onClick={openChest}>
-                Abrir cofre
-              </Button>
-            </>
-          ) : (
-            <>
-              <p className="list__title">¡Cofre abierto hoy!</p>
-              <p className="muted small">Vuelve mañana por otro. Llevas {profile.chests ?? 0} {(profile.chests ?? 0) === 1 ? 'cofre' : 'cofres'} en total.</p>
-            </>
-          )}
-        </div>
-      </div>
-      {open && <p className="kicker">Botín de hoy: desde {preview.coins} monedas</p>}
-    </FoldPanel>
+    <section className="panel chestline chestline--ready" aria-label="Cofre diario">
+      <Sprite name="chest" size={40} className="chestbox__sprite" />
+      <p className="grow">
+        <b>Cofre del día por abrir.</b> <span className="muted small">Botín desde {preview.coins} monedas; tu racha de {streak} {streak === 1 ? 'día' : 'días'} lo mejora.</span>
+      </p>
+      <Button variant="coin" small onClick={openChest}>
+        Abrir
+      </Button>
+    </section>
   );
 }
 
@@ -383,6 +335,8 @@ export default function Inicio() {
   const events = useMemo(() => activeEvents(habits, habitLogs, profile), [habits, habitLogs, profile]);
   const advice = useMemo(() => tips(snap), [snap]);
   const streak = useMemo(() => computeStreak(xpEvents, profile.frozenDates), [xpEvents, profile.frozenDates]);
+  const scopes = useMemo(() => taskScopes(tasks), [tasks]);
+  const week = useMemo(() => habitWeek(habits, habitLogs), [habits, habitLogs]);
 
   const isEmpty = !tasks.length && !habits.length && !courses.length;
 
@@ -412,7 +366,7 @@ export default function Inicio() {
         <>
           <NowStrip />
           <StartGuide />
-          <DaySummary progress={progress} streak={streak.current} streakAlive={streak.activeToday} />
+          <DaySummary progress={progress} scopes={scopes} habitWeek={week} streak={streak} />
           {/* Dos columnas en pantallas anchas: a la izquierda lo que se hace (siguiente paso y misiones), a la derecha
               el contexto del día. Cada panel se pliega, así nada empuja lo demás hacia abajo sin permiso. */}
           <div className="home__grid">
@@ -430,13 +384,12 @@ export default function Inicio() {
               ) : (
                 <MissionBoard missions={missions} hasHabits={habits.length > 0} hasTasks={tasks.length > 0} />
               )}
-              <CoursesInPlay where="inicio" />
+              <CoursesToday />
             </div>
             <aside className="stack home__rail" aria-label="Tu día">
               <TodayPriorities />
               <TodayAgenda />
               <QuickLog />
-              <StreakCalendar />
               <DailyChest streak={streak.current} />
               <FoldPanel id="home-tips" kicker="Inteligencia táctica" title="Consejos del Toad" badge={advice.length} defaultOpen={false}>
                 <ul className="tips">

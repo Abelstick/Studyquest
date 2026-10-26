@@ -162,6 +162,17 @@ describe('copia de seguridad', () => {
     expect(restaurado.link).toBeNull();
   });
 
+  it('conserva la meta semanal de un curso y descarta una fuera de rango', () => {
+    const file = buildBackup(demo());
+    file.data.courses[0].studyDaysPerWeek = 3;
+    file.data.courses[1].studyDaysPerWeek = 12;
+    const res = parseBackup(JSON.stringify(file));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.snapshot.courses[0].studyDaysPerWeek).toBe(3);
+    expect(res.snapshot.courses[1].studyDaysPerWeek).toBeUndefined();
+  });
+
   it('convierte ids que no son UUID y reescribe las referencias', () => {
     const file = {
       app: 'studyquest', version: 1, exportedAt: '',

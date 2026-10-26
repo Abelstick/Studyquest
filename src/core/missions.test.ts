@@ -44,6 +44,15 @@ describe('avance del día', () => {
     expect(dayProgress(dailyMissions(s, NOW), NOW)).toEqual({ habitsDone: 0, habitsTotal: 1, tasksDone: 1, tasksTotal: 3, done: 1, total: 4, pct: 25, xpLeft: 40, late: 1 });
   });
 
+  it('las tareas sin fecha o para más adelante no entran: si el día tenía 7 cosas, hacerlas es el 100 %', () => {
+    const hoy = Array.from({ length: 6 }, (_, i) => ({ ...task(`d${i}`, NOW), status: 'done' as const, completedAt: NOW }));
+    const open = [task('sin', null), task('luego', '2026-10-30'), { ...task('extra', null), status: 'done' as const, completedAt: NOW }];
+    const hab = { ...habit, id: 'hh' };
+    const s = { habits: [hab], habitLogs: [{ id: 'l', habitId: 'hh', date: NOW, value: 1, stepsDone: [] }], courses: [], tasks: [...hoy, ...open] } as unknown as Snapshot; // solo hacen falta estos campos
+    const p = dayProgress(dailyMissions(s, NOW), NOW);
+    expect(p).toMatchObject({ habitsDone: 1, habitsTotal: 1, tasksDone: 6, tasksTotal: 6, done: 7, total: 7, pct: 100, xpLeft: 0 });
+  });
+
   it('sin misiones el avance es 0, no NaN', () => {
     expect(dayProgress([], NOW)).toMatchObject({ total: 0, pct: 0, xpLeft: 0 });
   });

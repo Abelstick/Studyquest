@@ -111,21 +111,14 @@ describe('cursos y tareas', () => {
       tasks: [task('Entregar guía', { courseId: 'Álgebra', dueDate: ayer }), task('Leer capítulo', { courseId: 'Álgebra' }), task('Ajena', { courseId: 'otro' })],
     });
 
-  it('Inicio muestra los cursos en marcha con su próximo tema y lo que deben en tareas', () => {
+  it('En marcha (Cursos) muestra el próximo tema, la última vez y lo que debe en tareas', () => {
     withTasks();
-    wrap(<CoursesInPlay where="inicio" />);
-    const panel = screen.getByRole('region', { name: 'Tus cursos' });
-    expect(within(panel).getByText('Álgebra')).toBeTruthy();
+    wrap(<CoursesInPlay />);
+    const panel = screen.getByRole('heading', { name: 'En marcha' }).closest('section') as HTMLElement;
     expect(within(panel).getByText('Tema 1')).toBeTruthy();
     expect(within(panel).getByText('aún sin estudiar', { exact: false })).toBeTruthy();
     expect(within(panel).getByText('2 abiertas · 1 vencida')).toBeTruthy();
     expect(within(panel).getByText('Atrasado')).toBeTruthy();
-  });
-
-  it('Inicio no muestra nada si no hay cursos por avanzar', () => {
-    useData.setState({ courses: [course('Listo', 2, 2)] });
-    wrap(<CoursesInPlay where="inicio" />);
-    expect(screen.queryByRole('region', { name: 'Tus cursos' })).toBeNull();
   });
 
   it('cada tarjeta de Cursos dice qué tareas tiene', () => {

@@ -28,6 +28,7 @@ export function CourseModal({ id }: { id?: string }) {
   const [field, setField] = useState(editing?.field ?? '');
   const [link, setLink] = useState(editing?.link ?? '');
   const badLink = link.trim().length > 0 && safeUrl(link) === null;
+  const [studyDays, setStudyDays] = useState(editing?.studyDaysPerWeek ?? 0);
   const [modules, setModules] = useState('');
   const [mentorName, setMentorName] = useState(editing?.mentor?.name ?? '');
   const [mentorSkills, setMentorSkills] = useState(editing?.mentor?.skills ?? '');
@@ -39,7 +40,7 @@ export function CourseModal({ id }: { id?: string }) {
     const mentor: Mentor | null = mentorName.trim()
       ? { name: mentorName.trim(), skills: mentorSkills.trim(), feedback: feedback.trim(), feedbackAt: feedback.trim() && feedback.trim() !== editing?.mentor?.feedback ? today() : (editing?.mentor?.feedbackAt ?? null) }
       : null;
-    const base = { title: title.trim(), professor: professor.trim(), field: field.trim(), mentor, link: safeUrl(link) ?? undefined };
+    const base = { title: title.trim(), professor: professor.trim(), field: field.trim(), mentor, link: safeUrl(link) ?? undefined, studyDaysPerWeek: studyDays > 0 ? studyDays : undefined };
     if (editing) updateCourse(editing.id, base);
     else {
       createCourse({
@@ -63,6 +64,18 @@ export function CourseModal({ id }: { id?: string }) {
         </div>
         <Field label="Enlace del curso (opcional)" hint="Si es de una plataforma (Udemy, Coursera, YouTube…), para abrirlo desde aquí.">
           {(fid) => <TextInput id={fid} className="input" value={link} onChange={(e) => setLink(e.target.value)} placeholder="udemy.com/course/..." spellCheck={false} aria-invalid={badLink || undefined} />}
+        </Field>
+        <Field label="Meta semanal" hint="Cuántos días por semana quieres estudiarlo. Inicio te avisa qué cursos tocan hoy para cumplirla.">
+          {(fid) => (
+            <select id={fid} className="input" value={studyDays} onChange={(e) => setStudyDays(Number(e.target.value))}>
+              <option value={0}>Sin meta</option>
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                <option key={n} value={n}>
+                  {n} {n === 1 ? 'día' : 'días'} por semana
+                </option>
+              ))}
+            </select>
+          )}
         </Field>
         {!editing && (
           <Field label="Módulos" hint="Uno por línea; añade «| 300» para darle XP. Los temas los agregas después, dentro del curso.">

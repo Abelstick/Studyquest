@@ -269,6 +269,8 @@ export interface Course {
   mentor: Mentor | null;
   /** Enlace de acceso al curso (Udemy, Coursera, YouTube, campus…), si es de una plataforma. */
   link?: string;
+  /** Cuántos días por semana quieres estudiarlo (1-7). Sin definir = sin meta semanal. */
+  studyDaysPerWeek?: number;
   createdAt: ISODateTime;
   /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
   planId?: ID;

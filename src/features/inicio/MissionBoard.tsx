@@ -165,7 +165,8 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
   // Hábitos creados que hoy no tocan (por su frecuencia): no están en la misión, pero se avisa en vez de callarlo.
   const habitsOff = Math.max(0, habitsTotal - missions.filter((m) => m.kind === 'habit').length);
   const habitEmpty = !hasHabits ? 'none' : progress.habitsTotal === 0 ? 'off' : 'clear';
-  const taskEmpty = !hasTasks ? 'none' : progress.tasksTotal === 0 ? 'off' : 'clear';
+  // El contador de tareas es solo el de hoy; qué decir cuando no hay ninguna visible depende de si hay tareas en la lista.
+  const taskEmpty = !hasTasks ? 'none' : missions.some((m) => m.kind === 'task') ? 'clear' : 'off';
   const searching = query.trim() !== '';
   const toolsActive = onlyPending || sort !== 'urgency' || searching;
 

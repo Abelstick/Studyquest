@@ -1391,6 +1391,40 @@
   gap: 4px 8px;
   font-size: var(--fs-sm);
 }
+.hcourse__tasks.is-late {
+  color: var(--late);
+  font-weight: 700;
+}
+.hcourse__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--sp-2);
+}
+/* Cuántos días de la semana llevas frente a tu meta: un punto por día de la meta. */
+.hcourse__week {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--sp-2);
+  font-size: var(--fs-sm);
+}
+.ccad {
+  display: inline-flex;
+  gap: 3px;
+}
+.ccad i {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--line);
+  background: transparent;
+}
+.ccad i.is-on {
+  background: var(--green);
+}
+.ccad i.is-extra {
+  border-style: dashed;
+}
 /* Tareas de un curso, en su ficha: cada una abre su detalle. */
 .ctasks {
   display: flex;

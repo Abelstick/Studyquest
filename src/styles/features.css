@@ -139,21 +139,23 @@
 .event__pulse {
   animation: bob 1s steps(3) infinite;
 }
-.chestbox {
+/* Cofre del día en una línea: por abrir invita, y ya abierto queda en una nota discreta. */
+.chestline {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 10px;
+  gap: var(--sp-3);
 }
-.chestbox > div {
-  display: grid;
-  gap: 8px;
+.chestline--ready {
+  padding: var(--sp-2) var(--sp-3);
+}
+.chestline--done {
+  margin: 0;
+}
+.chestline--done .sprite {
+  filter: grayscale(0.7);
 }
 .chestbox__sprite {
   animation: bob 1.2s steps(3) infinite;
-}
-.chestbox.is-open .sprite {
-  filter: grayscale(0.7);
 }
 
 /* ---------- Flashcards ---------- */

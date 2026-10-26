@@ -150,10 +150,17 @@ export interface DayProgress {
   late: number;
 }
 
-/** Avance del día para el resumen de Hoy: cuántos hábitos y tareas van hechos, cuánto XP queda y cuántas tareas vencieron. */
+/**
+ * Avance del día para el resumen de Hoy: cuántos hábitos y tareas van hechos, cuánto XP queda y cuántas tareas
+ * vencieron. Solo cuenta lo que tocaba hoy: los hábitos de hoy y las tareas que vencen hoy o venían atrasadas.
+ * Lo que no tiene fecha o es para más adelante sigue en la lista pero no entra aquí: si el día tenía 7 cosas,
+ * hacerlas todas es el 100 %, no «3 de 17».
+ */
 export function dayProgress(missions: Mission[], now: ISODate = today()): DayProgress {
-  const p: DayProgress = { habitsDone: 0, habitsTotal: 0, tasksDone: 0, tasksTotal: 0, done: 0, total: missions.length, pct: 0, xpLeft: 0, late: 0 };
+  const p: DayProgress = { habitsDone: 0, habitsTotal: 0, tasksDone: 0, tasksTotal: 0, done: 0, total: 0, pct: 0, xpLeft: 0, late: 0 };
   for (const m of missions) {
+    if (m.kind === 'task' && !(m.task.dueDate && m.task.dueDate <= now)) continue;
+    p.total++;
     if (m.kind === 'habit') p.habitsTotal++;
     else p.tasksTotal++;
     if (m.done) {

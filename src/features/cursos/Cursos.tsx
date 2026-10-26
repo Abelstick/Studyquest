@@ -11,6 +11,8 @@ import { Icon } from '@/ui/Icon';
 import { ListSearch } from '@/ui/ListSearch';
 import { matchesQuery } from '@/core/search';
 import { ListTools } from '@/ui/ListTools';
+import { courseTasks, courseTasksLabel } from '@/core/courseTasks';
+import { deadlineText } from '@/core/missions';
 import { COURSE_FILTERS, COURSE_SORTS, arrangeCourses, type CourseFilter, type CourseSort } from '@/core/listOrder';
 
 const TONES = ['red', 'green', 'blue', 'yellow'] as const;
@@ -38,6 +40,7 @@ function ModuleStrip({ course }: Readonly<{ course: Course }>) {
 export default function Cursos() {
   const courses = useData((s) => s.courses);
   const sessions = useData((s) => s.sessions);
+  const tasks = useData((s) => s.tasks);
   const openModal = useUi((s) => s.openModal);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<CourseFilter>('all');
@@ -163,6 +166,7 @@ export default function Cursos() {
             {shown.map(({ c, p, hours, tone }) => {
               const next = nextTopic(c);
               const last = lastTopic(c);
+              const t = courseTasks(tasks, c.id);
               return (
                 <article key={c.id} className={`card card--${tone}`}>
                   <div className="card__bar" />
@@ -196,6 +200,19 @@ export default function Cursos() {
                     <div>
                       <dt>Próximo tema</dt>
                       <dd className="xp-text">{next?.title ?? '¡Mundo completado!'}</dd>
+                    </div>
+                    <div>
+                      <dt>Tareas</dt>
+                      <dd>
+                        <Link className={t.late > 0 ? 'link tasklate' : 'link'} to={`/tareas?curso=${encodeURIComponent(c.id)}`}>
+                          {courseTasksLabel(t)}
+                        </Link>
+                      </dd>
+                      {t.next && (
+                        <p className="muted small">
+                          Siguiente: {t.next.title} · {deadlineText(t.next)}
+                        </p>
+                      )}
                     </div>
                     <p className="muted small">{hours.toFixed(0)} h invertidas</p>
                   </dl>

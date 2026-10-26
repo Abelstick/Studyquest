@@ -2,46 +2,98 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
+import { agoDays } from '@/core/dates';
 import { courseProgress, nextTopic } from '@/core/game';
-import { coursesInPlay } from '@/core/stats';
-import { Bar, Button, Panel } from '@/ui/kit';
+import { courseTasks, courseTasksLabel } from '@/core/courseTasks';
+import { coursesInPlay, courseLastStudied } from '@/core/stats';
+import { Bar, Button, Panel, Tag } from '@/ui/kit';
+import { FoldPanel } from '@/ui/Fold';
 import { Icon } from '@/ui/Icon';
 
 /** Cuántos cursos en marcha se destacan arriba de la lista. */
 const IN_PLAY = 3;
 
-/** Los cursos que estudiaste hace menos, con su próximo tema y un botón para ponerte a estudiar (antes «Tus cursos» en Inicio). */
-export function CoursesInPlay() {
+/**
+ * Los cursos que estudiaste hace menos, con su próximo tema, cuándo fue la última vez, lo que te debe cada uno en
+ * tareas y un botón para ponerte a estudiar. Vive en Cursos («En marcha») y en Inicio («Tus cursos»).
+ */
+export function CoursesInPlay({ where = 'cursos' }: Readonly<{ where?: 'cursos' | 'inicio' }>) {
   const courses = useData((s) => s.courses);
   const sessions = useData((s) => s.sessions);
+  const tasks = useData((s) => s.tasks);
   const openModal = useUi((s) => s.openModal);
   const shown = useMemo(() => coursesInPlay({ courses, sessions }).filter((c) => nextTopic(c)).slice(0, IN_PLAY), [courses, sessions]);
   if (shown.length === 0) return null;
+
+  const list = (
+    <ul className="hcourses">
+      {shown.map((c) => {
+        const p = courseProgress(c);
+        const next = nextTopic(c);
+        const last = courseLastStudied({ sessions }, c);
+        const t = courseTasks(tasks, c.id);
+        return (
+          <li key={c.id} className="hcourse">
+            <div className="hcourse__text">
+              <Link className="hcourse__title" to={`/cursos/${c.id}`}>
+                {c.title}
+              </Link>
+              <p className="muted small">
+                {next && (
+                  <>
+                    Próximo: <b>{next.title}</b> ·{' '}
+                  </>
+                )}
+                {last ? `estudiado ${agoDays(last)}` : 'aún sin estudiar'}
+              </p>
+              <div className="hcourse__bar">
+                <Bar pct={p.pct} tone="yellow" label={`Progreso de ${c.title}`} />
+                <span className="kicker">
+                  {p.done}/{p.total} · {p.pct}%
+                </span>
+              </div>
+              <p className="hcourse__tasks">
+                <Link className="link" to={`/tareas?curso=${encodeURIComponent(c.id)}`}>
+                  {courseTasksLabel(t)}
+                </Link>
+                {t.late > 0 && <Tag tone="red">Atrasado</Tag>}
+                {t.next && t.late === 0 && (
+                  <span className="muted small">
+                    {' '}
+                    · siguiente: {t.next.title}
+                  </span>
+                )}
+              </p>
+            </div>
+            <Button small onClick={() => openModal({ type: 'session', courseId: c.id })}>
+              <Icon name="play" size={10} /> Estudiar
+            </Button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+
+  if (where === 'inicio') {
+    return (
+      <FoldPanel
+        id="home-courses"
+        kicker="Lo que debes ir avanzando"
+        title="Tus cursos"
+        badge={shown.length}
+        right={
+          <Link className="btn btn--ghost btn--sm" to="/cursos">
+            Ver cursos
+          </Link>
+        }
+      >
+        {list}
+      </FoldPanel>
+    );
+  }
   return (
     <Panel kicker="Sigue donde lo dejaste" title="En marcha">
-      <ul className="hcourses">
-        {shown.map((c) => {
-          const p = courseProgress(c);
-          const next = nextTopic(c);
-          return (
-            <li key={c.id} className="hcourse">
-              <div className="hcourse__text">
-                <Link className="hcourse__title" to={`/cursos/${c.id}`}>
-                  {c.title}
-                </Link>
-                <p className="muted small">{next && <>Próximo: <b>{next.title}</b></>}</p>
-                <div className="hcourse__bar">
-                  <Bar pct={p.pct} tone="yellow" label={`Progreso de ${c.title}`} />
-                  <span className="kicker">{p.pct}%</span>
-                </div>
-              </div>
-              <Button small onClick={() => openModal({ type: 'session', courseId: c.id })}>
-                <Icon name="play" size={10} /> Estudiar
-              </Button>
-            </li>
-          );
-        })}
-      </ul>
+      {list}
     </Panel>
   );
 }

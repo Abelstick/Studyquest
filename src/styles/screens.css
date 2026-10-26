@@ -1384,6 +1384,56 @@
   align-items: center;
   gap: 10px;
 }
+.hcourse__tasks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: var(--fs-sm);
+}
+/* Tareas de un curso, en su ficha: cada una abre su detalle. */
+.ctasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ctasks__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--field);
+  border: var(--bw) solid var(--line-soft);
+}
+.ctasks__item.is-late {
+  border-color: var(--alert);
+}
+.ctasks__open {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+  padding: 0;
+  background: none;
+  color: var(--text);
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.ctasks__title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.ctasks__open:hover .ctasks__title {
+  text-decoration: underline;
+}
+.tasklate {
+  color: var(--alert);
+  font-weight: 700;
+}
 .card__top > div {
   min-width: 0;
 }

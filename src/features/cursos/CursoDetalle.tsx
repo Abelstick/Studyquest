@@ -8,6 +8,8 @@ import { agoDays, diffDays, today } from '@/core/dates';
 import { reviewDueDate } from '@/core/review';
 import { certificationsOfCourse, linkLabel, safeUrl } from '@/core/certifications';
 import { overdueOf } from '@/core/pace';
+import { courseTasks, courseTasksLabel } from '@/core/courseTasks';
+import { deadlineText } from '@/core/missions';
 import { blankNote, notesOfTopic, sortNotes } from '@/core/notes';
 import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
@@ -23,6 +25,9 @@ const when = (due: string | null) => {
   return n <= 0 ? 'hoy' : n === 1 ? 'mañana' : `en ${n} d`;
 };
 
+/** Tareas abiertas que se listan en la ficha del curso; el resto está en Tareas. */
+const COURSE_TASKS_SHOWN = 6;
+
 const STATE_LABEL: Record<ModuleState, string> = { done: 'Completado', active: 'En curso', locked: 'Bloqueado' };
 const TOPIC_NEXT: Record<TopicStatus, TopicStatus> = { todo: 'doing', doing: 'done', done: 'todo' };
 const TOPIC_LABEL: Record<TopicStatus, string> = { todo: 'Pendiente', doing: 'En progreso', done: 'Completado' };
@@ -34,7 +39,8 @@ export default function CursoDetalle() {
   const sessions = useData((s) => s.sessions);
   const allCerts = useData((s) => s.certifications);
   const allNotes = useData((s) => s.notes);
-  const overdue = useData((s) => overdueOf(s.tasks.filter((t) => t.courseId === id)));
+  const allTasks = useData((s) => s.tasks);
+  const overdue = useMemo(() => overdueOf(allTasks.filter((t) => t.courseId === id)), [allTasks, id]);
   const createNote = useData((s) => s.createNote);
   const { setTopicStatus, toggleTopicReview, addTopic, removeTopic, addModule } = useData();
   const openModal = useUi((s) => s.openModal);
@@ -56,6 +62,7 @@ export default function CursoDetalle() {
   const streak = courseStreak(snap, course);
   const mentor = course.mentor;
   const certs = certificationsOfCourse(allCerts, course.id);
+  const work = courseTasks(allTasks, course.id);
 
   return (
     <div className="stack">
@@ -217,6 +224,42 @@ export default function CursoDetalle() {
         </div>
 
         <div className="stack">
+          <Panel
+            kicker="Lo que te falta entregar"
+            title="Tareas del curso"
+            right={
+              <Button small onClick={() => openModal({ type: 'task', courseId: course.id })}>
+                <Icon name="plus" size={10} /> Nueva
+              </Button>
+            }
+          >
+            <p className="muted small">
+              {courseTasksLabel(work)}
+              {work.done > 0 && ` · ${work.done} ${work.done === 1 ? 'superada' : 'superadas'}`}
+            </p>
+            {work.open.length > 0 && (
+              <ul className="ctasks">
+                {work.open.slice(0, COURSE_TASKS_SHOWN).map((t) => {
+                  const late = !!t.dueDate && t.dueDate < today();
+                  return (
+                    <li key={t.id} className={cx('ctasks__item', late && 'is-late')}>
+                      <button type="button" className="ctasks__open" onClick={() => openModal({ type: 'task-detail', id: t.id })} aria-haspopup="dialog">
+                        <span className="ctasks__title">{t.title}</span>
+                        <span className="muted small">{deadlineText(t)}</span>
+                      </button>
+                      <Tag tone="xp">+{t.xp} XP</Tag>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {work.open.length > COURSE_TASKS_SHOWN && <p className="muted small">y {work.open.length - COURSE_TASKS_SHOWN} más.</p>}
+            {work.open.length + work.done > 0 && (
+              <Link className="btn btn--ghost btn--sm" to={`/tareas?curso=${encodeURIComponent(course.id)}`}>
+                Ver en Tareas
+              </Link>
+            )}
+          </Panel>
           {mentor && (
             <Panel kicker="Mentor asignado">
               <div className="mentor">

@@ -25,14 +25,14 @@ const STATUSES: { value: TaskStatus; label: string }[] = [
   { value: 'done', label: 'Superada' },
 ];
 
-export function TaskModal({ id, dueDate, goalId: presetGoal }: { id?: string; dueDate?: string; goalId?: string }) {
+export function TaskModal({ id, dueDate, goalId: presetGoal, courseId: presetCourse }: { id?: string; dueDate?: string; goalId?: string; courseId?: string }) {
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
   const { tasks, courses, events, habits, habitLogs, createTask, updateTask, deleteTask, createEvent } = useData();
   const editing = tasks.find((t) => t.id === id);
 
   const [title, setTitle] = useState(editing?.title ?? '');
-  const [courseId, setCourseId] = useState(editing?.courseId ?? '');
+  const [courseId, setCourseId] = useState(editing?.courseId ?? presetCourse ?? '');
   const [due, setDue] = useState(editing?.dueDate ?? dueDate ?? '');
   const [dueTime, setDueTime] = useState(editing?.dueTime ?? '');
   const [repeat, setRepeat] = useState<Recurrence | null>(editing?.recurrence ?? null);

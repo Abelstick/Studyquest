@@ -143,13 +143,17 @@ export default function Tareas() {
   const tasks = useData((s) => s.tasks);
   const courses = useData((s) => s.courses);
   const openModal = useUi((s) => s.openModal);
-  const [filter, setFilter] = useState('all');
+  const [params, setParams] = useSearchParams();
+  // /tareas?curso=<id> (desde un curso) abre ya filtrado por ese curso.
+  const [filter, setFilter] = useState(() => {
+    const wanted = params.get('curso');
+    return wanted && courses.some((c) => c.id === wanted) ? wanted : 'all';
+  });
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
   const [query, setQuery] = useState('');
   const [allDone, setAllDone] = useState(false);
   const [over, setOver] = useState<TaskStatus | null>(null);
   const setTaskStatus = useData((s) => s.setTaskStatus);
-  const [params, setParams] = useSearchParams();
 
   // Enlace directo a una tarea (/tareas?tarea=<id>, desde la búsqueda o el calendario): se muestra, se trae a la vista y se resalta.
   const target = params.get('tarea');

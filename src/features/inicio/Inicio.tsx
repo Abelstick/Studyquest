@@ -23,6 +23,7 @@ import { ConflictBanner, ReviewNudge, TodayAgenda, TodayPriorities } from './Tod
 import { NowStrip } from './NowStrip';
 import { StartGuide } from './StartGuide';
 import { HowToButton } from '@/features/help/HowToGuide';
+import { CoursesInPlay } from '@/features/cursos/CoursesInPlay';
 
 function StreakCalendar() {
   const events = useData((s) => s.xpEvents);
@@ -429,6 +430,7 @@ export default function Inicio() {
               ) : (
                 <MissionBoard missions={missions} hasHabits={habits.length > 0} hasTasks={tasks.length > 0} />
               )}
+              <CoursesInPlay where="inicio" />
             </div>
             <aside className="stack home__rail" aria-label="Tu día">
               <TodayPriorities />

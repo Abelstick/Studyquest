@@ -13,6 +13,8 @@ import { matchesQuery } from '@/core/search';
 import { ListTools } from '@/ui/ListTools';
 import { courseTasks, courseTasksLabel } from '@/core/courseTasks';
 import { deadlineText } from '@/core/missions';
+import { courseDeadline } from '@/core/courseDeadline';
+import { DeadlineLine } from './DeadlineLine';
 import { COURSE_FILTERS, COURSE_SORTS, arrangeCourses, type CourseFilter, type CourseSort } from '@/core/listOrder';
 
 const TONES = ['red', 'green', 'blue', 'yellow'] as const;
@@ -63,11 +65,11 @@ export default function Cursos() {
   const doneTopics = rows.reduce((a, r) => a + r.p.done, 0);
   const finished = rows.filter((r) => r.p.total > 0 && r.p.done === r.p.total).length;
   const shown = useMemo(() => {
-    const order = new Map(arrangeCourses(courses, sessions, filter, sort).map((c, i) => [c.id, i]));
+    const order = new Map(arrangeCourses(courses, sessions, filter, sort, tasks).map((c, i) => [c.id, i]));
     return rows
       .filter((r) => order.has(r.c.id) && matchesQuery([r.c.title, r.c.professor, r.c.field, ...r.c.modules.map((m) => m.title)], query))
       .sort((a, b) => (order.get(a.c.id) ?? 0) - (order.get(b.c.id) ?? 0));
-  }, [rows, courses, sessions, filter, sort, query]);
+  }, [rows, courses, sessions, tasks, filter, sort, query]);
   const narrowed = query.trim() !== '' || filter !== 'all';
 
   return (
@@ -167,6 +169,7 @@ export default function Cursos() {
               const next = nextTopic(c);
               const last = lastTopic(c);
               const t = courseTasks(tasks, c.id);
+              const deadline = courseDeadline(c, tasks);
               return (
                 <article key={c.id} className={`card card--${tone}`}>
                   <div className="card__bar" />
@@ -193,6 +196,12 @@ export default function Cursos() {
                     </p>
                   </div>
                   <dl className="card__facts">
+                    <div>
+                      <dt>Plazo</dt>
+                      <dd>
+                        <DeadlineLine d={deadline} onSet={() => openModal({ type: 'course', id: c.id })} />
+                      </dd>
+                    </div>
                     <div>
                       <dt>Último tema</dt>
                       <dd>{last?.title ?? '—'}</dd>

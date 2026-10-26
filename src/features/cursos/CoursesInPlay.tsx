@@ -8,6 +8,8 @@ import { courseTasks, courseTasksLabel } from '@/core/courseTasks';
 import { coursesInPlay, courseLastStudied } from '@/core/stats';
 import { Bar, Button, Panel, Tag } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
+import { courseDeadline } from '@/core/courseDeadline';
+import { DeadlineLine } from './DeadlineLine';
 
 /** Cuántos cursos en marcha se destacan arriba de la lista. */
 const IN_PLAY = 3;
@@ -31,6 +33,7 @@ export function CoursesInPlay() {
         const next = nextTopic(c);
         const last = courseLastStudied({ sessions }, c);
         const t = courseTasks(tasks, c.id);
+        const deadline = courseDeadline(c, tasks);
         return (
           <li key={c.id} className="hcourse">
             <div className="hcourse__text">
@@ -45,6 +48,7 @@ export function CoursesInPlay() {
                 )}
                 {last ? `estudiado ${agoDays(last)}` : 'aún sin estudiar'}
               </p>
+              <DeadlineLine d={deadline} />
               <div className="hcourse__bar">
                 <Bar pct={p.pct} tone="yellow" label={`Progreso de ${c.title}`} />
                 <span className="kicker">

@@ -5,6 +5,7 @@
 import type { Course, Habit, ISODate, Snapshot, Task } from './domain';
 import { courseProgress } from './game';
 import { courseLastStudied } from './stats';
+import { courseDeadline } from './courseDeadline';
 
 /* ---------- Hábitos ---------- */
 
@@ -49,7 +50,7 @@ export function sortHabitCards<T extends HabitCard>(cards: T[], sort: HabitSort)
 /** `new`: sin ningún tema hecho · `doing`: empezado · `done`: todos los temas hechos. */
 export type CourseStatus = 'new' | 'doing' | 'done';
 export type CourseFilter = CourseStatus | 'all';
-export type CourseSort = 'recent' | 'progress' | 'name';
+export type CourseSort = 'recent' | 'progress' | 'deadline' | 'name';
 
 export const COURSE_FILTERS: { value: CourseFilter; label: string }[] = [
   { value: 'all', label: 'Todos' },
@@ -59,6 +60,7 @@ export const COURSE_FILTERS: { value: CourseFilter; label: string }[] = [
 ];
 export const COURSE_SORTS: { value: CourseSort; label: string }[] = [
   { value: 'recent', label: 'Estudiados hace poco' },
+  { value: 'deadline', label: 'Plazo más cercano' },
   { value: 'progress', label: 'Más avanzados' },
   { value: 'name', label: 'A–Z' },
 ];
@@ -69,11 +71,18 @@ export function courseStatus(c: Course): CourseStatus {
   return p.done > 0 ? 'doing' : 'new';
 }
 
-/** Filtra por estado y ordena. Con «recientes» los completados van al final. */
-export function arrangeCourses(courses: Course[], sessions: Snapshot['sessions'], filter: CourseFilter, sort: CourseSort): Course[] {
+/** Filtra por estado y ordena. Con «recientes» los completados van al final. Las tareas solo sirven para el plazo deducido. */
+export function arrangeCourses(courses: Course[], sessions: Snapshot['sessions'], filter: CourseFilter, sort: CourseSort, tasks: Task[] = []): Course[] {
   const last = (c: Course): ISODate | '' => courseLastStudied({ sessions }, c) ?? '';
+  // Por plazo: los vencidos y luego el que vence antes; después los sin plazo y, al final, los ya terminados.
+  const due = (c: Course): string => {
+    const d = courseDeadline(c, tasks);
+    if (d.state === 'done') return '99999';
+    return d.date ?? '9999';
+  };
   const by = (a: Course, b: Course): number => {
     if (sort === 'name') return a.title.localeCompare(b.title, 'es');
+    if (sort === 'deadline') return due(a).localeCompare(due(b)) || a.title.localeCompare(b.title, 'es');
     if (sort === 'progress') return courseProgress(b).pct - courseProgress(a).pct;
     return Number(courseStatus(a) === 'done') - Number(courseStatus(b) === 'done') || last(b).localeCompare(last(a)) || b.createdAt.localeCompare(a.createdAt);
   };

@@ -271,6 +271,8 @@ export interface Course {
   link?: string;
   /** Cuántos días por semana quieres estudiarlo (1-7). Sin definir = sin meta semanal. */
   studyDaysPerWeek?: number;
+  /** Hasta cuándo quieres terminarlo (día local). Sin definir, el plazo sale de la última tarea abierta del curso, si la hay. */
+  dueDate?: ISODate;
   createdAt: ISODateTime;
   /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
   planId?: ID;

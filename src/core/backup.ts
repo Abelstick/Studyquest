@@ -107,6 +107,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       id: fixId(o.id), title: str(o.title), professor: str(o.professor), field: str(o.field), mentor, createdAt: str(o.createdAt, new Date().toISOString()),
       ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       ...(safeUrl(str(o.link)) ? { link: safeUrl(str(o.link)) as string } : {}),
+      ...(DATE.test(str(o.dueDate)) ? { dueDate: str(o.dueDate) } : {}),
       ...(typeof o.studyDaysPerWeek === 'number' && Number.isInteger(o.studyDaysPerWeek) && o.studyDaysPerWeek >= 1 && o.studyDaysPerWeek <= 7 ? { studyDaysPerWeek: o.studyDaysPerWeek } : {}),
       modules: subs(o.modules, (m) => ({
         id: fixId(m.id), title: str(m.title, 'Módulo'), summary: str(m.summary), xp: num(m.xp, 100),

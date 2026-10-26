@@ -139,6 +139,19 @@ describe('cursos de esta semana (Inicio)', () => {
     expect(screen.getByText('1 vencida')).toBeTruthy();
   });
 
+  it('dice hasta cuándo hay para terminar el curso y sube al que vence pronto', () => {
+    useData.setState({ courses: [course('Holgado', { dueDate: '2026-12-31' }), course('Apretado', { dueDate: '2026-09-20' })] });
+    render(
+      <MemoryRouter>
+        <CoursesToday />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(/Hasta el 20 sep · faltan 4 días/)).toBeTruthy();
+    expect(screen.getByText(/Hasta el 31 dic/)).toBeTruthy();
+    const titles = screen.getAllByRole('link').map((l) => l.textContent);
+    expect(titles.indexOf('Apretado')).toBeLessThan(titles.indexOf('Holgado'));
+  });
+
   it('no aparece si no hay cursos por avanzar', () => {
     render(
       <MemoryRouter>

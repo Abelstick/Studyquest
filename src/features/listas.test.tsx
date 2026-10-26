@@ -128,6 +128,31 @@ describe('cursos y tareas', () => {
     expect(screen.getAllByText(/Siguiente: Entregar guía/).length).toBeGreaterThan(0);
   });
 
+  it('las tarjetas y la ficha dicen hasta cuándo tienes para terminar el curso', () => {
+    useData.setState({ courses: [{ ...course('Álgebra', 1, 5), dueDate: addDays(today(), 20) }, course('Libre', 0, 2)], tasks: [] });
+    wrap(<Cursos />);
+    // Sale en la tarjeta y en «En marcha».
+    expect(screen.getAllByText(/faltan 20 días/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/≈ 2 temas por semana para llegar/).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Fijar plazo' })).toBeTruthy();
+    cleanup();
+    render(
+      <MemoryRouter initialEntries={['/cursos/Álgebra']}>
+        <Routes>
+          <Route path="/cursos/:id" element={<CursoDetalle />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(/faltan 20 días/)).toBeTruthy();
+  });
+
+  it('sin fecha propia, el plazo se deduce de la última tarea y lo dice', () => {
+    useData.setState({ courses: [course('Álgebra', 0, 2)], tasks: [task('guia', { courseId: 'Álgebra', dueDate: addDays(today(), 9) })] });
+    wrap(<Cursos />);
+    expect(screen.getAllByText(/faltan 9 días/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('según tus tareas').length).toBeGreaterThan(0);
+  });
+
   it('la ficha del curso lista sus tareas abiertas (y no las de otros cursos) y abre su detalle', () => {
     withTasks();
     render(

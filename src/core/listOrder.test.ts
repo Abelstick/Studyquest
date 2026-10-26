@@ -55,6 +55,22 @@ describe('cursos', () => {
     expect(r.map((c) => c.id)).toEqual(['m', 'n', 'l']);
   });
 
+  it('«plazo más cercano»: primero el que vence antes (el vencido, el primero); terminados y sin plazo, al final', () => {
+    const tarde = { ...nuevo, id: 'tarde', title: 'Tarde', dueDate: '2026-12-01' };
+    const pronto = { ...medio, id: 'pronto', title: 'Pronto', dueDate: '2026-03-01' };
+    const sinPlazo = { ...nuevo, id: 'sin', title: 'Sin plazo' };
+    const hecho = { ...listo, dueDate: '2020-01-01' };
+    const r = arrangeCourses([sinPlazo, hecho, tarde, pronto], [], 'all', 'deadline');
+    expect(r.map((c) => c.id)).toEqual(['pronto', 'tarde', 'sin', 'l']);
+  });
+
+  it('el plazo también sale de la última tarea abierta del curso', () => {
+    const t = { id: 't', title: 't', courseId: 'n', priority: 'mid', status: 'todo', dueDate: '2026-01-05', estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null } as Task;
+    const conTarea = { ...nuevo, id: 'n2', title: 'ConTarea' };
+    const r = arrangeCourses([course('x', 'X', ['todo']), conTarea], [], 'all', 'deadline', [{ ...t, courseId: 'n2' }]);
+    expect(r.map((c) => c.id)).toEqual(['n2', 'x']);
+  });
+
   it('«más avanzados» ordena por porcentaje', () => {
     expect(arrangeCourses([nuevo, listo, medio], [], 'all', 'progress').map((c) => c.id)).toEqual(['l', 'm', 'n']);
   });

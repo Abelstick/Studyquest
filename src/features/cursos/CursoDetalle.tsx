@@ -9,6 +9,8 @@ import { reviewDueDate } from '@/core/review';
 import { certificationsOfCourse, linkLabel, safeUrl } from '@/core/certifications';
 import { overdueOf } from '@/core/pace';
 import { courseTasks, courseTasksLabel } from '@/core/courseTasks';
+import { courseDeadline } from '@/core/courseDeadline';
+import { DeadlineLine } from './DeadlineLine';
 import { deadlineText } from '@/core/missions';
 import { blankNote, notesOfTopic, sortNotes } from '@/core/notes';
 import type { Snapshot, TopicStatus } from '@/core/domain';
@@ -63,6 +65,7 @@ export default function CursoDetalle() {
   const mentor = course.mentor;
   const certs = certificationsOfCourse(allCerts, course.id);
   const work = courseTasks(allTasks, course.id);
+  const deadline = courseDeadline(course, allTasks);
 
   return (
     <div className="stack">
@@ -77,6 +80,7 @@ export default function CursoDetalle() {
           <p className="muted upper">
             {course.modules.length} módulos · {hours.toFixed(0)} h · {p.xp.toLocaleString('en-US')} XP · racha {streak} {streak === 1 ? 'día' : 'días'}
           </p>
+          <DeadlineLine d={deadline} onSet={() => openModal({ type: 'course', id: course.id })} />
         </div>
         <div className="page-head__right page-head__right--col">
           <div className="split">

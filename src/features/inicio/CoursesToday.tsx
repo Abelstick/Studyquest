@@ -6,6 +6,8 @@ import { today } from '@/core/dates';
 import { courseProgress, nextTopic } from '@/core/game';
 import { courseTasks, type CourseTasks } from '@/core/courseTasks';
 import { courseWeek, type CourseWeek } from '@/core/courseCadence';
+import { courseDeadline, type CourseDeadline } from '@/core/courseDeadline';
+import { DeadlineLine } from '@/features/cursos/DeadlineLine';
 import type { Course } from '@/core/domain';
 import { Bar, Button, Tag, cx } from '@/ui/kit';
 import { FoldPanel } from '@/ui/Fold';
@@ -18,10 +20,12 @@ interface Row {
   course: Course;
   week: CourseWeek;
   work: CourseTasks;
+  deadline: CourseDeadline;
 }
 
-/** Qué curso va primero: el que hoy toca, luego el que debe tareas vencidas o de hoy, luego el que va por debajo de su meta. */
-const priority = ({ week, work }: Row): number => (week.dueToday ? 4 : 0) + (work.late > 0 ? 2 : 0) + (work.dueToday > 0 ? 1.5 : 0) + (week.remaining > 0 ? 1 : 0);
+/** Qué curso va primero: el que hoy toca o está por vencer, luego el que debe tareas vencidas o de hoy, luego el que va por debajo de su meta. */
+const priority = ({ week, work, deadline }: Row): number =>
+  (week.dueToday ? 4 : 0) + (deadline.state === 'late' || deadline.state === 'soon' ? 3 : 0) + (work.late > 0 ? 2 : 0) + (work.dueToday > 0 ? 1.5 : 0) + (week.remaining > 0 ? 1 : 0);
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -53,7 +57,7 @@ function StatusTag({ week }: Readonly<{ week: CourseWeek }>) {
 
 function CourseRow({ row }: Readonly<{ row: Row }>) {
   const openModal = useUi((s) => s.openModal);
-  const { course, week, work } = row;
+  const { course, week, work, deadline } = row;
   const p = courseProgress(course);
   const next = nextTopic(course);
   const line = workLine(work);
@@ -68,6 +72,7 @@ function CourseRow({ row }: Readonly<{ row: Row }>) {
           </Link>
           <StatusTag week={week} />
         </div>
+        <DeadlineLine d={deadline} onSet={() => openModal({ type: 'course', id: course.id })} />
         <p className="hcourse__week">
           {week.target > 0 ? (
             <>
@@ -133,7 +138,7 @@ export function CoursesToday() {
     () =>
       courses
         .filter((c) => nextTopic(c))
-        .map((course): Row => ({ course, week: courseWeek(course, sessions, now), work: courseTasks(tasks, course.id, now) }))
+        .map((course): Row => ({ course, week: courseWeek(course, sessions, now), work: courseTasks(tasks, course.id, now), deadline: courseDeadline(course, tasks, now) }))
         .sort((a, b) => priority(b) - priority(a) || (b.week.last ?? '').localeCompare(a.week.last ?? '')),
     [courses, sessions, tasks, now],
   );

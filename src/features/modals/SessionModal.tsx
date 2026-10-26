@@ -22,6 +22,7 @@ export function SessionModal({ courseId: initialCourse, minutes: initialMinutes 
   const close = useUi((s) => s.closeModal);
   const navigate = useNavigate();
   const { courses, logSession } = useData();
+  const openModal = useUi((s) => s.openModal);
   const { setCourse, setConfig } = usePomodoro();
   const [courseId, setCourseId] = useState(initialCourse ?? courses[0]?.id ?? '');
   const [minutes, setMinutes] = useState(initialMinutes ?? 20);
@@ -37,7 +38,10 @@ export function SessionModal({ courseId: initialCourse, minutes: initialMinutes 
   const logNow = () => {
     if (minutes < 1) return;
     logSession({ minutes, courseId: courseId || null });
-    close();
+    // Con un curso con temas por hacer, se pregunta de una vez qué tema avanzaste.
+    const course = courses.find((c) => c.id === courseId);
+    if (course && course.modules.some((m) => m.topics.some((t) => t.status !== 'done'))) openModal({ type: 'topic-advance', courseId: course.id });
+    else close();
   };
 
   return (

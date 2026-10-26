@@ -33,6 +33,7 @@ export function HabitDetailModal({ id }: { id: string }) {
   const logs = useData((s) => s.habitLogs);
   const chains = useData((s) => s.profile.chains) ?? NO_CHAINS;
   const goal = useData((s) => s.goals.find((g) => g.id === habit?.goalId));
+  const course = useData((s) => s.courses.find((c) => c.id === habit?.courseId));
   const toggleStep = useData((s) => s.toggleHabitStep);
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
@@ -68,6 +69,7 @@ export function HabitDetailModal({ id }: { id: string }) {
     ...(minimumOf(habit) !== null ? ([['Versión mínima', `${minimumLabel(habit)} (mantiene la racha)`]] as [string, string][]) : []),
     ...(habit.area ? ([['Área', areaInfo(habit.area).label]] as [string, string][]) : []),
     ...(goal ? ([['Aporta a la meta', goal.title]] as [string, string][]) : []),
+    ...(course ? ([['Curso', course.title]] as [string, string][]) : []),
     ...(quit ? ([['Días limpio', String(cleanDays(habit, now))]] as [string, string][]) : []),
     ['Racha', `${stats.current} · mejor ${stats.best}`],
     ['Veces cumplido', String(stats.completions)],

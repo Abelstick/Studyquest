@@ -124,7 +124,13 @@ export const usePomodoro = create<PomodoroState>((set, get) => {
         const to = nextPhase('focus', done, config.every);
         sfx.levelUp();
         const body = to === 'long' ? `¡Ronda completa! Descanso largo de ${config.long} min.` : `Descanso de ${config.short} min.`;
-        ui.toast({ kind: 'info', title: '🍅 ¡Pomodoro terminado!', body });
+        ui.toast({
+          kind: 'info',
+          title: '🍅 ¡Pomodoro terminado!',
+          body,
+          // Con un curso elegido, un toque para decir qué tema avanzaste (y marcarlo) sin buscarlo después.
+          ...(courseId ? { action: { label: '¿Qué tema avanzaste?', run: () => ui.openModal({ type: 'topic-advance', courseId }) } } : {}),
+        });
         void systemNotice('🍅 ¡Pomodoro terminado!', body);
         enter(to, to === 'long' ? 0 : done, true, now); // el descanso arranca solo
       } else {

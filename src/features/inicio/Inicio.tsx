@@ -25,6 +25,7 @@ import { NowStrip } from './NowStrip';
 import { StartGuide } from './StartGuide';
 import { HowToButton } from '@/features/help/HowToGuide';
 import { CoursesToday } from './CoursesToday';
+import { MonthChallenge } from './MonthChallenge';
 
 /** Eventos de hoy (bonus de fin de semana, combo ×2) en una línea compacta dentro de la misión. */
 function Events({ events }: { events: GameEvent[] }) {
@@ -373,7 +374,7 @@ export default function Inicio() {
             <div className="stack home__main">
               <LateBanner />
               <ConflictBanner />
-              <ReviewNudge />
+              <ReviewNudge snap={snap} />
               <Events events={events} />
               {missions.length === 0 ? (
                 <Panel kicker="Quest diaria" title="Tu misión de hoy">
@@ -390,6 +391,7 @@ export default function Inicio() {
               <TodayPriorities />
               <TodayAgenda />
               <QuickLog />
+              <MonthChallenge />
               <DailyChest streak={streak.current} />
               <FoldPanel id="home-tips" kicker="Inteligencia táctica" title="Consejos del Toad" badge={advice.length} defaultOpen={false}>
                 <ul className="tips">

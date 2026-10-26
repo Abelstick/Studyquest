@@ -10,6 +10,7 @@ import { useLevelUpIntro } from '@/ui/motion';
 import { Icon } from '@/ui/Icon';
 import type { SpriteName } from '@/ui/sprites';
 import { TaskModal } from '../modals/TaskModal';
+import { TopicAdvanceModal } from '../modals/TopicAdvanceModal';
 import { HabitModal } from '../modals/HabitModal';
 import { HabitDetailModal } from '../modals/HabitDetailModal';
 import { TaskDetailModal } from '../modals/TaskDetailModal';
@@ -60,7 +61,9 @@ function ModalHost() {
     case 'cards':
       return <CardsModal key={modal.topicId} courseId={modal.courseId} topicId={modal.topicId} />;
     case 'habit':
-      return <HabitModal key={`${modal.id ?? 'new'}${modal.goalId ?? ''}`} id={modal.id} goalId={modal.goalId} />;
+      return <HabitModal key={`${modal.id ?? 'new'}${modal.goalId ?? ''}${modal.courseId ?? ''}`} id={modal.id} goalId={modal.goalId} courseId={modal.courseId} />;
+    case 'topic-advance':
+      return <TopicAdvanceModal key={modal.courseId} courseId={modal.courseId} />;
     case 'habit-detail':
       return <HabitDetailModal key={modal.id} id={modal.id} />;
     case 'task-detail':
@@ -92,7 +95,7 @@ function ModalHost() {
     case 'welcome':
       return <WelcomeModal />;
     case 'event':
-      return <EventModal key={`${modal.id ?? 'new'}${modal.original ?? ''}${modal.date ?? ''}${modal.start ?? ''}`} {...modal} />;
+      return <EventModal key={`${modal.id ?? 'new'}${modal.original ?? ''}${modal.date ?? ''}${modal.start ?? ''}${modal.courseId ?? ''}`} {...modal} />;
     case 'scope':
       return <ScopeModal title={modal.title} verb={modal.verb} onPick={modal.onPick} />;
     case 'export':

@@ -11,6 +11,7 @@ import { cleanChains } from './chains';
 import { sanitizeHero } from './hero';
 import { parseAgendaEvent } from './agenda';
 import { cleanArea } from './areas';
+import { cleanChallenge } from './challenge';
 import { cleanIfThen } from './ifthen';
 import { cleanMinimum } from './minimum';
 import { cleanReview, MAX_REVIEWS } from './weekReview';
@@ -115,6 +116,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
           id: fixId(t.id), title: str(t.title, 'Tema'), status: ['todo', 'doing', 'done'].includes(str(t.status)) ? str(t.status) : 'todo', review: t.review === true, markedAt: DATE.test(str(t.markedAt)) ? str(t.markedAt) : null,
           ...(typeof t.reviewStage === 'number' && t.reviewStage >= 0 && t.reviewStage <= 3 ? { reviewStage: Math.floor(t.reviewStage) } : {}),
           ...(DATE.test(str(t.nextReview)) ? { nextReview: str(t.nextReview) } : {}),
+          ...(str(t.status) === 'done' && DATE.test(str(t.doneAt)) ? { doneAt: str(t.doneAt) } : {}),
           ...(asArray(t.cards).length ? { cards: subs(t.cards, (c) => (str(c.q) ? { id: fixId(c.id), q: str(c.q).slice(0, 300), a: str(c.a).slice(0, 600) } : null)) } : {}),
         })),
       })),
@@ -147,6 +149,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       ...(goalId && goalIds.has(goalId) ? { goalId } : {}),
     };
   };
+  const courseIdSet = new Set(courses.map((c) => (c as Obj).id as string));
   const habits = list('habits', 'hábitos', (o) => {
     if (!str(o.title) || !isObj(o.frequency) || typeof o.frequency.type !== 'string') return null;
     // La versión mínima solo vale si es menor que el objetivo y el hábito se mide en cantidad.
@@ -156,6 +159,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       ...(DIFFICULTY_IDS.includes(str(o.difficulty)) ? { difficulty: str(o.difficulty) } : {}),
       ...links(o),
+      ...(ref(o.courseId) && courseIdSet.has(ref(o.courseId) as string) ? { courseId: ref(o.courseId) as string } : {}),
       ...(cleanIfThen(o.ifThen) ? { ifThen: cleanIfThen(o.ifThen) } : {}),
       ...(minTarget ? { minTarget } : {}),
       ...(o.kind === 'quit' ? { kind: 'quit', slips: [...new Set(asArray(o.slips).filter((d): d is string => typeof d === 'string' && DATE.test(d)))].sort() } : {}),
@@ -247,7 +251,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
   );
 
   // Actividades del calendario: sus vínculos con hábitos y tareas se reescriben o se sueltan si ya no existen.
-  const events = list('events', 'actividades del calendario', (o) => parseAgendaEvent(o, { id: fixId, ref }, { habits: habitIds, tasks: taskIds }));
+  const events = list('events', 'actividades del calendario', (o) => parseAgendaEvent(o, { id: fixId, ref }, { habits: habitIds, tasks: taskIds, courses: courseIdSet }));
 
   const p = isObj(d.profile) ? d.profile : {};
   const base = defaultProfile(userId);
@@ -255,6 +259,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
   const reviews = [...new Map(asArray(p.reviews).flatMap((r) => cleanReview(r, (v) => { const t = ref(v); return t && taskIds.has(t) ? t : null; }) ?? []).map((r) => [r.week, r])).values()]
     .sort((a, b) => a.week.localeCompare(b.week))
     .slice(-MAX_REVIEWS);
+  const challenge = cleanChallenge(p.challenge);
   const inventory = asArray(p.inventory).filter((x): x is string => typeof x === 'string');
   // El héroe solo puede llevar objetos que están en el inventario.
   const hero = sanitizeHero(p.hero, inventory);
@@ -290,6 +295,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     ...(hero ? { hero } : {}),
     ...(reviews.length ? { reviews } : {}),
     ...(typeof p.works === 'boolean' ? { works: p.works } : {}),
+    ...(challenge ? { challenge } : {}),
   };
 
   for (const [what, n] of Object.entries(dropped)) warnings.push(`${n} ${what} descartados por datos inválidos.`);

@@ -48,10 +48,10 @@ const REPEATS: { value: number; label: string }[] = [
 
 const stepLine = (s: Habit['steps'][number]) => (s.minutes ? `${s.title} | ${s.minutes}` : s.title);
 
-export function HabitModal({ id, goalId: presetGoal }: { id?: string; goalId?: string }) {
+export function HabitModal({ id, goalId: presetGoal, courseId: presetCourse }: { id?: string; goalId?: string; courseId?: string }) {
   const close = useUi((s) => s.closeModal);
   const openModal = useUi((s) => s.openModal);
-  const { habits, createHabit, updateHabit, deleteHabit } = useData();
+  const { habits, courses, createHabit, updateHabit, deleteHabit } = useData();
   const editing = habits.find((h) => h.id === id);
   const f0 = editing?.frequency;
   // Hábito normal o mal hábito a dejar. No se cambia al editar: el historial de uno no tiene sentido en el otro.
@@ -83,6 +83,7 @@ export function HabitModal({ id, goalId: presetGoal }: { id?: string; goalId?: s
 
   const [area, setArea] = useState<AreaId | ''>(editing?.area ?? '');
   const [goalId, setGoalId] = useState(editing?.goalId ?? presetGoal ?? '');
+  const [courseId, setCourseId] = useState(editing?.courseId ?? presetCourse ?? '');
   // 0 = sin versión mínima.
   const [minTarget, setMinTarget] = useState(editing?.minTarget ?? 0);
   const [ifThen, setIfThen] = useState<IfThen[]>(editing?.ifThen ?? []);
@@ -134,6 +135,7 @@ export function HabitModal({ id, goalId: presetGoal }: { id?: string; goalId?: s
       ...(quit ? { kind: 'quit' as const } : {}),
       area: area || undefined,
       goalId: goalId || undefined,
+      courseId: courseId || undefined,
       // Vacío o incoherente (≥ objetivo, hecho/no hecho, mal hábito) = sin versión mínima.
       minTarget: cleanMinimum(minTarget, { target: quit || measure === 'boolean' ? 1 : Math.max(1, target), measure: quit ? 'boolean' : measure, kind: quit ? 'quit' : 'build' }),
       ifThen: cleanIfThen(ifThen),
@@ -249,8 +251,22 @@ export function HabitModal({ id, goalId: presetGoal }: { id?: string; goalId?: s
             {() => <IfThenEditor value={ifThen} onChange={setIfThen} />}
           </Field>
         </Fold>
-        <Fold summary="Área y meta (opcional)" open={!!area || !!goalId}>
+        <Fold summary="Área, meta y curso (opcional)" open={!!area || !!goalId || !!courseId}>
           <OrganizeFields area={area} onArea={setArea} goalId={goalId} onGoal={setGoalId} />
+          {(courses.length > 0 || courseId) && (
+            <Field label="Es parte del curso" hint="Aparece en el curso, en Inicio y en su ficha. No registra avance del curso: eso lo haces tú al estudiar.">
+              {(fid) => (
+                <select id={fid} className="input" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+                  <option value="">Ninguno</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </Field>
+          )}
         </Fold>
         <div className="modal__actions">
           <Button variant="primary" type="submit" disabled={invalid}>

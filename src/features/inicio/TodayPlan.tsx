@@ -2,12 +2,13 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { addDays, today } from '@/core/dates';
+import { addDays, today, weekStart } from '@/core/dates';
 import { useMinuteOfDay } from './useMinuteOfDay';
 import { toClock } from '@/core/agenda';
 import { deadlineText } from '@/core/missions';
 import { PRIORITY_REASON_TEXT, agendaToday, topPriorities, type AgendaItem, type TodayPriority } from '@/core/today';
-import { reviewOf, reviewWeekFor } from '@/core/weekReview';
+import { buildWeekReview, reviewHeadline, reviewOf, reviewWeekFor } from '@/core/weekReview';
+import type { Snapshot } from '@/core/domain';
 import { findConflicts } from '@/core/conflicts';
 import { Button, Tag, cx } from '@/ui/kit';
 import { FoldPanel } from '@/ui/Fold';
@@ -153,16 +154,18 @@ export function TodayAgenda() {
 }
 
 /** Invitación breve a revisar la semana cuando toca (domingo y primeros días de la siguiente) y aún no se hizo. */
-export function ReviewNudge() {
+export function ReviewNudge({ snap }: Readonly<{ snap?: Snapshot }>) {
   const hasData = useData((s) => s.tasks.length + s.habits.length > 0);
   const profile = useData((s) => s.profile);
   const week = reviewWeekFor(today());
+  const headline = useMemo(() => (snap && week ? reviewHeadline(buildWeekReview(snap, week)) : null), [snap, week]);
   if (!hasData || !week || reviewOf(profile, week)) return null;
   return (
     <section className="panel catchup" role="status">
       <Sprite name="flag" size={24} />
       <p className="grow">
-        <b>Es buen momento para revisar tu semana.</b> Dos minutos para ver qué avanzó, ajustar lo pendiente sin culpas y elegir tus prioridades de la próxima.
+        <b>Es buen momento para revisar tu semana.</b>
+        {headline && <> {week === weekStart(today()) ? 'Esta semana' : 'Semana pasada'}: {headline}.</>} Dos minutos para ver qué avanzó, ajustar lo pendiente sin culpas y elegir tus prioridades de la próxima.
       </p>
       <Link className="btn btn--primary btn--sm" to={`/progreso?revision=${week}`}>
         Revisar mi semana

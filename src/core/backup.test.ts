@@ -173,6 +173,43 @@ describe('copia de seguridad', () => {
     expect(res.snapshot.courses[1].studyDaysPerWeek).toBeUndefined();
   });
 
+  it('conserva el plazo del curso, el día de cada tema, los vínculos a cursos y el reto del mes', () => {
+    const file = buildBackup(demo());
+    const courseId = file.data.courses[0].id;
+    file.data.courses[0].dueDate = '2026-12-31';
+    file.data.courses[0].modules[0].topics[0].status = 'done';
+    file.data.courses[0].modules[0].topics[0].doneAt = '2026-09-10';
+    file.data.courses[0].modules[0].topics[1].status = 'todo';
+    file.data.courses[0].modules[0].topics[1].doneAt = '2026-09-11';
+    file.data.habits[0].courseId = courseId;
+    file.data.habits[1].courseId = 'no-existe';
+    file.data.events = [{ id: '11111111-1111-4111-8111-111111111111', title: 'Estudio', category: 'study', date: '2026-09-16', start: '18:00', minutes: 60, courseId, rev: 0, createdAt: '', updatedAt: '' } as never]; // el demo no trae agenda
+    file.data.profile.challenge = { month: '2026-09', kind: 'tasks', target: 10, reward: 60, base: 2, claimed: true };
+    const res = parseBackup(JSON.stringify(file));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    const c = res.snapshot.courses[0];
+    expect(c.dueDate).toBe('2026-12-31');
+    expect(c.modules[0].topics[0].doneAt).toBe('2026-09-10');
+    // Un día de cierre en un tema que no está hecho no tiene sentido: se descarta.
+    expect(c.modules[0].topics[1].doneAt).toBeUndefined();
+    expect(res.snapshot.habits[0].courseId).toBe(c.id);
+    expect(res.snapshot.habits[1].courseId).toBeUndefined();
+    expect(res.snapshot.events[0].courseId).toBe(c.id);
+    expect(res.snapshot.profile.challenge).toEqual({ month: '2026-09', kind: 'tasks', target: 10, reward: 60, base: 2, claimed: true });
+  });
+
+  it('un reto del mes manipulado se descarta o se acota', () => {
+    const file = buildBackup(demo());
+    file.data.profile.challenge = { month: 'septiembre', kind: 'tasks', target: 5, reward: 1 };
+    const malo = parseBackup(JSON.stringify(file));
+    expect(malo.ok && malo.snapshot.profile.challenge).toBeFalsy();
+    file.data.profile.challenge = { month: '2026-09', kind: 'xp', target: 9e12, reward: 9e12 };
+    const grande = parseBackup(JSON.stringify(file));
+    expect(grande.ok && grande.snapshot.profile.challenge?.target).toBe(100000);
+    expect(grande.ok && grande.snapshot.profile.challenge?.reward).toBe(100000);
+  });
+
   it('convierte ids que no son UUID y reescribe las referencias', () => {
     const file = {
       app: 'studyquest', version: 1, exportedAt: '',

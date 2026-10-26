@@ -577,11 +577,12 @@ function parseException(v: unknown): AgendaException | null {
  * Convierte un objeto cualquiera (de una copia de seguridad) en una actividad válida, o null.
  * `id` y `ref` reescriben los identificadores igual que el resto de la copia.
  */
-export function parseAgendaEvent(o: Obj, ids: { id: (v: unknown) => string; ref: (v: unknown) => string | null }, known: { habits: Set<string>; tasks: Set<string> }): AgendaEvent | null {
+export function parseAgendaEvent(o: Obj, ids: { id: (v: unknown) => string; ref: (v: unknown) => string | null }, known: { habits: Set<string>; tasks: Set<string>; courses?: Set<string> }): AgendaEvent | null {
   if (!DATE.test(str(o.date))) return null;
   const start = o.start === null ? null : isClockTime(o.start) ? (o.start as string) : null;
   const habitId = ids.ref(o.habitId);
   const taskId = ids.ref(o.taskId);
+  const courseId = ids.ref(o.courseId);
   const now = new Date().toISOString();
   const exceptions = isObj(o.exceptions)
     ? Object.fromEntries(Object.entries(o.exceptions).flatMap(([k, v]) => {
@@ -604,6 +605,7 @@ export function parseAgendaEvent(o: Obj, ids: { id: (v: unknown) => string; ref:
     ...(Object.keys(exceptions).length ? { exceptions } : {}),
     habitId: linkedHabit,
     taskId: taskId && known.tasks.has(taskId) ? taskId : null,
+    ...(courseId && known.courses?.has(courseId) ? { courseId } : {}),
     ...(isAgendaColor(o.color) ? { color: o.color } : {}),
     ...(str(o.description) ? { description: str(o.description).slice(0, 2000) } : {}),
     ...(str(o.location) ? { location: str(o.location).slice(0, 200) } : {}),

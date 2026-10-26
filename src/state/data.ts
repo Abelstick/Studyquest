@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type {
-  AgendaEvent, AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, WeekReview, XpEvent, XpSource,
+  AgendaEvent, AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, MonthChallenge, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, WeekReview, XpEvent, XpSource,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
@@ -23,6 +23,8 @@ import { ACHIEVEMENTS } from '@/core/achievements';
 import { shopItem } from '@/core/catalog';
 import { canEvolve, cleanHeroName, heroItem, newHero, raceOf, stageForLevel, stageName } from '@/core/hero';
 import { buildDemo } from '@/core/seed';
+import { courseAlerts, newAlerts } from '@/core/courseAlerts';
+import { challengeProgress } from '@/core/challenge';
 import { computeStats } from '@/core/stats';
 import { changeOccurrence, removeOccurrence, replaceFrom, setOccurrenceStatus, unlinkEvents, type EditScope, type EventDraft, type OccurrenceChange, type SeriesResult } from '@/core/agenda';
 import type { Repository } from '@/data/ports';
@@ -48,6 +50,8 @@ export interface DataState extends Data {
   createTask: (draft: Omit<Task, 'id' | 'createdAt' | 'completedAt'>) => ID;
   updateTask: (id: ID, patch: Partial<Omit<Task, 'id'>>) => void;
   deleteTask: (id: ID) => void;
+  /** Crea varias tareas de una vez (por ejemplo, repartir los temas de un curso) y devuelve sus ids. */
+  createTasks: (drafts: Omit<Task, 'id' | 'createdAt' | 'completedAt'>[]) => ID[];
   setTaskStatus: (id: ID, status: TaskStatus) => void;
   toggleSubtask: (taskId: ID, subId: ID) => void;
 
@@ -130,6 +134,12 @@ export interface DataState extends Data {
   logSession: (input: { minutes: number; courseId: ID | null; label?: string }) => void;
   freezeToday: () => void;
   claimWeeklyBonus: () => void;
+  /** Fija (o quita, con null) el reto del mes. */
+  setChallenge: (challenge: MonthChallenge | null) => void;
+  /** Cobra el premio del reto del mes si se cumplió. Una sola vez. */
+  claimChallenge: () => void;
+  /** Avisa de los cursos parados o a punto de vencer, sin repetir el mismo aviso en sus días de silencio. */
+  checkCourseAlerts: () => void;
   /** Abre el cofre del día (una vez al día). */
   openChest: () => void;
   /** Crea de una vez lo que genera el planificador: curso, meta, hábito de estudio y tareas con fechas. */
@@ -354,6 +364,8 @@ export function createDataStore(repo: Repository) {
           const ensured = profile ?? (await repo.profile.save(defaultProfile(userId)));
           set({ profile: ensured, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events, status: 'ready', error: null });
           useUi.getState().setWorld(worldOf(ensured.equipped.world));
+          // Al abrir la app: avisos de cursos parados o por vencer (sin repetir los de hoy).
+          if (ensured.onboarded) get().checkCourseAlerts();
           if (!ensured.onboarded) useUi.getState().openModal({ type: 'welcome' });
         } catch (e) {
           (hydrate ? console.warn : console.error)('[load]', e);
@@ -439,6 +451,18 @@ export function createDataStore(repo: Repository) {
         const { status, ...rest } = patch;
         run((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...rest } : t)) }), () => repo.tasks.update(id, rest));
         if (status && status !== cur.status) get().setTaskStatus(id, status);
+      },
+      createTasks(drafts) {
+        const made: Task[] = drafts.map((d) => ({ ...d, id: newId(), createdAt: isoNow(), completedAt: d.status === 'done' ? today() : null }));
+        if (!made.length) return [];
+        run(
+          (s) => ({ tasks: [...s.tasks, ...made] }),
+          async () => {
+            for (const t of made) await repo.tasks.create(t);
+          },
+        );
+        sfx.jump();
+        return made.map((t) => t.id);
       },
       deleteTask(id) {
         unlinkAgenda({ taskId: id });
@@ -634,6 +658,9 @@ export function createDataStore(repo: Repository) {
         const freedCerts = get().certifications.filter((c) => c.courseId === id).map((c) => ({ ...c, courseId: null }));
         // Lo que escribiste sobrevive al curso: el apunte se queda, solo pierde el vínculo.
         const freedNotes = get().notes.filter((n) => n.courseId === id).map((n) => ({ ...n, courseId: null, topicId: null }));
+        // Un hábito y un bloque del calendario también sobreviven al curso: solo pierden el vínculo.
+        const freedHabits = get().habits.filter((h) => h.courseId === id).map(({ courseId: _gone, ...h }) => h);
+        const freedEvents = get().events.filter((e) => e.courseId === id).map((e) => ({ ...e, courseId: null, rev: e.rev + 1, updatedAt: isoNow() }));
         run(
           (s) => ({
             courses: s.courses.filter((c) => c.id !== id),
@@ -641,6 +668,8 @@ export function createDataStore(repo: Repository) {
             sessions: s.sessions.map((x) => (x.courseId === id ? { ...x, courseId: null } : x)),
             certifications: s.certifications.map((c) => (c.courseId === id ? { ...c, courseId: null } : c)),
             notes: s.notes.map((n) => (n.courseId === id ? { ...n, courseId: null, topicId: null } : n)),
+            habits: s.habits.map((h) => (h.courseId === id ? freedHabits.find((x) => x.id === h.id) ?? h : h)),
+            events: s.events.map((e) => (e.courseId === id ? freedEvents.find((x) => x.id === e.id) ?? e : e)),
           }),
           async () => {
             await repo.courses.remove(id);
@@ -649,6 +678,8 @@ export function createDataStore(repo: Repository) {
             if (freed.length) await repo.sessions.createMany(freed);
             if (freedCerts.length) await repo.certifications.createMany(freedCerts);
             if (freedNotes.length) await repo.notes.createMany(freedNotes);
+            if (freedHabits.length) await repo.habits.createMany(freedHabits);
+            if (freedEvents.length) await repo.events.createMany(freedEvents);
           },
         );
       },
@@ -668,7 +699,8 @@ export function createDataStore(repo: Repository) {
         const found = course && findTopic(course, topicId);
         if (!course || !found || found.topic.status === status) return;
         const was = found.topic.status;
-        mutateCourse(courseId, (c) => mapTopic(c, topicId, (t) => ({ ...t, status })));
+        // Se anota el día en que se completa (para medir el ritmo) y se borra si se reabre.
+        mutateCourse(courseId, (c) => mapTopic(c, topicId, (t) => ({ ...t, status, doneAt: status === 'done' ? today() : undefined })));
         const xp = topicXp(found.module);
         if (status === 'done') award(xp, 'topic', found.topic.title);
         else if (was === 'done') award(-xp, 'topic', `Deshacer: ${found.topic.title}`);
@@ -1020,6 +1052,24 @@ export function createDataStore(repo: Repository) {
         );
         useUi.getState().toast({ kind: 'info', title: 'Plazos ajustados', body: `${shifts.length} ${shifts.length === 1 ? 'tarea cambió' : 'tareas cambiaron'} de fecha.` });
         sfx.click();
+      },
+      setChallenge(challenge) {
+        patchProfile({ challenge: challenge ?? undefined });
+      },
+      claimChallenge() {
+        const s = get();
+        const c = s.profile.challenge;
+        if (!c || !challengeProgress(c, s).claimable) return;
+        patchProfile({ credits: s.profile.credits + c.reward, challenge: { ...c, claimed: true } });
+        notify({ category: 'achievement', title: 'Reto del mes cumplido', body: `+${c.reward} monedas acreditadas.` });
+        useUi.getState().toast({ kind: 'info', title: '¡Reto cumplido!', body: `+${c.reward} monedas.` });
+        sfx.unlock();
+      },
+      checkCourseAlerts() {
+        const s = get();
+        for (const a of newAlerts(courseAlerts(s.courses, s.sessions, s.tasks), s.notifications)) {
+          notify({ category: 'alert', title: a.title, body: a.body });
+        }
       },
       openChest() {
         const p = get().profile;

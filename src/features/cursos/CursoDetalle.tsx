@@ -11,6 +11,9 @@ import { overdueOf } from '@/core/pace';
 import { courseTasks, courseTasksLabel } from '@/core/courseTasks';
 import { courseDeadline } from '@/core/courseDeadline';
 import { DeadlineLine } from './DeadlineLine';
+import { CourseRhythm } from './CourseRhythm';
+import { CourseRecovery } from './CourseRecovery';
+import { CourseRoutine } from './CourseRoutine';
 import { deadlineText } from '@/core/missions';
 import { blankNote, notesOfTopic, sortNotes } from '@/core/notes';
 import type { Snapshot, TopicStatus } from '@/core/domain';
@@ -228,6 +231,7 @@ export default function CursoDetalle() {
         </div>
 
         <div className="stack">
+          <CourseRecovery course={course} />
           <Panel
             kicker="Lo que te falta entregar"
             title="Tareas del curso"
@@ -264,6 +268,8 @@ export default function CursoDetalle() {
               </Link>
             )}
           </Panel>
+          <CourseRoutine course={course} />
+          <CourseRhythm course={course} />
           {mentor && (
             <Panel kicker="Mentor asignado">
               <div className="mentor">

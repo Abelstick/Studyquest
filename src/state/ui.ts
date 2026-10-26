@@ -9,7 +9,7 @@ export type ModalState =
   | null
   /** `goalId` propone la meta a la que aportará una tarea u hábito nuevo (desde la ficha de la meta). */
   | { type: 'task'; id?: string; dueDate?: string; goalId?: string; courseId?: string }
-  | { type: 'habit'; id?: string; goalId?: string }
+  | { type: 'habit'; id?: string; goalId?: string; courseId?: string }
   /** Ficha de solo lectura (con acciones) de un hábito o una tarea, abierta desde Hoy. */
   | { type: 'habit-detail'; id: string }
   | { type: 'task-detail'; id: string }
@@ -24,6 +24,8 @@ export type ModalState =
   | { type: 'certification'; id?: string }
   | { type: 'chain'; id?: string }
   | { type: 'session'; courseId?: string; minutes?: number }
+  /** Al terminar de estudiar un curso: ¿qué tema avanzaste? Marca temas como hechos o en progreso. */
+  | { type: 'topic-advance'; courseId: string }
   | { type: 'quick' }
   | { type: 'shortcuts' }
   | { type: 'tour' }
@@ -37,7 +39,7 @@ export type ModalState =
   | { type: 'howto' }
   | { type: 'settings' }
   /** Actividad del calendario: nueva (con día, hora o vínculo propuestos) o una ocurrencia existente (`original`). */
-  | { type: 'event'; id?: string; original?: string; date?: string; start?: string | null; minutes?: number; habitId?: string; taskId?: string }
+  | { type: 'event'; id?: string; original?: string; date?: string; start?: string | null; minutes?: number; habitId?: string; taskId?: string; courseId?: string; title?: string }
   /** ¿A qué ocurrencias de la serie se aplica un cambio? */
   | { type: 'scope'; title: string; verb: string; onPick: (scope: EditScope) => void }
   | { type: 'export'; from: string; to: string; ids?: string[] }

@@ -7,11 +7,12 @@ import { computeStreak, levelProgress, monthlyCompliance, rankFor } from '@/core
 import { ACHIEVEMENTS, achievementById } from '@/core/achievements';
 import type { SpriteName } from '@/ui/sprites';
 import { Sprite } from '@/ui/Sprite';
-import { computeStats, hoursBetween, timeDistribution, weeklyHours, weeklyXp, xpBetween, xpBySource, xpByDay, xpByWeekday } from '@/core/stats';
+import { computeStats, hoursBetween, timeDistribution, weeklyHours, weeklyXp, xpBetween, xpBySource, xpByWeekday } from '@/core/stats';
 import { Bar, PageHead, Panel, Segmented, cx } from '@/ui/kit';
 import { ChartCard, ColumnChart, HBars, LineChart, Sparkline } from './charts';
 import { CityMini, WeeklyReport } from './WeekPanels';
 import { WeekReviewPanel } from './WeekReview';
+import { ActivityYear } from './ActivityYear';
 import { Scramble } from '@/ui/motion';
 
 type Range = '30' | '90' | '180' | 'all';
@@ -27,7 +28,6 @@ const MAX_COURSES = 5;
 
 const SOURCE_SPRITE: Record<string, SpriteName> = { task: 'qblock', habit: 'flower', topic: 'pipe', session: 'tomato', milestone: 'flag', checkpoint: 'flag', bonus: 'star', review: 'note', combo: 'fire', certification: 'trophy', legacy: 'mushroom' };
 
-const level = (xp: number) => (xp <= 0 ? 0 : xp < 50 ? 1 : xp < 120 ? 2 : xp < 220 ? 3 : 4);
 const fmt = (n: number) => Math.round(n).toLocaleString('es');
 const hours = (n: number) => `${+n.toFixed(1)} h`;
 
@@ -123,18 +123,11 @@ export default function Progreso() {
     const dist = timeDistribution(snap, since);
     const distRows = dist.length > MAX_COURSES + 1 ? [...dist.slice(0, MAX_COURSES), { id: 'rest', label: 'Otros', hours: dist.slice(MAX_COURSES).reduce((a, d) => a + d.hours, 0), pct: dist.slice(MAX_COURSES).reduce((a, d) => a + d.pct, 0), minutes: 0 }] : dist;
 
-    const perDay = xpByDay(snap);
-    const start = addDays(weekStart(now), -19 * 7);
-    const heat = Array.from({ length: 140 }, (_, i) => {
-      const date = addDays(start, Math.floor(i / 7) * 7 + (i % 7));
-      return { date, lvl: date > now ? -1 : level(perDay.get(date) ?? 0), xp: perDay.get(date) ?? 0 };
-    });
-
     const lp = levelProgress(profile.xp);
     const unlocked = [...profile.achievements].reverse().map((a) => achievementById(a.id)).filter((a): a is NonNullable<typeof a> => !!a);
     return {
       lp, unlocked, stats, streak, xpNow, hrsNow, xpChange, hrsChange, doneInRange, compliance, avgCompliance, dist: distRows,
-      hoursWeeks, xpWeeks, bySource: xpBySource(snap, since), byWeekday: xpByWeekday(snap, since), heat,
+      hoursWeeks, xpWeeks, bySource: xpBySource(snap, since), byWeekday: xpByWeekday(snap, since),
       milestones: goals.reduce((a, g) => a + g.milestones.length, 0), openProjects: projects.length - stats.projectsCompleted,
     };
   }, [snap, range, now, xpEvents, profile.frozenDates, profile.xp, profile.achievements, sessions, goals, projects, tasks, habits, habitLogs]);
@@ -246,24 +239,7 @@ export default function Progreso() {
         )}
       </Panel>
 
-      <Panel
-        kicker="Mapa de actividad — 20 semanas"
-        right={
-          <div className="legend" aria-hidden="true">
-            <span className="kicker">Menos</span>
-            {[0, 1, 2, 3, 4].map((l) => (
-              <i key={l} className={`heat__cell is-${l}`} />
-            ))}
-            <span className="kicker">Más</span>
-          </div>
-        }
-      >
-        <div className="heat heat--year" role="img" aria-label="Mapa de actividad de las últimas 20 semanas">
-          {view.heat.map((c) => (
-            <span key={c.date} title={`${shortDate(c.date)} · ${c.xp} XP`} className={cx('heat__cell', c.lvl >= 0 ? `is-${c.lvl}` : 'is-future', c.date === now && 'is-today')} />
-          ))}
-        </div>
-      </Panel>
+      <ActivityYear />
     </div>
   );
 }

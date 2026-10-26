@@ -7,6 +7,7 @@ import type { Course, ISODate, Task } from './domain';
 import { diffDays, shortDate, today } from './dates';
 import { courseProgress } from './game';
 import { lastDue } from './pace';
+import { topicPace } from './courseStats';
 
 /** `done` ya terminado · `late` venció sin terminar · `soon` termina en 7 días o menos · `ok` con tiempo · `none` sin plazo. */
 export type DeadlineState = 'done' | 'late' | 'soon' | 'ok' | 'none';
@@ -21,11 +22,17 @@ export interface CourseDeadline {
   topicsLeft: number;
   /** Temas por semana que hay que sacar para llegar a tiempo, o null si no aplica (sin plazo, terminado o vencido). */
   perWeek: number | null;
+  /** Temas por semana que llevas de verdad (últimas 4 semanas), o null si aún no hay datos. */
+  actualPerWeek: number | null;
+  /** Vencido, o con un ritmo real claramente por debajo del necesario: conviene replantear el plazo. */
+  atRisk: boolean;
   state: DeadlineState;
 }
 
 /** Días que quedan para decir «termina pronto». */
 export const SOON_DAYS = 7;
+/** Cuánto más lento que lo necesario (en temas por semana) hace falta ir para considerar el plazo en riesgo. */
+export const RISK_MARGIN = 0.5;
 
 export function courseDeadline(course: Course, tasks: Task[], now: ISODate = today()): CourseDeadline {
   const p = courseProgress(course);
@@ -42,7 +49,9 @@ export function courseDeadline(course: Course, tasks: Task[], now: ISODate = tod
   else if (daysLeft !== null) state = daysLeft < 0 ? 'late' : daysLeft <= SOON_DAYS ? 'soon' : 'ok';
 
   const perWeek = state === 'ok' || state === 'soon' ? (topicsLeft > 0 && daysLeft !== null ? Math.ceil(topicsLeft / Math.max(1, daysLeft / 7)) : null) : null;
-  return { date, source, daysLeft, topicsLeft, perWeek, state };
+  const actualPerWeek = finished ? null : topicPace(course, now);
+  const behind = perWeek !== null && actualPerWeek !== null && perWeek - actualPerWeek > RISK_MARGIN;
+  return { date, source, daysLeft, topicsLeft, perWeek, actualPerWeek, atRisk: state === 'late' || behind, state };
 }
 
 /** «Hasta el 30 sep · faltan 14 días», «Venció el 2 sep · hace 5 días», «Completado» o «Sin plazo». */
@@ -56,8 +65,11 @@ export function deadlineSummary(d: CourseDeadline): string {
   return `Hasta el ${shortDate(d.date)} · faltan ${n} días`;
 }
 
-/** Ritmo para llegar: «≈ 3 temas por semana», o null si no hay nada que decir. */
+const fmt = (n: number) => String(n).replace('.', ',');
+
+/** Ritmo para llegar: «≈ 3 temas por semana para llegar · llevas 1,5», o null si no hay nada que decir. */
 export function paceText(d: CourseDeadline): string | null {
   if (d.perWeek === null) return null;
-  return `≈ ${d.perWeek} ${d.perWeek === 1 ? 'tema' : 'temas'} por semana para llegar`;
+  const need = `≈ ${d.perWeek} ${d.perWeek === 1 ? 'tema' : 'temas'} por semana para llegar`;
+  return d.actualPerWeek === null ? need : `${need} · llevas ${fmt(d.actualPerWeek)}`;
 }

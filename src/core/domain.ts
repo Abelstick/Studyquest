@@ -47,8 +47,27 @@ export interface Profile {
   hero?: Hero;
   /** Revisiones semanales guardadas (las últimas semanas). Son reflexiones y decisiones, no registros: viven con el perfil. */
   reviews?: WeekReview[];
+  /** Reto del mes que te pusiste. Es configuración con su propio avance calculado, no un registro. */
+  challenge?: MonthChallenge;
   /** ¿Trabaja? Sin definir = aún no se le ha preguntado. Con `true`, su horario laboral vive en el calendario («Mi semana»). */
   works?: boolean;
+}
+
+/** Qué mide un reto mensual. */
+export type ChallengeKind = 'studyDays' | 'studyHours' | 'tasks' | 'xp';
+
+/** Reto del mes: una meta numérica propia, con premio en monedas al cumplirla. Se reclama una sola vez. */
+export interface MonthChallenge {
+  /** Mes al que pertenece, «YYYY-MM». Un reto de otro mes ya no cuenta. */
+  month: string;
+  kind: ChallengeKind;
+  target: number;
+  /** Monedas de premio, ya calculadas al crearlo. */
+  reward: number;
+  /** Lo que ya llevabas del mes al fijar el reto: solo cuenta lo que logres después (así no se cobra lo ya hecho). */
+  base?: number;
+  /** El premio ya se cobró. */
+  claimed?: boolean;
 }
 
 /* ---------- Áreas de la vida y planes «si… entonces…» ---------- */
@@ -196,6 +215,8 @@ export interface Habit {
   area?: AreaId;
   /** Meta a la que aporta. */
   goalId?: ID;
+  /** Curso al que pertenece (por ejemplo, «estudiar SQL» es el hábito del curso de SQL). Solo informa: no registra progreso del curso. */
+  courseId?: ID;
   /** Versión mínima: una cantidad menor que `target` que basta para no cortar la racha del hábito. Sin definir = no hay. */
   minTarget?: number;
   /** Planes «si ocurre X, haré Y» para los días difíciles. */
@@ -238,6 +259,8 @@ export interface Topic {
   /** Marcado como "necesito repasar". */
   review: boolean;
   markedAt: ISODate | null;
+  /** Día (local) en que se completó. Sin definir en los temas hechos antes de que se guardara. Sirve para medir el ritmo. */
+  doneAt?: ISODate;
   /** Repasos superados desde que se marcó (0-3); a los 4 el tema queda dominado. */
   reviewStage?: number;
   /** Día en que toca el próximo repaso. */
@@ -446,6 +469,8 @@ export interface AgendaEvent {
   exceptions?: Record<ISODate, AgendaException>;
   habitId?: ID | null;
   taskId?: ID | null;
+  /** Curso al que se dedica el bloque (estudio). Solo informa: marcarlo no registra una sesión ni da XP. */
+  courseId?: ID | null;
   color?: string;
   description?: string;
   location?: string;

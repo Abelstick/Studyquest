@@ -6,7 +6,7 @@
  *
  * Lógica pura, sin React ni base de datos.
  */
-import type { AgendaCategory, Goal, Habit, HabitLog, ID, ISODate, Profile, Snapshot, Task, WeekReview } from './domain';
+import type { AgendaCategory, Course, Goal, Habit, HabitLog, ID, ISODate, Profile, Snapshot, Task, WeekReview } from './domain';
 import { addDays, isoNow, today, weekStart, weekdayIndex } from './dates';
 import { hoursInWeek, isDueOn, logFor, weekSummary } from './game';
 import { isMinimumMet } from './minimum';
@@ -14,6 +14,9 @@ import { isQuotaHabit } from './periods';
 import { areaBalance, type AreaRow } from './areas';
 import { occurrencesBetween, type Occurrence } from './agenda';
 import { goalPace, isGoalComplete, type GoalPace } from './goals';
+import { courseWeek } from './courseCadence';
+import { courseDeadline, type DeadlineState } from './courseDeadline';
+import { courseProgress } from './game';
 
 /* ---------- Lo que se guarda ---------- */
 
@@ -238,6 +241,38 @@ function nextWeek(s: Snapshot, from: ISODate): NextWeek {
   return { from, to, blocks: agenda.planned, minutesByCategory: m, tasksDue: due.length, tasksMinutes: due.reduce((a, t) => a + t.estimateMin, 0), notes, candidates: suggestPriorities(s.tasks, from) };
 }
 
+export interface CourseReviewRow {
+  course: Course;
+  /** Días de la semana con estudio. */
+  days: number;
+  /** Meta de días por semana, o 0 si no hay. */
+  target: number;
+  minutes: number;
+  /** Temas completados en la semana (solo los que guardaron su fecha). */
+  topicsDone: number;
+  /** Con meta: se cumplió. Sin meta: null. */
+  met: boolean | null;
+  deadline: DeadlineState;
+  atRisk: boolean;
+}
+
+/**
+ * Cursos para la revisión: los que no están terminados y se movieron esta semana, tienen meta o van con plazo en
+ * riesgo. Los que no se tocaron ni piden nada no estorban.
+ */
+export function courseReviewRows(s: Snapshot, from: ISODate, to: ISODate, now: ISODate = today()): CourseReviewRow[] {
+  const end = to < now ? to : now;
+  return s.courses.flatMap((course) => {
+    const p = courseProgress(course);
+    if (p.total > 0 && p.done === p.total && !course.modules.some((m) => m.topics.some((t) => t.doneAt && t.doneAt >= from && t.doneAt <= to))) return [];
+    const w = courseWeek(course, s.sessions, end);
+    const d = courseDeadline(course, s.tasks, end);
+    const topicsDone = course.modules.flatMap((m) => m.topics).filter((t) => t.doneAt && t.doneAt >= from && t.doneAt <= to).length;
+    if (!w.target && w.days === 0 && topicsDone === 0 && !d.atRisk) return [];
+    return [{ course, days: w.days, target: w.target, minutes: w.minutes, topicsDone, met: w.target ? w.days >= w.target : null, deadline: d.state, atRisk: d.atRisk }];
+  });
+}
+
 export interface WeekReviewData {
   from: ISODate;
   to: ISODate;
@@ -246,6 +281,7 @@ export interface WeekReviewData {
   tasks: TaskReview;
   habits: HabitReviewRow[];
   goals: GoalReviewRow[];
+  courses: CourseReviewRow[];
   agenda: AgendaReview;
   studyHours: number;
   studyGoalHours: number;
@@ -275,12 +311,27 @@ export function buildWeekReview(s: Snapshot, week: ISODate, now: ISODate = today
     tasks,
     habits: s.habits.flatMap((h) => habitRow(h, s.habitLogs, from, now) ?? []),
     goals: goalRows(s, from, to, now),
+    courses: courseReviewRows(s, from, to, now),
     agenda: agendaReview(occs, now),
     studyHours: hoursInWeek(s.sessions, from),
     studyGoalHours: s.profile.weeklyGoalHours,
     areas: areaBalance(s, from, to),
     next: nextWeek(s, addDays(from, 7)),
   };
+}
+
+/**
+ * Una línea con lo esencial de la semana, para el aviso de Inicio: tareas hechas, hábitos y cursos por debajo de su
+ * meta. Null si no hay nada que contar (semana vacía).
+ */
+export function reviewHeadline(d: Pick<WeekReviewData, 'tasks' | 'habits' | 'courses'>): string | null {
+  const parts: string[] = [];
+  if (d.tasks.planned > 0) parts.push(`${d.tasks.plannedDone}/${d.tasks.planned} tareas`);
+  const due = d.habits.reduce((a, r) => a + r.due, 0);
+  if (due > 0) parts.push(`hábitos ${Math.round((d.habits.reduce((a, r) => a + r.done, 0) / due) * 100)} %`);
+  const below = d.courses.filter((c) => c.met === false).length;
+  if (below > 0) parts.push(`${below} ${below === 1 ? 'curso por debajo' : 'cursos por debajo'} de su meta`);
+  return parts.length ? parts.join(' · ') : null;
 }
 
 /** Obstáculos de uso corriente, para anotarlos de un toque. El usuario puede escribir los suyos. */

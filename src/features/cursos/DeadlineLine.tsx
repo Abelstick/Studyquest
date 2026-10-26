@@ -26,6 +26,7 @@ export function DeadlineLine({ d, onSet, className }: Readonly<Props>) {
         </button>
       )}
       {pace && <span className="muted small cdead__pace">{pace}</span>}
+      {d.atRisk && d.state !== 'late' && <span className="rwarn">Ritmo insuficiente</span>}
     </p>
   );
 }

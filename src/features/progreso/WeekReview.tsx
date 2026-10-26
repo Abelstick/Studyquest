@@ -240,6 +240,35 @@ export function WeekReviewPanel({ week, onClose }: Readonly<{ week: ISODate; onC
         )}
       </Section>
 
+      <Section id="cursos" title="Cursos" hint="Cuántos días estudiaste cada curso frente a tu meta semanal, y los que van con el plazo apretado.">
+        {data.courses.length === 0 ? (
+          <p className="muted small">Ningún curso se movió esta semana ni tiene meta semanal. Puedes fijarla al editar un curso.</p>
+        ) : (
+          <ul className="rv__list">
+            {data.courses.map((c) => (
+              <li key={c.course.id} className="rv__row">
+                <div>
+                  <p className="rv__name">{c.course.title}</p>
+                  <p className="muted small">
+                    {c.target > 0 ? `${c.days} de ${c.target} días de estudio` : `${c.days} ${c.days === 1 ? 'día' : 'días'} de estudio`}
+                    {c.minutes > 0 && ` · ${hours(c.minutes)}`}
+                    {c.topicsDone > 0 && ` · ${c.topicsDone} ${c.topicsDone === 1 ? 'tema completado' : 'temas completados'}`}
+                  </p>
+                </div>
+                <div className="rv__side">
+                  {c.met === true && <Tag tone="green">Meta cumplida</Tag>}
+                  {c.met === false && <Tag tone="xp">Por debajo de la meta</Tag>}
+                  {c.atRisk && <Tag tone="red">{c.deadline === 'late' ? 'Plazo vencido' : 'Plazo en riesgo'}</Tag>}
+                  <Link className="btn btn--ghost btn--sm" to={`/cursos/${c.course.id}`}>
+                    Abrir
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
       <Section id="metas" title="Metas">
         {data.goals.length === 0 ? (
           <p className="muted small">Aún no tienes metas abiertas.</p>

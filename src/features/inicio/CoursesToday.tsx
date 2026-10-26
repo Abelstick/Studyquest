@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { today } from '@/core/dates';
+import { toClock } from '@/core/agenda';
+import { courseBlocks, courseHabitsToday } from '@/core/courseLinks';
 import { courseProgress, nextTopic } from '@/core/game';
 import { courseTasks, type CourseTasks } from '@/core/courseTasks';
 import { courseWeek, type CourseWeek } from '@/core/courseCadence';
@@ -55,6 +57,38 @@ function StatusTag({ week }: Readonly<{ week: CourseWeek }>) {
   return null;
 }
 
+/** Lo vinculado al curso que toca hoy: el bloque reservado en el calendario y sus hábitos. */
+function TodayLinks({ courseId }: Readonly<{ courseId: string }>) {
+  const openModal = useUi((s) => s.openModal);
+  const events = useData((s) => s.events);
+  const habits = useData((s) => s.habits);
+  const tasks = useData((s) => s.tasks);
+  const logs = useData((s) => s.habitLogs);
+  const now = today();
+  const blocks = useMemo(() => courseBlocks(events, { habits, tasks, logs }, courseId, now, now), [events, habits, tasks, logs, courseId, now]);
+  const mine = useMemo(() => courseHabitsToday(habits, logs, courseId, now), [habits, logs, courseId, now]);
+  if (blocks.length === 0 && mine.length === 0) return null;
+  return (
+    <ul className="hcourse__links" aria-label="Lo de hoy para este curso">
+      {blocks.map((o) => (
+        <li key={o.key}>
+          <button type="button" className="chip chip--sm" onClick={() => openModal({ type: 'event', id: o.event.id, original: o.original })} aria-haspopup="dialog">
+            <Icon name="pin" size={10} /> {o.start !== null ? `Hoy ${toClock(o.start)}` : 'Hoy'}
+            {o.start !== null && o.minutes ? `–${toClock(o.start + o.minutes)}` : ''}
+          </button>
+        </li>
+      ))}
+      {mine.map(({ habit, done }) => (
+        <li key={habit.id}>
+          <button type="button" className={cx('chip chip--sm', done && 'is-on')} onClick={() => openModal({ type: 'habit-detail', id: habit.id })} aria-haspopup="dialog">
+            <Icon name={done ? 'check' : 'habit'} size={10} /> {habit.title}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function CourseRow({ row }: Readonly<{ row: Row }>) {
   const openModal = useUi((s) => s.openModal);
   const { course, week, work, deadline } = row;
@@ -97,6 +131,7 @@ function CourseRow({ row }: Readonly<{ row: Row }>) {
             </>
           )}
         </p>
+        <TodayLinks courseId={course.id} />
         {next && (
           <p className="muted small">
             Próximo tema: <b>{next.title}</b>

@@ -60,6 +60,10 @@ interface Props {
   minutes?: number;
   habitId?: string;
   taskId?: string;
+  /** Curso al que se dedica el bloque (desde «Reservar horario» de un curso). */
+  courseId?: string;
+  /** Nombre propuesto para una actividad nueva. */
+  title?: string;
 }
 
 /** Crear o editar una actividad del calendario. Solo enseña los campos que tienen sentido para cada tipo. */
@@ -67,6 +71,7 @@ export function EventModal(props: Props) {
   const events = useData((s) => s.events);
   const habits = useData((s) => s.habits);
   const tasks = useData((s) => s.tasks);
+  const courses = useData((s) => s.courses);
   const logs = useData((s) => s.habitLogs);
   const { createEvent, saveEvent, removeEvent, setEventStatus, setHabitValueOn, setTaskStatus } = useData();
   const close = useUi((s) => s.closeModal);
@@ -90,8 +95,9 @@ export function EventModal(props: Props) {
     return props.habitId ? 'habit' : props.taskId ? 'task' : 'block';
   });
   const startMin0 = occ?.start ?? (editing?.start ? clockToMinutes(editing.start) : null);
-  const [title, setTitle] = useState(occ?.exception?.title ?? editing?.title ?? '');
-  const [category, setCategory] = useState<AgendaCategory>(editing?.category ?? (props.taskId ? 'study' : props.habitId ? 'personal' : 'personal'));
+  const [title, setTitle] = useState(occ?.exception?.title ?? editing?.title ?? props.title ?? '');
+  const [category, setCategory] = useState<AgendaCategory>(editing?.category ?? (props.taskId || props.courseId ? 'study' : 'personal'));
+  const [courseId, setCourseId] = useState(editing?.courseId ?? props.courseId ?? '');
   const [date, setDate] = useState<ISODate>(occ?.date ?? editing?.date ?? props.date ?? today());
   const [allDay, setAllDay] = useState(editing ? editing.start === null : props.start === null);
   const [start, setStart] = useState(() => (startMin0 !== null ? toClock(startMin0) : (props.start ?? habitDef?.start ?? '09:00')));
@@ -196,6 +202,7 @@ export function EventModal(props: Props) {
       until: r && until ? until : null,
       habitId: kind === 'habit' ? habitId : null,
       taskId: kind === 'task' ? taskId : null,
+      courseId: kind === 'block' && category === 'study' && courseId ? courseId : null,
       ...(color ? { color } : {}),
       ...(description.trim() ? { description: description.trim().slice(0, 2000) } : {}),
       ...(location.trim() ? { location: location.trim().slice(0, 200) } : {}),
@@ -384,6 +391,21 @@ export function EventModal(props: Props) {
             </Field>
           )}
         </div>
+
+        {kind === 'block' && category === 'study' && courses.length > 0 && (
+          <Field label="Curso (opcional)" hint="Solo informa en Inicio y en el curso: marcar el bloque no registra una sesión de estudio.">
+            {(fid) => (
+              <select id={fid} className="input" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+                <option value="">Sin curso</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        )}
 
         {kind === 'block' && (
           <label className="stepcheck">

@@ -6,6 +6,7 @@ import type { ChallengeKind } from '@/core/domain';
 import { Bar, Button, cx } from '@/ui/kit';
 import { FoldPanel } from '@/ui/Fold';
 import { Sprite } from '@/ui/Sprite';
+import { RadioGroup } from '@/ui/RadioGroup';
 
 const monthLabel = (month: string) => monthName(Number(month.slice(5, 7)) - 1);
 
@@ -27,7 +28,7 @@ function Picker() {
       <p className="muted small">
         Ponte una meta para {monthLabel(preview.month)}. Si la cumples, ganas monedas (una sola vez).{base > 0 && ' Lo que ya llevas este mes no cuenta: el reto mide lo que logres desde hoy.'}
       </p>
-      <div className="chips" role="radiogroup" aria-label="Qué medir">
+      <RadioGroup className="chips" aria-label="Qué medir">
         {CHALLENGES.map((c) => (
           <button
             key={c.kind}
@@ -43,14 +44,14 @@ function Picker() {
             {c.label}
           </button>
         ))}
-      </div>
-      <div className="chips" role="radiogroup" aria-label="Meta del mes">
+      </RadioGroup>
+      <RadioGroup className="chips" aria-label="Meta del mes">
         {opt.presets.map((p) => (
           <button key={p} type="button" role="radio" aria-checked={p === target} className={cx('chip chip--sm', p === target && 'is-on')} onClick={() => setTarget(p)}>
             {p.toLocaleString('es')} {opt.unit}
           </button>
         ))}
-      </div>
+      </RadioGroup>
       <Button variant="primary" small onClick={() => setChallenge(newChallenge(kind, target, today(), base))}>
         Empezar: {targetText(preview)} · +{preview.reward} monedas
       </Button>

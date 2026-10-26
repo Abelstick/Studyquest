@@ -239,6 +239,9 @@
   color: var(--on-yellow);
   transform: rotateY(180deg);
 }
+.flashcard__back .kicker {
+  color: var(--on-yellow);
+}
 .flashcard.is-flipped .flashcard__front {
   transform: rotateY(-180deg);
 }
@@ -1183,6 +1186,9 @@
   color: var(--text);
   border-color: var(--line);
 }
+.pick__opt.is-on .muted {
+  color: var(--text);
+}
 .pick__opt input {
   flex: none;
   width: 18px;
@@ -1252,6 +1258,9 @@
 }
 
 /* ---------- Explicaciones: tareas, hábitos, metas y proyectos ---------- */
+.page-head__hint a {
+  text-decoration: underline;
+}
 .page-head__hint {
   max-width: 62ch;
   margin-top: 6px;
@@ -1741,6 +1750,9 @@
   background: color-mix(in srgb, var(--yellow) 22%, var(--panel));
   color: var(--text);
 }
+.ladder li.is-next .muted {
+  color: var(--text);
+}
 .ladder__mark {
   display: inline-flex;
   align-items: center;
@@ -1756,6 +1768,9 @@
 }
 .ladder__name {
   font-weight: 700;
+}
+.ladder li.is-done .ladder__coins {
+  color: var(--text);
 }
 .ladder__coins {
   display: inline-flex;
@@ -2795,6 +2810,10 @@ select.input {
 }
 .evo__step.is-now {
   background: var(--yellow);
+  color: var(--on-yellow);
+}
+.evo__step.is-done .evo__lv {
+  color: var(--text);
 }
 .evo__step.is-ready {
   border: var(--bw) dashed var(--xp-text);
@@ -2819,7 +2838,7 @@ select.input {
   color: var(--muted);
 }
 .evo__step.is-now .evo__lv {
-  color: var(--text);
+  color: var(--on-yellow);
 }
 .evo__go {
   animation: evo-go 0.9s steps(2) infinite;

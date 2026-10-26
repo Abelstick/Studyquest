@@ -4,6 +4,7 @@ import { sfx } from '@/audio/sfx';
 import { Sprite } from './Sprite';
 import { Spinner } from './Spinner';
 import { Icon } from './Icon';
+import { RadioGroup } from './RadioGroup';
 import type { SpriteName } from './sprites';
 
 export const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' ');
@@ -243,25 +244,25 @@ export function NumberInput({ value, onValue, min, max, onFocus, onBlur, ...rest
 
 export function Segmented<T extends string | number>({ value, options, onChange, label }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; label: string }) {
   return (
-    <div className="seg" role="radiogroup" aria-label={label}>
+    <RadioGroup className="seg" aria-label={label}>
       {options.map((o) => (
         <button key={String(o.value)} type="button" role="radio" aria-checked={o.value === value} className={cx('seg__opt', o.value === value && 'is-on')} onClick={() => { sfx.select(); onChange(o.value); }}>
           {o.label}
         </button>
       ))}
-    </div>
+    </RadioGroup>
   );
 }
 
 export function ChipGroup<T extends string | number>({ value, options, onChange, label }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; label: string }) {
   return (
-    <div className="chips" role="radiogroup" aria-label={label}>
+    <RadioGroup className="chips" aria-label={label}>
       {options.map((o) => (
         <button key={String(o.value)} type="button" role="radio" aria-checked={o.value === value} className={cx('chip', o.value === value && 'is-on')} onClick={() => onChange(o.value)}>
           {o.label}
         </button>
       ))}
-    </div>
+    </RadioGroup>
   );
 }
 

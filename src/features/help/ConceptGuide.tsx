@@ -5,6 +5,7 @@ import { useUi, type ModalState } from '@/state/ui';
 import { Button, Modal, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
+import { RadioGroup } from '@/ui/RadioGroup';
 
 const CREATE: Record<ConceptId, Exclude<ModalState, null>> = {
   tarea: { type: 'task' },
@@ -40,13 +41,13 @@ function Chains() {
   return (
     <section className="guide__chain">
       <h3 className="guide__h">Cómo encajan: ejemplos completos</h3>
-      <div className="chips" role="radiogroup" aria-label="Elige un ejemplo">
+      <RadioGroup className="chips" aria-label="Elige un ejemplo">
         {EXAMPLE_CHAINS.map((c, k) => (
           <button key={c.label} type="button" role="radio" aria-checked={k === i} className={cx('chip chip--sm', k === i && 'is-on')} onClick={() => setI(k)}>
             {c.label}
           </button>
         ))}
-      </div>
+      </RadioGroup>
       <p className="guide__ambition">{chain.ambition}</p>
       <ul>
         <li>{chain.meta}</li>

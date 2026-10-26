@@ -65,8 +65,10 @@ function Flashcard({ item, onRate, practice, onDone }: { item: DueReview; onRate
         <Steps stage={item.stage} />
       </div>
 
-      <button type="button" className={cx('flashcard', flipped && 'is-flipped')} onClick={flip} aria-label={flipped ? 'Ver la pregunta' : 'Mostrar la respuesta'}>
-        <span className="flashcard__side flashcard__front">
+      {/* El nombre del botón sale de lo que se ve (la pregunta o la respuesta), no de una etiqueta que lo tape (WCAG 2.5.3). */}
+      <button type="button" className={cx('flashcard', flipped && 'is-flipped')} onClick={flip}>
+        <span className="sr-only">{flipped ? 'Ver la pregunta. ' : 'Mostrar la respuesta. '}</span>
+        <span className="flashcard__side flashcard__front" aria-hidden={flipped}>
           <span className="kicker">Pregunta {item.cards.length > 1 ? `${index + 1}/${item.cards.length}` : ''}</span>
           <span className="flashcard__text">{card.q}</span>
           <span className="flashcard__hint">Toca o pulsa espacio para girar</span>
@@ -76,6 +78,10 @@ function Flashcard({ item, onRate, practice, onDone }: { item: DueReview; onRate
           <span className="flashcard__text">{card.a || 'Compruébalo en tus apuntes.'}</span>
         </span>
       </button>
+      {/* Al girar la tarjeta el foco no se mueve: se anuncia la respuesta. */}
+      <p className="sr-only" role="status">
+        {flipped ? `Respuesta: ${card.a || 'Compruébalo en tus apuntes.'}` : ''}
+      </p>
 
       {flipped && !last && (
         <div className="modal__actions modal__actions--center">

@@ -3,6 +3,7 @@ import type { AreaId } from '@/core/domain';
 import { cx } from './kit';
 import { Icon } from './Icon';
 import { AREA_ICON } from './domainIcons';
+import { RadioGroup } from './RadioGroup';
 
 /** Etiqueta pequeña con el área de una tarea, hábito o meta. */
 export function AreaTag({ area, className }: Readonly<{ area?: AreaId; className?: string }>) {
@@ -18,7 +19,7 @@ export function AreaTag({ area, className }: Readonly<{ area?: AreaId; className
 /** Elección del área en un formulario: una opción o ninguna. */
 export function AreaChips({ value, onChange, label = 'Área de la vida' }: Readonly<{ value: AreaId | ''; onChange: (v: AreaId | '') => void; label?: string }>) {
   return (
-    <div className="chips" role="radiogroup" aria-label={label}>
+    <RadioGroup className="chips" aria-label={label}>
       <button type="button" role="radio" aria-checked={value === ''} className={cx('chip chip--sm', value === '' && 'is-on')} onClick={() => onChange('')}>
         Sin área
       </button>
@@ -27,7 +28,7 @@ export function AreaChips({ value, onChange, label = 'Área de la vida' }: Reado
           <Icon name={AREA_ICON[a.id]} size={10} /> {a.label}
         </button>
       ))}
-    </div>
+    </RadioGroup>
   );
 }
 

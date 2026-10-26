@@ -9,6 +9,7 @@ import { habitBlockDrafts, habitBlocks, suggestHabitTimes } from '@/core/routine
 import { frequencyLabel } from '@/core/game';
 import { Button, Tag } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
+import { RadioGroup } from '@/ui/RadioGroup';
 
 const PER_DAY = [1, 2, 3];
 
@@ -59,7 +60,7 @@ export function HabitScheduler({ habit }: Readonly<{ habit: Habit }>) {
     <div className="sched">
       <div className="split">
         <span className="kicker">Ponle hora</span>
-        <div className="chips" role="radiogroup" aria-label="Veces al día">
+        <RadioGroup className="chips" aria-label="Veces al día">
           {PER_DAY.map((n) => (
             <button
               key={n}
@@ -75,7 +76,7 @@ export function HabitScheduler({ habit }: Readonly<{ habit: Habit }>) {
               {n}× al día
             </button>
           ))}
-        </div>
+        </RadioGroup>
       </div>
       {suggestion ? (
         <>

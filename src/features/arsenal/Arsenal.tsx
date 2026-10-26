@@ -54,7 +54,7 @@ function ShopCard({ item }: { item: ShopItem }) {
       </div>
       <div>
         <p className="kicker">{item.category}</p>
-        <h3 className="shopcard__title">{item.title}</h3>
+        <h2 className="shopcard__title">{item.title}</h2>
       </div>
       <div className="split shopcard__foot">
         <span className="price">
@@ -157,10 +157,10 @@ export default function Arsenal() {
                       </Button>
                     ) : (
                       <>
-                        <Button small onClick={() => bumpReward(r.id, 1)}>
+                        <Button small onClick={() => bumpReward(r.id, 1)} aria-label={`+1 avance de ${r.title}`}>
                           +1 avance
                         </Button>
-                        <Button small onClick={() => bumpReward(r.id, -1)} disabled={r.current === 0} aria-label="Restar avance">
+                        <Button small onClick={() => bumpReward(r.id, -1)} disabled={r.current === 0} aria-label={`−1 avance de ${r.title}`}>
                           −1
                         </Button>
                       </>

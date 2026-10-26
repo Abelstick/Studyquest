@@ -14,6 +14,7 @@ import { Button, Field, Modal, Segmented, TextInput, cx } from '@/ui/kit';
 import { downloadText } from '@/ui/download';
 import { Icon } from '@/ui/Icon';
 import { ScopeChoice } from './ScopeChoice';
+import { RadioGroup } from '@/ui/RadioGroup';
 
 type Kind = 'block' | 'habit' | 'task' | 'reminder';
 type RepeatKind = 'none' | 'daily' | 'weekdays' | 'weekly' | 'every' | 'habit';
@@ -523,14 +524,14 @@ export function EventModal(props: Props) {
                 )}
               </Field>
             )}
-            <div className="chips" role="radiogroup" aria-label="Color">
+            <RadioGroup className="chips" aria-label="Color">
               <button type="button" role="radio" aria-checked={!color} className={cx('chip chip--sm', !color && 'is-on')} onClick={() => setColor('')}>
                 Según categoría
               </button>
               {AGENDA_COLORS.map((c) => (
                 <button key={c} type="button" role="radio" aria-checked={color === c} className={cx('chip chip--sm swatch', `swatch--${c}`, color === c && 'is-on')} onClick={() => setColor(c)} aria-label={COLOR_LABEL[c]} title={COLOR_LABEL[c]} />
               ))}
-            </div>
+            </RadioGroup>
             <Field label="Ubicación (opcional)">{(fid) => <TextInput id={fid} className="input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Oficina, Zoom, gimnasio…" maxLength={200} />}</Field>
             <Field label="Descripción (opcional)">{(fid) => <textarea id={fid} className="input" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} />}</Field>
           </div>

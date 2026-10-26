@@ -37,7 +37,7 @@ export function PasswordInput({ id, value, onChange, autoComplete = 'current-pas
           spellCheck={false}
           autoCapitalize="none"
         />
-        <button type="button" className="pwd__toggle" aria-pressed={show} aria-label={show ? `Ocultar ${noun}` : `Mostrar ${noun}`} onClick={() => setShow((s) => !s)}>
+        <button type="button" className="pwd__toggle" aria-label={show ? `Ocultar ${noun}` : `Ver ${noun}`} onClick={() => setShow((s) => !s)}>
           {show ? 'OCULTAR' : 'VER'}
         </button>
       </div>

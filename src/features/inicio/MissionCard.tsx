@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { today } from '@/core/dates';
+import { dayLabel, today } from '@/core/dates';
 import { habitProgress, isCounter, logFor } from '@/core/game';
 import { isReadyToFinish, missionParts, type Mission } from '@/core/missions';
-import { PRIORITY_LABEL, isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
+import { PRIORITY_LABEL, dueTimeOf, isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
 import { minimumOf } from '@/core/minimum';
 import type { HabitChain, Priority } from '@/core/domain';
@@ -123,7 +123,19 @@ export function MissionCard({ m }: { m: Mission }) {
         {m.kind === 'task' && (
           <div className="mission__meta">
             {!m.done && <Tag tone={late ? 'red' : dueTone}>{timeLeftLabel(m.task) ?? 'Sin fecha'}</Tag>}
+            {/* La fecha exacta, con el día de la semana: «Vie 30 oct · 18:00». */}
+            {m.task.dueDate && (
+              <span className="mission__date">
+                {dayLabel(m.task.dueDate)}
+                {dueTimeOf(m.task) && ` · ${dueTimeOf(m.task)}`}
+              </span>
+            )}
             <PriorityMark priority={m.task.priority} />
+          </div>
+        )}
+        {m.kind === 'habit' && (
+          <div className="mission__meta">
+            <span className="mission__date">Hoy · {dayLabel(today())}</span>
           </div>
         )}
         {/* Hábitos por cantidad (agua, páginas, repeticiones…): se registra una repetición sin entrar al detalle. */}

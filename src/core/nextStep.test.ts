@@ -108,6 +108,25 @@ describe('siguiente paso', () => {
     expect(nextStep(s, NOW, NOON)?.kind).toBe('habit');
   });
 
+  it('un hábito a medias que ya llegó a su versión mínima deja paso a los que aún no se han tocado', () => {
+    const s = snap({
+      habits: [habit('estudiar', { measure: 'minutes', target: 30, minTarget: 5, reminder: '08:00' }), habit('leer', { reminder: '20:00' })],
+      habitLogs: [log('estudiar', 10)],
+    });
+    expect(nextStep(s, NOW, NOON)).toMatchObject({ kind: 'habit', habit: { id: 'leer' } });
+    // Sin otro pendiente, vuelve a ser el paso: terminarlo sigue siendo lo siguiente.
+    const solo = snap({ habits: [habit('estudiar', { measure: 'minutes', target: 30, minTarget: 5 })], habitLogs: [log('estudiar', 10)] });
+    expect(nextStep(solo, NOW, NOON)).toMatchObject({ kind: 'habit', habit: { id: 'estudiar' } });
+  });
+
+  it('un hábito con avance pero por debajo del mínimo sigue siendo el paso (se está haciendo)', () => {
+    const s = snap({
+      habits: [habit('estudiar', { measure: 'minutes', target: 30, minTarget: 10, reminder: '08:00' }), habit('leer', { reminder: '20:00' })],
+      habitLogs: [log('estudiar', 4)],
+    });
+    expect(nextStep(s, NOW, NOON)).toMatchObject({ habit: { id: 'estudiar' } });
+  });
+
   it('no propone hábitos que hoy no tocan ni hábitos de dejar', () => {
     const s = snap({
       habits: [habit('fechas', { frequency: { type: 'dates', dates: ['2026-09-20'] } }), habit('fumar', { kind: 'quit' })],

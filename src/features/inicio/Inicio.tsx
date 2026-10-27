@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { today } from '@/core/dates';
-import { computeStreak, goalLabel, isCounter, levelProgress, logFor, rankFor } from '@/core/game';
+import { dayLabel, today } from '@/core/dates';
+import { computeStreak, goalLabel, habitCreditXp, habitProgress, isCounter, levelProgress, logFor, rankFor } from '@/core/game';
 import { dailyMissions, dayProgress, deadlineText, tips } from '@/core/missions';
 import { habitWeek, taskScopes } from '@/core/overview';
 import { nextStep, type NextStep } from '@/core/nextStep';
@@ -22,6 +22,7 @@ import { MissionBoard } from './MissionBoard';
 import { FoldPanel } from '@/ui/Fold';
 import { ConflictBanner, ReviewNudge, TodayAgenda, TodayPriorities } from './TodayPlan';
 import { NowStrip } from './NowStrip';
+import { useMinuteOfDay } from './useMinuteOfDay';
 import { StartGuide } from './StartGuide';
 import { HowToButton } from '@/features/help/HowToGuide';
 import { CoursesToday } from './CoursesToday';
@@ -183,6 +184,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
   let detail: string;
   let action: ReactNode;
   let extra: ReactNode = null;
+  let progressBar: ReactNode = null;
   switch (step.kind) {
     case 'task-late':
     case 'task-today': {
@@ -205,8 +207,12 @@ function NextStepCard({ step }: { step: NextStep | null }) {
     }
     case 'habit': {
       const h = step.habit;
+      const log = logFor(logs, h.id, today());
+      const prog = habitProgress(h, log);
       title = h.title;
-      detail = `Hábito · ${goalLabel(h)} · +${h.xp} XP`;
+      // Con avance a medias el hábito sigue siendo el paso (aún no está cumplido), pero se ve lo que ya llevas y ganaste.
+      detail = prog > 0 ? `Hábito · ${goalLabel(h)} · llevas el ${Math.round(prog * 100)} % · ya ganaste +${habitCreditXp(h, log)} de ${h.xp} XP` : `Hábito · ${goalLabel(h)} · +${h.xp} XP`;
+      progressBar = prog > 0 ? <Bar className="nextstep__bar" pct={prog * 100} tone="yellow" label={`Avance de hoy de ${h.title}`} /> : null;
       action = isCounter(h) ? (
         <HabitAction habit={h} log={logFor(logs, h.id, today())} />
       ) : (
@@ -260,11 +266,17 @@ function NextStepCard({ step }: { step: NextStep | null }) {
     <section ref={ref} className={cx('nextstep', `nextstep--${step.kind}`)} aria-labelledby="nextstep-title">
       <div className="nextstep__body">
         {doneLine}
-        <p className="kicker">Siguiente paso · {STEP_KICKER[step.kind]}</p>
+        <p className="kicker">
+          Siguiente paso · {STEP_KICKER[step.kind]}
+          {step.kind === 'habit' && ` · ${dayLabel(today())}`}
+        </p>
         <h2 id="nextstep-title" className="nextstep__title">
           {title}
         </h2>
-        <p className="nextstep__detail">{detail}</p>
+        <p className="nextstep__detail" aria-live="polite">
+          {detail}
+        </p>
+        {progressBar}
         {extra}
       </div>
       <div className="nextstep__actions">
@@ -330,9 +342,13 @@ export default function Inicio() {
     () => ({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events: agenda }),
     [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, agenda],
   );
-  const missions = useMemo(() => dailyMissions(snap), [snap]);
-  const progress = useMemo(() => dayProgress(missions), [missions]);
-  const step = useMemo(() => nextStep(snap), [snap]);
+  // Lo que depende del día y de la hora (qué vence ahora, qué toca hoy) se recalcula también cuando pasa el tiempo,
+  // no solo cuando cambian los datos: con la app abierta toda la noche, «hoy» deja de ser ayer.
+  const day = today();
+  const minute = useMinuteOfDay();
+  const missions = useMemo(() => dailyMissions(snap, day), [snap, day]);
+  const progress = useMemo(() => dayProgress(missions, day), [missions, day]);
+  const step = useMemo(() => nextStep(snap, day, minute), [snap, day, minute]);
   const events = useMemo(() => activeEvents(habits, habitLogs, profile), [habits, habitLogs, profile]);
   const advice = useMemo(() => tips(snap), [snap]);
   const streak = useMemo(() => computeStreak(xpEvents, profile.frozenDates), [xpEvents, profile.frozenDates]);

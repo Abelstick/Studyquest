@@ -81,7 +81,11 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
 }
-.nextstep--clear > .nextstep__actions {
+.nextstep--clear > .nextstep__bar {
+  max-width: 420px;
+  margin-top: var(--sp-2);
+}
+.nextstep__actions {
   grid-column: 1 / -1;
 }
 .nextstep__body {
@@ -638,6 +642,13 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+}
+.mission__date {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
 }
 .mission__xp {
   margin-top: 2px;

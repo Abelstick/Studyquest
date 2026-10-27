@@ -79,6 +79,8 @@ export const daysLeftLabel = (due: ISODate | null, now: ISODate = today()): stri
   if (n > 1) return `Faltan ${n} días`;
   return n === -1 ? 'Venció ayer' : `Venció hace ${-n} días`;
 };
+/** «Lun 26 oct»: el día de la semana junto a la fecha, para ver de un vistazo qué día es. */
+export const dayLabel = (s: ISODate): string => `${WEEKDAYS_ABBR[weekdayIndex(s)]} ${shortDate(s)}`;
 export const shortDate = (s: ISODate): string => {
   const d = fromISODate(s);
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;

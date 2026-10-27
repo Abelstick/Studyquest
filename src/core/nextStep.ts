@@ -2,6 +2,7 @@ import type { Course, Habit, ID, ISODate, Snapshot, Task, Topic } from './domain
 import { clockToMinutes, isClockTime, minutesOfDay, today } from './dates';
 import { isDueOn, isHabitDone, logFor } from './game';
 import { isQuit } from './quit';
+import { isMinimumMet } from './minimum';
 import { dueReviews, type DueReview } from './review';
 import { dueTimeOf, isOverdue } from './tasks';
 
@@ -45,9 +46,11 @@ export function nextStep(s: NextStepInput, now: ISODate = today(), nowMin: numbe
   if (dueToday[0]) return { kind: 'task-today', task: dueToday[0], courseId: dueToday[0].courseId };
 
   // 3. Hábitos que tocan hoy y no están cumplidos. Los de «dejar» se marcan al final del día, no son una acción.
+  // Uno que ya quedó en su versión mínima (racha a salvo, algo de XP ganado) deja paso a los que aún no se han tocado.
+  const atMinimum = (h: Habit) => (isMinimumMet(h, logFor(s.habitLogs, h.id, now)) ? 1 : 0);
   const habit = s.habits
     .filter((h) => !isQuit(h) && isDueOn(h, now, s.habitLogs) && !isHabitDone(h, logFor(s.habitLogs, h.id, now)))
-    .sort((a, b) => reminderMinute(a) - reminderMinute(b))[0];
+    .sort((a, b) => atMinimum(a) - atMinimum(b) || reminderMinute(a) - reminderMinute(b))[0];
   if (habit) return { kind: 'habit', habit, courseId: null };
 
   // 4. Repasos que tocan hoy o están atrasados (ya vienen ordenados por antigüedad).

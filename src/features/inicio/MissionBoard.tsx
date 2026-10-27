@@ -2,6 +2,7 @@ import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
+import { longDate, today } from '@/core/dates';
 import { dayProgress, missionUrgency, taskBucket, type Mission, type TaskBucket } from '@/core/missions';
 import { Bar, Button, Empty, cx } from '@/ui/kit';
 import { FoldToggle, useFold } from '@/ui/Fold';
@@ -179,7 +180,7 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
     <section className="today-board" aria-label="Misiones de hoy">
       <div className="today-board__bar">
         <div>
-          <p className="kicker">Quest diaria</p>
+          <p className="kicker">Quest diaria · {longDate(today())}</p>
           <h2 className="today-board__title">Tu misión de hoy</h2>
         </div>
         <div className="today-board__ctl">

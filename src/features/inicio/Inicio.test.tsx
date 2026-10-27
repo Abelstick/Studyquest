@@ -48,6 +48,22 @@ describe('tablero de Hoy', () => {
     expect(within(habitos).queryByRole('button', { name: /Ver \d+ más/ })).toBeNull();
   });
 
+  it('cada tarea enseña su fecha exacta con el día de la semana, y la hora si la tiene', () => {
+    board([], [task('t9', 'Entregar', { dueDate: '2026-10-30', dueTime: '18:00' }), task('t8', 'Sin plazo')]);
+    expect(screen.getByText('Vie 30 oct · 18:00')).toBeTruthy();
+    // La que no tiene fecha no inventa una.
+    const sinPlazo = screen.getByText('Sin plazo').closest('.mission') as HTMLElement;
+    expect(within(sinPlazo).queryByText(/oct/)).toBeNull();
+  });
+
+  it('cada hábito de hoy dice qué día es hoy, y la cabecera del tablero también', () => {
+    board();
+    const hoy = today();
+    const habitos = screen.getByRole('region', { name: /^Hábitos/ });
+    expect(within(habitos).getByText(/^Hoy · /)).toBeTruthy();
+    expect(screen.getByText(new RegExp(`Quest diaria · .*${Number(hoy.slice(8))}`))).toBeTruthy();
+  });
+
   it('separa hábitos y tareas y pone las vencidas en su propio grupo', () => {
     board();
     const tareas = screen.getByRole('region', { name: /^Tareas/ });

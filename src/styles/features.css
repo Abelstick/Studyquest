@@ -2217,6 +2217,9 @@ select.input {
   color: var(--text);
 }
 /* El eslabón que toca ahora se distingue por su placa, no solo por el color. */
+.chlink.is-next .muted {
+  color: var(--text);
+}
 .chlink.is-next {
   background: color-mix(in srgb, var(--yellow) 18%, transparent);
   box-shadow: inset 3px 0 0 var(--yellow);

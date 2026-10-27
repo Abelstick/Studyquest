@@ -108,23 +108,16 @@ describe('siguiente paso', () => {
     expect(nextStep(s, NOW, NOON)?.kind).toBe('habit');
   });
 
-  it('un hábito a medias que ya llegó a su versión mínima deja paso a los que aún no se han tocado', () => {
+  it('un hábito a medias sigue siendo el paso hasta cumplirlo por completo, aunque ya haya hecho algo o llegado al mínimo', () => {
     const s = snap({
-      habits: [habit('estudiar', { measure: 'minutes', target: 30, minTarget: 5, reminder: '08:00' }), habit('leer', { reminder: '20:00' })],
-      habitLogs: [log('estudiar', 10)],
+      habits: [habit('agua', { measure: 'times', target: 8, minTarget: 3, reminder: '08:00' }), habit('leer', { reminder: '20:00' })],
+      habitLogs: [log('agua', 3)],
     });
-    expect(nextStep(s, NOW, NOON)).toMatchObject({ kind: 'habit', habit: { id: 'leer' } });
-    // Sin otro pendiente, vuelve a ser el paso: terminarlo sigue siendo lo siguiente.
-    const solo = snap({ habits: [habit('estudiar', { measure: 'minutes', target: 30, minTarget: 5 })], habitLogs: [log('estudiar', 10)] });
-    expect(nextStep(solo, NOW, NOON)).toMatchObject({ kind: 'habit', habit: { id: 'estudiar' } });
-  });
-
-  it('un hábito con avance pero por debajo del mínimo sigue siendo el paso (se está haciendo)', () => {
-    const s = snap({
-      habits: [habit('estudiar', { measure: 'minutes', target: 30, minTarget: 10, reminder: '08:00' }), habit('leer', { reminder: '20:00' })],
-      habitLogs: [log('estudiar', 4)],
-    });
-    expect(nextStep(s, NOW, NOON)).toMatchObject({ habit: { id: 'estudiar' } });
+    expect(nextStep(s, NOW, NOON)).toMatchObject({ kind: 'habit', habit: { id: 'agua' } });
+    // Con una sola repetición hecha, igual.
+    expect(nextStep({ ...s, habitLogs: [log('agua', 1)] }, NOW, NOON)).toMatchObject({ habit: { id: 'agua' } });
+    // Solo al completarlo (8 de 8) pasa al siguiente.
+    expect(nextStep({ ...s, habitLogs: [log('agua', 8)] }, NOW, NOON)).toMatchObject({ habit: { id: 'leer' } });
   });
 
   it('no propone hábitos que hoy no tocan ni hábitos de dejar', () => {

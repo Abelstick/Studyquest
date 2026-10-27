@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { dayLabel, today } from '@/core/dates';
-import { habitProgress, isCounter, logFor } from '@/core/game';
+import { habitProgress, isCounter, logFor, stepForCounter } from '@/core/game';
 import { isReadyToFinish, missionParts, type Mission } from '@/core/missions';
 import { PRIORITY_LABEL, dueTimeOf, isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
@@ -77,8 +77,12 @@ export function MissionCard({ m }: { m: Mission }) {
   const openModal = useUi((s) => s.openModal);
   const fx = useJustDone(m.done);
 
+  // Un hábito de varias veces (8 vasos, 20 páginas) suma una cada vez que se pulsa la casilla y solo queda hecho al
+  // llegar al total; ya hecho, la casilla lo deshace. El resto (una vez, minutos) se cumple de golpe.
+  const counts = m.kind === 'habit' && isCounter(m.habit);
   const toggle = () => {
     if (m.kind === 'task') setTaskStatus(m.task.id, m.done ? 'todo' : 'done');
+    else if (counts && !m.done) setHabitValue(m.habit.id, Math.min(m.habit.target, (logFor(logs, m.habit.id, today())?.value ?? 0) + stepForCounter(m.habit)));
     else setHabitValue(m.habit.id, m.done ? 0 : m.habit.target);
   };
   const openDetail = () => openModal(m.kind === 'task' ? { type: 'task-detail', id: m.task.id } : { type: 'habit-detail', id: m.habit.id });
@@ -95,6 +99,10 @@ export function MissionCard({ m }: { m: Mission }) {
   const ready = isReadyToFinish(m, parts);
   const late = m.kind === 'task' && !m.done && isOverdue(m.task);
   const habitLog = m.kind === 'habit' ? logFor(logs, m.habit.id, today()) : undefined;
+  const checkLabel =
+    m.kind === 'habit' && counts && !m.done
+      ? `Sumar uno a: ${m.title} (${habitLog?.value ?? 0} de ${m.habit.target})`
+      : `${m.done ? 'Deshacer' : 'Completar'}: ${m.title}${ready ? ' (ya tienes todo el desglose hecho)' : ''}`;
   // Avance a medias: de las subtareas/pasos o, en un hábito por cantidad, del contador.
   const progress = parts.length > 0 ? doneParts / parts.length : m.kind === 'habit' ? habitProgress(m.habit, habitLog) : 0;
   // Vencida en rojo, para hoy en oscuro (destaca sin competir con el amarillo del XP), el resto discreto.
@@ -106,12 +114,12 @@ export function MissionCard({ m }: { m: Mission }) {
         type="button"
         className="mission__check"
         role="checkbox"
-        aria-checked={m.done}
-        aria-label={`${m.done ? 'Deshacer' : 'Completar'}: ${m.title}${ready ? ' (ya tienes todo el desglose hecho)' : ''}`}
+        aria-checked={m.done ? true : counts && (habitLog?.value ?? 0) > 0 ? 'mixed' : false}
+        aria-label={checkLabel}
         title={ready ? '¡Todo listo! Pulsa para darla por terminada' : undefined}
         onClick={toggle}
       >
-        {m.done ? <Icon name="check" size={16} /> : null}
+        {m.done ? <Icon name="check" size={16} /> : counts ? <Icon name="plus" size={14} /> : null}
       </button>
       <div className="mission__body">
         <button type="button" className="mission__open" onClick={openDetail} aria-haspopup="dialog" aria-label={`Ver detalle: ${m.title}`}>

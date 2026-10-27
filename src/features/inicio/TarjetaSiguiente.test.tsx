@@ -79,10 +79,28 @@ describe('tarjeta grande de «Siguiente paso»', () => {
     expect(within(card()).getByText(/Hábito de hoy · Mié 16 sep/)).toBeTruthy();
   });
 
-  it('un hábito que quedó en su versión mínima deja paso al siguiente sin tocar', () => {
+  it('un hábito de varias veces no se quita tras la primera: sigue siendo el paso hasta completarlo', () => {
+    useData.setState({
+      habits: [habit('Agua', { measure: 'times', target: 3, reminder: '07:00' }), habit('Correr', { reminder: '19:00' })],
+    });
+    home();
+    expect(title()).toBe('Agua');
+    // Primera repetición con la casilla del tablero: suma una, no completa las tres.
+    fireEvent.click(screen.getByRole('checkbox', { name: /Sumar uno a: Agua \(0 de 3\)/ }));
+    expect(useData.getState().habitLogs.find((l) => l.habitId === 'Agua')?.value).toBe(1);
+    expect(title()).toBe('Agua');
+    fireEvent.click(screen.getByRole('checkbox', { name: /Sumar uno a: Agua \(1 de 3\)/ }));
+    expect(title()).toBe('Agua');
+    // La tercera lo completa y recién entonces pasa al siguiente.
+    fireEvent.click(screen.getByRole('checkbox', { name: /Sumar uno a: Agua \(2 de 3\)/ }));
+    expect(useData.getState().habitLogs.find((l) => l.habitId === 'Agua')?.value).toBe(3);
+    expect(title()).toBe('Correr');
+  });
+
+  it('un hábito que llegó a su versión mínima sigue siendo el paso hasta cumplirlo del todo', () => {
     useData.setState({ habits: [habit('Estudiar', { measure: 'minutes', target: 30, minTarget: 5, reminder: '08:00' }), habit('Leer', { reminder: '20:00' })], habitLogs: [log('Estudiar', 10)] });
     home();
-    expect(title()).toBe('Leer');
+    expect(title()).toBe('Estudiar');
   });
 
   it('con la app abierta toda la noche, al pasar la medianoche «hoy» se pone al día solo', () => {

@@ -211,3 +211,34 @@ describe('ficha de tarea', () => {
     expect((screen.getByRole('checkbox', { name: 'Uno' }) as HTMLInputElement).disabled).toBe(true);
   });
 });
+
+describe('hora de los hábitos en la misión de hoy', () => {
+  it('cada hábito enseña su hora, y varios horarios del calendario salen todos', () => {
+    const conHora: Habit = { ...habit, id: 'h2', title: 'Correr', reminder: '07:30' };
+    const dosVeces: Habit = { ...habit, id: 'h3', title: 'Agua' };
+    const bloque = (start: string) => ({ id: `e${start}`, title: '', category: 'personal' as const, date: '2026-01-01', start, minutes: 15, repeat: { type: 'daily' as const, every: 1 }, habitId: 'h3', taskId: null, rev: 0, createdAt: '', updatedAt: '' });
+    useData.setState({ events: [bloque('10:00'), bloque('16:00')] });
+    board([conHora, dosVeces, { ...habit, title: 'Leer' }], []);
+    const correr = screen.getByText('Correr').closest('.mission') as HTMLElement;
+    expect(within(correr).getByText(/07:30/)).toBeTruthy();
+    const agua = screen.getByText('Agua').closest('.mission') as HTMLElement;
+    expect(within(agua).getByText(/10:00 · 16:00/)).toBeTruthy();
+    // Un hábito sin hora no la inventa.
+    const leer = screen.getByText('Leer').closest('.mission') as HTMLElement;
+    expect(within(leer).queryByText(/\d\d:\d\d/)).toBeNull();
+  });
+
+  it('ordenado por hora, el de las 7:00 va antes que el de las 20:00 y el que no tiene hora, al final', () => {
+    const tarde: Habit = { ...habit, id: 'a', title: 'Tarde', reminder: '20:00' };
+    const sin: Habit = { ...habit, id: 'b', title: 'SinHora' };
+    const temprano: Habit = { ...habit, id: 'c', title: 'Temprano', reminder: '07:00' };
+    useData.setState({ events: [] });
+    board([tarde, sin, temprano], []);
+    const orden = () => Array.from(document.querySelectorAll('.mission__check')).map((c) => c.getAttribute('aria-label'));
+    // Por urgencia (la de fábrica), a igual urgencia los hábitos van por hora.
+    expect(orden().map((l) => l?.replace('Completar: ', ''))).toEqual(['Temprano', 'Tarde', 'SinHora']);
+    fireEvent.click(screen.getByRole('button', { name: /Ordenar y filtrar/ }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Ordenar misiones' }), { target: { value: 'time' } });
+    expect(orden().map((l) => l?.replace('Completar: ', ''))).toEqual(['Temprano', 'Tarde', 'SinHora']);
+  });
+});

@@ -24,6 +24,8 @@ import { isQuit } from '@/core/quit';
 import { difficultyInfo, difficultyOf } from '@/core/difficulty';
 import { HabitPeriod } from './HabitPeriod';
 import { ListSearch } from '@/ui/ListSearch';
+import { HabitTimeField } from './HabitTimeField';
+import { useHabitCalendarTimes } from './useHabitTimes';
 import { ResultCount } from '@/ui/ResultCount';
 import { matchesQuery } from '@/core/search';
 import { ListTools } from '@/ui/ListTools';
@@ -37,6 +39,7 @@ export default function Habitos() {
   const now = today();
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
   const [query, setQuery] = useState('');
+  const calendarTimes = useHabitCalendarTimes();
   const [sort, setSort] = useState<HabitSort>('today');
   const usedAreas = useMemo(() => new Set<AreaId>(habits.flatMap((h) => (h.area ? [h.area] : []))), [habits]);
 
@@ -146,6 +149,7 @@ export default function Habitos() {
                 <Tag tone={done ? 'green' : 'xp'}>{!done && credit > 0 ? `+${credit} / ${h.xp} XP` : `+${h.xp} XP`}</Tag>
               </div>
               {/* Los días pasados se abren para registrar cuánto se hizo, aunque no se llegara a la meta. */}
+              {!isQuit(h) && <HabitTimeField habit={h} calendarTimes={calendarTimes.get(h.id) ?? []} />}
               <HabitPeriod habit={h} logs={logs} now={now} />
               {isQuit(h) && <QuitStatus habit={h} />}
               <HabitWeek habit={h} logs={logs} now={now} />
@@ -163,8 +167,8 @@ export default function Habitos() {
               <Bar pct={pct} tone={pct >= 75 ? 'green' : pct >= 40 ? 'yellow' : 'red'} label={`Cumplimiento mensual de ${h.title}`} />
               <HabitRecovery habit={h} logs={logs} />
               {!isQuit(h) && habitBlocks(events, h.id).length === 0 && (
-                <Button small variant="ghost" onClick={() => openModal({ type: 'habit-detail', id: h.id })}>
-                  Ponle hora
+                <Button small variant="ghost" onClick={() => openModal({ type: 'habit-detail', id: h.id })} title="Reserva ratos para este hábito en tu calendario">
+                  Reservar en el calendario
                 </Button>
               )}
               <div className="habit__actions">

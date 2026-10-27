@@ -23,6 +23,8 @@ import { FoldPanel } from '@/ui/Fold';
 import { ConflictBanner, ReviewNudge, TodayAgenda, TodayPriorities } from './TodayPlan';
 import { NowStrip } from './NowStrip';
 import { useMinuteOfDay } from './useMinuteOfDay';
+import { useHabitTimes } from '@/features/habitos/useHabitTimes';
+import { timesText } from '@/core/habitTime';
 import { StartGuide } from './StartGuide';
 import { HowToButton } from '@/features/help/HowToGuide';
 import { CoursesToday } from './CoursesToday';
@@ -115,6 +117,7 @@ const focusHref = (courseId: string | null) => (courseId ? `/pomodoro?curso=${en
 
 /** Bloque principal de Hoy: una sola cosa que hacer ahora, con su acción a un toque. */
 function NextStepCard({ step }: { step: NextStep | null }) {
+  const habitTimes = useHabitTimes();
   const courses = useData((s) => s.courses);
   const logs = useData((s) => s.habitLogs);
   const setTaskStatus = useData((s) => s.setTaskStatus);
@@ -269,6 +272,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
         <p className="kicker">
           Siguiente paso · {STEP_KICKER[step.kind]}
           {step.kind === 'habit' && ` · ${dayLabel(today())}`}
+          {step.kind === 'habit' && habitTimes.get(step.habit.id) && ` · ${timesText(habitTimes.get(step.habit.id) as string[])}`}
         </p>
         <h2 id="nextstep-title" className="nextstep__title">
           {title}

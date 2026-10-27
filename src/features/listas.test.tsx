@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { useData } from '@/state';
@@ -53,6 +53,47 @@ describe('Hábitos', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ocultar buscador de hábitos' }));
     expect(screen.getByText('Leer')).toBeTruthy();
     expect(screen.getByText('Correr')).toBeTruthy();
+  });
+});
+
+describe('hora del hábito en su pantalla', () => {
+  it('cada hábito tiene su campo de hora y se guarda al salir del campo, no en cada dígito', () => {
+    const updateHabit = vi.fn();
+    useData.setState({ habits: [habit('Leer', { reminder: '07:30' }), habit('Correr')], updateHabit });
+    wrap(<Habitos />);
+    const leer = screen.getByLabelText('Hora a la que harás Leer') as HTMLInputElement;
+    expect(leer.value).toBe('07:30');
+    expect((screen.getByLabelText('Hora a la que harás Correr') as HTMLInputElement).value).toBe('');
+    expect(screen.getByText('Sin hora fija')).toBeTruthy();
+    fireEvent.change(leer, { target: { value: '08:15' } });
+    expect(updateHabit).not.toHaveBeenCalled();
+    fireEvent.blur(leer);
+    expect(updateHabit).toHaveBeenCalledWith('Leer', { reminder: '08:15' });
+  });
+
+  it('dejar el campo vacío quita la hora, y no guarda si no cambió nada', () => {
+    const updateHabit = vi.fn();
+    useData.setState({ habits: [habit('Leer', { reminder: '07:30' })], updateHabit });
+    wrap(<Habitos />);
+    const leer = screen.getByLabelText('Hora a la que harás Leer');
+    fireEvent.blur(leer);
+    expect(updateHabit).not.toHaveBeenCalled();
+    fireEvent.change(leer, { target: { value: '' } });
+    fireEvent.blur(leer);
+    expect(updateHabit).toHaveBeenCalledWith('Leer', { reminder: null });
+  });
+
+  it('un mal hábito a dejar no lleva hora', () => {
+    useData.setState({ habits: [habit('Fumar', { kind: 'quit' })] });
+    wrap(<Habitos />);
+    expect(screen.queryByLabelText('Hora a la que harás Fumar')).toBeNull();
+  });
+
+  it('si reservaste bloques en el calendario, se enseñan aparte', () => {
+    const bloque = { id: 'e1', title: '', category: 'personal' as const, date: '2026-01-01', start: '18:00', minutes: 30, repeat: { type: 'daily' as const, every: 1 }, habitId: 'Leer', taskId: null, rev: 0, createdAt: '', updatedAt: '' };
+    useData.setState({ habits: [habit('Leer', { reminder: '07:30' })], events: [bloque] });
+    wrap(<Habitos />);
+    expect(screen.getByText('En el calendario: 18:00')).toBeTruthy();
   });
 });
 

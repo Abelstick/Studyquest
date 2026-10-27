@@ -6,6 +6,7 @@ import { habitProgress, isCounter, logFor, stepForCounter } from '@/core/game';
 import { isReadyToFinish, missionParts, type Mission } from '@/core/missions';
 import { PRIORITY_LABEL, dueTimeOf, isBoss, isOverdue, timeLeftLabel } from '@/core/tasks';
 import { chainOf, chainState } from '@/core/chains';
+import { timesText } from '@/core/habitTime';
 import { minimumOf } from '@/core/minimum';
 import type { HabitChain, Priority } from '@/core/domain';
 import { HabitAction, HabitMinimumButton, HabitRecovery } from '@/features/habitos/HabitAction';
@@ -68,7 +69,7 @@ function useJustDone(done: boolean): boolean {
  * Una misión de Hoy (hábito o tarea). El título abre su ficha y, con un botón «estirado», toda la tarjeta
  * es clicable; los controles de dentro (casilla, contador, desglose) quedan por encima y no la activan.
  */
-export function MissionCard({ m }: { m: Mission }) {
+export function MissionCard({ m, times }: { m: Mission; times?: string[] }) {
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const setHabitValue = useData((s) => s.setHabitValue);
   const toggleSubtask = useData((s) => s.toggleSubtask);
@@ -143,7 +144,16 @@ export function MissionCard({ m }: { m: Mission }) {
         )}
         {m.kind === 'habit' && (
           <div className="mission__meta">
-            <span className="mission__date">Hoy · {dayLabel(today())}</span>
+            <span className="mission__date">
+              Hoy · {dayLabel(today())}
+              {times && times.length > 0 && (
+                <>
+                  {' · '}
+                  <Icon name="bell" size={10} /> <span className="sr-only">a las </span>
+                  {timesText(times)}
+                </>
+              )}
+            </span>
           </div>
         )}
         {/* Hábitos por cantidad (agua, páginas, repeticiones…): se registra una repetición sin entrar al detalle. */}

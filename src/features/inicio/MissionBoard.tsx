@@ -12,12 +12,15 @@ import { useFlipReorder } from '@/ui/motion';
 import { MissionCard } from './MissionCard';
 import { ListSearch } from '@/ui/ListSearch';
 import { matchesQuery } from '@/core/search';
+import { firstMinute } from '@/core/habitTime';
+import { useHabitTimes } from '@/features/habitos/useHabitTimes';
 
-type MissionSort = 'urgency' | 'xp' | 'name';
+type MissionSort = 'urgency' | 'time' | 'xp' | 'name';
 type Lane = 'habit' | 'task';
 
 const SORTS: { value: MissionSort; label: string }[] = [
   { value: 'urgency', label: 'Más urgente' },
+  { value: 'time', label: 'Por hora' },
   { value: 'xp', label: 'Más XP' },
   { value: 'name', label: 'A–Z' },
 ];
@@ -37,11 +40,16 @@ const BUCKETS: { id: TaskBucket; label: string }[] = [
 ];
 
 /** Ordena sin mover lo hecho de sitio: lo pendiente va primero y, dentro, el criterio elegido. */
-function sortMissions(items: Mission[], sort: MissionSort): Mission[] {
+function sortMissions(items: Mission[], sort: MissionSort, times: Map<string, string[]>): Mission[] {
+  // Hora del hábito en minutos; sin hora, al final. Las tareas no tienen hora de hacer: empatan.
+  const at = (m: Mission) => (m.kind === 'habit' ? (firstMinute(times.get(m.habit.id)) ?? Infinity) : Infinity);
+  const byTime = (a: Mission, b: Mission) => (at(a) === at(b) ? 0 : at(a) < at(b) ? -1 : 1);
   const by = (a: Mission, b: Mission) => {
     if (sort === 'xp') return b.xp - a.xp;
     if (sort === 'name') return a.title.localeCompare(b.title, 'es');
-    return missionUrgency(a) - missionUrgency(b) || b.xp - a.xp;
+    if (sort === 'time') return byTime(a, b) || missionUrgency(a) - missionUrgency(b) || b.xp - a.xp;
+    // Por urgencia, a igual urgencia los hábitos van por hora (el de las 7:00 antes que el de las 20:00).
+    return missionUrgency(a) - missionUrgency(b) || byTime(a, b) || b.xp - a.xp;
   };
   return [...items].sort((a, b) => Number(a.done) - Number(b.done) || by(a, b));
 }
@@ -51,7 +59,7 @@ function sortMissions(items: Mission[], sort: MissionSort): Mission[] {
  * Al completar una misión, baja al final de la lista: Flip la lleva cuadro a cuadro desde su sitio viejo,
  * así se ve adónde fue en vez de desaparecer de golpe.
  */
-function MissionList({ items, limit }: { items: Mission[]; limit: number }) {
+function MissionList({ items, limit, times }: { items: Mission[]; limit: number; times: Map<string, string[]> }) {
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? items : items.slice(0, limit);
   const listRef = useRef<HTMLUListElement>(null);
@@ -61,7 +69,7 @@ function MissionList({ items, limit }: { items: Mission[]; limit: number }) {
     <>
       <ul className="missions" ref={listRef} onClickCapture={capture}>
         {shown.map((m) => (
-          <MissionCard key={m.id} m={m} />
+          <MissionCard key={m.id} m={m} times={m.kind === 'habit' ? times.get(m.habit.id) : undefined} />
         ))}
       </ul>
       {items.length > limit && (
@@ -116,7 +124,7 @@ function LaneSection({ kind, title, done, total, addLabel, onAdd, shown, childre
 }
 
 /** Un grupo de tareas por plazo. Lo vencido y lo de hoy empiezan abiertos; lo que puede esperar, plegado. */
-function TaskGroup({ id, label, items, first, listKey }: Readonly<{ id: TaskBucket; label: string; items: Mission[]; first: boolean; listKey: string }>) {
+function TaskGroup({ id, label, items, first, listKey, times }: Readonly<{ id: TaskBucket; label: string; items: Mission[]; first: boolean; listKey: string; times: Map<string, string[]> }>) {
   const urgent = id === 'late' || id === 'today';
   const [open, toggle] = useFold(`home-tasks-${id}`, urgent || first);
   const bodyId = useId();
@@ -128,7 +136,7 @@ function TaskGroup({ id, label, items, first, listKey }: Readonly<{ id: TaskBuck
         </FoldToggle>
       </h4>
       <div id={bodyId} hidden={!open}>
-        <MissionList key={listKey} items={items} limit={urgent ? SHOW_URGENT : SHOW_OTHER} />
+        <MissionList key={listKey} items={items} limit={urgent ? SHOW_URGENT : SHOW_OTHER} times={times} />
       </div>
     </div>
   );
@@ -148,6 +156,7 @@ interface MissionBoardProps {
 export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<MissionBoardProps>) {
   const openModal = useUi((s) => s.openModal);
   const habitsTotal = useData((s) => s.habits.length);
+  const times = useHabitTimes();
   const progress = useMemo(() => dayProgress(missions), [missions]);
   // En móvil, si hay tareas vencidas se abre directamente en Tareas: es lo que más apremia.
   const [lane, setLane] = useState<Lane>(() => (progress.late > 0 ? 'task' : 'habit'));
@@ -157,7 +166,7 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
   // En móvil, ordenar y filtrar quedan plegados: casi nunca se tocan y empujan la lista hacia abajo.
   const [toolsOpen, setToolsOpen] = useState(false);
 
-  const pick = (kind: Mission['kind']) => sortMissions(missions.filter((m) => m.kind === kind && (!onlyPending || !m.done) && matchesQuery([m.title, m.subtitle], query)), sort);
+  const pick = (kind: Mission['kind']) => sortMissions(missions.filter((m) => m.kind === kind && (!onlyPending || !m.done) && matchesQuery([m.title, m.subtitle], query)), sort, times);
   const habits = pick('habit');
   const tasks = pick('task');
   // Las tareas se agrupan por cuándo tocan, para ver de un vistazo qué es de hoy y qué puede esperar.
@@ -226,7 +235,7 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
       <div className="lanes">
         <LaneSection kind="habit" title="Hábitos" done={progress.habitsDone} total={progress.habitsTotal} addLabel="Nuevo hábito" onAdd={() => openModal({ type: 'habit' })} shown={lane === 'habit'}>
           {habits.length > 0 ? (
-            <MissionList key={`habit-${sort}-${onlyPending}-${query}`} items={habits} limit={habits.length} />
+            <MissionList key={`habit-${sort}-${onlyPending}-${query}`} items={habits} limit={habits.length} times={times} />
           ) : (
             <LaneEmpty kind="habit" state={habitEmpty} query={searching ? query.trim() : ''} onCreate={() => openModal({ type: 'habit' })} />
           )}
@@ -239,7 +248,7 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
 
         <LaneSection kind="task" title="Tareas" done={progress.tasksDone} total={progress.tasksTotal} addLabel="Nueva tarea" onAdd={() => openModal({ type: 'task' })} shown={lane === 'task'}>
           {taskGroups.length > 0 ? (
-            taskGroups.map((g, i) => <TaskGroup key={g.id} id={g.id} label={g.label} items={g.items} first={i === 0} listKey={`${g.id}-${sort}-${onlyPending}-${query}`} />)
+            taskGroups.map((g, i) => <TaskGroup key={g.id} id={g.id} label={g.label} items={g.items} first={i === 0} listKey={`${g.id}-${sort}-${onlyPending}-${query}`} times={times} />)
           ) : (
             <LaneEmpty kind="task" state={taskEmpty} query={searching ? query.trim() : ''} onCreate={() => openModal({ type: 'task' })} />
           )}

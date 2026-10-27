@@ -72,6 +72,12 @@ describe('tarjeta grande de «Siguiente paso»', () => {
     expect(within(card()).getByRole('progressbar', { name: 'Avance de hoy de Leer' })).toBeTruthy();
   });
 
+  it('el hábito del paso enseña su hora junto a la fecha', () => {
+    useData.setState({ habits: [habit('Leer', { reminder: '07:30' })] });
+    home();
+    expect(within(card()).getByText(/Hábito de hoy · Mié 16 sep · 07:30/)).toBeTruthy();
+  });
+
   it('sin avance no enseña barra, y el hábito lleva la fecha de hoy', () => {
     useData.setState({ habits: [habit('Leer')] });
     home();

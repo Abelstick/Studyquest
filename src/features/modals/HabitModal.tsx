@@ -229,7 +229,7 @@ export function HabitModal({ id, goalId: presetGoal, courseId: presetCourse }: {
         <div className="form__row">
           {!quit && measure !== 'boolean' && <Field label="Objetivo">{(fid) => <NumberInput id={fid} className="input" min={1} value={target} onValue={(n) => setTarget(n)}/>}</Field>}
           <Field label="Recompensa (XP)">{(fid) => <NumberInput id={fid} className="input input--xp" min={0} step={5} value={xp} onValue={(n) => { setXp(n); setXpTouched(true); }}/>}</Field>
-          <Field label="Recordatorio" hint="Avisa dentro de la app (con sonido) y, si activas los push en Perfil, también con la app cerrada.">
+          <Field label="Hora a la que lo harás" hint="Se ve en Hoy y ordena tu día. También te avisa a esa hora, dentro de la app (con sonido) y, si activas los push en Perfil, con la app cerrada.">
             {(fid) => <input id={fid} className="input" type="time" value={reminder} onChange={(e) => setReminder(e.target.value)} />}
           </Field>
         </div>

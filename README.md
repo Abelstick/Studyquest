@@ -37,6 +37,7 @@ Todo da XP y monedas para subir de nivel: *Goomba despistado → Koopa → Toad 
 - [Planificador inteligente](#planificador-inteligente)
 - [Tu ciudad](#tu-ciudad)
 - [Tu héroe 3D](#tu-héroe-3d)
+- [Mundos visuales](#mundos-visuales)
 - [Repaso espaciado, calendario, jefes y Pomodoro](#repaso-espaciado-calendario-jefes-y-pomodoro)
 - [Reglas del juego](#reglas-del-juego)
 - [Arquitectura](#arquitectura)
@@ -119,9 +120,9 @@ El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañ
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
 | **Progreso** | Informe de la semana con su **revisión semanal** (ver abajo) y resumen de tu ciudad, horas por semana, distribución del tiempo por curso y mapa de actividad del último año. Filtro 30 / 90 días, 6 meses o todo. |
 | **Héroe 3D** | Tu personaje en **3D con bloques**: eliges raza (**Saiyajin, Mario, Koopa, Protoss, Terran o Zerg**), **evoluciona** en 4 etapas a medida que subes de nivel estudiando y le compras **armas, poderes y skins** con tus monedas (puedes **probarlos antes de comprar**). Arrástralo para girarlo. |
-| **Arsenal** | Tienda de Toad (11 avatares, marcos, **6 mundos visuales**, insignias, poderes), **51 logros** y recompensas personales de la vida real. |
+| **Arsenal** | Tienda de Toad (21 avatares, marcos, **6 mundos visuales** que se pueden **probar gratis** antes de canjearlos, insignias, poderes), **51 logros** y recompensas personales de la vida real. |
 | **Personajes** | **21 avatares** con arte pixel propio (búho, mago, ninja, astronauta, zorro, pingüino, rana, murciélago, ajolote, dragón…) y **cada uno con su gesto de reposo**: el fantasma flota, el slime se aplasta, el ninja parpadea de sitio, el dragón respira. Se ven moviéndose ya en la tienda, antes de comprarlos. |
-| **Perfil** | Camino de aprendizaje, insignias, ajustes, instalar la app, **recordatorios**, **exportar/importar tu partida**, cerrar sesión y reiniciar partida. |
+| **Perfil** | Camino de aprendizaje, insignias, ajustes, **experiencia** (mundo, día/noche, sonido con volumen y animaciones reducidas), instalar la app, **recordatorios**, **exportar/importar tu partida**, cerrar sesión y reiniciar partida. |
 
 Además: sesiones de estudio con temporizador, búsqueda global con enlaces directos, atajos de teclado, notificaciones, modo día/noche, efectos de sonido 8-bit (sintetizados, sin archivos), pantalla de *level up* con lluvia de monedas, y diseño responsive: en el móvil, barra inferior con las cinco secciones y el botón **＋** de arriba para buscar o crear.
 
@@ -443,6 +444,26 @@ Son **fan art en bloques** hecho para este proyecto personal: los personajes per
 - **4 logros nuevos**: Nace un héroe, Primera evolución, Leyenda viviente y Armería completa.
 - **Cómo está hecho**: el modelo lo calcula `core/hero.ts` (código puro, probado sin navegador) y el visor lo pinta con [three.js](https://threejs.org) a baja resolución. three.js va en su propio archivo y solo se descarga al abrir la pantalla. Sin WebGL, la pantalla lo explica en vez de romperse.
 - El héroe se guarda **dentro del perfil** (no hace falta migración en Supabase) y viaja en las copias de seguridad; al importar, un héroe solo puede llevar objetos que están en el inventario.
+
+## Mundos visuales
+
+Cada mundo de la tienda cambia **toda** la interfaz, no solo el fondo: barra lateral y barra inferior del móvil, HUD, paneles, tarjetas, modales, botones, campos, pestañas, barras de progreso, avisos, foco del teclado, letra de los rótulos, forma (radios y grosor de borde), decoración, ritmo de las animaciones, la transición al entrar y el timbre de los efectos de sonido.
+
+| Mundo | Dirección artística | Lo que más se nota |
+| --- | --- | --- |
+| Mundo 1-1 (de serie) | Recreativa de barrio | Paneles crema, rótulos condensados, botón principal amarillo |
+| Mundo subterráneo | Cripta de cristal (arcade de los 80) | Letra pixel, bordes de 2 px y sombras duras, ladrillo, remaches cian, eco de caverna |
+| Castillo | Fortaleza de lava (RPG medieval) | Pergamino con escuadras doradas, títulos con serifa y botones en versalitas, piedra y antorchas, timbre de laúd |
+| Mundo submarino | Abismo bioluminiscente (ciencia ficción) | Cápsulas redondeadas, reflejos de cristal, burbujas, halo turquesa, sonido de burbuja |
+| Montaña nevada | Cumbre helada (fantasía de hielo) | Blancos con filo de escarcha, nieve en la barra lateral, campanillas |
+| Desierto | Dunas del ocaso (aventura) | Cenefa tejida en cada panel, zigzag de bazar, acción principal turquesa, cuerdas pulsadas |
+| Casa encantada | Mansión espectral (fantasía oscura) | Neón violeta en los títulos, halo en paneles y botones, niebla, theremín |
+
+- **Probar antes de comprar.** En Arsenal, cada mundo tiene su ficha con una **miniatura pintada con su CSS real**, qué cambia, sus efectos, su precio y su estado (*por desbloquear*, *en tu colección*, *activo* o *probándolo*). **Probar** lo aplica a toda la app para que navegues con él: no cuesta monedas ni se guarda, y **Salir** (o `Escape`) devuelve el mundo equipado. Desde la barra de la prueba se puede canjear o equipar.
+- **Lo que no cambia nunca:** la estructura, el orden de las acciones, la jerarquía de títulos y textos, y el **dorado de XP y monedas**, que significa lo mismo en todos los mundos.
+- **Accesibilidad.** Una prueba (`src/styles/themes.test.ts`) lee el CSS, reproduce la cascada y exige en los 7 mundos, de día y de noche, contraste **WCAG AA**: 4,5:1 en texto y 3:1 en bordes de campos, foco, marcas de navegación y botón principal. Las animaciones respetan `prefers-reduced-motion` y además se pueden reducir desde **Perfil → Experiencia**.
+- **Sonido.** Los efectos siguen siendo sintetizados (sin archivos) y cada mundo les cambia el instrumento, no la melodía. Hay volumen general, nada suena al abrir la app, un mismo efecto no se repite en ráfaga y hay un límite de notas simultáneas.
+- **Cómo está hecho.** El contrato de tema está en `src/styles/tokens.css` y cada mundo lo redefine completo en `src/styles/themes.css` (otra prueba falla si falta un token). Lo que no es estilo —nombre, descripción, rasgos, timbre— vive en `src/core/themes.ts`. El decorado por capas de la pantalla del mundo sigue en `src/styles/worlds.css` (`npm run worlds`). La transición usa la API View Transitions cuando el navegador la tiene; si no, el cambio es instantáneo.
 
 ## Repaso espaciado, calendario, jefes y Pomodoro
 

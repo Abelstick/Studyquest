@@ -136,8 +136,8 @@
 }
 .tagenda__row.is-now {
   border-color: var(--line);
-  border-left-color: var(--yellow);
-  background: color-mix(in srgb, var(--yellow) 12%, var(--panel));
+  border-left-color: var(--nav-mark);
+  background: color-mix(in srgb, var(--primary) 12%, var(--panel));
   color: var(--text);
 }
 .tagenda__row.is-done {
@@ -335,6 +335,7 @@
   font-size: 26px;
   font-weight: 700;
   line-height: 1;
+  border-radius: var(--r-sm);
 }
 .nowstrip__main,
 .nowstrip__next,
@@ -385,7 +386,9 @@
 }
 
 .startguide {
-  border-left: 10px solid var(--yellow);
+  border-left: 10px solid var(--nav-mark);
+  border-radius: var(--r-md);
+  box-shadow: var(--panel-shadow);
 }
 .startguide__now .kicker,
 .startguide__now .muted {
@@ -397,9 +400,10 @@
   gap: 12px 16px;
   align-items: center;
   padding: 12px;
-  background: color-mix(in srgb, var(--yellow) 14%, var(--panel));
+  background: color-mix(in srgb, var(--primary) 14%, var(--panel));
   color: var(--text);
   border: 2px solid var(--line);
+  border-radius: var(--r-sm);
 }
 .startguide__title {
   margin: 0;

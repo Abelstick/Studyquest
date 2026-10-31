@@ -137,6 +137,12 @@ variables de build.
   `styles/tokens.css`; si un valor fijo se repite, conviértelo en token (constante
   si no cambia con el tema ni con el mundo).
 - Texto mínimo: 12px con la fuente normal y 10px con la fuente pixel.
+- Mundos visuales: el contrato de tema es el bloque `:root, [data-world-preview='classic']`
+  de `styles/tokens.css` (más su bloque de noche); cada mundo lo redefine completo en
+  `styles/themes.css`. Un token temable nuevo va en los tres sitios. `themes.test.ts`
+  exige cobertura y contraste AA en todos los mundos, de día y de noche. Los componentes
+  usan `--primary` para la acción principal y lo seleccionado, `--nav-mark` para las
+  marcas y `--focus` para el foco; `--yellow` queda para XP, monedas y logros.
 - Los sprites son cuadrículas de texto en `ui/sprites.ts`, con todas las filas
   del mismo ancho; una prueba lo valida.
 - No agregues imágenes ni audio de terceros: los sprites son dibujos propios y

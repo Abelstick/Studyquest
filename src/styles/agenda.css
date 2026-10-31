@@ -204,7 +204,7 @@
   background: var(--cream);
 }
 .tgrid__dayname.is-selected {
-  background: color-mix(in srgb, var(--yellow) 26%, transparent);
+  background: color-mix(in srgb, var(--primary) 26%, transparent);
 }
 .tgrid__dayname.is-selected .tgrid__wd {
   color: var(--text);
@@ -224,7 +224,7 @@
   border-left: 1px solid var(--line-soft);
 }
 .tgrid__alldaycell.is-over {
-  background: color-mix(in srgb, var(--yellow) 30%, var(--panel));
+  background: color-mix(in srgb, var(--primary) 30%, var(--panel));
   color: var(--text);
 }
 .chip-task--habits {
@@ -275,7 +275,7 @@
   cursor: copy;
 }
 .tgrid__col.is-today {
-  background-color: color-mix(in srgb, var(--yellow) 8%, transparent);
+  background-color: color-mix(in srgb, var(--primary) 8%, transparent);
 }
 .tgrid__col.is-past {
   background-color: color-mix(in srgb, var(--panel-2) 45%, transparent);

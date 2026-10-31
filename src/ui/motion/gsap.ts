@@ -43,13 +43,16 @@ export const framesIn = (seconds: number) => Math.max(1, Math.round(seconds / FR
 
 const MOTION_OK = '(prefers-reduced-motion: no-preference)';
 
+/** «Animaciones: reducidas» elegido en el Perfil (state/ui lo refleja en <html data-motion>), aunque el sistema no lo pida. */
+export const appReducedMotion = () => typeof document !== 'undefined' && document.documentElement.dataset.motion === 'reduce';
+
 /**
  * Ejecuta `setup` solo si la persona no pidió reducir el movimiento. Dentro de `useGSAP`, el `matchMedia`
  * queda recogido por el contexto y se revierte solo al desmontar; si la preferencia cambia en caliente,
  * las animaciones se deshacen y el contenido queda en su estado final.
  */
 export function withMotion(setup: () => void | (() => void)) {
-  if (!canAnimate()) return;
+  if (!canAnimate() || appReducedMotion()) return;
   const mm = gsap.matchMedia();
   mm.add(MOTION_OK, setup);
   return mm;

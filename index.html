@@ -15,6 +15,7 @@
         var t = p.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.dataset.theme = t;
         if (p.world) document.documentElement.dataset.world = p.world;
+        if (p.motion === 'reduce') document.documentElement.dataset.motion = 'reduce';
       } catch (e) {}
     </script>
   </head>

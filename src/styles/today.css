@@ -57,16 +57,18 @@
 
 /* ---------- Siguiente paso: la etiqueta grande que se sale de la pantalla ---------- */
 .nextstep {
-  --tone: var(--yellow);
+  --tone: var(--nav-mark);
   grid-column: 1 / span 8;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--sp-5);
   padding: var(--sp-6) var(--sp-6) var(--sp-5);
-  background: var(--panel);
+  background: var(--panel-deco), var(--panel);
   color: var(--text);
   border: var(--bw) solid var(--ink);
   border-top: 6px solid var(--tone);
+  border-radius: var(--r-md);
+  box-shadow: var(--panel-shadow);
 }
 .nextstep--task-late {
   --tone: var(--red);
@@ -140,6 +142,7 @@
   background: var(--grain), var(--hud);
   color: var(--hud-text);
   border: var(--bw) solid var(--hud-edge);
+  border-radius: var(--r-md);
 }
 .levelcard__hi {
   display: flex;
@@ -225,6 +228,8 @@
   color: var(--text);
   border: var(--bw) solid var(--line);
   border-top: 4px solid var(--tone);
+  border-radius: var(--r-md);
+  box-shadow: var(--panel-shadow);
 }
 .daysum__tile--main {
   grid-column: span 5;
@@ -439,6 +444,8 @@
   color: var(--text);
   border: var(--bw) solid var(--line);
   border-top: 4px solid var(--tone);
+  border-radius: var(--r-md);
+  box-shadow: var(--panel-shadow);
 }
 .lane--task {
   --tone: var(--task);
@@ -493,8 +500,8 @@
   transition: background-color var(--dur-micro) var(--ease-out);
 }
 .lane__add:hover {
-  background: var(--yellow);
-  color: var(--on-yellow);
+  background: var(--primary);
+  color: var(--on-primary);
 }
 .lane__bar {
   grid-column: 1 / -1;
@@ -560,6 +567,7 @@
   border-left: 4px solid var(--tone);
   cursor: pointer;
   transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out);
+  border-radius: var(--r-sm);
 }
 .mission--task {
   --tone: var(--task);
@@ -712,7 +720,7 @@
   border-color: var(--text);
 }
 .mission__check:hover {
-  background: var(--yellow);
+  background: var(--primary);
 }
 .mission__check:active {
   transform: translateY(2px);

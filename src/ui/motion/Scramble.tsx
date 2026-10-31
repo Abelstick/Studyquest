@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { DUR, EASE, canAnimate, gsap, useGSAP } from './gsap';
+import { DUR, EASE, appReducedMotion, canAnimate, gsap, useGSAP } from './gsap';
 
 interface Props {
   /** Texto final (normalmente una cifra ya formateada). */
@@ -22,7 +22,7 @@ export function Scramble({ value, className }: Props) {
     () => {
       const el = ref.current;
       if (!el) return;
-      const reduced = !canAnimate() || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduced = !canAnimate() || appReducedMotion() || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (first.current || reduced) {
         first.current = false;
         el.textContent = value;

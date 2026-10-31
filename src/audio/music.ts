@@ -11,7 +11,7 @@
  * transcribirlos nota por nota sería infringirlo igual que subir el MP3, incluso en un
  * proyecto personal — así que en vez de copiarlos, esas pistas solo evocan su ambiente.
  */
-import { audio } from './sfx';
+import { audio, output } from './sfx';
 
 export type TrackName = 'focus' | 'break' | 'heroe' | 'cueva' | 'jefe' | 'nieve' | 'agua' | 'creditos' | 'alegria' | 'elisa' | 'estrellita';
 
@@ -235,9 +235,9 @@ function kick(c: AudioContext, out: AudioNode, at: number) {
   osc.stop(at + 0.14);
 }
 
-/** Conecta la pista a los altavoces; si pide eco, añade una cola de delay con realimentación (así suena "bajo el agua"). */
+/** Conecta la pista a los altavoces (a través del volumen general); si pide eco, añade una cola de delay con realimentación (así suena "bajo el agua"). */
 function connectOutput(c: AudioContext, node: GainNode, ambient: boolean) {
-  node.connect(c.destination);
+  node.connect(output(c));
   if (!ambient) return;
   const delay = c.createDelay(1.5);
   delay.delayTime.value = 0.42;
@@ -247,7 +247,7 @@ function connectOutput(c: AudioContext, node: GainNode, ambient: boolean) {
   wet.gain.value = 0.55;
   node.connect(delay);
   delay.connect(feedback).connect(delay);
-  delay.connect(wet).connect(c.destination);
+  delay.connect(wet).connect(output(c));
   echoNodes = delay;
 }
 

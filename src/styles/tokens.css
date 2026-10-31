@@ -41,7 +41,6 @@
  */
 :root {
   /* --- Tipografía --- */
-  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
   --font-body: 'Atkinson Hyperlegible Next Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-num: 'Pixelify Sans Variable', ui-monospace, 'Courier New', monospace;
   --font-pixel: 'Press Start 2P', ui-monospace, 'Courier New', monospace;
@@ -58,7 +57,6 @@
   --fs-2xl: 40px;
   --fs-display: clamp(40px, 5.6vw, 84px);
   --fs-mega: clamp(72px, 10vw, 132px);
-  --display-stretch: 78%; /* condensada: más letra en menos ancho, aspecto de rótulo */
   --tracking-caps: 0.08em;
 
   /* --- Espaciado (múltiplos de 4) --- */
@@ -71,83 +69,36 @@
   --sp-7: 48px;
   --sp-8: 72px;
 
-  /* --- Superficies y texto (modo día: etiquetas crema sobre la caja carbón) --- */
-  --page: #17191f; /* 60 %: carbón con tinte azul, nunca negro puro */
-  --on-page: #ece3ce; /* texto suelto sobre la caja: 13.9:1 */
-  --on-page-muted: #a39c8a; /* 6.6:1 sobre --page */
-  --panel: #ece3ce; /* 30 %: crema */
-  --panel-2: #e3d8be;
-  --panel-3: #d6c9a8;
-  --field: #f6f0e1;
-  --text: #17191f; /* 13.9:1 sobre --panel */
-  --muted: #57503f; /* 6.4:1 sobre --panel */
-  --ink-soft: #645d4c; /* 5.0:1 sobre --panel */
-  --line: #17191f;
-  --line-soft: #c9bb98;
-  --shadow: #17191f;
+  /* --- Jerarquía (la misma en todos los mundos: el tema cambia la personalidad, no la importancia) ---
+   * Nivel 1 · títulos de página, acción principal y cifras protagonistas: --font-display / --font-figure, 800, --fs-xl en adelante.
+   * Nivel 2 · títulos de panel, descripciones y acciones secundarias: --fs-lg / --fs-md, 600–700.
+   * Nivel 3 · rótulos, metadatos e indicadores: --fs-xs en mayúsculas con --tracking-caps, color --muted.
+   */
+  --lh-tight: 1.05;
+  --lh-body: 1.5;
 
-  /* --- Acento y estados --- */
-  --yellow: #f2c230; /* 10 %: la ficha. Solo XP, monedas y la acción principal */
-  --xp-text: #7a5600; /* el amarillo hecho texto legible sobre crema: 5.1:1 */
-  --red: #d2452b;
-  --red-text: #a3301a; /* 5.6:1 sobre crema */
-  --green: #2f7d49; /* texto crema encima: 4,7:1 (con #3e8e57 eran 3,7:1) */
-  --green-text: #23633a;
-  --blue: #3566a0;
-  --violet: #6d4fa0;
+  /* Constantes: no cambian con el tema ni con el mundo. */
+  --yellow: #f2c230; /* la ficha: XP y monedas se ven doradas en todos los mundos */
   --orange: #d9822b;
   --partial: #d9822b;
   --habit: var(--green); /* hábitos: constancia */
   --task: var(--blue); /* tareas: plazos */
   --late: var(--red-text); /* vencido o en peligro */
-
   --on-red: #fbf6ea;
   --on-yellow: #17191f;
-  --on-green: #fbf6ea;
-  --on-blue: #fbf6ea;
-
-  /* --- La caja de la máquina: HUD y barra lateral, siempre oscuros --- */
-  --hud: #0f1115;
-  --hud-text: #ece3ce;
-  --side: #121419;
-  --side-2: #0c0d11;
-  --side-text: #ece3ce;
-  --side-plate: rgba(236, 227, 206, 0.04);
-  --side-plate-hi: rgba(236, 227, 206, 0.09);
-  --side-edge: rgba(236, 227, 206, 0.14);
-  --side-label: #ece3ce;
-  --side-texture: none;
-  --bar-bg: #d6c9a8;
-
-  /* Constantes: no cambian con el tema ni con el mundo. */
   --ink: #17191f;
   --cream: #ece3ce;
-  --hud-2: #1b1e25;
-  --hud-edge: #2e323c;
   --alert: #b3321f; /* contadores en rojo; crema encima da 5.6:1 */
   --scene-day-1: #4f8fe8; /* cielo de las escenas (Pomodoro, ciudad, cargador) */
   --scene-day-2: #a8d2ff;
   --scene-night-1: #141836;
   --scene-night-2: #2b3c7c;
-
-  /* Foco en dos tonos: el anillo amarillo destaca sobre lo oscuro, el halo carbón sobre la crema. */
-  --focus: #f2c230;
-  --focus-ink: #17191f;
   --rail: rgba(0, 0, 0, 0.35);
   --rail-thumb: #f2c230;
-
-  /* --- Identidad de cada mundo: acento, suelo y tinte de la caja --- */
-  --accent: #f2c230;
-  --turf: #5fc95b;
-  --turf-2: #2f8f3a;
-
-  /* --- Forma: un único sistema. Radio 0, bordes de 1 px y UNA sombra dura reservada al botón principal --- */
   --radius: 0;
-  --bw: 1px;
   --bw-strong: 2px;
   --sh: none;
   --sh-sm: none;
-  --sh-press: 0 4px 0 var(--ink); /* el botón de la máquina: se hunde al pulsarlo */
   /* Marca de verificación pixel para usar como máscara en CSS (mismo dibujo que ui/icons · check). */
   --icon-check: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%207%207'%20shape-rendering%3D'crispEdges'%3E%3Crect%20x%3D'6'%20y%3D'1'%20width%3D'1'%20height%3D'1'%2F%3E%3Crect%20x%3D'5'%20y%3D'2'%20width%3D'2'%20height%3D'1'%2F%3E%3Crect%20x%3D'0'%20y%3D'3'%20width%3D'1'%20height%3D'1'%2F%3E%3Crect%20x%3D'4'%20y%3D'3'%20width%3D'2'%20height%3D'1'%2F%3E%3Crect%20x%3D'0'%20y%3D'4'%20width%3D'2'%20height%3D'1'%2F%3E%3Crect%20x%3D'3'%20y%3D'4'%20width%3D'2'%20height%3D'1'%2F%3E%3Crect%20x%3D'1'%20y%3D'5'%20width%3D'3'%20height%3D'1'%2F%3E%3Crect%20x%3D'2'%20y%3D'6'%20width%3D'1'%20height%3D'1'%2F%3E%3C%2Fsvg%3E");
   /* Grano sutil, como el vinilo de una recreativa. Va en el fondo, nunca encima del texto. */
@@ -163,12 +114,104 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* expo.out */
   --dur-micro: 0.24s;
   --dur-enter: 1s;
+  --dur-theme: 0.55s; /* cambio de mundo */
 
+}
+
+/*
+ * ===== Contrato de tema · Mundo 1-1 «Recreativa de barrio» =====
+ * Todo lo que un mundo puede cambiar está aquí, y cada mundo de themes.css lo redefine COMPLETO (una prueba
+ * lo exige). El mismo bloque vale para la vista previa en miniatura de la tienda: [data-world-preview].
+ * Sin el atributo data-world, la página usa estos valores.
+ */
+:root,
+[data-world-preview='classic'] {
+  /* --- Superficies y texto (modo día: etiquetas crema sobre la caja carbón) --- */
+  --page: #17191f; /* 60 %: carbón con tinte azul, nunca negro puro */
+  --on-page: #ece3ce; /* texto suelto sobre la caja: 13.9:1 */
+  --on-page-muted: #a39c8a; /* 6.6:1 sobre --page */
+  --panel: #ece3ce; /* 30 %: crema */
+  --panel-2: #e3d8be;
+  --panel-3: #d6c9a8;
+  --field: #f6f0e1;
+  --field-edge: var(--line); /* borde de los campos: 3:1 como mínimo sobre --field */
+  --text: #17191f; /* 13.9:1 sobre --panel */
+  --muted: #57503f; /* 6.4:1 sobre --panel */
+  --ink-soft: #645d4c; /* 5.0:1 sobre --panel */
+  --line: #17191f;
+  --line-soft: #c9bb98;
+  --shadow: #17191f;
+  --bar-bg: #d6c9a8;
+
+  /* --- Estados --- */
+  --xp-text: #7a5600; /* el amarillo hecho texto legible sobre crema: 5.1:1 */
+  --red: #d2452b;
+  --red-text: #a3301a; /* 5.6:1 sobre crema */
+  --green: #2f7d49; /* texto crema encima: 4,7:1 (con #3e8e57 eran 3,7:1) */
+  --green-text: #23633a;
+  --blue: #3566a0;
+  --violet: #6d4fa0;
+  --on-green: #fbf6ea;
+  --on-blue: #fbf6ea;
+
+  /* --- La caja de la máquina: HUD y barra lateral, siempre oscuros --- */
+  --hud: #0f1115;
+  --hud-2: #1b1e25;
+  --hud-edge: #2e323c;
+  --hud-text: #ece3ce;
+  --side: #121419;
+  --side-text: #ece3ce;
+  --side-plate: rgba(236, 227, 206, 0.04);
+  --side-plate-hi: rgba(236, 227, 206, 0.09);
+  --side-edge: rgba(236, 227, 206, 0.14);
+  --side-bg: var(--grain), var(--side); /* fondo completo de la barra lateral: textura del mundo + color */
+  --nav-mark: var(--yellow); /* muesca de la sección activa */
+  --nav-mark-ease: steps(3);
+  --nav-active-bg: var(--panel);
+
+  /* --- Acción principal: la ÚNICA superficie que «se aprieta». Monedas y XP siguen en --yellow --- */
+  --primary: var(--yellow);
+  --on-primary: var(--on-yellow);
+  --primary-edge: var(--ink);
+  --primary-glow: 0 0 0 transparent;
+
+  /* Foco en dos tonos: el anillo claro destaca sobre lo oscuro, el halo oscuro sobre lo claro. */
+  --focus: #f2c230;
+  --focus-ink: #17191f;
+
+  /* --- Identidad de cada mundo: acento del logotipo y suelo --- */
+  --accent: #f2c230;
+  --turf: #5fc95b;
+  --turf-2: #2f8f3a;
+
+  /* --- Letra de rótulo --- */
+  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
+  --display-stretch: 78%; /* condensada: más letra en menos ancho, aspecto de rótulo */
+  --btn-case: uppercase;
+  --btn-caps: normal; /* font-variant-caps de los botones */
+
+  /* --- Forma: radio 0, bordes de 1 px y UNA sombra dura reservada al botón principal --- */
+  --r-sm: 0; /* botones, campos, etiquetas */
+  --r-md: 0; /* paneles y tarjetas */
+  --r-lg: 0; /* modales */
+  --bw: 1px;
+
+  /* --- Decoración y efectos (siempre detrás del texto) --- */
+  --panel-deco: none; /* capas de fondo extra de los paneles: ornamentos, brillos, cenefas */
+  --panel-shadow: 0 0 0 transparent;
+  --title-glow: none; /* text-shadow del rótulo en las superficies oscuras (logotipo, HUD) */
+  --fx-glow: 0 0 0 transparent; /* halo de las recompensas */
+  --backdrop: rgba(15, 17, 21, 0.78);
+  --bar-ease: steps(12); /* cómo se llena una barra */
+  --hover-lift: -1px;
   --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='340' shape-rendering='crispEdges'%3E%3Cg fill='%23fff' opacity='.6'%3E%3Crect x='48' y='64' width='96' height='16'/%3E%3Crect x='64' y='48' width='64' height='16'/%3E%3Crect x='32' y='80' width='128' height='16'/%3E%3Crect x='330' y='190' width='96' height='16'/%3E%3Crect x='346' y='174' width='64' height='16'/%3E%3Crect x='314' y='206' width='128' height='16'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* ===== Noche: la caja se queda, las etiquetas se apagan ===== */
-:root[data-theme='dark'] {
+:root[data-theme='dark'],
+:root[data-theme='dark'] [data-world-preview='classic'] {
+  --field-edge: #6b7180;
+  --nav-active-bg: var(--panel-3);
   --panel: #22252d;
   --panel-2: #2a2e37;
   --panel-3: #343844;
@@ -192,52 +235,4 @@
   --violet: #a58bd6;
 
   --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' shape-rendering='crispEdges'%3E%3Cg fill='%23fff'%3E%3Crect x='30' y='40' width='3' height='3' opacity='.8'/%3E%3Crect x='190' y='90' width='3' height='3' opacity='.5'/%3E%3Crect x='300' y='30' width='3' height='3' opacity='.7'/%3E%3Crect x='90' y='200' width='3' height='3' opacity='.6'/%3E%3Crect x='250' y='250' width='3' height='3' opacity='.8'/%3E%3Crect x='330' y='170' width='3' height='3' opacity='.5'/%3E%3Crect x='20' y='320' width='3' height='3' opacity='.6'/%3E%3Crect x='160' y='330' width='3' height='3' opacity='.4'/%3E%3C/g%3E%3Crect x='210' y='140' width='6' height='6' fill='%23ffd23f' opacity='.7'/%3E%3C/svg%3E");
-}
-
-/*
- * ===== Mundos comprables (se combinan con día/noche) =====
- * Cada mundo tiñe la caja carbón con su color (sigue siendo el 60 % neutro, ahora con temperatura propia),
- * cambia el acento del logotipo y el suelo. El decorado por capas está en worlds.css (generado).
- */
-:root[data-world='underground'] {
-  --page: #12161f;
-  --accent: #6fa8ff;
-  --turf: #6f86c4;
-  --turf-2: #3d4d7a;
-  --page-art: none;
-}
-:root[data-world='castle'] {
-  --page: #1c1716;
-  --accent: #ff8a3c;
-  --turf: #b0563a;
-  --turf-2: #6b2a1c;
-  --page-art: none;
-}
-:root[data-world='water'] {
-  --page: #10191f;
-  --accent: #5be0ff;
-  --turf: #e3cf8f;
-  --turf-2: #a99457;
-  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' shape-rendering='crispEdges'%3E%3Cg fill='none' stroke='%2359c8ff' stroke-width='3' opacity='.45'%3E%3Crect x='40' y='60' width='12' height='12'/%3E%3Crect x='70' y='30' width='8' height='8'/%3E%3Crect x='210' y='120' width='14' height='14'/%3E%3Crect x='250' y='90' width='8' height='8'/%3E%3Crect x='120' y='230' width='10' height='10'/%3E%3Crect x='150' y='260' width='6' height='6'/%3E%3C/g%3E%3C/svg%3E");
-}
-:root[data-world='snow'] {
-  --page: #161b21;
-  --accent: #a9e4ff;
-  --turf: #f2f8ff;
-  --turf-2: #a9cfe8;
-  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' shape-rendering='crispEdges'%3E%3Cg fill='%23fff'%3E%3Crect x='20' y='30' width='6' height='6' opacity='.9'/%3E%3Crect x='90' y='80' width='4' height='4' opacity='.7'/%3E%3Crect x='170' y='20' width='6' height='6' opacity='.8'/%3E%3Crect x='240' y='110' width='4' height='4' opacity='.7'/%3E%3Crect x='60' y='170' width='6' height='6' opacity='.85'/%3E%3Crect x='150' y='200' width='4' height='4' opacity='.6'/%3E%3Crect x='260' y='240' width='6' height='6' opacity='.9'/%3E%3Crect x='30' y='260' width='4' height='4' opacity='.6'/%3E%3C/g%3E%3C/svg%3E");
-}
-:root[data-world='desert'] {
-  --page: #1e1913;
-  --accent: #ffa64d;
-  --turf: #ecc97a;
-  --turf-2: #b98d45;
-  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='240' shape-rendering='crispEdges'%3E%3Cg fill='%23e8c87a' opacity='.22'%3E%3Crect x='0' y='200' width='120' height='16'/%3E%3Crect x='24' y='184' width='72' height='16'/%3E%3Crect x='200' y='216' width='160' height='16'/%3E%3Crect x='240' y='200' width='80' height='16'/%3E%3C/g%3E%3Ccircle cx='290' cy='50' r='22' fill='%23ffd23f' opacity='.35'/%3E%3C/svg%3E");
-}
-:root[data-world='ghost'] {
-  --page: #17131f;
-  --accent: #c3a2ff;
-  --turf: #5a4a80;
-  --turf-2: #2f2448;
-  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' shape-rendering='crispEdges'%3E%3Cg fill='%23c9b6ff' opacity='.5'%3E%3Crect x='40' y='60' width='16' height='16'/%3E%3Crect x='44' y='76' width='8' height='8'/%3E%3Crect x='250' y='140' width='16' height='16'/%3E%3Crect x='254' y='156' width='8' height='8'/%3E%3Crect x='120' y='280' width='12' height='12'/%3E%3C/g%3E%3Cg fill='%23fff' opacity='.5'%3E%3Crect x='200' y='40' width='3' height='3'/%3E%3Crect x='300' y='250' width='3' height='3'/%3E%3Crect x='30' y='220' width='3' height='3'/%3E%3C/g%3E%3C/svg%3E");
 }

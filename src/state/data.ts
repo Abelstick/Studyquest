@@ -21,6 +21,7 @@ import { upsertReview } from '@/core/weekReview';
 import { buildingById, cityUpgrades } from '@/core/city';
 import { ACHIEVEMENTS } from '@/core/achievements';
 import { shopItem } from '@/core/catalog';
+import { worldIdOf } from '@/core/themes';
 import { canEvolve, cleanHeroName, heroItem, newHero, raceOf, stageForLevel, stageName } from '@/core/hero';
 import { buildDemo } from '@/core/seed';
 import { courseAlerts, newAlerts } from '@/core/courseAlerts';
@@ -169,7 +170,6 @@ const pickData = (s: DataState): Data => ({
 });
 
 const upsertBy = <T extends { id: ID }>(list: T[], item: T): T[] => (list.some((x) => x.id === item.id) ? list.map((x) => (x.id === item.id ? item : x)) : [...list, item]);
-const worldOf = (itemId: string | null) => (itemId ? itemId.replace('world-', '') : null);
 
 export function createDataStore(repo: Repository) {
   /** Cola de escritura: garantiza que los cambios llegan a la base de datos en el orden en que ocurrieron. */
@@ -363,7 +363,7 @@ export function createDataStore(repo: Repository) {
           ]);
           const ensured = profile ?? (await repo.profile.save(defaultProfile(userId)));
           set({ profile: ensured, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events, status: 'ready', error: null });
-          useUi.getState().setWorld(worldOf(ensured.equipped.world));
+          useUi.getState().setWorld(worldIdOf(ensured.equipped.world));
           // Al abrir la app: avisos de cursos parados o por vencer (sin repetir los de hoy).
           if (ensured.onboarded) get().checkCourseAlerts();
           if (!ensured.onboarded) useUi.getState().openModal({ type: 'welcome' });
@@ -399,7 +399,7 @@ export function createDataStore(repo: Repository) {
           await repo.events.createMany(snapshot.events ?? []);
           const profile = await repo.profile.save({ ...snapshot.profile, id });
           set({ ...snapshot, events: snapshot.events ?? [], profile, status: 'ready' });
-          useUi.getState().setWorld(worldOf(profile.equipped.world));
+          useUi.getState().setWorld(worldIdOf(profile.equipped.world));
           return true;
         } catch (e) {
           console.error(e);
@@ -911,9 +911,9 @@ export function createDataStore(repo: Repository) {
         const p = get().profile;
         if (itemId && !p.inventory.includes(itemId)) return;
         patchProfile({ equipped: { ...p.equipped, [kind]: itemId } });
-        if (kind === 'world') useUi.getState().setWorld(worldOf(itemId));
-        // Cambiar de mundo suena a tubería; ponerse un objeto, a power-up.
-        if (kind === 'world' && itemId) sfx.pipe();
+        if (kind === 'world') useUi.getState().setWorld(worldIdOf(itemId), { animate: true });
+        // Cambiar de mundo suena con la firma del mundo nuevo; ponerse un objeto, a power-up.
+        if (kind === 'world') sfx.theme();
         else if (itemId) sfx.powerUp();
         else sfx.click();
       },

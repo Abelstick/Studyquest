@@ -10,6 +10,7 @@ import { Button, Field, Panel, cx, NumberInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { useInstallPrompt } from '@/pwa/hooks';
 import { AiSetup } from '@/features/ai/AiSetup';
+import { ExperiencePanel } from './ExperiencePanel';
 import { useAi } from '@/ai/store';
 import { describeInvalidVapidKey, disablePush, enablePush, getPushState, showTestNotification, type PushState } from '@/pwa/push';
 import { backupFileName, buildBackup, parseBackup, summarize } from '@/core/backup';
@@ -167,7 +168,7 @@ export default function Perfil() {
   const projects = useData((s) => s.projects);
   const xpEvents = useData((s) => s.xpEvents);
   const { updateProfile, resetAll } = useData();
-  const { sound, theme, toggleSound, toggleTheme, openModal } = useUi();
+  const { openModal } = useUi();
   const { canInstall, installed, install } = useInstallPrompt();
   const level = levelFromXp(profile.xp);
   const streak = useMemo(() => computeStreak(xpEvents, profile.frozenDates).current, [xpEvents, profile.frozenDates]);
@@ -280,20 +281,20 @@ export default function Perfil() {
                 Guardar
               </Button>
             </form>
-            <div className="row row--top">
-              <Button small onClick={toggleTheme}>
-                Modo {theme === 'dark' ? 'día' : 'noche'}
-              </Button>
-              <Button small onClick={toggleSound}>
-                Sonido: {sound ? 'sí' : 'no'}
-              </Button>
-              {canInstall && (
-                <Button small variant="green" onClick={install}>
-                  Instalar app
-                </Button>
-              )}
-              {installed && <span className="tag tag--green">App instalada</span>}
-            </div>
+            {(canInstall || installed) && (
+              <div className="row row--top">
+                {canInstall && (
+                  <Button small variant="green" onClick={install}>
+                    Instalar app
+                  </Button>
+                )}
+                {installed && <span className="tag tag--green">App instalada</span>}
+              </div>
+            )}
+          </Panel>
+
+          <Panel kicker="Experiencia" title="Mundo, sonido y movimiento">
+            <ExperiencePanel />
           </Panel>
 
           <Panel kicker="Funciones inteligentes" title="IA con tu clave de Gemini">

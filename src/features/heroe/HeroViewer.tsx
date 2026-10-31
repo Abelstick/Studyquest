@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BoxGeometry, DirectionalLight, Group, HemisphereLight, Mesh, MeshLambertMaterial, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { BONES, buildHeroModel, type Bone, type HeroLook, type HeroModel } from '@/core/hero';
 import { Icon } from '@/ui/Icon';
+import { appReducedMotion } from '@/ui/motion';
 
 /*
  * Visor 3D del héroe. Este archivo (y three.js con él) solo se descarga al abrir la pantalla
@@ -213,7 +214,7 @@ function createEngine(canvas: HTMLCanvasElement, reduced: boolean): Engine {
   };
 }
 
-const prefersReduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const prefersReduced = () => appReducedMotion() || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
 export default function HeroViewer({ look, label, celebrate = 0 }: { look: HeroLook; label: string; /** Al cambiar, se reproduce la animación de evolución. */ celebrate?: number }) {
   const wrap = useRef<HTMLDivElement>(null);

@@ -28,6 +28,7 @@ import { ConflictsModal } from '../calendario/ConflictsModal';
 import { ConceptGuide } from '../help/ConceptGuide';
 import { HowToGuide } from '../help/HowToGuide';
 import { EventModal } from '../calendario/EventModal';
+import { ThemePreviewBar } from './ThemePreviewBar';
 import { ExportModal } from '../calendario/ExportModal';
 import { ScopeModal } from '../calendario/ScopeChoice';
 import { ShortcutsModal } from '../modals/ShortcutsModal';
@@ -362,6 +363,7 @@ export function Overlays() {
   return (
     <>
       <ModalHost />
+      <ThemePreviewBar />
       <NotificationsDrawer />
       <Toasts />
       <LevelUp />

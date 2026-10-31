@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { newId } from '@/core/dates';
-import { setSoundEnabled, sfx } from '@/audio/sfx';
+import { setSoundEnabled, setSoundVoice, setSoundVolume, sfx } from '@/audio/sfx';
+import { worldTheme } from '@/core/themes';
 
 import type { ConfirmExtra } from '@/ui/kit';
 import type { EditScope } from '@/core/agenda';
@@ -78,6 +79,10 @@ interface Prefs {
   sound: boolean;
   music: boolean;
   world: string | null;
+  /** Volumen general de efectos y música, de 0 a 1. */
+  volume: number;
+  /** 'system' sigue a prefers-reduced-motion; 'reduce' apaga las animaciones decorativas aunque el sistema no lo pida. */
+  motion: 'system' | 'reduce';
   /** Secciones plegables abiertas (true) o cerradas (false) por id; si falta, manda el valor por defecto de la sección. */
   folds: Record<string, boolean>;
 }
@@ -90,10 +95,14 @@ function readPrefs(): Prefs {
     sound: true,
     music: true,
     world: null,
+    volume: 0.8,
+    motion: 'system',
     folds: {},
   };
   try {
-    return { ...fallback, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') };
+    const p: Prefs = { ...fallback, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') };
+    const volume = typeof p.volume === 'number' && Number.isFinite(p.volume) ? Math.min(1, Math.max(0, p.volume)) : fallback.volume;
+    return { ...p, volume, motion: p.motion === 'reduce' ? 'reduce' : 'system' };
   } catch {
     return fallback;
   }
@@ -118,7 +127,19 @@ function readSideHidden(): boolean {
   }
 }
 
+/** Mundo que se está probando en la tienda: se ve en toda la app, pero no se guarda ni cuesta monedas. */
+export interface ThemePreview {
+  world: string | null;
+}
+
 interface UiState extends Prefs {
+  preview: ThemePreview | null;
+  /** Prueba un mundo sin equiparlo. */
+  startPreview: (world: string | null) => void;
+  /** Sale de la prueba y vuelve al mundo equipado. */
+  endPreview: () => void;
+  setVolume: (volume: number) => void;
+  setMotion: (motion: Prefs['motion']) => void;
   /** Barra lateral oculta en pantallas anchas, para ganar espacio. Se recuerda en el dispositivo. */
   sideHidden: boolean;
   setSideHidden: (hidden: boolean) => void;
@@ -140,25 +161,51 @@ interface UiState extends Prefs {
   setNavOpen: (open: boolean) => void;
   toggleTheme: () => void;
   toggleSound: () => void;
-  setWorld: (world: string | null) => void;
+  /** Cambia el mundo equipado (y termina cualquier vista previa). Con `animate` usa la transición del mundo nuevo. */
+  setWorld: (world: string | null, opts?: { animate?: boolean }) => void;
   setFold: (id: string, open: boolean) => void;
 }
 
 const initial = readPrefs();
-const prefsOf = (s: Prefs): Prefs => ({ theme: s.theme, sound: s.sound, music: s.music, world: s.world, folds: s.folds });
+// La vista previa no está aquí a propósito: nunca se guarda.
+const prefsOf = (s: Prefs): Prefs => ({ theme: s.theme, sound: s.sound, music: s.music, world: s.world, volume: s.volume, motion: s.motion, folds: s.folds });
 setSoundEnabled(initial.sound);
+setSoundVolume(initial.volume);
+setSoundVoice(worldTheme(initial.world).voice);
 
-const applyTheme = (theme: Prefs['theme'], world: string | null) => {
+/** El mundo que se ve: el de la vista previa si la hay; si no, el equipado. */
+const shownWorld = (s: { world: string | null; preview: ThemePreview | null }) => (s.preview ? s.preview.world : s.world);
+
+const applyTheme = (theme: Prefs['theme'], world: string | null, motion: Prefs['motion']) => {
   if (typeof document === 'undefined') return;
   const el = document.documentElement;
   el.dataset.theme = theme;
   if (world) el.dataset.world = world;
   else delete el.dataset.world;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0e0e24' : '#5c94fc');
+  if (motion === 'reduce') el.dataset.motion = 'reduce';
+  else delete el.dataset.motion;
+  // La barra del navegador del móvil se funde con el HUD del mundo.
+  const hud = typeof getComputedStyle === 'function' ? getComputedStyle(el).getPropertyValue('--hud').trim() : '';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', hud || (theme === 'dark' ? '#0e0e24' : '#5c94fc'));
 };
+
+const motionAllowed = (motion: Prefs['motion']) =>
+  motion !== 'reduce' && typeof matchMedia === 'function' && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** Aplica un cambio de mundo con la transición del mundo nuevo (View Transitions) si se puede; si no, al instante. */
+function transition(motion: Prefs['motion'], change: () => void) {
+  if (typeof document === 'undefined' || typeof document.startViewTransition !== 'function' || !motionAllowed(motion)) {
+    change();
+    return;
+  }
+  document.startViewTransition(change).ready.catch(() => {
+    // Otra transición la interrumpió (dos cambios seguidos): el cambio ya se aplicó, solo se salta la animación.
+  });
+}
 
 export const useUi = create<UiState>((set, get) => ({
   ...initial,
+  preview: null,
   toasts: [],
   levelUp: null,
   victory: null,
@@ -195,7 +242,7 @@ export const useUi = create<UiState>((set, get) => ({
   toggleTheme: () => {
     const theme = get().theme === 'dark' ? 'light' : 'dark';
     set({ theme });
-    applyTheme(theme, get().world);
+    applyTheme(theme, shownWorld(get()), get().motion);
     writePrefs(prefsOf(get()));
     sfx.click();
   },
@@ -206,9 +253,35 @@ export const useUi = create<UiState>((set, get) => ({
     writePrefs(prefsOf(get()));
     if (sound) sfx.coin();
   },
-  setWorld: (world) => {
-    set({ world });
-    applyTheme(get().theme, world);
+  setWorld: (world, opts) => {
+    set({ world, preview: null });
+    setSoundVoice(worldTheme(world).voice);
+    const apply = () => applyTheme(get().theme, world, get().motion);
+    if (opts?.animate) transition(get().motion, apply);
+    else apply();
+    writePrefs(prefsOf(get()));
+  },
+  startPreview: (world) => {
+    set({ preview: { world } });
+    setSoundVoice(worldTheme(world).voice);
+    transition(get().motion, () => applyTheme(get().theme, world, get().motion));
+    sfx.theme();
+  },
+  endPreview: () => {
+    if (!get().preview) return;
+    set({ preview: null });
+    const world = get().world;
+    setSoundVoice(worldTheme(world).voice);
+    transition(get().motion, () => applyTheme(get().theme, world, get().motion));
+  },
+  setVolume: (volume) => {
+    set({ volume: Math.min(1, Math.max(0, volume)) });
+    setSoundVolume(get().volume);
+    writePrefs(prefsOf(get()));
+  },
+  setMotion: (motion) => {
+    set({ motion });
+    applyTheme(get().theme, shownWorld(get()), motion);
     writePrefs(prefsOf(get()));
   },
   setFold: (id, open) => {

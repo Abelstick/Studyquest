@@ -9,6 +9,7 @@ import { Bar, Button, Empty, PageHead, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
 import { Scramble } from '@/ui/motion';
+import { WorldShop } from './WorldShop';
 
 const EQUIP_KEY: Partial<Record<ShopItem['kind'], keyof Equipped>> = { avatar: 'avatar', frame: 'frame', world: 'world' };
 
@@ -95,8 +96,11 @@ export default function Arsenal() {
         }
       />
 
+      <WorldShop />
+
+      <h2 className="section-title">Personaje, marcos, poderes e insignias</h2>
       <div className="grid grid--shop">
-        {SHOP.map((i) => (
+        {SHOP.filter((i) => i.kind !== 'world').map((i) => (
           <ShopCard key={i.id} item={i} />
         ))}
       </div>

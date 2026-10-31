@@ -1,12 +1,37 @@
 /**
  * Efectos de sonido 8-bit sintetizados con Web Audio (sin archivos que descargar ni cachear).
  * Todo falla en silencio si el navegador no soporta audio o el usuario lo desactivó.
+ *
+ * - Nada suena al cargar: el contexto de audio solo se crea con el primer efecto, que siempre nace de un gesto.
+ * - Todo pasa por un volumen general (`setSoundVolume`) y por el timbre del mundo activo (`setSoundVoice`).
+ * - Un mismo efecto no se repite antes de REPEAT_MS y nunca suenan más de MAX_VOICES notas a la vez:
+ *   así una ráfaga de clics no se convierte en ruido.
  */
+import type { SoundVoice } from '@/core/themes';
+import { VOICES, type Voice } from './voices';
+
 let ctx: AudioContext | null = null;
+let master: GainNode | null = null;
 let enabled = true;
+let volume = 0.8;
+let voice: Voice = VOICES.arcade;
+let active = 0;
+
+const MAX_VOICES = 16;
+const REPEAT_MS = 70;
 
 export const setSoundEnabled = (on: boolean) => {
   enabled = on;
+};
+
+/** Volumen general de efectos y música, de 0 a 1. */
+export const setSoundVolume = (v: number) => {
+  volume = Math.min(1, Math.max(0, v));
+  if (ctx && master) master.gain.setTargetAtTime(volume, ctx.currentTime, 0.02);
+};
+
+export const setSoundVoice = (v: SoundVoice) => {
+  voice = VOICES[v] ?? VOICES.arcade;
 };
 
 export function audio(): AudioContext | null {
@@ -15,6 +40,11 @@ export function audio(): AudioContext | null {
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return null;
     ctx ??= new Ctor();
+    if (!master) {
+      master = ctx.createGain();
+      master.gain.value = volume;
+      master.connect(ctx.destination);
+    }
     if (ctx.state === 'suspended') void ctx.resume();
     return ctx;
   } catch {
@@ -22,23 +52,65 @@ export function audio(): AudioContext | null {
   }
 }
 
-function note(freq: number, at: number, dur: number, type: OscillatorType = 'square', vol = 0.05, slideTo?: number) {
-  const c = audio();
-  if (!c) return;
-  const t0 = c.currentTime + at;
+/** Salida común (con el volumen general) para la música y los efectos. */
+export const output = (c: AudioContext): AudioNode => master ?? c.destination;
+
+function play(c: AudioContext, freq: number, t0: number, dur: number, type: OscillatorType, vol: number, slideTo?: number) {
+  if (active >= MAX_VOICES) return;
   const osc = c.createOscillator();
   const gain = c.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, t0);
   if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+  if (voice.vibrato) {
+    const lfo = c.createOscillator();
+    const depth = c.createGain();
+    lfo.frequency.value = voice.vibrato.rate;
+    depth.gain.value = freq * voice.vibrato.depth;
+    lfo.connect(depth).connect(osc.frequency);
+    lfo.start(t0);
+    lfo.stop(t0 + dur + 0.02);
+  }
   gain.gain.setValueAtTime(vol, t0);
   gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  osc.connect(gain).connect(c.destination);
+  osc.connect(gain).connect(output(c));
+  active++;
+  osc.onended = () => {
+    active--;
+  };
   osc.start(t0);
   osc.stop(t0 + dur + 0.02);
 }
 
-export const sfx = {
+function note(freq: number, at: number, dur: number, type: OscillatorType = 'square', vol = 0.05, slideTo?: number) {
+  const c = audio();
+  if (!c) return;
+  const f = freq * voice.pitch;
+  const d = dur * voice.decay;
+  const wave = type === 'square' && voice.wave ? voice.wave : type;
+  const g = vol * voice.gain;
+  const end = slideTo ? slideTo * voice.pitch : voice.bend ? f * voice.bend : undefined;
+  const t0 = c.currentTime + at;
+  play(c, f, t0, d, wave, g, end);
+  if (voice.echo) play(c, f, t0 + voice.echo.delay, d, wave, g * voice.echo.gain, end);
+}
+
+const lastAt: Record<string, number> = {};
+/** Ignora el mismo efecto si se pide otra vez en menos de REPEAT_MS (dobles clics, ráfagas de eventos). */
+function gate<T extends Record<string, () => void>>(effects: T): T {
+  const out = {} as Record<string, () => void>;
+  for (const [name, run] of Object.entries(effects)) {
+    out[name] = () => {
+      const now = typeof performance === 'undefined' ? Date.now() : performance.now();
+      if (now - (lastAt[name] ?? -Infinity) < REPEAT_MS) return;
+      lastAt[name] = now;
+      run();
+    };
+  }
+  return out as T;
+}
+
+export const sfx = gate({
   /** Moneda de Mario: dos notas rápidas. */
   coin() {
     note(988, 0, 0.08);
@@ -106,6 +178,10 @@ export const sfx = {
     note(1047, 0, 0.22, 'square', 0.05, 220);
     note(523, 0.1, 0.2, 'triangle', 0.035, 130);
   },
+  /** Entrar en un mundo (equiparlo o probarlo): la firma del timbre activo. */
+  theme() {
+    voice.motif.forEach((f, i) => note(f, i * 0.08, i === voice.motif.length - 1 ? 0.3 : 0.12, 'square', 0.045));
+  },
   /** Pisotón: romper un bloque. */
   stomp() {
     note(160, 0, 0.07, 'square', 0.055, 70);
@@ -141,4 +217,4 @@ export const sfx = {
   blip() {
     note(740, 0, 0.025, 'square', 0.022);
   },
-};
+});

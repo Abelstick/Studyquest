@@ -1,0 +1,653 @@
+/*
+ * ===== Mundos comprables: identidad visual completa =====
+ * Cada mundo redefine TODO el contrato de tema de tokens.css (superficies, barra lateral, HUD, acción
+ * principal, foco, forma, letra de rótulo, decoración y ritmo) en dos bloques: el general (día) y el de noche.
+ * Una prueba (themes.test.ts) comprueba que no falta ningún token y que los pares de texto cumplen WCAG AA.
+ *
+ * Los selectores van en pareja: `:root[data-world]` pinta la app y `[data-world-preview]` pinta la miniatura
+ * de la tienda con el mismo CSS, sin duplicar colores en TypeScript.
+ *
+ * Reglas que NO cambian entre mundos: la jerarquía tipográfica, el espaciado, el lugar de cada acción y el
+ * dorado de XP y monedas (--yellow). El mundo cambia la personalidad, no la importancia.
+ * El decorado por capas de la pantalla del mundo sigue en worlds.css (generado).
+ */
+
+/* ---------- Cripta de cristal · subterráneo: arcade pixelado, ladrillo y cristales cian ---------- */
+:root[data-world='underground'],
+[data-world-preview='underground'] {
+  --page: #12161f;
+  --on-page: #e3e9ff;
+  --on-page-muted: #a3aed0;
+  --panel: #dde3f0;
+  --panel-2: #cfd7e8;
+  --panel-3: #c0cae0;
+  --field: #eef1f8;
+  --field-edge: var(--line);
+  --text: #0e1428;
+  --muted: #3d4766;
+  --ink-soft: #4a5577;
+  --line: #0e1428;
+  --line-soft: #a9b4cf;
+  --shadow: #0a0f22;
+  --bar-bg: #c0cae0;
+  --xp-text: #6a4a00;
+  --red: #c2412b;
+  --red-text: #962914;
+  --green: #2a7a45;
+  --green-text: #1d5c33;
+  --blue: #2f5fa8;
+  --violet: #5f46a0;
+  --on-green: #f4f7ff;
+  --on-blue: #f4f7ff;
+  --hud: #0b0f1d;
+  --hud-2: #151c33;
+  --hud-edge: #2a3866;
+  --hud-text: #e3e9ff;
+  --side: #0e1428;
+  --side-text: #e3e9ff;
+  --side-plate: rgba(91, 224, 255, 0.05);
+  --side-plate-hi: rgba(91, 224, 255, 0.12);
+  --side-edge: rgba(91, 224, 255, 0.24);
+  --side-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='24'%3E%3Cpath d='M0 1h40M0 13h40M20 1v12M1 13v12' fill='none' stroke='%23000' stroke-opacity='.45' stroke-width='2'/%3E%3Cpath d='M0 3h40M0 15h40' stroke='%235be0ff' stroke-opacity='.07' stroke-width='2'/%3E%3C/svg%3E"), linear-gradient(180deg, #131b38, #0a0f20);
+  --nav-mark: #5be0ff;
+  --nav-mark-ease: steps(3);
+  --nav-active-bg: var(--panel);
+  --primary: #5be0ff;
+  --on-primary: #0a0f22;
+  --primary-edge: #0a0f22;
+  --primary-glow: 0 0 14px rgba(91, 224, 255, 0.35);
+  --focus: #5be0ff;
+  --focus-ink: #0a0f22;
+  --accent: #5be0ff;
+  --turf: #6f86c4;
+  --turf-2: #3d4d7a;
+  --font-display: 'Pixelify Sans Variable', ui-monospace, 'Courier New', monospace;
+  --display-stretch: 100%;
+  --btn-case: uppercase;
+  --btn-caps: normal;
+  --r-sm: 0;
+  --r-md: 0;
+  --r-lg: 0;
+  --bw: 2px;
+  /* Remaches de píxel en las cuatro esquinas, como los paneles de una recreativa de los 80. */
+  --panel-deco: linear-gradient(#2fb8d8, #2fb8d8) left 5px top 5px / 4px 4px no-repeat, linear-gradient(#2fb8d8, #2fb8d8) right 5px top 5px / 4px 4px no-repeat, linear-gradient(#2fb8d8, #2fb8d8) left 5px bottom 5px / 4px 4px no-repeat, linear-gradient(#2fb8d8, #2fb8d8) right 5px bottom 5px / 4px 4px no-repeat;
+  --panel-shadow: 4px 4px 0 var(--shadow);
+  --title-glow: 2px 2px 0 #000;
+  --fx-glow: 4px 4px 0 #000, 0 0 18px rgba(91, 224, 255, 0.35);
+  --backdrop: rgba(6, 10, 24, 0.82);
+  --bar-ease: steps(12);
+  --hover-lift: -2px;
+  --page-art: none;
+}
+:root[data-theme='dark'][data-world='underground'],
+:root[data-theme='dark'] [data-world-preview='underground'] {
+  --panel: #1a2240;
+  --panel-2: #212a4d;
+  --panel-3: #2b365e;
+  --field: #121933;
+  --field-edge: #6878a8;
+  --text: #e3e9ff;
+  --muted: #a5b0d4;
+  --ink-soft: #929ec4;
+  --line: #3a4878;
+  --line-soft: #2b365e;
+  --shadow: #05070f;
+  --bar-bg: #121933;
+  --xp-text: #f2c230;
+  --red: #e0553a;
+  --red-text: #ff9a80;
+  --green: #4fae6a;
+  --green-text: #7fd497;
+  --blue: #6f9fd8;
+  --violet: #a58bd6;
+  --on-green: #0a0f22;
+  --on-blue: #0a0f22;
+  --nav-active-bg: var(--panel-3);
+}
+
+/* ---------- Fortaleza de lava · castillo: RPG medieval, pergamino, oro y piedra ---------- */
+:root[data-world='castle'],
+[data-world-preview='castle'] {
+  --page: #1c1716;
+  --on-page: #f0e2c4;
+  --on-page-muted: #b8a98b;
+  --panel: #efe2c2;
+  --panel-2: #e6d5ae;
+  --panel-3: #dac595;
+  --field: #f8efda;
+  --field-edge: var(--line);
+  --text: #241712;
+  --muted: #59432f;
+  --ink-soft: #66503a;
+  --line: #3a2618;
+  --line-soft: #cdb486;
+  --shadow: #140f0d;
+  --bar-bg: #dac595;
+  --xp-text: #6f4e00;
+  --red: #b3321f;
+  --red-text: #962914;
+  --green: #2f7d49;
+  --green-text: #225e36;
+  --blue: #2e5b93;
+  --violet: #6d4fa0;
+  --on-green: #fbf3e0;
+  --on-blue: #fbf3e0;
+  --hud: #140f0d;
+  --hud-2: #241a16;
+  --hud-edge: #4a3626;
+  --hud-text: #f0e2c4;
+  --side: #1a1311;
+  --side-text: #f0e2c4;
+  --side-plate: rgba(212, 169, 74, 0.06);
+  --side-plate-hi: rgba(212, 169, 74, 0.14);
+  --side-edge: rgba(212, 169, 74, 0.32);
+  /* Sillares de piedra y el resplandor de una antorcha arriba. */
+  --side-bg: radial-gradient(130% 38% at 50% 0%, rgba(255, 138, 60, 0.16), transparent 70%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='32'%3E%3Cpath d='M0 1h56M0 17h56M28 1v16M1 17v16' fill='none' stroke='%23000' stroke-opacity='.5' stroke-width='2'/%3E%3Cpath d='M4 4h20M32 20h20' stroke='%23d4a94a' stroke-opacity='.08' stroke-width='2'/%3E%3C/svg%3E"), #1a1311;
+  --nav-mark: #d4a94a;
+  --nav-mark-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --nav-active-bg: var(--panel);
+  --primary: #e8742c;
+  --on-primary: #1a0f0a;
+  --primary-edge: #3a1d0e;
+  --primary-glow: 0 0 16px rgba(255, 138, 60, 0.35);
+  --focus: #f2c230;
+  --focus-ink: #1a0f0a;
+  --accent: #ff8a3c;
+  --turf: #b0563a;
+  --turf-2: #6b2a1c;
+  --font-display: Georgia, 'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif;
+  --display-stretch: 100%;
+  --btn-case: none;
+  --btn-caps: small-caps;
+  --r-sm: 2px;
+  --r-md: 3px;
+  --r-lg: 4px;
+  --bw: 1px;
+  /* Escuadras doradas en las esquinas y un filete interior: el marco de un pergamino de inventario. */
+  --panel-deco: linear-gradient(#b8892f, #b8892f) left 7px top 7px / 16px 2px no-repeat, linear-gradient(#b8892f, #b8892f) left 7px top 7px / 2px 16px no-repeat, linear-gradient(#b8892f, #b8892f) right 7px top 7px / 16px 2px no-repeat, linear-gradient(#b8892f, #b8892f) right 7px top 7px / 2px 16px no-repeat, linear-gradient(#b8892f, #b8892f) left 7px bottom 7px / 16px 2px no-repeat, linear-gradient(#b8892f, #b8892f) left 7px bottom 7px / 2px 16px no-repeat, linear-gradient(#b8892f, #b8892f) right 7px bottom 7px / 16px 2px no-repeat, linear-gradient(#b8892f, #b8892f) right 7px bottom 7px / 2px 16px no-repeat;
+  --panel-shadow: inset 0 0 0 3px var(--panel), inset 0 0 0 4px rgba(184, 137, 47, 0.5), 0 3px 0 rgba(0, 0, 0, 0.3);
+  --title-glow: 0 1px 0 #000, 0 0 14px rgba(255, 138, 60, 0.45);
+  --fx-glow: 0 0 22px rgba(255, 138, 60, 0.5);
+  --backdrop: rgba(20, 10, 6, 0.84);
+  --bar-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --hover-lift: -2px;
+  --page-art: none;
+}
+:root[data-theme='dark'][data-world='castle'],
+:root[data-theme='dark'] [data-world-preview='castle'] {
+  --panel: #2a201b;
+  --panel-2: #33271f;
+  --panel-3: #3f3026;
+  --field: #1f1814;
+  --field-edge: #8a7050;
+  --text: #f0e2c4;
+  --muted: #c4b08c;
+  --ink-soft: #ab9773;
+  --line: #5a4430;
+  --line-soft: #3f3026;
+  --shadow: #0a0706;
+  --bar-bg: #1f1814;
+  --xp-text: #f2c230;
+  --red: #e0553a;
+  --red-text: #ff9a80;
+  --green: #4fae6a;
+  --green-text: #8fd9a5;
+  --blue: #7aa7dc;
+  --violet: #b49be0;
+  --on-green: #140f0d;
+  --on-blue: #140f0d;
+  --nav-active-bg: var(--panel-3);
+}
+
+/* ---------- Abismo bioluminiscente · submarino: ciencia ficción acuática, cristal y luz turquesa ---------- */
+:root[data-world='water'],
+[data-world-preview='water'] {
+  --page: #0b1a22;
+  --on-page: #def5f7;
+  --on-page-muted: #93bcc4;
+  --panel: #e2f2f1;
+  --panel-2: #d2eae9;
+  --panel-3: #bfe0de;
+  --field: #f2fafa;
+  --field-edge: var(--line);
+  --text: #08202a;
+  --muted: #2f5560;
+  --ink-soft: #3a616c;
+  --line: #0e3a48;
+  --line-soft: #a6d0d0;
+  --shadow: #062029;
+  --bar-bg: #bfe0de;
+  --xp-text: #6a4c00;
+  --red: #b8361f;
+  --red-text: #932713;
+  --green: #1f7a52;
+  --green-text: #175e3f;
+  --blue: #1d5f96;
+  --violet: #5b4a9e;
+  --on-green: #f2fafa;
+  --on-blue: #f2fafa;
+  --hud: #08151c;
+  --hud-2: #0f2530;
+  --hud-edge: #1d4a5a;
+  --hud-text: #def5f7;
+  --side: #0a1c26;
+  --side-text: #def5f7;
+  --side-plate: rgba(90, 224, 230, 0.05);
+  --side-plate-hi: rgba(90, 224, 230, 0.12);
+  --side-edge: rgba(90, 224, 230, 0.24);
+  /* Burbujas que suben y la luz que cae desde la superficie. */
+  --side-bg: radial-gradient(circle at 30% 70%, rgba(127, 243, 255, 0.16) 0 2px, transparent 3px) 0 0 / 38px 46px, radial-gradient(circle at 70% 30%, rgba(127, 243, 255, 0.1) 0 3px, transparent 4px) 0 0 / 54px 62px, linear-gradient(180deg, #0f3140 0%, #0a1c26 45%, #061017 100%);
+  --nav-mark: #2fd6cf;
+  --nav-mark-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --nav-active-bg: var(--panel);
+  --primary: #2fd6cf;
+  --on-primary: #04161a;
+  --primary-edge: #04161a;
+  --primary-glow: 0 0 18px rgba(47, 214, 207, 0.45);
+  --focus: #7ff3ff;
+  --focus-ink: #04161a;
+  --accent: #5be0ff;
+  --turf: #e3cf8f;
+  --turf-2: #a99457;
+  --font-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  --display-stretch: 100%;
+  --btn-case: none;
+  --btn-caps: normal;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --bw: 1px;
+  /* Reflejo de cristal en la parte alta del panel. */
+  --panel-deco: linear-gradient(180deg, rgba(127, 243, 255, 0.14), rgba(127, 243, 255, 0) 72px);
+  --panel-shadow: 0 8px 24px rgba(0, 30, 45, 0.28);
+  --title-glow: 0 0 16px rgba(47, 214, 207, 0.55);
+  --fx-glow: 0 0 24px rgba(47, 214, 207, 0.5);
+  --backdrop: rgba(3, 14, 20, 0.8);
+  --bar-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --hover-lift: -3px;
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' shape-rendering='crispEdges'%3E%3Cg fill='none' stroke='%2359c8ff' stroke-width='3' opacity='.45'%3E%3Crect x='40' y='60' width='12' height='12'/%3E%3Crect x='70' y='30' width='8' height='8'/%3E%3Crect x='210' y='120' width='14' height='14'/%3E%3Crect x='250' y='90' width='8' height='8'/%3E%3Crect x='120' y='230' width='10' height='10'/%3E%3Crect x='150' y='260' width='6' height='6'/%3E%3C/g%3E%3C/svg%3E");
+}
+:root[data-theme='dark'][data-world='water'],
+:root[data-theme='dark'] [data-world-preview='water'] {
+  --panel: #102a35;
+  --panel-2: #143341;
+  --panel-3: #1b4050;
+  --field: #0b1f28;
+  --field-edge: #4f8a9a;
+  --text: #def5f7;
+  --muted: #9cc5cc;
+  --ink-soft: #88b3bb;
+  --line: #2a5a6a;
+  --line-soft: #1b4050;
+  --shadow: #020a0e;
+  --bar-bg: #0b1f28;
+  --xp-text: #f2c230;
+  --red: #e0553a;
+  --red-text: #ff9a80;
+  --green: #3fbf86;
+  --green-text: #7fe0b4;
+  --blue: #5fb0ea;
+  --violet: #a99be6;
+  --on-green: #04161a;
+  --on-blue: #04161a;
+  --nav-active-bg: var(--panel-3);
+}
+
+/* ---------- Cumbre helada · montaña nevada: fantasía de hielo, escarcha y aristas limpias ---------- */
+:root[data-world='snow'],
+[data-world-preview='snow'] {
+  --page: #141b24;
+  --on-page: #eef6ff;
+  --on-page-muted: #a6b8cb;
+  --panel: #f1f6fb;
+  --panel-2: #e3edf6;
+  --panel-3: #d0e0ee;
+  --field: #fbfdff;
+  --field-edge: var(--line);
+  --text: #0f1b28;
+  --muted: #3f5468;
+  --ink-soft: #4b6075;
+  --line: #1d3048;
+  --line-soft: #b8cde0;
+  --shadow: #0f1620;
+  --bar-bg: #d0e0ee;
+  --xp-text: #6a4c00;
+  --red: #b8361f;
+  --red-text: #9a2915;
+  --green: #237247;
+  --green-text: #1b5c39;
+  --blue: #1f5f9e;
+  --violet: #5a4aa0;
+  --on-green: #fbfdff;
+  --on-blue: #fbfdff;
+  --hud: #0f1620;
+  --hud-2: #18222f;
+  --hud-edge: #34465c;
+  --hud-text: #eef6ff;
+  --side: #121b27;
+  --side-text: #eef6ff;
+  --side-plate: rgba(200, 230, 255, 0.05);
+  --side-plate-hi: rgba(200, 230, 255, 0.11);
+  --side-edge: rgba(200, 230, 255, 0.22);
+  /* Nieve fina sobre el azul de la noche de montaña. */
+  --side-bg: radial-gradient(circle, rgba(255, 255, 255, 0.32) 0 1px, transparent 1.6px) 0 0 / 28px 28px, radial-gradient(circle, rgba(255, 255, 255, 0.18) 0 1px, transparent 1.6px) 14px 14px / 28px 28px, linear-gradient(180deg, #1c2a3b, #0e151e);
+  --nav-mark: #cfeaff;
+  --nav-mark-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --nav-active-bg: var(--panel);
+  --primary: #9fd8ff;
+  --on-primary: #0b1a2b;
+  --primary-edge: #0b1a2b;
+  --primary-glow: 0 0 14px rgba(159, 216, 255, 0.4);
+  --focus: #9fd8ff;
+  --focus-ink: #0b1a2b;
+  --accent: #a9e4ff;
+  --turf: #f2f8ff;
+  --turf-2: #a9cfe8;
+  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
+  --display-stretch: 88%;
+  --btn-case: uppercase;
+  --btn-caps: normal;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --bw: 1px;
+  /* Escarcha: un filo de luz helada en el borde superior. */
+  --panel-deco: linear-gradient(90deg, rgba(159, 216, 255, 0), rgba(159, 216, 255, 0.9) 30%, rgba(255, 255, 255, 0.95) 50%, rgba(159, 216, 255, 0.9) 70%, rgba(159, 216, 255, 0)) top / 100% 3px no-repeat;
+  --panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 18px rgba(20, 50, 90, 0.18);
+  --title-glow: 0 0 10px rgba(180, 225, 255, 0.5);
+  --fx-glow: 0 0 20px rgba(159, 216, 255, 0.5);
+  --backdrop: rgba(10, 18, 28, 0.8);
+  --bar-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --hover-lift: -2px;
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' shape-rendering='crispEdges'%3E%3Cg fill='%23fff'%3E%3Crect x='20' y='30' width='6' height='6' opacity='.9'/%3E%3Crect x='90' y='80' width='4' height='4' opacity='.7'/%3E%3Crect x='170' y='20' width='6' height='6' opacity='.8'/%3E%3Crect x='240' y='110' width='4' height='4' opacity='.7'/%3E%3Crect x='60' y='170' width='6' height='6' opacity='.85'/%3E%3Crect x='150' y='200' width='4' height='4' opacity='.6'/%3E%3Crect x='260' y='240' width='6' height='6' opacity='.9'/%3E%3Crect x='30' y='260' width='4' height='4' opacity='.6'/%3E%3C/g%3E%3C/svg%3E");
+}
+:root[data-theme='dark'][data-world='snow'],
+:root[data-theme='dark'] [data-world-preview='snow'] {
+  --panel: #1a2533;
+  --panel-2: #202d3d;
+  --panel-3: #2a3a4e;
+  --field: #131c27;
+  --field-edge: #66809c;
+  --text: #eef6ff;
+  --muted: #a9bdd2;
+  --ink-soft: #94aac1;
+  --line: #3b5068;
+  --line-soft: #2a3a4e;
+  --shadow: #070b10;
+  --bar-bg: #131c27;
+  --xp-text: #f2c230;
+  --red: #e0553a;
+  --red-text: #ff9a80;
+  --green: #4fae6a;
+  --green-text: #86d8a0;
+  --blue: #7ab4ea;
+  --violet: #ab9be6;
+  --on-green: #0b1a2b;
+  --on-blue: #0b1a2b;
+  --nav-active-bg: var(--panel-3);
+}
+
+/* ---------- Dunas del ocaso · desierto: aventura, arenisca, cenefas tejidas y oasis turquesa ---------- */
+:root[data-world='desert'],
+[data-world-preview='desert'] {
+  --page: #1e1913;
+  --on-page: #f4e6c8;
+  --on-page-muted: #bda988;
+  --panel: #f2e2bf;
+  --panel-2: #e9d4a8;
+  --panel-3: #dcc28d;
+  --field: #faf0da;
+  --field-edge: var(--line);
+  --text: #2a1a0c;
+  --muted: #5a4227;
+  --ink-soft: #684f31;
+  --line: #3d2812;
+  --line-soft: #d2b47c;
+  --shadow: #17120d;
+  --bar-bg: #dcc28d;
+  --xp-text: #6f4c00;
+  --red: #b3401f;
+  --red-text: #932f18;
+  --green: #2d7a46;
+  --green-text: #225e36;
+  --blue: #1f6e78;
+  --violet: #6d4fa0;
+  --on-green: #faf0da;
+  --on-blue: #faf0da;
+  --hud: #17120d;
+  --hud-2: #251d15;
+  --hud-edge: #4d3b27;
+  --hud-text: #f4e6c8;
+  --side: #1d150f;
+  --side-text: #f4e6c8;
+  --side-plate: rgba(224, 162, 59, 0.06);
+  --side-plate-hi: rgba(224, 162, 59, 0.14);
+  --side-edge: rgba(224, 162, 59, 0.3);
+  /* Atardecer arriba y un tejido en zigzag, como una alfombra del bazar. */
+  --side-bg: linear-gradient(180deg, rgba(224, 110, 50, 0.2), transparent 32%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12'%3E%3Cpath d='M0 10l6-6 6 6 6-6 6 6' fill='none' stroke='%23e0a23b' stroke-opacity='.09' stroke-width='2'/%3E%3C/svg%3E"), #1d150f;
+  --nav-mark: #e0a23b;
+  --nav-mark-ease: steps(4);
+  --nav-active-bg: var(--panel);
+  --primary: #3cbfae;
+  --on-primary: #0d1a17;
+  --primary-edge: #0d1a17;
+  --primary-glow: 0 0 14px rgba(60, 191, 174, 0.35);
+  --focus: #ffd166;
+  --focus-ink: #1d0f06;
+  --accent: #ffa64d;
+  --turf: #ecc97a;
+  --turf-2: #b98d45;
+  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
+  --display-stretch: 75%;
+  --btn-case: uppercase;
+  --btn-caps: normal;
+  --r-sm: 3px;
+  --r-md: 4px;
+  --r-lg: 6px;
+  --bw: 1px;
+  /* Cenefa tejida (terracota, ocre y turquesa) en el borde superior del panel. */
+  --panel-deco: repeating-linear-gradient(90deg, #b4532a 0 14px, #e0a23b 14px 20px, #2a8c8c 20px 28px, #e0a23b 28px 34px) top / 100% 5px no-repeat;
+  --panel-shadow: 0 3px 0 rgba(80, 45, 15, 0.35);
+  --title-glow: 0 2px 0 rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 166, 77, 0.35);
+  --fx-glow: 0 0 20px rgba(255, 166, 77, 0.45);
+  --backdrop: rgba(24, 14, 6, 0.82);
+  --bar-ease: steps(8);
+  --hover-lift: -2px;
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='240' shape-rendering='crispEdges'%3E%3Cg fill='%23e8c87a' opacity='.22'%3E%3Crect x='0' y='200' width='120' height='16'/%3E%3Crect x='24' y='184' width='72' height='16'/%3E%3Crect x='200' y='216' width='160' height='16'/%3E%3Crect x='240' y='200' width='80' height='16'/%3E%3C/g%3E%3Ccircle cx='290' cy='50' r='22' fill='%23ffd23f' opacity='.35'/%3E%3C/svg%3E");
+}
+:root[data-theme='dark'][data-world='desert'],
+:root[data-theme='dark'] [data-world-preview='desert'] {
+  --panel: #2b2117;
+  --panel-2: #33281c;
+  --panel-3: #3e3122;
+  --field: #211911;
+  --field-edge: #8a6d45;
+  --text: #f4e6c8;
+  --muted: #c9b28a;
+  --ink-soft: #b09a75;
+  --line: #5b4528;
+  --line-soft: #3e3122;
+  --shadow: #0a0705;
+  --bar-bg: #211911;
+  --xp-text: #f2c230;
+  --red: #e0603a;
+  --red-text: #ffa184;
+  --green: #52b06d;
+  --green-text: #8fd9a5;
+  --blue: #4fc0c4;
+  --violet: #b49be0;
+  --on-green: #17120d;
+  --on-blue: #17120d;
+  --nav-active-bg: var(--panel-3);
+}
+
+/* ---------- Mansión espectral · casa encantada: fantasía oscura, niebla violeta y luz de neón ---------- */
+:root[data-world='ghost'],
+[data-world-preview='ghost'] {
+  --page: #17131f;
+  --on-page: #ede6ff;
+  --on-page-muted: #ada1cc;
+  --panel: #ece6f6;
+  --panel-2: #e0d7f0;
+  --panel-3: #cfc2e6;
+  --field: #f7f3fc;
+  --field-edge: var(--line);
+  --text: #1a1228;
+  --muted: #4d3f68;
+  --ink-soft: #594b74;
+  --line: #241a38;
+  --line-soft: #c2b3dc;
+  --shadow: #110d19;
+  --bar-bg: #cfc2e6;
+  --xp-text: #6a4c00;
+  --red: #b3321f;
+  --red-text: #962914;
+  --green: #2a7550;
+  --green-text: #1f5c3d;
+  --blue: #3c5aa6;
+  --violet: #6a3fb8;
+  --on-green: #f7f3fc;
+  --on-blue: #f7f3fc;
+  --hud: #110d19;
+  --hud-2: #1d1729;
+  --hud-edge: #3e3160;
+  --hud-text: #ede6ff;
+  --side: #130f1c;
+  --side-text: #ede6ff;
+  --side-plate: rgba(195, 162, 255, 0.06);
+  --side-plate-hi: rgba(195, 162, 255, 0.14);
+  --side-edge: rgba(195, 162, 255, 0.28);
+  /* Niebla violeta que sube del suelo y un fuego fatuo verde arriba. */
+  --side-bg: radial-gradient(120% 50% at 0% 100%, rgba(140, 90, 255, 0.24), transparent 62%), radial-gradient(90% 36% at 100% 0%, rgba(90, 220, 200, 0.1), transparent 60%), #130f1c;
+  --nav-mark: #b991ff;
+  --nav-mark-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --nav-active-bg: var(--panel);
+  --primary: #b991ff;
+  --on-primary: #160d26;
+  --primary-edge: #160d26;
+  --primary-glow: 0 0 18px rgba(185, 145, 255, 0.55);
+  --focus: #d6c2ff;
+  --focus-ink: #160d26;
+  --accent: #c3a2ff;
+  --turf: #5a4a80;
+  --turf-2: #2f2448;
+  --font-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  --display-stretch: 100%;
+  --btn-case: uppercase;
+  --btn-caps: normal;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
+  --bw: 1px;
+  /* Un velo de luz violeta en la esquina, como si algo brillara detrás del panel. */
+  --panel-deco: radial-gradient(120% 70% at 100% 0%, rgba(185, 145, 255, 0.16), transparent 60%);
+  --panel-shadow: 0 0 0 1px rgba(185, 145, 255, 0.18), 0 0 22px rgba(140, 90, 255, 0.16);
+  --title-glow: 0 0 2px rgba(195, 162, 255, 0.9), 0 0 12px rgba(195, 162, 255, 0.7);
+  --fx-glow: 0 0 26px rgba(185, 145, 255, 0.6);
+  --backdrop: rgba(12, 8, 22, 0.84);
+  --bar-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --hover-lift: -2px;
+  --page-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' shape-rendering='crispEdges'%3E%3Cg fill='%23c9b6ff' opacity='.5'%3E%3Crect x='40' y='60' width='16' height='16'/%3E%3Crect x='44' y='76' width='8' height='8'/%3E%3Crect x='250' y='140' width='16' height='16'/%3E%3Crect x='254' y='156' width='8' height='8'/%3E%3Crect x='120' y='280' width='12' height='12'/%3E%3C/g%3E%3Cg fill='%23fff' opacity='.5'%3E%3Crect x='200' y='40' width='3' height='3'/%3E%3Crect x='300' y='250' width='3' height='3'/%3E%3Crect x='30' y='220' width='3' height='3'/%3E%3C/g%3E%3C/svg%3E");
+}
+:root[data-theme='dark'][data-world='ghost'],
+:root[data-theme='dark'] [data-world-preview='ghost'] {
+  --panel: #221b31;
+  --panel-2: #2a213c;
+  --panel-3: #352a4b;
+  --field: #1a1426;
+  --field-edge: #7a68a8;
+  --text: #ede6ff;
+  --muted: #b8aad8;
+  --ink-soft: #a294c6;
+  --line: #4a3b6e;
+  --line-soft: #352a4b;
+  --shadow: #07050c;
+  --bar-bg: #1a1426;
+  --xp-text: #f2c230;
+  --red: #e0553a;
+  --red-text: #ff9a80;
+  --green: #4fbf8a;
+  --green-text: #8fe0b9;
+  --blue: #8aa8ff;
+  --violet: #c3a2ff;
+  --on-green: #110d19;
+  --on-blue: #110d19;
+  --nav-active-bg: var(--panel-3);
+}
+
+/*
+ * ===== Cambio de mundo =====
+ * Con la API View Transitions (si el navegador la tiene y no se pidió menos movimiento), la interfaz nueva
+ * entra con el gesto de su mundo. Sin ella, el cambio es instantáneo: nunca se bloquea nada.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-theme);
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  animation: none;
+}
+::view-transition-new(root) {
+  animation-name: theme-in-pixel;
+  animation-timing-function: steps(8);
+}
+:root[data-world='castle']::view-transition-new(root) {
+  animation-name: theme-in-gate;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+:root[data-world='water']::view-transition-new(root) {
+  animation-name: theme-in-iris;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+:root[data-world='snow']::view-transition-new(root) {
+  animation-name: theme-in-frost;
+  animation-timing-function: ease-out;
+}
+:root[data-world='desert']::view-transition-new(root) {
+  animation-name: theme-in-dune;
+  animation-timing-function: steps(10);
+}
+:root[data-world='ghost']::view-transition-new(root) {
+  animation-name: theme-in-mist;
+  animation-timing-function: ease-out;
+}
+/* Recreativa y cripta: la pantalla nueva se revela por franjas, a saltos. */
+@keyframes theme-in-pixel {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+}
+/* Fortaleza: el rastrillo del castillo cae. */
+@keyframes theme-in-gate {
+  from {
+    clip-path: inset(0 0 0 0 round 0);
+    transform: translateY(-100%);
+  }
+}
+/* Abismo: se abre como el ojo de una escotilla. */
+@keyframes theme-in-iris {
+  from {
+    clip-path: circle(0% at 50% 50%);
+  }
+}
+/* Cumbre: la escarcha se aclara. */
+@keyframes theme-in-frost {
+  from {
+    opacity: 0;
+    filter: blur(6px) brightness(1.4);
+  }
+}
+/* Dunas: el viento barre de izquierda a derecha. */
+@keyframes theme-in-dune {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+/* Mansión: aparece entre la niebla. */
+@keyframes theme-in-mist {
+  from {
+    opacity: 0;
+    filter: blur(10px) saturate(1.6);
+  }
+}

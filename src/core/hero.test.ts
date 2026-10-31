@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { Hero } from './domain';
 import {
-  BONES, HERO_SHOP, HERO_STAGES, MAX_STAGE, RACES, buildHeroModel, canEvolve, cleanHeroName, describeHero, heroItem, heroStats, itemState,
-  itemsFor, newHero, nextStage, paletteFor, sanitizeHero, stageForLevel, STAT_KEYS,
+  BONES, HERO_SHOP, HERO_STAGES, MAX_STAGE, RACES, buildHeroModel, canEvolve, cleanHeroName, describeHero, heroItem, itemState,
+  itemsFor, newHero, nextStage, paletteFor, sanitizeHero, stageForLevel,
 } from './hero';
 
 const hero = (over: Partial<Hero> = {}): Hero => ({ race: 'saiyajin', name: 'Kai', stage: 0, weapon: null, power: null, skin: null, ...over });
@@ -35,42 +35,9 @@ describe('evolución', () => {
 });
 
 describe('razas', () => {
-  it('son seis y todas parten equilibradas (misma suma)', () => {
+  it('son seis, cada una con su paleta propia', () => {
     expect(RACES).toHaveLength(6);
-    const sum = (o: Record<string, number>) => Object.values(o).reduce((a, b) => a + b, 0);
-    const bases = RACES.map((r) => sum(r.base));
-    const growth = RACES.map((r) => Math.round(sum(r.growth) * 10));
-    expect(new Set(bases).size).toBe(1);
-    expect(new Set(growth).size).toBe(1);
-  });
-
-  it('cada una destaca en algo distinto', () => {
-    const best = RACES.map((r) => STAT_KEYS.reduce((a, k) => (r.base[k] > r.base[a] ? k : a), STAT_KEYS[0]));
-    expect(new Set(best).size).toBeGreaterThanOrEqual(3);
-  });
-});
-
-describe('estadísticas', () => {
-  it('crecen con el nivel', () => {
-    expect(heroStats(hero(), 10).power).toBeGreaterThan(heroStats(hero(), 2).power);
-  });
-
-  it('evolucionar multiplica lo que da el nivel', () => {
-    const antes = heroStats(hero({ stage: 0 }), 12).power;
-    const despues = heroStats(hero({ stage: 2 }), 12).power;
-    expect(despues).toBeGreaterThan(antes * 1.3);
-  });
-
-  it('el arma y el poder suman su bonus; la skin no', () => {
-    const base = heroStats(hero(), 5);
-    const armado = heroStats(hero({ weapon: 'hero-w-martillo', power: 'hero-p-escudo', skin: 'hero-s-neon' }), 5);
-    expect(armado.bonus).toEqual({ fuerza: 5, defensa: 7, velocidad: 0, energia: 0 });
-    expect(armado.total.fuerza).toBe(base.total.fuerza + 5);
-    expect(armado.power).toBe(base.power + 12);
-  });
-
-  it('ignora objetos que no existen', () => {
-    expect(heroStats(hero({ weapon: 'no-existe' }), 3).bonus.fuerza).toBe(0);
+    expect(new Set(RACES.map((r) => r.palette.primary)).size).toBe(6);
   });
 });
 
@@ -80,14 +47,15 @@ describe('tienda del héroe', () => {
     expect(new Set(ids).size).toBe(ids.length);
     for (const i of HERO_SHOP) {
       expect(i.id.startsWith('hero-')).toBe(true);
-      expect(i.price).toBeGreaterThan(0);
+      // Lo que se gana con un atributo no se vende (precio 0); el resto, sí.
+      if (i.unlock) expect(i.price).toBe(0);
+      else expect(i.price).toBeGreaterThan(0);
       expect(i.stage).toBeGreaterThanOrEqual(0);
       expect(i.stage).toBeLessThanOrEqual(MAX_STAGE);
       if (i.slot === 'weapon') expect(i.shape).toBeTruthy();
       if (i.slot === 'power') expect(i.effect).toBeTruthy();
       if (i.slot === 'skin') {
         expect(i.palette).toBeTruthy();
-        expect(i.bonus).toEqual({});
       }
     }
   });

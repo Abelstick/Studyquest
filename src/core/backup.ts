@@ -15,6 +15,7 @@ import { cleanChallenge } from './challenge';
 import { cleanIfThen } from './ifthen';
 import { cleanMinimum } from './minimum';
 import { cleanReview, MAX_REVIEWS } from './weekReview';
+import { MAX_FREEZER_MILESTONES, cleanProgressable, isAttributeId, isClassId, isXpSource, xpKey } from './progression';
 
 export const BACKUP_APP = 'studyquest';
 export const BACKUP_VERSION = 1;
@@ -106,12 +107,13 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     const mentor = isObj(o.mentor) ? { name: str(o.mentor.name), skills: str(o.mentor.skills), feedback: str(o.mentor.feedback), feedbackAt: DATE.test(str(o.mentor.feedbackAt)) ? str(o.mentor.feedbackAt) : null } : null;
     return {
       id: fixId(o.id), title: str(o.title), professor: str(o.professor), field: str(o.field), mentor, createdAt: str(o.createdAt, new Date().toISOString()),
+      ...cleanProgressable(o),
       ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       ...(safeUrl(str(o.link)) ? { link: safeUrl(str(o.link)) as string } : {}),
       ...(DATE.test(str(o.dueDate)) ? { dueDate: str(o.dueDate) } : {}),
       ...(typeof o.studyDaysPerWeek === 'number' && Number.isInteger(o.studyDaysPerWeek) && o.studyDaysPerWeek >= 1 && o.studyDaysPerWeek <= 7 ? { studyDaysPerWeek: o.studyDaysPerWeek } : {}),
       modules: subs(o.modules, (m) => ({
-        id: fixId(m.id), title: str(m.title, 'Módulo'), summary: str(m.summary), xp: num(m.xp, 100),
+        id: fixId(m.id), title: str(m.title, 'Módulo'), summary: str(m.summary),
         topics: subs(m.topics, (t) => ({
           id: fixId(t.id), title: str(t.title, 'Tema'), status: ['todo', 'doing', 'done'].includes(str(t.status)) ? str(t.status) : 'todo', review: t.review === true, markedAt: DATE.test(str(t.markedAt)) ? str(t.markedAt) : null,
           ...(typeof t.reviewStage === 'number' && t.reviewStage >= 0 && t.reviewStage <= 3 ? { reviewStage: Math.floor(t.reviewStage) } : {}),
@@ -127,6 +129,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     str(o.title)
       ? {
           id: fixId(o.id), title: str(o.title), rewardTitle: str(o.rewardTitle), rewardDescription: str(o.rewardDescription), createdAt: str(o.createdAt, new Date().toISOString()),
+          ...cleanProgressable(o),
           ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
           ...(DATE.test(str(o.deadline)) ? { deadline: str(o.deadline) } : {}),
           ...(str(o.measure).trim() ? { measure: str(o.measure).trim().slice(0, 300) } : {}),
@@ -134,7 +137,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
           ...(cleanArea(o.area) ? { area: cleanArea(o.area) } : {}),
           ...(cleanIfThen(o.ifThen) ? { ifThen: cleanIfThen(o.ifThen) } : {}),
           milestones: subs(o.milestones, (m) => ({
-            id: fixId(m.id), title: str(m.title, 'Hito'), summary: str(m.summary), xp: num(m.xp, 100), done: m.done === true,
+            id: fixId(m.id), title: str(m.title, 'Hito'), summary: str(m.summary), done: m.done === true,
             skills: subs(m.skills, (k) => ({ id: fixId(k.id), label: str(k.label, 'Habilidad'), done: k.done === true })),
           })),
         }
@@ -145,6 +148,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
   const links = (o: Obj) => {
     const goalId = ref(o.goalId);
     return {
+      ...cleanProgressable(o),
       ...(cleanArea(o.area) ? { area: cleanArea(o.area) } : {}),
       ...(goalId && goalIds.has(goalId) ? { goalId } : {}),
     };
@@ -155,7 +159,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     // La versión mínima solo vale si es menor que el objetivo y el hábito se mide en cantidad.
     const minTarget = cleanMinimum(o.minTarget, { target: Math.max(1, num(o.target, 1)), measure: str(o.measure, 'times') as Habit['measure'], kind: o.kind === 'quit' ? 'quit' : 'build' });
     return {
-      id: fixId(o.id), title: str(o.title), frequency: o.frequency, measure: str(o.measure, 'times'), target: Math.max(1, num(o.target, 1)), xp: num(o.xp, 10),
+      id: fixId(o.id), title: str(o.title), frequency: o.frequency, measure: str(o.measure, 'times'), target: Math.max(1, num(o.target, 1)),
       ...(str(o.planId) ? { planId: fixId(o.planId) } : {}),
       ...(DIFFICULTY_IDS.includes(str(o.difficulty)) ? { difficulty: str(o.difficulty) } : {}),
       ...links(o),
@@ -179,7 +183,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
       id: fixId(o.id), title: str(o.title), courseId: courseId && courseIds.has(courseId) ? courseId : null,
       priority: ['low', 'mid', 'high', 'boss'].includes(str(o.priority)) ? str(o.priority) : 'mid',
       status: ['todo', 'doing', 'done'].includes(str(o.status)) ? str(o.status) : 'todo',
-      dueDate: DATE.test(str(o.dueDate)) ? str(o.dueDate) : null, estimateMin: num(o.estimateMin), xp: num(o.xp, 20),
+      dueDate: DATE.test(str(o.dueDate)) ? str(o.dueDate) : null, estimateMin: num(o.estimateMin),
       subtasks: subs(o.subtasks, (s) => ({ id: fixId(s.id), title: str(s.title, 'Subtarea'), done: s.done === true })),
       tags: asArray(o.tags).filter((t): t is string => typeof t === 'string'), createdAt: str(o.createdAt, new Date().toISOString()),
       completedAt: DATE.test(str(o.completedAt)) ? str(o.completedAt) : null,
@@ -202,7 +206,8 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     str(o.title)
       ? {
           id: fixId(o.id), title: str(o.title), summary: str(o.summary), kind: o.kind === 'main' ? 'main' : 'side', createdAt: str(o.createdAt, new Date().toISOString()),
-          checkpoints: subs(o.checkpoints, (c) => ({ id: fixId(c.id), title: str(c.title, 'Checkpoint'), summary: str(c.summary), xp: num(c.xp, 100), done: c.done === true })),
+          ...cleanProgressable(o),
+          checkpoints: subs(o.checkpoints, (c) => ({ id: fixId(c.id), title: str(c.title, 'Checkpoint'), summary: str(c.summary), done: c.done === true })),
         }
       : null,
   );
@@ -243,9 +248,18 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     const courseId = ref(o.courseId);
     return { id: fixId(o.id), date: str(o.date), minutes: num(o.minutes), courseId: courseId && courseIds.has(courseId) ? courseId : null, label: str(o.label, 'Sesión de estudio') };
   });
-  const xpEvents = list('xpEvents', 'eventos de XP', (o) =>
-    DATE.test(str(o.date)) && typeof o.amount === 'number' ? { id: fixId(o.id), date: str(o.date), amount: num(o.amount), source: str(o.source, 'bonus'), label: str(o.label) } : null,
-  );
+  // Ledger de XP: solo filas con atributo (las copias anteriores al sistema de atributos no traen XP que conservar)
+  // y una por clave, que es lo que exige la base de datos.
+  const xpSeen = new Set<string>();
+  const xpEvents = list('xpEvents', 'eventos de XP', (o) => {
+    if (!DATE.test(str(o.date)) || typeof o.amount !== 'number' || o.amount < 0 || !isAttributeId(o.attribute) || !isXpSource(o.source) || !str(o.sourceId)) return null;
+    // Los orígenes con id de una entidad se reescriben si esa entidad cambió de id; las claves compuestas («weekly:…») se quedan.
+    const event = { id: fixId(o.id), date: str(o.date), attribute: o.attribute, amount: Math.round(o.amount), source: o.source, sourceId: ref(o.sourceId) ?? str(o.sourceId), label: str(o.label) };
+    const key = xpKey(event);
+    if (xpSeen.has(key)) return null;
+    xpSeen.add(key);
+    return event;
+  });
   const notifications = list('notifications', 'notificaciones', (o) =>
     str(o.title) ? { id: fixId(o.id), category: str(o.category, 'alert'), title: str(o.title), body: str(o.body), createdAt: str(o.createdAt, new Date().toISOString()), read: o.read === true } : null,
   );
@@ -265,7 +279,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
   const hero = sanitizeHero(p.hero, inventory);
   const profile = {
     ...base,
-    displayName: str(p.displayName, base.displayName), xp: Math.max(0, num(p.xp)), credits: Math.max(0, num(p.credits)), streakFreezes: Math.max(0, num(p.streakFreezes)),
+    displayName: str(p.displayName, base.displayName), credits: Math.max(0, num(p.credits)), streakFreezes: Math.max(0, num(p.streakFreezes)),
     frozenDates: asArray(p.frozenDates).filter((x): x is string => DATE.test(str(x))), weeklyGoalHours: Math.max(1, num(p.weeklyGoalHours, 15)),
     weeklyBonusClaimed: DATE.test(str(p.weeklyBonusClaimed)) ? str(p.weeklyBonusClaimed) : null,
     inventory,
@@ -279,6 +293,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
     ...(isObj(p.city) ? { city: Object.fromEntries(Object.entries(p.city).filter(([k, v]) => ['casa', 'biblioteca', 'academia', 'laboratorio', 'arena', 'museo'].includes(k) && typeof v === 'number').map(([k, v]) => [k, Math.max(0, Math.min(5, Math.floor(v as number)))])) } : {}),
     ...(typeof p.chests === 'number' && p.chests > 0 ? { chests: Math.floor(p.chests) } : {}),
     ...(p.weeklyDigest === false ? { weeklyDigest: false } : {}),
+    ...(asArray(p.freezerMilestones).length ? { freezerMilestones: asArray(p.freezerMilestones).filter((x): x is string => /^\d{4}-\d{2}-\d{2}\+\d+$/.test(str(x))).slice(-MAX_FREEZER_MILESTONES) } : {}),
     // Las cadenas apuntan a hábitos: se reescriben las referencias y se descartan las que quedan sueltas.
     ...(asArray(p.chains).length
       ? {
@@ -293,6 +308,7 @@ export function parseBackup(text: string, userId = 'imported'): ParseResult {
         }
       : {}),
     ...(hero ? { hero } : {}),
+    ...(isClassId(p.characterClass) ? { characterClass: p.characterClass } : {}),
     ...(reviews.length ? { reviews } : {}),
     ...(typeof p.works === 'boolean' ? { works: p.works } : {}),
     ...(challenge ? { challenge } : {}),

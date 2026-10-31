@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
-import { XP_BY_PRIORITY } from '@/core/game';
-import { DIFFICULTIES, difficultyInfo, difficultyOf, xpForDifficulty } from '@/core/difficulty';
+import { DIFFICULTIES, difficultyInfo, difficultyOf } from '@/core/difficulty';
+import { SOURCE_BASE_XP, taskBaseXp, taskCtx } from '@/core/progression';
 import { isClockTime, minutesOfDay, newId, today } from '@/core/dates';
 import { planTaskSlots, slotLabel, taskBlockDrafts, taskBlocks } from '@/core/routine';
 import { WorksQuestion } from '../calendario/WorksQuestion';
 import type { AreaId, Difficulty, Priority, Recurrence, TaskStatus } from '@/core/domain';
-import { BOSS_BONUS_XP, RECURRENCE_UNITS } from '@/core/tasks';
+import { RECURRENCE_UNITS } from '@/core/tasks';
 import { Button, Field, Modal, Segmented, linesToList, TextInput, NumberInput } from '@/ui/kit';
 import { ConceptHint } from '../help/ConceptGuide';
 import { Fold, OrganizeFields } from './LifeFields';
 import { Sprite } from '@/ui/Sprite';
+import { CategoryField, progressToSave, type ProgressDraft } from './CategoryField';
 
 const PRIORITIES: { value: Priority; label: string }[] = [
   { value: 'low', label: 'Baja' },
@@ -39,9 +40,8 @@ export function TaskModal({ id, dueDate, goalId: presetGoal, courseId: presetCou
   const [priority, setPriority] = useState<Priority>(editing?.priority ?? 'mid');
   const [estimate, setEstimate] = useState(editing?.estimateMin ?? 30);
   const [difficulty, setDifficulty] = useState<Difficulty>(editing ? difficultyOf(editing) : 'normal');
-  const [xp, setXp] = useState(editing?.xp ?? XP_BY_PRIORITY.mid);
-  // Si el XP ya no coincide con el que propone su prioridad y dificultad, es que lo personalizaste: no se lo pisamos.
-  const [xpTouched, setXpTouched] = useState(!!editing && editing.xp !== xpForDifficulty(XP_BY_PRIORITY[editing.priority], difficultyOf(editing)));
+  // Sin categoría guardada, la sugerida sigue al título mientras escribes.
+  const [progress, setProgress] = useState<ProgressDraft>({ category: editing?.category, attributes: editing?.attributes });
   const [subs, setSubs] = useState(editing?.subtasks.map((s) => s.title).join('\n') ?? '');
   const [tags, setTags] = useState(editing?.tags.join(', ') ?? '');
   const [status, setStatus] = useState<TaskStatus>(editing?.status ?? 'todo');
@@ -57,14 +57,8 @@ export function TaskModal({ id, dueDate, goalId: presetGoal, courseId: presetCou
     [events, hasBlocks, status, due, dueTime, estimate, priority, courseId, area, habits, tasks, habitLogs],
   );
 
-  const pickPriority = (p: Priority) => {
-    setPriority(p);
-    if (!xpTouched) setXp(xpForDifficulty(XP_BY_PRIORITY[p], difficulty));
-  };
-  const pickDifficulty = (d: Difficulty) => {
-    setDifficulty(d);
-    if (!xpTouched) setXp(xpForDifficulty(XP_BY_PRIORITY[priority], d));
-  };
+  const tagList = tags.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean);
+  const suggestCtx = taskCtx({ area: area || undefined, tags: tagList, courseId: courseId || null }, courses);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,10 +73,10 @@ export function TaskModal({ id, dueDate, goalId: presetGoal, courseId: presetCou
       // La hora solo vale con fecha; sin ella la tarea vence al terminar el día.
       dueTime: due && isClockTime(dueTime) ? dueTime : undefined,
       estimateMin: Math.max(0, estimate),
-      xp: Math.max(0, xp),
       difficulty,
+      ...progressToSave(progress, title.trim(), suggestCtx),
       subtasks,
-      tags: tags.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean),
+      tags: tagList,
       recurrence: repeat ? { unit: repeat.unit, interval: Math.max(1, Math.min(365, Math.floor(repeat.interval) || 1)) } : undefined,
       area: area || undefined,
       goalId: goalId || undefined,
@@ -120,31 +114,18 @@ export function TaskModal({ id, dueDate, goalId: presetGoal, courseId: presetCou
             {(fid) => <input id={fid} className="input" type="time" value={due ? dueTime : ''} disabled={!due} onChange={(e) => setDueTime(e.target.value)} />}
           </Field>
         </div>
-        <Field label="Prioridad">{() => <Segmented label="Prioridad" value={priority} options={PRIORITIES} onChange={pickPriority} />}</Field>
-        <Field label="Dificultad" hint={`${difficultyInfo(difficulty).hint} Ajusta el XP que propone la tarea; puedes cambiarlo abajo.`}>
-          {() => <Segmented label="Dificultad" value={difficulty} options={DIFFICULTIES.map((d) => ({ value: d.value, label: d.label }))} onChange={pickDifficulty} />}
+        <Field label="Prioridad">{() => <Segmented label="Prioridad" value={priority} options={PRIORITIES} onChange={setPriority} />}</Field>
+        <Field label="Dificultad" hint={`${difficultyInfo(difficulty).hint} Decide el XP que da la tarea.`}>
+          {() => <Segmented label="Dificultad" value={difficulty} options={DIFFICULTIES.map((d) => ({ value: d.value, label: d.label }))} onChange={(d: Difficulty) => setDifficulty(d)} />}
         </Field>
+        <CategoryField title={title} ctx={suggestCtx} value={progress} onChange={setProgress} base={taskBaseXp({ difficulty, priority })} />
         {priority === 'boss' && (
           <p className="form__info">
-            <Sprite name="skull" size={14} /> Un jefe final tiene una vida por subtarea: cada una que completes le quita una. Al caer el último golpe ganas su XP y un botín extra de <b>+{BOSS_BONUS_XP} XP</b>. Añade subtareas abajo para darle vida.
+            <Sprite name="skull" size={14} /> Un jefe final tiene una vida por subtarea: cada una que completes le quita una. Al caer el último golpe ganas su XP con un extra de <b>+{SOURCE_BASE_XP.boss} XP</b>. Añade subtareas abajo para darle vida.
           </p>
         )}
         <div className="form__row">
           <Field label="Tiempo estimado (min)">{(fid) => <NumberInput id={fid} className="input" min={0} step={5} value={estimate} onValue={(n) => setEstimate(n)}/>}</Field>
-          <Field label="Recompensa (XP)">
-            {(fid) => (
-              <NumberInput
-                id={fid}
-                className="input input--xp"
-                min={0}
-                step={5}
-                value={xp}
-                onValue={(n) => {
-                  setXp(n);
-                  setXpTouched(true);
-                }}/>
-            )}
-          </Field>
         </div>
         {plan && (
           <div className="sched">

@@ -2,6 +2,7 @@ import { dataLayer } from '@/data';
 import type { Snapshot } from '@/core/domain';
 import { createDataStore } from './data';
 import { useUi } from './ui';
+import { totalXp } from '@/core/progression/ledger';
 
 export const useData = createDataStore(dataLayer.repo);
 export { dataLayer };
@@ -50,3 +51,6 @@ dataLayer.sync?.onEvent((e) => {
   if (e.type === 'synced') toast({ kind: 'info', title: 'Sincronizado', body: `${e.count} ${e.count === 1 ? 'cambio guardado' : 'cambios guardados'} en la nube.` });
   else toast({ kind: 'error', title: 'Un cambio no se pudo guardar', body: e.error });
 });
+
+/** XP total del personaje: la suma del ledger (no hay un contador aparte que se pueda desincronizar). */
+export const useTotalXp = () => useData((s) => totalXp(s.xpEvents));

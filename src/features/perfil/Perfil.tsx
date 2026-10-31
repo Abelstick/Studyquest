@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useData, dataLayer, clearCache } from '@/state';
+import { useData, dataLayer, clearCache, useTotalXp } from '@/state';
+import { totalXp } from '@/core/progression';
 import { useUi } from '@/state/ui';
 import { ACHIEVEMENTS } from '@/core/achievements';
 import { shopItem } from '@/core/catalog';
@@ -130,7 +131,7 @@ function BackupPanel() {
     openModal({
       type: 'confirm',
       title: 'Restaurar copia',
-      body: `Se reemplazará TODA tu partida actual por la de la copia (${counts}; ${parsed.snapshot.profile.xp} XP).${warn} Te recomendamos exportar antes una copia de la partida actual.`,
+      body: `Se reemplazará TODA tu partida actual por la de la copia (${counts}; ${totalXp(parsed.snapshot.xpEvents)} XP).${warn} Te recomendamos exportar antes una copia de la partida actual.`,
       confirmLabel: 'Reemplazar todo',
       onConfirm: () => void replaceAll(parsed.snapshot).then((ok) => ok && toast({ kind: 'info', title: 'Partida restaurada' })),
     });
@@ -170,7 +171,8 @@ export default function Perfil() {
   const { updateProfile, resetAll } = useData();
   const { openModal } = useUi();
   const { canInstall, installed, install } = useInstallPrompt();
-  const level = levelFromXp(profile.xp);
+  const xp = useTotalXp();
+  const level = levelFromXp(xp);
   const streak = useMemo(() => computeStreak(xpEvents, profile.frozenDates).current, [xpEvents, profile.frozenDates]);
 
   const [name, setName] = useState(profile.displayName);
@@ -218,7 +220,7 @@ export default function Perfil() {
               <p className="kicker">Nivel {level} · {rankFor(level)}</p>
               <h1 className="hero__hi">{profile.displayName}</h1>
               <p className="muted upper">
-                Desde {shortDate(profile.joinedAt.slice(0, 10))} · {profile.xp.toLocaleString('en-US')} XP · racha {streak}
+                Desde {shortDate(profile.joinedAt.slice(0, 10))} · {xp.toLocaleString('en-US')} XP · racha {streak}
               </p>
             </div>
           </div>

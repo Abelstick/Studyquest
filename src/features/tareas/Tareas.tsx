@@ -8,6 +8,8 @@ import { NEXT_STATUS, PRIORITY_LABEL, bossHp, dueTimeOf, isBoss, isOverdue, recu
 import { CONCEPTS } from '@/core/concepts';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { difficultyInfo, difficultyOf } from '@/core/difficulty';
+import { taskBaseXp, taskGains } from '@/core/progression';
+import { Gains } from '@/ui/Attribute';
 import { Bar, Button, Empty, PageHead, cx } from '@/ui/kit';
 import { LateBanner } from './LateBanner';
 import { AreaFilterSelect, AreaTag } from '@/ui/Area';
@@ -48,6 +50,8 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
   const hp = bossHp(task);
   // Subtareas todas hechas: no se cierra sola, pero se nota que solo falta pulsar «Completar».
   const ready = task.subtasks.length > 0 && doneSubs === task.subtasks.length && task.status !== 'done';
+  const courses = useData((s) => s.courses);
+  const gains = taskGains(task, courses);
 
   return (
     <article
@@ -69,7 +73,7 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
         ) : (
           <span className="kicker">{courseName}</span>
         )}
-        <span className="task__xp">+{task.xp} XP</span>
+        <Gains gains={gains} className="task__xp" />
       </div>
       <h3 className="task__title">
         {task.priority === 'boss' && <Sprite name={boss ? 'boss' : 'skull'} size={boss ? 22 : 16} />} {task.title}
@@ -199,7 +203,7 @@ export default function Tareas() {
     visible
       .filter((t) => t.status === st)
       // Las superadas, la última primero; las demás, por vencimiento.
-      .sort(st === 'done' ? byRecentlyDone : (a, b) => dueKey(a).localeCompare(dueKey(b)) || b.xp - a.xp);
+      .sort(st === 'done' ? byRecentlyDone : (a, b) => dueKey(a).localeCompare(dueKey(b)) || taskBaseXp(b) - taskBaseXp(a));
   // Buscar o filtrar enseña todas las que coinciden: limitar la lista ahí haría pensar que faltan.
   const filtering = query.trim() !== '' || filter !== 'all' || areaFilter !== 'all';
   // Una tarea que cambia de columna (con su botón o arrastrándola) viaja hasta su sitio nuevo con Flip.

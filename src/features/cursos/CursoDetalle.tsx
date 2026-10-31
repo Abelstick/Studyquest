@@ -18,6 +18,8 @@ import { deadlineText } from '@/core/missions';
 import { blankNote, notesOfTopic, sortNotes } from '@/core/notes';
 import type { Snapshot, TopicStatus } from '@/core/domain';
 import { Avatar } from '@/ui/Avatar';
+import { Gains } from '@/ui/Attribute';
+import { taskGains } from '@/core/progression';
 import { Bar, Button, Panel, Tag, cx, TextInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
@@ -45,6 +47,7 @@ export default function CursoDetalle() {
   const allCerts = useData((s) => s.certifications);
   const allNotes = useData((s) => s.notes);
   const allTasks = useData((s) => s.tasks);
+  const courses = useData((s) => s.courses);
   const overdue = useMemo(() => overdueOf(allTasks.filter((t) => t.courseId === id)), [allTasks, id]);
   const createNote = useData((s) => s.createNote);
   const { setTopicStatus, toggleTopicReview, addTopic, removeTopic, addModule } = useData();
@@ -126,7 +129,7 @@ export default function CursoDetalle() {
                         {m.summary ? ` · ${m.summary}` : ''}
                       </span>
                     </span>
-                    <span className="module__xp">{m.xp} XP</span>
+                    <span className="module__xp">{m.topics.length * topicXp()} XP</span>
                   </button>
                 </li>
               );
@@ -255,7 +258,7 @@ export default function CursoDetalle() {
                         <span className="ctasks__title">{t.title}</span>
                         <span className="muted small">{deadlineText(t)}</span>
                       </button>
-                      <Tag tone="xp">+{t.xp} XP</Tag>
+                      <Gains gains={taskGains(t, courses)} className="tag tag--xp" />
                     </li>
                   );
                 })}

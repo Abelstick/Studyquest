@@ -9,6 +9,7 @@
 import type { AgendaCategory, AgendaEvent, Habit, ISODate, Snapshot, Task } from './domain';
 import { addDays, clockToMinutes, diffDays, dueLabel, isClockTime, weekdayIndex } from './dates';
 import { isDueOn, isHabitDone, logFor } from './game';
+import { taskBaseXp } from './progression/rewards';
 import { DAY_MIN, MAX_EVENT_MIN, MIN_BLOCK_MIN, habitDefaults, habitScheduledOn, occurrencesBetween, segmentsOn, toClock, type EventDraft, type Occurrence } from './agenda';
 import { isQuit } from './quit';
 
@@ -174,7 +175,7 @@ export function freeTimeIdeas(ctx: Ctx, date: ISODate, nowMin: number, until: nu
     .map(({ order: _o, ...rest }) => rest);
   const tasks: Idea[] = ctx.tasks
     .filter((t: Task) => t.status !== 'done' && !!t.dueDate && diffDays(t.dueDate, date) <= 1 && (t.estimateMin === 0 || t.estimateMin <= free))
-    .sort((a, b) => (a.dueDate as string).localeCompare(b.dueDate as string) || b.xp - a.xp)
+    .sort((a, b) => (a.dueDate as string).localeCompare(b.dueDate as string) || taskBaseXp(b) - taskBaseXp(a))
     .map((t) => ({ kind: 'task' as const, id: t.id, title: t.title, minutes: t.estimateMin || undefined }));
   return [...habits, ...tasks].slice(0, limit);
 }

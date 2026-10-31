@@ -18,10 +18,10 @@ const course = (extra = {}) => ({
   professor: '',
   field: '',
   mentor: null,
-  modules: [{ id: 'm1', title: 'Mod', summary: '', xp: 40, topics: [{ id: 't1', title: 'Joins', status: 'todo' as const, review: false, markedAt: null }, { id: 't2', title: 'Índices', status: 'todo' as const, review: false, markedAt: null }] }],
+  modules: [{ id: 'm1', title: 'Mod', summary: '', topics: [{ id: 't1', title: 'Joins', status: 'todo' as const, review: false, markedAt: null }, { id: 't2', title: 'Índices', status: 'todo' as const, review: false, markedAt: null }] }],
   ...extra,
 });
-const habit = (courseId?: string) => ({ title: 'Practicar SQL', frequency: { type: 'daily' as const }, measure: 'boolean' as const, target: 1, xp: 10, reminder: null, steps: [], ...(courseId ? { courseId } : {}) });
+const habit = (courseId?: string) => ({ title: 'Practicar SQL', frequency: { type: 'daily' as const }, measure: 'boolean' as const, target: 1, reminder: null, steps: [], ...(courseId ? { courseId } : {}) });
 
 afterEach(() => vi.useRealTimers());
 beforeEach(async () => {
@@ -61,8 +61,8 @@ describe('cursos en el store', () => {
 
   it('createTasks crea varias tareas de una vez y devuelve sus ids', async () => {
     const ids = store.getState().createTasks([
-      { title: 'A', courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 30, xp: 40, subtasks: [], tags: [] },
-      { title: 'B', courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 30, xp: 40, subtasks: [], tags: [] },
+      { title: 'A', courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 30, subtasks: [], tags: [] },
+      { title: 'B', courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 30, subtasks: [], tags: [] },
     ]);
     expect(ids).toHaveLength(2);
     expect(store.getState().tasks.map((t) => t.id)).toEqual(ids);
@@ -76,7 +76,7 @@ describe('reto del mes en el store', () => {
   it('se cobra una sola vez y solo suma lo logrado desde que lo fijaste', async () => {
     const tasksDone = (n: number) => {
       for (let i = 0; i < n; i++) {
-        const id = store.getState().createTask({ title: `T${i}`, courseId: null, priority: 'low', status: 'todo', dueDate: null, estimateMin: 0, xp: 0, subtasks: [], tags: [] });
+        const id = store.getState().createTask({ title: `T${i}`, courseId: null, priority: 'low', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [] });
         store.getState().setTaskStatus(id, 'done');
       }
     };

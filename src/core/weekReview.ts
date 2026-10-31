@@ -10,6 +10,8 @@ import type { AgendaCategory, Course, Goal, Habit, HabitLog, ID, ISODate, Profil
 import { addDays, isoNow, today, weekStart, weekdayIndex } from './dates';
 import { hoursInWeek, isDueOn, logFor, weekSummary } from './game';
 import { isMinimumMet } from './minimum';
+import { taskBaseXp } from './progression/rewards';
+import { attributeWeek, type AttributeWeek } from './progression/weekly';
 import { isQuotaHabit } from './periods';
 import { areaBalance, type AreaRow } from './areas';
 import { occurrencesBetween, type Occurrence } from './agenda';
@@ -207,7 +209,7 @@ export function suggestPriorities(tasks: Task[], nextFrom: ISODate): Task[] {
   };
   return tasks
     .filter((t) => t.status !== 'done' && ((t.dueDate && t.dueDate <= nextTo) || t.priority === 'high' || t.priority === 'boss'))
-    .sort((a, b) => band(a) - band(b) || (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999') || PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || b.xp - a.xp)
+    .sort((a, b) => band(a) - band(b) || (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999') || PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || taskBaseXp(b) - taskBaseXp(a))
     .slice(0, 12);
 }
 
@@ -286,6 +288,8 @@ export interface WeekReviewData {
   studyHours: number;
   studyGoalHours: number;
   areas: { rows: AreaRow[]; unassigned: number };
+  /** Cómo crecieron los atributos del personaje: el fuerte, el descuidado y un mensaje que anima. */
+  attributes: AttributeWeek;
   next: NextWeek;
 }
 
@@ -316,6 +320,7 @@ export function buildWeekReview(s: Snapshot, week: ISODate, now: ISODate = today
     studyHours: hoursInWeek(s.sessions, from),
     studyGoalHours: s.profile.weeklyGoalHours,
     areas: areaBalance(s, from, to),
+    attributes: attributeWeek(s.xpEvents, from),
     next: nextWeek(s, addDays(from, 7)),
   };
 }

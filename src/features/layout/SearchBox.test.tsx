@@ -11,7 +11,7 @@ function Where() {
   return <output data-testid="where">{pathname + search}</output>;
 }
 
-const task = (id: string, title: string): Task => ({ id, title, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null });
+const task = (id: string, title: string): Task => ({ id, title, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null });
 
 const setup = (props: Parameters<typeof SearchBox>[0] = {}) =>
   render(

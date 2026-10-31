@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
+import { totalXp } from '@/core/progression';
 import type { ISODate, Snapshot } from '@/core/domain';
 import { addDays, shortDate, today, weekStart } from '@/core/dates';
 import { computeStreak, levelProgress, monthlyCompliance, rankFor } from '@/core/game';
@@ -123,14 +124,14 @@ export default function Progreso() {
     const dist = timeDistribution(snap, since);
     const distRows = dist.length > MAX_COURSES + 1 ? [...dist.slice(0, MAX_COURSES), { id: 'rest', label: 'Otros', hours: dist.slice(MAX_COURSES).reduce((a, d) => a + d.hours, 0), pct: dist.slice(MAX_COURSES).reduce((a, d) => a + d.pct, 0), minutes: 0 }] : dist;
 
-    const lp = levelProgress(profile.xp);
+    const lp = levelProgress(totalXp(xpEvents));
     const unlocked = [...profile.achievements].reverse().map((a) => achievementById(a.id)).filter((a): a is NonNullable<typeof a> => !!a);
     return {
       lp, unlocked, stats, streak, xpNow, hrsNow, xpChange, hrsChange, doneInRange, compliance, avgCompliance, dist: distRows,
       hoursWeeks, xpWeeks, bySource: xpBySource(snap, since), byWeekday: xpByWeekday(snap, since),
       milestones: goals.reduce((a, g) => a + g.milestones.length, 0), openProjects: projects.length - stats.projectsCompleted,
     };
-  }, [snap, range, now, xpEvents, profile.frozenDates, profile.xp, profile.achievements, sessions, goals, projects, tasks, habits, habitLogs]);
+  }, [snap, range, now, xpEvents, profile.frozenDates, profile.achievements, sessions, goals, projects, tasks, habits, habitLogs]);
 
   const { stats } = view;
   const xpPoints = view.xpWeeks.map((w) => ({ label: shortDate(w.from), value: w.xp }));

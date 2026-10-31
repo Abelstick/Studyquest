@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Task } from './domain';
 import { courseTasks, courseTasksLabel } from './courseTasks';
 
-const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: 'c1', priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: 'c1', priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 const NOW = '2026-09-16';
 
 describe('tareas de un curso', () => {

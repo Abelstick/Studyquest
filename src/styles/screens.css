@@ -636,11 +636,12 @@
   font-weight: 800;
   line-height: 1.1;
 }
+/* XP de la tarea repartido por atributo: el número dorado, el atributo en su marca. */
 .task__xp {
   font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--xp-text);
 }
 .task.is-done .task__title {
@@ -709,6 +710,12 @@
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.01em;
+}
+/* Recompensa del hábito: su XP y, debajo, a qué atributos va. */
+.habit__gain {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
 }
 .habit__title a {
   color: var(--text);

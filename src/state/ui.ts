@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { newId } from '@/core/dates';
+import type { AttributeId } from '@/core/domain';
 import { setSoundEnabled, setSoundVoice, setSoundVolume, sfx } from '@/audio/sfx';
 import { worldTheme } from '@/core/themes';
 
@@ -53,6 +54,10 @@ export interface Toast {
   body?: string;
   xp?: number;
   coins?: number;
+  /** XP ganado por atributo («+14 FUE · +6 VIT»). */
+  gains?: { attribute: AttributeId; xp: number }[];
+  /** Aviso de un atributo (sube de nivel): se ve con su marca y su color. */
+  attribute?: AttributeId;
   /** Ruta a la que lleva el aviso al pulsarlo. */
   to?: string;
   /** Botón propio del aviso (por ejemplo, «Deshacer»). Con acción, el aviso dura más para dar tiempo a pulsarlo. */

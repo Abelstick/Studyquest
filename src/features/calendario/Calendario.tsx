@@ -6,6 +6,7 @@ import { calendarDays, monthGrid, overdueTasks, undatedTasks, weekDays, type Day
 import { addDays, addMonths, fromISODate, longDate, minutesOfDay, monthName, shortDate, today, WEEKDAYS_SHORT } from '@/core/dates';
 import type { ISODate, Task } from '@/core/domain';
 import { recurrenceLabel } from '@/core/tasks';
+import { taskBaseXp } from '@/core/progression';
 import { DAY_MIN, durationLabel, freeMinutes, occurrencesBetween, segmentsOn, toClock, type EditScope, type Occurrence } from '@/core/agenda';
 import { Button, PageHead, Panel, cx } from '@/ui/kit';
 import { findConflicts } from '@/core/conflicts';
@@ -379,7 +380,7 @@ export default function Calendario() {
                             ) : (
                               'Side quest'
                             )}{' '}
-                            · +{t.xp} XP{t.recurrence ? ` · ${recurrenceLabel(t.recurrence)}` : ''}
+                            · +{taskBaseXp(t)} XP{t.recurrence ? ` · ${recurrenceLabel(t.recurrence)}` : ''}
                           </span>
                         </span>
                       </label>

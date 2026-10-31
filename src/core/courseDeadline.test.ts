@@ -11,10 +11,10 @@ const course = (done: number, total: number, extra: Partial<Course> = {}): Cours
   field: '',
   mentor: null,
   createdAt: '',
-  modules: [{ id: 'm', title: 'M', summary: '', xp: 40, topics: Array.from({ length: total }, (_, i) => ({ id: `t${i}`, title: `T${i}`, status: i < done ? ('done' as const) : ('todo' as const), review: false, markedAt: null })) }],
+  modules: [{ id: 'm', title: 'M', summary: '', topics: Array.from({ length: total }, (_, i) => ({ id: `t${i}`, title: `T${i}`, status: i < done ? ('done' as const) : ('todo' as const), review: false, markedAt: null })) }],
   ...extra,
 });
-const task = (id: string, dueDate: string | null, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: 'c1', priority: 'mid', status: 'todo', dueDate, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const task = (id: string, dueDate: string | null, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: 'c1', priority: 'mid', status: 'todo', dueDate, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 
 describe('plazo de un curso', () => {
   it('la fecha que fijas manda sobre la de las tareas', () => {

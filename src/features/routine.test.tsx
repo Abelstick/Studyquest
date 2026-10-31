@@ -16,7 +16,7 @@ import { TaskScheduler } from './calendario/TaskScheduler';
 import { WorksQuestion } from './calendario/WorksQuestion';
 import { TaskModal } from './modals/TaskModal';
 
-const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Estudiar SQL', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
+const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Estudiar SQL', frequency: { type: 'daily' }, measure: 'minutes', target: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
 /** Trabajo de lunes a viernes de 8:30 a 18:00. */
 const work: AgendaEvent = { id: 'w', title: 'Jornada laboral', category: 'work', date: '2026-09-14', start: '08:30', minutes: 570, repeat: { type: 'weekly', every: 1, days: [0, 1, 2, 3, 4] }, rev: 0, createdAt: '', updatedAt: '' };
 
@@ -90,7 +90,7 @@ describe('guía «Empieza aquí»', () => {
     useData.setState({
       events: [work, { ...work, id: 'b', title: '', habitId: 'h1', repeat: { type: 'habit' }, category: 'personal' }],
       goals: [{ id: 'g', title: 'Meta', rewardTitle: '', rewardDescription: '', createdAt: '', milestones: [] }],
-      habits: [habit()], xpEvents: [{ id: 'x', date: '2026-09-16', amount: 10, source: 'task', label: '' }],
+      habits: [habit()], xpEvents: [{ id: 'x', date: '2026-09-16', amount: 10, source: 'task', sourceId: 's', attribute: 'int', label: '' }],
     });
     expect(wrap(<StartGuide />).container.textContent).toBe('');
   });
@@ -182,7 +182,7 @@ describe('guía de uso', () => {
   });
 });
 
-const tarea = (extra: Partial<Task> = {}): Task => ({ id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-09-18', estimateMin: 60, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const tarea = (extra: Partial<Task> = {}): Task => ({ id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-09-18', estimateMin: 60, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 
 describe('¿Trabajas?', () => {
   it('pregunta primero y no deja guardar sin contestar', () => {

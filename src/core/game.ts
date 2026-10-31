@@ -1,31 +1,25 @@
-import type { Course, Habit, HabitLog, ISODate, Module, Priority, Profile, XpEvent } from './domain';
+import type { Course, Habit, HabitLog, ISODate, Module, Profile, XpEvent } from './domain';
 import { addDays, diffDays, fromISODate, monthKey, today, weekStart, weekdayIndex } from './dates';
 import { keepsStreakAt } from './minimum';
+import { BONUS_XP, CHARACTER_CURVE, COINS, SOURCE_BASE_XP } from './progression/config';
+import { characterLevel, xpToReach, type LevelInfo } from './progression/curve';
+import { coinsForXp, habitBaseXp } from './progression/rewards';
 
 /* ---------- Niveles ---------- */
 
-/** XP acumulado necesario para *empezar* el nivel L. Cada nivel cuesta 250·L (nivel 12 → 3 000). */
-export const xpAtLevelStart = (level: number): number => 125 * level * (level - 1);
+/*
+ * El nivel es el del PERSONAJE: sale de la suma del XP de sus seis atributos (core/progression).
+ * Estas funciones solo le ponen nombre para el resto de la app.
+ */
 
-export function levelFromXp(xp: number): number {
-  const safe = Math.max(0, xp);
-  return Math.max(1, Math.floor((1 + Math.sqrt(1 + (4 * safe) / 125)) / 2));
-}
+/** XP total necesario para *empezar* el nivel L. */
+export const xpAtLevelStart = (level: number): number => xpToReach(level, CHARACTER_CURVE);
 
-export interface LevelProgress {
-  level: number;
-  into: number;
-  needed: number;
-  left: number;
-  pct: number;
-}
+export const levelFromXp = (xp: number): number => characterLevel(xp).level;
 
-export function levelProgress(xp: number): LevelProgress {
-  const level = levelFromXp(xp);
-  const into = Math.max(0, xp) - xpAtLevelStart(level);
-  const needed = 250 * level;
-  return { level, into, needed, left: Math.max(0, needed - into), pct: Math.min(100, Math.round((into / needed) * 100)) };
-}
+export type LevelProgress = LevelInfo;
+
+export const levelProgress = (xp: number): LevelProgress => characterLevel(xp);
 
 const RANKS = [
   'Goomba despistado',
@@ -48,11 +42,10 @@ export const rankFor = (level: number): string => RANKS[level - 1] ?? 'Leyenda 8
 /** Nivel 12 → "3-4": cada mundo tiene cuatro fases. */
 export const worldFor = (level: number): string => `${Math.ceil(level / 4)}-${((level - 1) % 4) + 1}`;
 
-export const XP_BY_PRIORITY: Record<Priority, number> = { low: 20, mid: 35, high: 50, boss: 120 };
-export const coinsForXp = (amount: number): number => Math.trunc(amount / 4);
-export const LEVEL_UP_BONUS = 500;
-export const SESSION_XP_PER_MIN = 2;
-export const WEEKLY_BONUS_XP = 200;
+export { coinsForXp };
+export const LEVEL_UP_BONUS = COINS.levelUp;
+export const SESSION_XP_PER_MIN = SOURCE_BASE_XP.sessionPerMinute;
+export const WEEKLY_BONUS_XP = BONUS_XP.weekly;
 /** Las sesiones del Pomodoro se distinguen por su etiqueta (no hace falta una columna nueva en la base de datos). */
 export const POMODORO_LABEL = '🍅 Pomodoro';
 
@@ -104,10 +97,11 @@ export function habitProgress(habit: Habit, log?: HabitLog): number {
   return Math.min(1, Math.max(byValue, bySteps));
 }
 
-/** XP que ya se ganó por lo avanzado: proporcional al avance, y el total solo al completarlo. */
+/** XP base que ya se ganó por lo avanzado (sin multiplicadores): proporcional al avance, y el total solo al completarlo. */
 export function habitCreditXp(habit: Habit, log?: HabitLog): number {
-  if (isHabitDone(habit, log)) return habit.xp;
-  return Math.min(Math.floor(habit.xp * habitProgress(habit, log)), Math.max(0, habit.xp - 1));
+  const base = habitBaseXp(habit);
+  if (isHabitDone(habit, log)) return base;
+  return Math.min(Math.floor(base * habitProgress(habit, log)), Math.max(0, base - 1));
 }
 
 /** Medidas que se registran con contador (páginas, ejercicios…) en un +/− en lugar de un solo botón. */
@@ -270,7 +264,8 @@ export function moduleStates(course: Course): ModuleState[] {
   });
 }
 
-export const topicXp = (m: Module): number => Math.max(5, Math.round(m.xp / Math.max(1, m.topics.length)));
+/** XP base de un tema (el mismo en todos los módulos: lo que cuenta es terminarlo). */
+export const topicXp = (_m?: Module): number => SOURCE_BASE_XP.topic;
 
 export function courseProgress(course: Course) {
   const topics = course.modules.flatMap((m) => m.topics);
@@ -316,7 +311,6 @@ export const isBefore = (a: ISODate, b: ISODate) => fromISODate(a).getTime() < f
 export const defaultProfile = (id: string, name = 'Jugador 1'): Profile => ({
   id,
   displayName: name,
-  xp: 0,
   credits: 0,
   streakFreezes: 0,
   frozenDates: [],

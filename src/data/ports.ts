@@ -8,6 +8,9 @@
 import type {
   AgendaEvent, AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent,
 } from '@/core/domain';
+import type { XpRef } from '@/core/progression/ledger';
+
+export type { XpRef };
 
 /** Colección genérica. Los ids los genera el cliente, así que crear es idempotente y funciona offline. */
 export interface Collection<T extends { id: ID }> {
@@ -41,7 +44,17 @@ export interface Repository {
   certifications: Collection<Certification>;
   personalRewards: Collection<PersonalReward>;
   sessions: Pick<Collection<StudySession>, 'list' | 'create' | 'createMany' | 'remove'>;
-  xpEvents: Pick<Collection<XpEvent>, 'list' | 'create' | 'createMany'>;
+  /** Ledger de XP: la fuente de verdad del progreso. Única por `source + sourceId + date + attribute`. */
+  xpEvents: {
+    list(): Promise<XpEvent[]>;
+    /**
+     * Deja las filas de `ref` exactamente como `rows`: borra las de `ref` que no estén y otorga (o actualiza)
+     * las que vienen. Repetirla no cambia nada (idempotente). Con `rows` vacío, revierte.
+     */
+    replace(ref: XpRef, rows: XpEvent[]): Promise<void>;
+    /** Carga de golpe (restaurar copia, datos de ejemplo). */
+    createMany(events: XpEvent[]): Promise<void>;
+  };
   notifications: Pick<Collection<AppNotification>, 'list' | 'create' | 'createMany' | 'update'> & { markAllRead(): Promise<void> };
   /** Actividades programadas del calendario (una fila por serie, no por repetición). */
   events: Collection<AgendaEvent>;

@@ -244,6 +244,39 @@
   color: var(--text);
   font-size: 14px;
 }
+.rv__lead {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+}
+.rv__attrs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rv__attr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 8px 10px;
+  background: var(--panel-2);
+  color: var(--text);
+  border-left: 4px solid var(--attr);
+}
+.rv__attr.is-top {
+  background: color-mix(in srgb, var(--attr) 14%, var(--panel-2));
+}
+.rv__attr.is-low {
+  border-left-style: dashed;
+}
+.rv__attr-name {
+  flex: 1;
+  font-weight: 700;
+}
 .rv__cats {
   display: flex;
   flex-wrap: wrap;

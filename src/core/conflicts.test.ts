@@ -6,8 +6,8 @@ const MON = '2026-10-19';
 const TUE = '2026-10-20';
 let n = 0;
 const ev = (extra: Partial<AgendaEvent>): AgendaEvent => ({ id: `e${++n}`, title: 'Bloque', category: 'other', date: TUE, start: '09:00', minutes: 60, rev: 0, createdAt: '', updatedAt: '', ...extra });
-const task = (extra: Partial<Task> = {}): Task => ({ id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-10-23', estimateMin: 60, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
-const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Estudiar', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
+const task = (extra: Partial<Task> = {}): Task => ({ id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-10-23', estimateMin: 60, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Estudiar', frequency: { type: 'daily' }, measure: 'minutes', target: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
 /** Trabajo de lunes a viernes de 8:30 a 18:00. */
 const work = ev({ id: 'w', title: 'Jornada laboral', category: 'work', date: MON, start: '08:30', minutes: 570, repeat: { type: 'weekly', every: 1, days: [0, 1, 2, 3, 4] } });
 const ctx = (events: AgendaEvent[], tasks: Task[] = [], habits: Habit[] = []) => ({ events, tasks, habits, habitLogs: [] });

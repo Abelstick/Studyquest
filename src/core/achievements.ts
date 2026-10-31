@@ -16,6 +16,14 @@ export interface AchievementDef {
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
+  // Atributos del personaje
+  { id: 'class-1', title: 'Encuentra tu clase', hint: 'Que dos atributos tomen la delantera', sprite: 'knight', reward: 100, check: (s) => s.hasClass },
+  { id: 'attr-10', title: 'Primer nivel 10', hint: 'Lleva un atributo al nivel 10', sprite: 'star', reward: 300, check: (s) => s.maxAttrLevel >= 10 },
+  { id: 'attr-all-5', title: 'Equilibrio', hint: 'Los seis atributos al nivel 5', sprite: 'gem', reward: 400, check: (s) => s.minAttrLevel >= 5 },
+  { id: 'attr-30', title: 'Maestría', hint: 'Lleva un atributo al nivel 30', sprite: 'crown', reward: 1000, check: (s) => s.maxAttrLevel >= 30 },
+  { id: 'water-100', title: '100 vasos de agua', hint: 'Registra 100 vasos en un hábito de hidratación', sprite: 'drop', reward: 200, check: (s) => s.waterGlasses >= 100 },
+  { id: 'study-7', title: 'Semana de estudio', hint: 'Gana Intelecto 7 días seguidos', sprite: 'owl', reward: 100, check: (s) => s.bestStudyStreak >= 7 },
+  { id: 'study-30', title: '30 días estudiando', hint: 'Gana Intelecto 30 días seguidos', sprite: 'owl', reward: 500, check: (s) => s.bestStudyStreak >= 30 },
   { id: 'first-block', title: 'Primer bloque ?', hint: 'Completa tu primera tarea', sprite: 'qblock', reward: 25, check: (s) => s.tasksDone >= 1 },
   { id: 'streak-7', title: 'Racha de 7 días', hint: 'Estudia 7 días seguidos', sprite: 'fire', reward: 100, check: (s) => s.bestStreak >= 7 },
   { id: 'streak-30', title: 'Racha de 30 días', hint: 'Un mes sin perder una vida', sprite: 'flower', reward: 400, check: (s) => s.bestStreak >= 30 },

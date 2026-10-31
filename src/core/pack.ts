@@ -5,12 +5,13 @@
  * El formato no lleva ids ni fechas absolutas (la IA no conoce el día de hoy): las tareas usan `dueInDays`, la meta
  * `deadlineInDays`, y todo se enlaza por título (la tarea a su curso y a su meta, el hábito a su meta). Aquí se lee,
  * valida y convierte a entidades de la app. Nada de lo que venga de la IA se usa sin pasar por `parsePack`: los números
- * se acotan (la IA no puede regalar miles de XP) y los enlaces se comprueban. Lógica pura, sin React ni base de datos.
+ * se acotan, el XP sale de la dificultad (la IA no puede regalar XP) y los enlaces se comprueban. Lógica pura, sin React ni base de datos.
  */
 import { safeUrl } from './certifications';
 import type { AreaId, Course, Frequency, Goal, Habit, IfThen, ISODate, Measure, Priority, Project, Task } from './domain';
 import { addDays, isoNow, newId, today } from './dates';
-import { XP_BY_PRIORITY } from './game';
+import { DIFFICULTIES } from './difficulty';
+import { SOURCE_BASE_XP, cleanProgressable, habitBaseXp, taskBaseXp } from './progression';
 import { scaleDays } from './pace';
 import { cleanArea } from './areas';
 import { cleanIfThen } from './ifthen';
@@ -40,8 +41,6 @@ export interface PackEntities {
 export type PackResult = { ok: true; pack: Pack; warnings: string[] } | { ok: false; error: string };
 
 const LIMITS = { items: 30, children: 40, subchildren: 40 };
-/** Tope de XP por elemento: una ruta importada no puede desequilibrar el juego (la tabla de la app va de 20 a 120 por tarea). */
-export const PACK_XP_MAX = { task: 150, habit: 100, group: 600 };
 const MEASURES: Measure[] = ['times', 'minutes', 'hours', 'pages', 'exercises', 'tasks', 'percent', 'boolean'];
 const PRIORITIES: Priority[] = ['low', 'mid', 'high', 'boss'];
 
@@ -169,6 +168,11 @@ export function parsePack(raw: string): PackResult {
     const a = cleanArea(o.area);
     return a ? { area: a } : {};
   };
+  /** Dificultad y categoría (si la IA las propone y son válidas). Sin ellas, la app pone «normal» y sugiere la categoría por el título. */
+  const level = (o: Obj) => {
+    const d = DIFFICULTIES.find((x) => x.value === o.difficulty)?.value;
+    return { ...(d ? { difficulty: d } : {}), ...cleanProgressable(o) };
+  };
 
   const courses: Pack['courses'] = each('courses', 'cursos', (o) => {
     const title = text(o.title);
@@ -180,7 +184,7 @@ export function parsePack(raw: string): PackResult {
         if (!isObj(m) || !text(m.title)) return [];
         const topics = arr(m.topics).slice(0, LIMITS.subchildren).map(titleOf).filter(Boolean);
         return [{
-          id: '', title: text(m.title, 100), summary: text(m.summary, 200), xp: int(m.xp, Math.min(PACK_XP_MAX.group, Math.max(100, topics.length * 25)), 10, PACK_XP_MAX.group),
+          id: '', title: text(m.title, 100), summary: text(m.summary, 200),
           topics: topics.map((t) => ({ id: '', title: t, status: 'todo' as const, review: false, markedAt: null })),
         }];
       }),
@@ -201,7 +205,7 @@ export function parsePack(raw: string): PackResult {
       milestones: arr(o.milestones).slice(0, LIMITS.children).flatMap((m) => {
         if (!isObj(m) || !text(m.title)) return [];
         return [{
-          id: '', title: text(m.title, 100), summary: text(m.summary, 200), xp: int(m.xp, 100, 10, PACK_XP_MAX.group), done: false,
+          id: '', title: text(m.title, 100), summary: text(m.summary, 200), done: false,
           skills: arr(m.skills).slice(0, LIMITS.subchildren).map(titleOf).filter(Boolean).map((label) => ({ id: '', label, done: false })),
         }];
       }),
@@ -216,7 +220,7 @@ export function parsePack(raw: string): PackResult {
       checkpoints: arr(o.checkpoints).slice(0, LIMITS.children).flatMap((c) => {
         if (!titleOf(c)) return [];
         const o2 = isObj(c) ? c : {};
-        return [{ id: '', title: titleOf(c), summary: text(o2.summary, 200), xp: int(o2.xp, 100, 10, PACK_XP_MAX.group), done: false }];
+        return [{ id: '', title: titleOf(c), summary: text(o2.summary, 200), done: false }];
       }),
     };
   });
@@ -229,7 +233,7 @@ export function parsePack(raw: string): PackResult {
     const minTarget = cleanMinimum(o.minTarget, { target, measure, kind: 'build' });
     return {
       title, frequency: parseFrequency(o.frequency), measure, target, goal: refTitle(o.goal),
-      xp: int(o.xp, 30, 0, PACK_XP_MAX.habit), reminder: /^([01]\d|2[0-3]):[0-5]\d$/.test(text(o.reminder, 5)) ? text(o.reminder, 5) : null,
+      ...level(o), reminder: /^([01]\d|2[0-3]):[0-5]\d$/.test(text(o.reminder, 5)) ? text(o.reminder, 5) : null,
       ...(minTarget ? { minTarget } : {}),
       ...area(o),
       ...(parseIfThen(o.ifThen) ? { ifThen: parseIfThen(o.ifThen) } : {}),
@@ -245,7 +249,7 @@ export function parsePack(raw: string): PackResult {
     return {
       title, course: refTitle(o.course), goal: refTitle(o.goal), priority, status: 'todo', estimateMin: int(o.estimateMin, 30, 5, 1440),
       dueDate, dueInDays: typeof o.dueInDays === 'number' && Number.isFinite(o.dueInDays) ? int(o.dueInDays, 0, 0, 730) : null,
-      xp: int(o.xp, XP_BY_PRIORITY[priority], 0, PACK_XP_MAX.task),
+      ...level(o),
       ...area(o),
       subtasks: arr(o.subtasks).slice(0, LIMITS.subchildren).map(titleOf).filter(Boolean).map((t) => ({ id: '', title: t, done: false })),
       tags: arr(o.tags).map((t) => text(t, 24)).filter(Boolean).slice(0, 6),
@@ -359,12 +363,14 @@ export function buildPackEntities(
   return { courses, goals, projects, habits, tasks };
 }
 
-/** XP total que pondría en juego el pack (para decirlo en la vista previa). */
+/** XP base que pondría en juego el pack (para decirlo en la vista previa). Sale de la misma tabla que el juego. */
 export function packXp(p: Pack): number {
-  const sum = (xs: { xp: number }[]) => xs.reduce((a, x) => a + x.xp, 0);
+  const topics = p.courses.reduce((a, c) => a + c.modules.reduce((b, m) => b + m.topics.length, 0), 0);
+  const milestones = p.goals.reduce((a, g) => a + g.milestones.length, 0);
+  const checkpoints = p.projects.reduce((a, pr) => a + pr.checkpoints.length, 0);
   return (
-    p.courses.reduce((a, c) => a + sum(c.modules), 0) + p.goals.reduce((a, g) => a + sum(g.milestones), 0) +
-    p.projects.reduce((a, pr) => a + sum(pr.checkpoints), 0) + sum(p.tasks)
+    topics * SOURCE_BASE_XP.topic + milestones * SOURCE_BASE_XP.milestone + checkpoints * SOURCE_BASE_XP.checkpoint +
+    p.tasks.reduce((a, t) => a + taskBaseXp(t), 0) + p.habits.reduce((a, h) => a + habitBaseXp(h), 0)
   );
 }
 
@@ -405,7 +411,7 @@ export function packInstructions(): string {
       "field": "Área, p. ej. programación",
       "link": "https://... enlace al curso si es de una plataforma (opcional)",
       "modules": [
-        { "title": "Módulo 1", "summary": "De qué trata", "xp": 150, "topics": ["Tema 1", "Tema 2"] }
+        { "title": "Módulo 1", "summary": "De qué trata", "topics": ["Tema 1", "Tema 2"] }
       ]
     }
   ],
@@ -420,7 +426,7 @@ export function packInstructions(): string {
       "rewardDescription": "Cómo lo celebraré",
       "ifThen": [{ "when": "llego cansado del trabajo", "then": "hago solo 5 minutos de práctica" }],
       "milestones": [
-        { "title": "Hito 1", "summary": "Qué demuestra", "xp": 100, "skills": ["Habilidad 1", "Habilidad 2"] }
+        { "title": "Hito 1", "summary": "Qué demuestra", "skills": ["Habilidad 1", "Habilidad 2"] }
       ]
     }
   ],
@@ -430,7 +436,7 @@ export function packInstructions(): string {
       "summary": "Descripción breve",
       "kind": "main",
       "checkpoints": [
-        { "title": "Primer entregable", "summary": "Opcional", "xp": 100 }
+        { "title": "Primer entregable", "summary": "Opcional" }
       ]
     }
   ],
@@ -442,7 +448,7 @@ export function packInstructions(): string {
       "measure": "minutes",
       "target": 30,
       "minTarget": 5,
-      "xp": 30,
+      "difficulty": "normal",
       "reminder": "19:00",
       "area": "growth",
       "steps": []
@@ -456,7 +462,7 @@ export function packInstructions(): string {
       "priority": "mid",
       "dueInDays": 0,
       "estimateMin": 15,
-      "xp": 35,
+      "difficulty": "easy",
       "area": "growth",
       "subtasks": ["Paso 1", "Paso 2"],
       "tags": ["setup"]
@@ -476,7 +482,7 @@ Reglas del formato:
 - "area" (opcional): career | health | money | people | growth | home.
 - "link" del curso: URL real de la plataforma (Udemy, Coursera, YouTube, campus…). Si no estás seguro de que exista, omítelo: no inventes enlaces.
 - "kind" de un proyecto: main (principal) o side (secundario).
-- "xp" es opcional; si lo pones, entre 10 y 150 en tareas y hábitos, y hasta 600 en módulos, hitos y checkpoints.
+- "difficulty" (opcional, tareas y hábitos): easy | normal | hard | epic. Decide el XP que dan; no pongas XP a mano.
 - Adapta la ruta al nivel y al tiempo indicados: si ya domino algo, no lo repitas; reparte las tareas de forma realista con "dueInDays" y "estimateMin" (puedo acelerar o aflojar el ritmo después) y no pongas más trabajo por semana del que cabe en mis horas.
 - Máximo ~10 módulos por curso, ~8 temas por módulo y ~25 tareas en total.
 - Escribe todo en español.`;
@@ -504,7 +510,7 @@ export const PACK_SCHEMA = {
         type: 'object',
         properties: {
           title: str, professor: str, field: str, link: str,
-          modules: { type: 'array', items: { type: 'object', properties: { title: str, summary: str, xp: num, topics: strList }, required: ['title', 'topics'] } },
+          modules: { type: 'array', items: { type: 'object', properties: { title: str, summary: str, topics: strList }, required: ['title', 'topics'] } },
         },
         required: ['title', 'modules'],
       },
@@ -516,7 +522,7 @@ export const PACK_SCHEMA = {
         properties: {
           title: str, deadlineInDays: num, measure: str, why: str, area: str, rewardTitle: str, rewardDescription: str,
           ifThen: { type: 'array', items: { type: 'object', properties: { when: str, then: str }, required: ['when', 'then'] } },
-          milestones: { type: 'array', items: { type: 'object', properties: { title: str, summary: str, xp: num, skills: strList }, required: ['title'] } },
+          milestones: { type: 'array', items: { type: 'object', properties: { title: str, summary: str, skills: strList }, required: ['title'] } },
         },
         required: ['title', 'milestones'],
       },
@@ -525,7 +531,7 @@ export const PACK_SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        properties: { title: str, summary: str, kind: str, checkpoints: { type: 'array', items: { type: 'object', properties: { title: str, summary: str, xp: num }, required: ['title'] } } },
+        properties: { title: str, summary: str, kind: str, checkpoints: { type: 'array', items: { type: 'object', properties: { title: str, summary: str }, required: ['title'] } } },
         required: ['title', 'checkpoints'],
       },
     },
@@ -534,7 +540,7 @@ export const PACK_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          title: str, goal: str, measure: str, target: num, minTarget: num, xp: num, reminder: str, area: str,
+          title: str, goal: str, measure: str, target: num, minTarget: num, difficulty: str, reminder: str, area: str,
           frequency: { type: 'object', properties: { type: str, days: { type: 'array', items: num }, every: num, times: num, per: str }, required: ['type'] },
         },
         required: ['title', 'frequency', 'measure', 'target'],
@@ -544,7 +550,7 @@ export const PACK_SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        properties: { title: str, course: str, goal: str, priority: str, dueInDays: num, estimateMin: num, xp: num, area: str, subtasks: strList, tags: strList },
+        properties: { title: str, course: str, goal: str, priority: str, dueInDays: num, estimateMin: num, difficulty: str, area: str, subtasks: strList, tags: strList },
         required: ['title', 'dueInDays', 'estimateMin'],
       },
     },

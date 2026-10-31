@@ -6,6 +6,7 @@ import { dueReviews } from './review';
 import { quotaText } from './periods';
 import { isQuit } from './quit';
 import { dueTimeOf } from './tasks';
+import { habitBaseXp, taskBaseXp } from './progression/rewards';
 
 export type Mission =
   | { kind: 'task'; id: string; title: string; subtitle: string; xp: number; done: boolean; task: Task }
@@ -45,7 +46,7 @@ export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {
       id: `h:${h.id}`,
       title: h.title,
       subtitle: isQuit(h) ? 'Mal hábito a dejar · marca si hoy resististe' : `${quotaText(h, s.habitLogs, now) ?? frequencyLabel(h.frequency)} · ${goalLabel(h)}`,
-      xp: h.xp,
+      xp: habitBaseXp(h),
       done: isHabitDone(h, logFor(s.habitLogs, h.id, now)),
       habit: h,
     }));
@@ -57,7 +58,7 @@ export function dailyMissions(s: Snapshot, now: ISODate = today()): Mission[] {
       id: `t:${t.id}`,
       title: t.title,
       subtitle: [courseName(t.courseId) ?? 'Side quest', t.estimateMin ? `${t.estimateMin} min` : '', t.status === 'done' ? '' : deadlineText(t, now)].filter(Boolean).join(' · '),
-      xp: t.xp,
+      xp: taskBaseXp(t),
       done: t.status === 'done',
       task: t,
     }));
@@ -207,7 +208,7 @@ export function tips(s: Snapshot, now: ISODate = today()): Tip[] {
   if (overdue.length) out.push({ title: `${overdue.length} ${overdue.length === 1 ? 'tarea vencida' : 'tareas vencidas'}.`, body: `Empieza por "${overdue[0].title}": es la que más pesa.` });
 
   const streak = computeStreak(s.xpEvents, s.profile.frozenDates, now);
-  if (streak.current > 0 && !streak.activeToday) out.push({ title: `Tu racha de ${streak.current} días peligra hoy.`, body: 'Cualquier misión la salva. También puedes congelarla desde el inicio.' });
+  if (streak.current > 0 && !streak.activeToday) out.push({ title: `Tu racha de ${streak.current} días peligra hoy.`, body: 'Cualquier misión la salva; si no, un congelador la cubre solo.' });
 
   if (!out.length) out.push({ title: 'Todo en orden, jugador.', body: 'Crea una tarea nueva o inicia una sesión de estudio.' });
   return out.slice(0, 4);

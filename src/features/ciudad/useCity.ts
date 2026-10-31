@@ -24,6 +24,6 @@ export function useCity() {
     const stats = computeStats({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events });
     const states = cityStates(stats);
     const total = cityTotal(stats);
-    return { stats, states, total, title: cityTitle(total), decor: cityDecor(total), people: population(profile.xp, total), closest: closestUpgrade(states) };
+    return { stats, states, total, title: cityTitle(total), decor: cityDecor(total), people: population(stats.xp, total), closest: closestUpgrade(states) };
   }, [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events]);
 }

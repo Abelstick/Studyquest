@@ -5,7 +5,7 @@ import { CATCH_UP_DAYS, canCatchUp, catchUpDay, catchUpWindow, pendingCatchUp, t
 const NOW = '2026-09-16'; // miércoles
 
 const habit = (over: Partial<Habit> = {}): Habit => ({
-  id: 'h1', title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20,
+  id: 'h1', title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1,
   reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...over,
 });
 const log = (date: string, value = 1, habitId = 'h1'): HabitLog => ({ id: `l-${date}`, habitId, date, value, stepsDone: [] });

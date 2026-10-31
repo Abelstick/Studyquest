@@ -4,7 +4,6 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { addDays, dueLabel, isoNow, longDate, shortDate, today } from '@/core/dates';
 import type { ID, ISODate, Snapshot, Task } from '@/core/domain';
-import { XP_BY_PRIORITY } from '@/core/game';
 import { categoryInfo } from '@/core/agenda';
 import { areaInfo } from '@/core/areas';
 import { PACE_TEXT } from '@/core/goals';
@@ -12,6 +11,8 @@ import { COMMON_OBSTACLES, MAX_PRIORITIES, buildWeekReview, recurringObstacles, 
 import { Button, Panel, Tag, cx } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
 import { CATEGORY_ICON } from '@/ui/domainIcons';
+import { AttrBadge, attrStyle } from '@/ui/Attribute';
+import type { AttributeWeek } from '@/core/progression';
 
 const hours = (min: number) => `${+(min / 60).toFixed(1)} h`;
 
@@ -52,6 +53,32 @@ function HabitRow({ row }: Readonly<{ row: HabitReviewRow }>) {
         {t && <Tag tone={t.tone}>{t.text}</Tag>}
       </div>
     </li>
+  );
+}
+
+/** Los atributos en la semana: el mensaje primero y, debajo, lo que ganó cada uno frente a la semana anterior. */
+function AttributesSection({ week }: Readonly<{ week: AttributeWeek }>) {
+  const rows = week.rows.filter((r) => r.xp > 0 || r.prevXp > 0);
+  return (
+    <Section id="atributos" title="Tu personaje">
+      <p className="rv__lead">{week.message}</p>
+      {rows.length > 0 && (
+        <ul className="rv__attrs" aria-label="XP por atributo esta semana">
+          {rows.map((r) => (
+            <li key={r.def.id} className={cx('rv__attr', r === week.top && 'is-top', r === week.neglected && 'is-low')} style={attrStyle(r.def.id)}>
+              <AttrBadge id={r.def.id} />
+              <span className="rv__attr-name">{r.def.name}</span>
+              <b>+{r.xp} XP</b>
+              {r.levelsUp > 0 && <Tag tone="green">Nv {r.level}</Tag>}
+              <span className="muted small">{r.prevXp > 0 ? `antes +${r.prevXp}` : 'nuevo'}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link className="small" to="/heroe">
+        Ver tu personaje
+      </Link>
+    </Section>
   );
 }
 
@@ -155,14 +182,14 @@ export function WeekReviewPanel({ week, onClose }: Readonly<{ week: ISODate; onC
   const addPriorityTask = () => {
     const title = newPriority.trim();
     if (!title || chosen.length >= MAX_PRIORITIES) return;
-    const id = createTask({ title, courseId: null, priority: 'mid', status: 'todo', dueDate: nextFrom, estimateMin: 30, xp: XP_BY_PRIORITY.mid, subtasks: [], tags: ['revisión'] });
+    const id = createTask({ title, courseId: null, priority: 'mid', status: 'todo', dueDate: nextFrom, estimateMin: 30, subtasks: [], tags: ['revisión'] });
     setPriorities([...chosen, id]);
     setNewPriority('');
   };
   const adjustmentToTask = () => {
     const title = adjustment.trim();
     if (!title || adjustmentTask) return;
-    createTask({ title, courseId: null, priority: 'mid', status: 'todo', dueDate: nextFrom, estimateMin: 30, xp: XP_BY_PRIORITY.mid, subtasks: [], tags: ['revisión'] });
+    createTask({ title, courseId: null, priority: 'mid', status: 'todo', dueDate: nextFrom, estimateMin: 30, subtasks: [], tags: ['revisión'] });
     setAdjustmentTask(true);
   };
   const save = () => {
@@ -227,6 +254,8 @@ export function WeekReviewPanel({ week, onClose }: Readonly<{ week: ISODate; onC
           </div>
         )}
       </Section>
+
+      <AttributesSection week={data.attributes} />
 
       <Section id="habitos" title="Hábitos" hint="Omitido es lo que tocaba y no se registró. Lo que no tocaba ese día nunca cuenta como omisión.">
         {data.habits.length === 0 ? (

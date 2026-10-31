@@ -7,6 +7,7 @@ import type { ISODate, Snapshot, Task } from './domain';
 import { clockToMinutes, diffDays, minutesOfDay, today } from './dates';
 import { occurrencesBetween, type Occurrence } from './agenda';
 import { dueTimeOf, isOverdue } from './tasks';
+import { taskBaseXp } from './progression/rewards';
 import { weeklyPriorityIds } from './weekReview';
 
 export const MAX_TODAY_PRIORITIES = 3;
@@ -48,7 +49,7 @@ export function topPriorities(s: Pick<Snapshot, 'tasks' | 'profile'>, now: ISODa
     out.push({ task, reason, rank: ['late', 'today', 'week', 'soon'].indexOf(reason) });
   }
   return out
-    .sort((a, b) => a.rank - b.rank || (a.task.dueDate ?? '9999').localeCompare(b.task.dueDate ?? '9999') || dueMinute(a.task) - dueMinute(b.task) || b.task.xp - a.task.xp)
+    .sort((a, b) => a.rank - b.rank || (a.task.dueDate ?? '9999').localeCompare(b.task.dueDate ?? '9999') || dueMinute(a.task) - dueMinute(b.task) || taskBaseXp(b.task) - taskBaseXp(a.task))
     .slice(0, MAX_TODAY_PRIORITIES)
     .map(({ task, reason }) => ({ task, reason }));
 }

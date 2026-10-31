@@ -13,10 +13,10 @@ const ev = (over: Partial<AgendaEvent> = {}): AgendaEvent => ({
   id: 'e1', title: 'Desayuno', category: 'meal', date: '2026-10-12', start: '08:00', minutes: 30, rev: 0, createdAt: NOW, updatedAt: NOW, ...over,
 });
 const habit = (over: Partial<Habit> = {}): Habit => ({
-  id: 'h1', title: 'Beber agua', frequency: { type: 'daily' }, measure: 'times', target: 8, xp: 10, reminder: null, steps: [], startDate: '2026-10-01', createdAt: NOW, ...over,
+  id: 'h1', title: 'Beber agua', frequency: { type: 'daily' }, measure: 'times', target: 8, reminder: null, steps: [], startDate: '2026-10-01', createdAt: NOW, ...over,
 });
 const task = (over: Partial<Task> = {}): Task => ({
-  id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 45, xp: 20, subtasks: [], tags: [], createdAt: NOW, completedAt: null, ...over,
+  id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 45, subtasks: [], tags: [], createdAt: NOW, completedAt: null, ...over,
 });
 const ctx = (over: Partial<AgendaContext> = {}): AgendaContext => ({ habits: [], tasks: [], logs: [], ...over });
 const dates = (list: { date: string }[]) => list.map((o) => o.date);

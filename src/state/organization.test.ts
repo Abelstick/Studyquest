@@ -2,18 +2,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStorage, createLocalRepository } from '@/data/local';
 import type { Repository } from '@/data/ports';
 import { createDataStore } from './data';
+import { totalXp } from '@/core/progression';
 import { useUi } from './ui';
 
 let repo: Repository;
 let store: ReturnType<typeof createDataStore>;
+/** XP total del personaje: la suma del ledger. */
+const xp = () => totalXp(store.getState().xpEvents);
 const flush = () => new Promise((r) => setTimeout(r, 20));
 
-const draft = (over = {}) => ({ title: 'Tarea', courseId: null, priority: 'mid' as const, status: 'todo' as const, dueDate: null, estimateMin: 30, xp: 40, subtasks: [], tags: [], ...over });
+const draft = (over = {}) => ({ title: 'Tarea', courseId: null, priority: 'mid' as const, status: 'todo' as const, dueDate: null, estimateMin: 30, subtasks: [], tags: [], ...over });
 const goalDraft = (over = {}) => ({
   title: 'Programar mejor', rewardTitle: 'Título', rewardDescription: '',
-  milestones: [{ id: 'm1', title: 'SQL', summary: '', xp: 100, done: false, skills: [] }], ...over,
+  milestones: [{ id: 'm1', title: 'SQL', summary: '', done: false, skills: [] }], ...over,
 });
-const habitDraft = (over = {}) => ({ title: 'Estudiar', frequency: { type: 'daily' as const }, measure: 'minutes' as const, target: 30, xp: 30, reminder: null, steps: [], ...over });
+const habitDraft = (over = {}) => ({ title: 'Estudiar', frequency: { type: 'daily' as const }, measure: 'minutes' as const, target: 30, reminder: null, steps: [], ...over });
 
 /** Miércoles 16-sep-2026: los tests no dependen del día en que se ejecutan. */
 const WEDNESDAY = new Date(2026, 8, 16, 12, 0, 0);
@@ -34,7 +37,7 @@ describe('organización personal: store', () => {
     const id = store.getState().goals[0].id;
     store.getState().updateGoal(id, { deadline: '2026-12-01', measure: '3 sesiones por semana', why: 'Cambiar de empleo', area: 'career' });
     expect(store.getState().goals[0]).toMatchObject({ deadline: '2026-12-01', area: 'career', milestones: [{ id: 'm1', done: false }] });
-    expect(store.getState().profile.xp).toBe(0);
+    expect(xp()).toBe(0);
     await flush();
     expect((await repo.goals.list())[0].why).toBe('Cambiar de empleo');
   });
@@ -45,7 +48,7 @@ describe('organización personal: store', () => {
     store.getState().createTask(draft({ goalId }));
     store.getState().createHabit(habitDraft({ goalId }));
     store.getState().setTaskStatus(store.getState().tasks[0].id, 'done');
-    expect(store.getState().profile.xp).toBe(40);
+    expect(xp()).toBe(22); // la tarea da lo suyo (20 × 1,1); el hábito, sin marcar, no da nada
     expect(store.getState().goals[0].milestones[0].done).toBe(false);
   });
 
@@ -79,10 +82,11 @@ describe('organización personal: store', () => {
       const id = minimal();
       store.getState().setHabitValue(id, 5);
       expect(store.getState().habitLogs).toHaveLength(1);
-      expect(store.getState().profile.xp).toBe(5); // 30 × 5/30, nunca el XP completo
+      // «Estudiar» → Estudio: Intelecto 70 % / Disciplina 30 %.
+      expect(xp()).toBe(3 + 1); // 5/30 de (14 INT + 6 DIS) × 1,1, nunca el XP completo
       store.getState().setHabitValue(id, 30);
       expect(store.getState().habitLogs).toHaveLength(1);
-      expect(store.getState().profile.xp).toBe(30); // completar paga solo lo que faltaba
+      expect(xp()).toBe(15 + 7); // completar deja la fila del día en el total
     });
 
     it('no cobra bonos del día y deshacer devuelve el XP', () => {
@@ -90,7 +94,7 @@ describe('organización personal: store', () => {
       store.getState().setHabitValue(id, 5);
       expect(store.getState().xpEvents.some((e) => e.source === 'combo')).toBe(false);
       store.getState().setHabitValue(id, 0);
-      expect(store.getState().profile.xp).toBe(0);
+      expect(xp()).toBe(0);
     });
   });
 
@@ -100,7 +104,7 @@ describe('organización personal: store', () => {
     store.getState().saveWeekReview({ ...review, wins: 'Corregida' });
     expect(store.getState().profile.reviews).toHaveLength(1);
     expect(store.getState().profile.reviews?.[0].wins).toBe('Corregida');
-    expect(store.getState().profile.xp).toBe(0);
+    expect(xp()).toBe(0);
     await flush();
     expect((await repo.profile.get())?.reviews?.[0].week).toBe('2026-09-07');
   });
@@ -114,7 +118,7 @@ describe('organización personal: store', () => {
   });
 
   it('importar un pack con hábitos ofrece, en el aviso, ponerles hora', () => {
-    store.getState().importPack({ courses: [], goals: [], projects: [], tasks: [], habits: [{ id: 'h', title: 'Estudiar', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-09-16', createdAt: '' }] });
+    store.getState().importPack({ courses: [], goals: [], projects: [], tasks: [], habits: [{ id: 'h', title: 'Estudiar', frequency: { type: 'daily' }, measure: 'minutes', target: 30, reminder: null, steps: [], startDate: '2026-09-16', createdAt: '' }] });
     const toast = useUi.getState().toasts.at(-1);
     expect(toast?.action?.label).toBe('Ponerles hora');
     toast?.action?.run();

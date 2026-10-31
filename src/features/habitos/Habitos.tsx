@@ -22,6 +22,8 @@ import { HabitWeek } from './HabitWeek';
 import { QuitStatus } from './QuitStatus';
 import { isQuit } from '@/core/quit';
 import { difficultyInfo, difficultyOf } from '@/core/difficulty';
+import { habitBaseXp, habitGains } from '@/core/progression';
+import { Gains } from '@/ui/Attribute';
 import { HabitPeriod } from './HabitPeriod';
 import { ListSearch } from '@/ui/ListSearch';
 import { HabitTimeField } from './HabitTimeField';
@@ -34,6 +36,7 @@ import { HABIT_SORTS, sortHabitCards, type HabitSort } from '@/core/listOrder';
 export default function Habitos() {
   const habits = useData((s) => s.habits);
   const logs = useData((s) => s.habitLogs);
+  const courses = useData((s) => s.courses);
   const events = useData((s) => s.events);
   const openModal = useUi((s) => s.openModal);
   const now = today();
@@ -146,7 +149,10 @@ export default function Habitos() {
                     {h.area && ` · ${areaInfo(h.area).label}`}
                   </p>
                 </div>
-                <Tag tone={done ? 'green' : 'xp'}>{!done && credit > 0 ? `+${credit} / ${h.xp} XP` : `+${h.xp} XP`}</Tag>
+                <span className="habit__gain">
+                  <Tag tone={done ? 'green' : 'xp'}>{!done && credit > 0 ? `+${credit} / ${habitBaseXp(h)} XP` : `+${habitBaseXp(h)} XP`}</Tag>
+                  <Gains gains={habitGains(h, courses)} />
+                </span>
               </div>
               {/* Los días pasados se abren para registrar cuánto se hizo, aunque no se llegara a la meta. */}
               {!isQuit(h) && <HabitTimeField habit={h} calendarTimes={calendarTimes.get(h.id) ?? []} />}

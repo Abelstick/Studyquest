@@ -5,7 +5,7 @@ const sample = {
   studyquest: 'pack', version: 1,
   courses: [{ title: 'SQL', link: 'udemy.com/course/sql', modules: [{ title: 'Básico', topics: ['SELECT', { title: 'JOIN' }] }] }],
   goals: [{ title: 'Ser analista', milestones: [{ title: 'SQL', skills: ['SELECT'] }] }],
-  projects: [{ title: 'Dashboard', checkpoints: ['Datos', { title: 'Gráficos', xp: 200 }] }],
+  projects: [{ title: 'Dashboard', checkpoints: ['Datos', { title: 'Gráficos' }] }],
   habits: [{ title: 'Estudiar', frequency: { type: 'days', days: [0, 2, 9] }, measure: 'minutes', target: 30, reminder: '19:00' }],
   tasks: [{ title: 'Instalar', course: 'sql', dueInDays: 3, priority: 'high', subtasks: ['a'] }, { title: '' }],
 };
@@ -35,7 +35,7 @@ describe('pack de aprendizaje', () => {
     expect(e.courses[0].link).toBe('https://udemy.com/course/sql');
     expect(e.tasks[0].courseId).toBe(e.courses[0].id);
     expect(e.tasks[0].dueDate).toBe('2026-10-04');
-    expect(e.tasks[0].xp).toBe(50);
+    expect('xp' in e.tasks[0]).toBe(false); // el XP sale de la dificultad, no del pack
     expect(e.habits[0].startDate).toBe('2026-10-01');
     const ids = [e.courses[0].id, e.courses[0].modules[0].id, e.courses[0].modules[0].topics[0].id, e.goals[0].milestones[0].skills[0].id];
     expect(new Set(ids).size).toBe(4);

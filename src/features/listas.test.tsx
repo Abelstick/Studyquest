@@ -13,8 +13,8 @@ import CursoDetalle from './cursos/CursoDetalle';
 import { CoursesInPlay } from './cursos/CoursesInPlay';
 import { addDays, today } from '@/core/dates';
 
-const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 10, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
-const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
+const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 const course = (id: string, done: number, total: number): Course => ({
   id,
   title: id,
@@ -22,7 +22,7 @@ const course = (id: string, done: number, total: number): Course => ({
   field: '',
   mentor: null,
   createdAt: '',
-  modules: [{ id: `${id}m`, title: 'Módulo', summary: '', xp: 40, topics: Array.from({ length: total }, (_, i) => ({ id: `${id}t${i}`, title: `Tema ${i}`, status: i < done ? ('done' as const) : ('todo' as const), review: false, markedAt: null })) }],
+  modules: [{ id: `${id}m`, title: 'Módulo', summary: '', topics: Array.from({ length: total }, (_, i) => ({ id: `${id}t${i}`, title: `Tema ${i}`, status: i < done ? ('done' as const) : ('todo' as const), review: false, markedAt: null })) }],
 });
 
 const wrap = (ui: React.ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);

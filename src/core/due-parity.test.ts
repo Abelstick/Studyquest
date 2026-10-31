@@ -18,7 +18,7 @@ function rng(seed: number) {
 }
 
 const habit = (frequency: Frequency, over: Partial<Habit> = {}): Habit => ({
-  id: 'h', title: 'h', frequency, measure: 'times', target: 1, xp: 10, reminder: null, steps: [], startDate: '2026-01-10', createdAt: '', ...over,
+  id: 'h', title: 'h', frequency, measure: 'times', target: 1, reminder: null, steps: [], startDate: '2026-01-10', createdAt: '', ...over,
 });
 
 const FREQS: Frequency[] = [

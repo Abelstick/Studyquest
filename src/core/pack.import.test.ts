@@ -1,6 +1,7 @@
+import { BASE_XP_BY_DIFFICULTY, SOURCE_BASE_XP } from './progression';
 import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_MODEL, generatePack, type GenAiClient } from '@/ai/gemini';
-import { PACK_XP_MAX, PACK_SCHEMA, buildPackEntities, contextText, dropExisting, extractJson, packPrompt, packXp, parsePack } from './pack';
+import { PACK_SCHEMA, buildPackEntities, contextText, dropExisting, extractJson, packPrompt, packXp, parsePack } from './pack';
 import { availabilityText } from './routine';
 import type { AgendaEvent } from './domain';
 
@@ -11,7 +12,7 @@ const ok = (raw: string) => {
 };
 
 const sample = {
-  goals: [{ title: 'Dominar SQL', deadlineInDays: 60, measure: '3 sesiones por semana', why: 'Cambiar de empleo', area: 'growth', ifThen: [{ si: 'llego cansado', entonces: 'hago solo 5 minutos' }], milestones: [{ title: 'Consultas', xp: 100 }] }],
+  goals: [{ title: 'Dominar SQL', deadlineInDays: 60, measure: '3 sesiones por semana', why: 'Cambiar de empleo', area: 'growth', ifThen: [{ si: 'llego cansado', entonces: 'hago solo 5 minutos' }], milestones: [{ title: 'Consultas' }] }],
   courses: [{ title: 'SQL desde cero', modules: [{ title: 'Básico', topics: ['SELECT'] }] }],
   habits: [{ title: 'Practicar SQL', goal: 'dominar sql', frequency: { type: 'days', days: [4, 0, 2] }, measure: 'minutes', target: 30, minTarget: 5, area: 'growth' }],
   tasks: [
@@ -45,18 +46,18 @@ describe('leer lo que devuelve la IA', () => {
     expect(r.warnings.join()).toMatch(/primeros 30 de 35 tareas/);
   });
 
-  it('la IA no puede regalar XP: todo queda dentro de los topes de la app', () => {
+  it('la IA no puede regalar XP: se ignora el que traiga y cuenta solo la dificultad válida', () => {
     const r = ok(JSON.stringify({
-      courses: [{ title: 'C', modules: [{ title: 'M', xp: 99999, topics: ['t'] }] }],
-      goals: [{ title: 'G', milestones: [{ title: 'H', xp: 99999 }] }],
-      habits: [{ title: 'H', xp: 99999, frequency: { type: 'daily' } }],
-      tasks: [{ title: 'T', xp: 99999 }],
+      courses: [{ title: 'C', modules: [{ title: 'M', xp: 999999, topics: ['t'] }] }],
+      goals: [{ title: 'G', milestones: [{ title: 'H', xp: 999999 }] }],
+      habits: [{ title: 'H', frequency: { type: 'daily' }, xp: 999999, difficulty: 'legendaria' }],
+      tasks: [{ title: 'T', xp: 999999, difficulty: 'hard', category: 'codigo' }],
     }));
-    expect(r.pack.courses[0].modules[0].xp).toBe(PACK_XP_MAX.group);
-    expect(r.pack.goals[0].milestones[0].xp).toBe(PACK_XP_MAX.group);
-    expect(r.pack.habits[0].xp).toBe(PACK_XP_MAX.habit);
-    expect(r.pack.tasks[0].xp).toBe(PACK_XP_MAX.task);
-    expect(packXp(r.pack)).toBe(PACK_XP_MAX.group * 2 + PACK_XP_MAX.task);
+    expect('xp' in r.pack.courses[0].modules[0]).toBe(false);
+    expect('xp' in r.pack.tasks[0]).toBe(false);
+    expect(r.pack.habits[0].difficulty).toBeUndefined();
+    expect(r.pack.tasks[0]).toMatchObject({ difficulty: 'hard', category: 'codigo' });
+    expect(packXp(r.pack)).toBe(SOURCE_BASE_XP.topic + SOURCE_BASE_XP.milestone + BASE_XP_BY_DIFFICULTY.hard + BASE_XP_BY_DIFFICULTY.normal);
   });
 });
 

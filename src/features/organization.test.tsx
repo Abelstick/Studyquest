@@ -15,11 +15,11 @@ import { WeekReviewPanel } from './progreso/WeekReview';
 const NOW = new Date(2026, 8, 16, 12, 0, 0);
 const TODAY = '2026-09-16';
 
-const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
-const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Estudiar', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', minTarget: 5, ...extra });
+const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Estudiar', frequency: { type: 'daily' }, measure: 'minutes', target: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', minTarget: 5, ...extra });
 const goal = (extra: Partial<Goal> = {}): Goal => ({
   id: 'g1', title: 'Programar mejor', rewardTitle: 'Título', rewardDescription: '', createdAt: '2026-08-17T10:00:00.000Z',
-  milestones: [{ id: 'm1', title: 'SQL', summary: '', xp: 100, done: false, skills: [] }], ...extra,
+  milestones: [{ id: 'm1', title: 'SQL', summary: '', done: false, skills: [] }], ...extra,
 });
 const block = (extra: Partial<AgendaEvent> = {}): AgendaEvent => ({ id: 'e1', title: 'Estudio', category: 'study', date: TODAY, start: '15:00', minutes: 60, rev: 0, createdAt: '', updatedAt: '', ...extra });
 

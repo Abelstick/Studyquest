@@ -5,7 +5,6 @@ import { shortDate } from '@/core/dates';
 import type { Course } from '@/core/domain';
 import { courseDeadline, deadlineSummary } from '@/core/courseDeadline';
 import { recoveryPlan } from '@/core/courseRecovery';
-import { XP_BY_PRIORITY } from '@/core/game';
 import { Button, Panel } from '@/ui/kit';
 
 const fmt = (n: number) => String(n).replace('.', ',');
@@ -32,7 +31,7 @@ export function CourseRecovery({ course }: Readonly<{ course: Course }>) {
   };
   const spread = () => {
     const ids = createTasks(
-      plan.slots.map((s) => ({ title: s.title, courseId: course.id, priority: 'mid' as const, status: 'todo' as const, dueDate: s.date, estimateMin: 30, xp: XP_BY_PRIORITY.mid, subtasks: [], tags: [] })),
+      plan.slots.map((s) => ({ title: s.title, courseId: course.id, priority: 'mid' as const, status: 'todo' as const, dueDate: s.date, estimateMin: 30, subtasks: [], tags: [] })),
     );
     toast({ kind: 'info', title: 'Temas repartidos', body: `${ids.length} ${ids.length === 1 ? 'tarea creada' : 'tareas creadas'} hasta el ${shortDate(plan.target)}.`, action: { label: 'Deshacer', run: () => ids.forEach((id) => deleteTask(id)) } });
   };

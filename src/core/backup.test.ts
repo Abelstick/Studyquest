@@ -16,7 +16,7 @@ describe('copia de seguridad', () => {
     if (!res.ok) return;
     expect(res.warnings).toEqual([]);
     expect(summarize(res.snapshot)).toEqual(summarize(original));
-    expect(res.snapshot.profile.xp).toBe(original.profile.xp);
+    expect(res.snapshot.xpEvents.length).toBe(original.xpEvents.length);
     expect(res.snapshot.profile.credits).toBe(original.profile.credits);
     expect(res.snapshot.tasks.map((t) => t.id)).toEqual(original.tasks.map((t) => t.id));
     expect(res.snapshot.courses[0].modules[4].topics[2].review).toBe(true);

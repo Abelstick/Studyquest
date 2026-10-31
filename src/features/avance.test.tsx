@@ -26,13 +26,13 @@ const course = (topics: TopicSpec[], extra: Partial<Course> = {}): Course => ({
   field: '',
   mentor: null,
   createdAt: '',
-  modules: [{ id: 'm', title: 'Módulo 1', summary: '', xp: 40, topics: topics.map((t, i) => ({ id: `t${i}`, title: `Tema ${i}`, status: t.status ?? 'todo', review: false, markedAt: null, ...(t.doneAt ? { doneAt: t.doneAt } : {}) })) }],
+  modules: [{ id: 'm', title: 'Módulo 1', summary: '', topics: topics.map((t, i) => ({ id: `t${i}`, title: `Tema ${i}`, status: t.status ?? 'todo', review: false, markedAt: null, ...(t.doneAt ? { doneAt: t.doneAt } : {}) })) }],
   ...extra,
 });
 const session = (date: string, minutes = 30): StudySession => ({ id: date + minutes, date, minutes, courseId: 'c1', label: '' });
-const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Practicar SQL', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 10, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
+const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Practicar SQL', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
 const block = (extra: Partial<AgendaEvent> = {}): AgendaEvent => ({ id: 'e1', title: 'Estudio SQL', category: 'study', date: TODAY, start: '18:00', minutes: 60, courseId: 'c1', rev: 0, createdAt: '', updatedAt: '', ...extra });
-const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 
 const detail = () =>
   render(
@@ -227,7 +227,7 @@ describe('reto del mes', () => {
 describe('mapa de actividad del año', () => {
   it('dibuja 53 semanas, cuenta días activos y marca los congelados', () => {
     useData.setState({
-      xpEvents: [{ id: '1', date: TODAY, amount: 200, source: 'task', label: '' }, { id: '2', date: '2026-09-14', amount: 20, source: 'task', label: '' }],
+      xpEvents: [{ id: '1', date: TODAY, amount: 200, source: 'task', sourceId: 's', attribute: 'int', label: '' }, { id: '2', date: '2026-09-14', amount: 20, source: 'task', sourceId: 's', attribute: 'int', label: '' }],
       profile: { ...defaultProfile('u'), frozenDates: ['2026-09-15'] },
     });
     const { container } = render(<ActivityYear />);

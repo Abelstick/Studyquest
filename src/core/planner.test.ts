@@ -11,10 +11,10 @@ const datos = TEMPLATES[0];
 const roadmap = () => templateRoadmap(datos, 'Análisis de datos');
 
 const task = (over: Partial<Task> = {}): Task => ({
-  id: 't', title: 'T', courseId: null, priority: 'mid', status: 'todo', dueDate: START, estimateMin: 60, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null, ...over,
+  id: 't', title: 'T', courseId: null, priority: 'mid', status: 'todo', dueDate: START, estimateMin: 60, subtasks: [], tags: [], createdAt: '', completedAt: null, ...over,
 });
 const habit = (over: Partial<Habit> = {}): Habit => ({
-  id: 'h', title: 'H', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 20, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...over,
+  id: 'h', title: 'H', frequency: { type: 'daily' }, measure: 'minutes', target: 30, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...over,
 });
 
 describe('validación de la ruta que devuelve la IA', () => {

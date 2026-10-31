@@ -7,11 +7,11 @@ const course = (over: Partial<Course> = {}): Course => ({
 });
 const goal = (over: Partial<Goal> = {}): Goal => ({ id: 'g1', title: 'Aprender guitarra', rewardTitle: '', rewardDescription: '', milestones: [], createdAt: '', ...over });
 const habit = (over: Partial<Habit> = {}): Habit => ({
-  id: 'h1', title: 'Estudiar Aprender guitarra', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30,
+  id: 'h1', title: 'Estudiar Aprender guitarra', frequency: { type: 'daily' }, measure: 'minutes', target: 30,
   reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...over,
 });
 const task = (over: Partial<Task> = {}): Task => ({
-  id: 't1', title: 'Semana 1', courseId: 'c1', priority: 'mid', status: 'todo', dueDate: null, estimateMin: 60, xp: 40,
+  id: 't1', title: 'Semana 1', courseId: 'c1', priority: 'mid', status: 'todo', dueDate: null, estimateMin: 60,
   subtasks: [], tags: ['plan'], createdAt: '', completedAt: null, ...over,
 });
 

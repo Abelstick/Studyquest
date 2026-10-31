@@ -7,6 +7,7 @@ import type { AppNotification } from '@/core/domain';
 import { Button, ConfirmModal, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { useLevelUpIntro } from '@/ui/motion';
+import { AttrBadge, Gains, attrStyle } from '@/ui/Attribute';
 import { Icon } from '@/ui/Icon';
 import type { SpriteName } from '@/ui/sprites';
 import { TaskModal } from '../modals/TaskModal';
@@ -118,13 +119,14 @@ function Toasts() {
         const body = (
           <>
             {t.kind === 'xp' && <span className="toast__xp">+{t.xp}</span>}
-            {t.kind === 'unlock' && <Sprite name="trophy" size={30} />}
+            {t.kind === 'unlock' && (t.attribute ? <AttrBadge id={t.attribute} size={26} className="toast__attr" /> : <Sprite name="trophy" size={30} />)}
             {t.kind === 'error' && <Sprite name="skull" size={28} />}
             {t.kind === 'info' && <Sprite name="mushroom" size={28} />}
             {t.kind === 'reminder' && <Sprite name="fire" size={30} className="toast__shake" />}
             <span className="toast__text">
               <span className="toast__title">{t.title}</span>
               {t.body && <span className="toast__body">{t.body}</span>}
+              {t.gains && t.gains.length > 0 && <Gains gains={t.gains} full className="toast__gains" />}
             </span>
             {!!t.coins && (
               <span className="toast__coins">
@@ -141,7 +143,7 @@ function Toasts() {
         if (t.action) {
           const { label, run } = t.action;
           return (
-            <div key={t.id} className={cx('toast', 'toast--with-action', `toast--${t.kind}`)}>
+            <div key={t.id} className={cx('toast', 'toast--with-action', `toast--${t.kind}`, t.attribute && 'toast--attr')} style={t.attribute ? attrStyle(t.attribute) : undefined}>
               <button type="button" className="toast__main" onClick={open}>
                 {body}
               </button>
@@ -159,7 +161,7 @@ function Toasts() {
           );
         }
         return (
-          <button key={t.id} type="button" className={cx('toast', `toast--${t.kind}`)} onClick={open}>
+          <button key={t.id} type="button" className={cx('toast', `toast--${t.kind}`, t.attribute && 'toast--attr')} style={t.attribute ? attrStyle(t.attribute) : undefined} onClick={open}>
             {body}
           </button>
         );

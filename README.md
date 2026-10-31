@@ -71,7 +71,7 @@ El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañ
 | **Estudiar** | Cursos · Apuntes · Repaso |
 | **Planear** | Tareas · Calendario · Planificador |
 | **Lograr** | Hábitos · Metas · Proyectos · Certificaciones |
-| **Mi juego** | Progreso · Héroe 3D · Ciudad · Arsenal · Perfil |
+| **Mi juego** | Progreso · Personaje · Ciudad · Arsenal · Perfil |
 
 - **Siguiente paso.** Arriba de Hoy, un solo bloque responde «¿qué hago ahora?»: primero una tarea vencida, luego la que vence hoy (la de hora límite más cercana), un hábito pendiente, los repasos que tocan y, por último, un tema que dejaste a medias. Se completa o registra con un toque; si te equivocas, el aviso trae **Deshacer** (devuelve el XP como siempre). **Empezar enfoque** abre el Pomodoro con el curso ya elegido.
 - **Insignias solo si hay algo que hacer hoy:** tareas vencidas o de hoy (Planear), hábitos pendientes (Lograr) y repasos (Estudiar).
@@ -94,7 +94,7 @@ El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañ
 - **Áreas de la vida.** Tareas, hábitos y metas llevan una etiqueta opcional con una de seis áreas (carrera, salud, finanzas, relaciones, aprendizaje, hogar). No es una jerarquía ni una colección: sirve para filtrar Tareas y Hábitos y para ver el equilibrio de la semana, sin puntuarlo ni penalizar que un área quede vacía.
 - **Versión mínima de un hábito.** En «Para los días difíciles» del hábito defines una cantidad menor que el objetivo (5 de 30 min). En un mal día, «Solo lo mínimo» la anota **en el mismo registro del día**: mantiene la **racha del propio hábito**, pero no cuenta como día cumplido y da solo el XP proporcional de siempre (nunca el completo ni los bonos de fin de semana, combo o cadena). Si ayer tocaba y no se hizo ni el mínimo, el hábito te lo recuerda con un «hoy basta con volver», sin pedir que compenses.
 - **Si… entonces….** Hasta tres planes por hábito o meta («si termino cansado → descanso 15 min y hago solo el mínimo»). Se ven en la ficha y, en los hábitos, en el siguiente paso de Hoy.
-- **Revisión semanal** (Progreso, o el aviso de Hoy): lo planificado frente a lo hecho (tareas, hábitos, bloques, estudio), hábitos con **previstos / hechos / solo mínimo / omitidos** y tendencia (lo que no tocaba nunca cuenta como omisión), metas que avanzaron o no, equilibrio por área, y **lo pendiente sin culpas**: mover a otra fecha (la misma tarea, no una nueva), repartir en la semana siguiente, reducir o quitar. Registra obstáculos (avisa si uno se repite), lo que funcionó y el cambio de la próxima semana (convertible en tarea), muestra la carga de la semana siguiente y guarda **tus 3 prioridades**, que aparecen en Hoy durante esa semana. No da XP.
+- **Revisión semanal** (Progreso, o el aviso de Hoy): lo planificado frente a lo hecho (tareas, hábitos, bloques, estudio), hábitos con **previstos / hechos / solo mínimo / omitidos** y tendencia (lo que no tocaba nunca cuenta como omisión), metas que avanzaron o no, equilibrio por área, y **lo pendiente sin culpas**: mover a otra fecha (la misma tarea, no una nueva), repartir en la semana siguiente, reducir o quitar. Registra obstáculos (avisa si uno se repite), lo que funcionó y el cambio de la próxima semana (convertible en tarea), muestra **cómo creció tu personaje** (el atributo que más subió, el que se quedó quieto y un mensaje que anima), la carga de la semana siguiente y guarda **tus 3 prioridades**, que aparecen en Hoy durante esa semana. No da XP.
 - **Planificador.** La meta que crea nace con el plazo que elegiste y su indicador, y sus tareas y su hábito quedan enlazados a ella. Si ya existe un curso o una meta con ese nombre, pide confirmación antes de duplicarlo.
 
 - **Barra lateral ocultable.** En pantallas anchas, el botón ☰ de la barra superior (o la flecha de la barra lateral, o la tecla `[`) la oculta y el contenido ocupa todo el ancho; se recuerda en el dispositivo. Oculta, te mueves con ☰, el buscador y los atajos `G` + letra. En el móvil sigue siendo un cajón.
@@ -119,7 +119,7 @@ El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañ
 | **Metas** | Árbol de hitos con habilidades y recompensa final, y **criterio SMART** en su ficha: **plazo** (con aviso de si vas a tiempo, por delante o atrasado), **cómo se mide**, **por qué importa**, área de la vida y planes «si… entonces…». Las **acciones** son tareas y hábitos de siempre enlazados a la meta (se crean ya enlazados desde su ficha o eligiendo «Aporta a la meta» en sus formularios): se ven juntos con su propio avance, y el de la meta sigue siendo el de sus hitos. Se puede **editar**; al borrarla, sus tareas y hábitos se conservan. |
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
 | **Progreso** | Informe de la semana con su **revisión semanal** (ver abajo) y resumen de tu ciudad, horas por semana, distribución del tiempo por curso y mapa de actividad del último año. Filtro 30 / 90 días, 6 meses o todo. |
-| **Héroe 3D** | Tu personaje en **3D con bloques**: eliges raza (**Saiyajin, Mario, Koopa, Protoss, Terran o Zerg**), **evoluciona** en 4 etapas a medida que subes de nivel estudiando y le compras **armas, poderes y skins** con tus monedas (puedes **probarlos antes de comprar**). Arrástralo para girarlo. |
+| **Personaje** | Tu personaje en **3D con bloques** con **seis atributos** (Fuerza, Vitalidad, Intelecto, Disciplina, Espíritu y Creatividad) que crecen con tus hábitos y tareas: un **radar** muestra su forma y cada atributo enseña su nivel, su Forma, qué lo alimenta y su historial de 7 o 30 días. Eliges raza (**Saiyajin, Mario, Koopa, Protoss, Terran o Zerg**), **evoluciona** en 4 etapas con su nivel y le compras **armas, poderes y skins** con tus monedas (puedes **probarlos antes de comprar**). Arrástralo para girarlo. |
 | **Arsenal** | Tienda de Toad (21 avatares, marcos, **8 mundos visuales** que se pueden **probar gratis** antes de canjearlos, insignias, poderes), **51 logros** y recompensas personales de la vida real. |
 | **Personajes** | **21 avatares** con arte pixel propio (búho, mago, ninja, astronauta, zorro, pingüino, rana, murciélago, ajolote, dragón…) y **cada uno con su gesto de reposo**: el fantasma flota, el slime se aplasta, el ninja parpadea de sitio, el dragón respira. Se ven moviéndose ya en la tienda, antes de comprarlos. |
 | **Perfil** | Camino de aprendizaje, insignias, ajustes, **experiencia** (mundo, día/noche, sonido con volumen y animaciones reducidas), instalar la app, **recordatorios**, **exportar/importar tu partida**, cerrar sesión y reiniciar partida. |
@@ -288,7 +288,7 @@ Hay dos canales que funcionan a la vez y **no se duplican**:
 
 **Tareas con hora límite.** Una tarea abierta que vence **hoy** a una hora avisa **una vez**, en la última hora antes de que venza (si la creas con menos margen, avisa igual mientras no haya vencido). Usa los mismos dos canales sin duplicarse; el planificador es [`_shared/taskReminders.ts`](supabase/functions/_shared/taskReminders.ts), compartido por la web y el servidor.
 
-**Resumen semanal (solo push).** El **domingo desde las 19:00** (hora local) llega «📊 Tu semana en StudyQuest»: XP de los últimos 7 días, cuántos días estuviste activo (XP neto positivo), tareas vencidas (nombrando la más antigua) y cuántas vencen la semana que viene. Uno por semana; se desactiva en **Perfil → Recordatorios**. Lógica en [`_shared/weekly.ts`](supabase/functions/_shared/weekly.ts).
+**Resumen semanal (solo push).** El **domingo desde las 19:00** (hora local) llega «📊 Tu semana en StudyQuest»: XP de los últimos 7 días, cuántos días estuviste activo (XP neto positivo), el atributo que más creció, tareas vencidas (nombrando la más antigua) y cuántas vencen la semana que viene. Uno por semana; se desactiva en **Perfil → Recordatorios**. Lógica en [`_shared/weekly.ts`](supabase/functions/_shared/weekly.ts).
 
 **Cómo funcionan los push:** un cron de Supabase llama cada minuto a la Edge Function [`send-reminders`](supabase/functions/send-reminders/index.ts). Esta le pide al planificador ([`_shared/reminders.ts`](supabase/functions/_shared/reminders.ts), **el mismo código que usa la web**, así nunca discrepan) qué avisos tocan ahora para cada usuario con dispositivos suscritos, según su hora local (la zona horaria de su dispositivo). Cada aviso se reserva en `reminder_log` (hábitos), `task_reminder_log` (tareas) o `weekly_digest_log` (resumen) de forma atómica (contador y hora del último), así que **nunca se envía dos veces** aunque la función se ejecute a la vez dos veces. El servidor usa además las mismas reglas de «¿toca hoy?» que la app: una prueba compara ambas con miles de casos.
 
@@ -413,7 +413,7 @@ Pantalla **Ciudad** (y un resumen en Progreso). Cada área de la app es un edifi
 | 📚 **Biblioteca** | Conocimiento | 1 por tema completado · 1 por repaso superado · 3 por tema dominado | Estante (5) · Librería (20) · Biblioteca (60) · Gran biblioteca (150) · Archivo legendario (350) |
 | 🏫 **Academia** | Cursos | 3 por módulo completado · 10 por curso terminado · 1 por hora de estudio | Aula (6) · Escuelita (25) · Academia (70) · Instituto (160) · Universidad (350) |
 | 💻 **Laboratorio** | Proyectos | 2 por checkpoint · 10 por proyecto terminado · 2 por hito de una meta | Taller (4) · Laboratorio (16) · Centro de pruebas (45) · Instituto de I+D (110) · Fábrica de ideas (250) |
-| 🏟️ **Arena** | Retos | 3 por jefe derrotado · 5 por reto semanal · 2 por combo ×2 · 1 por Pomodoro | Pista (5) · Gimnasio (20) · Arena (55) · Estadio (130) · Coliseo (300) |
+| 🏟️ **Arena** | Retos | 3 por jefe derrotado · 5 por reto semanal · 2 por combo · 1 por Pomodoro | Pista (5) · Gimnasio (20) · Arena (55) · Estadio (130) · Coliseo (300) |
 | 🏆 **Museo** | Logros y certificaciones | 1 por logro desbloqueado · 1 por certificación registrada | Vitrina (3) · Sala de honor (8) · Museo (16) · Gran museo (28) · Palacio de los récords (40) |
 
 - **Mejorar un edificio da monedas**: +50, +100, +200, +400 y +800 por alcanzar los niveles 1 a 5, con aviso y mensaje en el buzón. Si saltas varios niveles a la vez, cobras todos. Deshacer o borrar datos **no baja** lo ya conseguido ni repite premios.
@@ -424,7 +424,7 @@ Pantalla **Ciudad** (y un resumen en Progreso). Cada área de la app es un edifi
 
 ## Tu héroe 3D
 
-Pantalla **Héroe 3D** (sección *Mi juego*). La primera vez eliges raza y nombre; mientras eliges puedes ver cómo será cada raza en sus cuatro etapas.
+Pantalla **Personaje** (sección *Mi juego*). La primera vez eliges raza y nombre; mientras eliges puedes ver cómo será cada raza en sus cuatro etapas.
 
 | Raza | De… | Destaca en | Evoluciona así |
 | --- | --- | --- | --- |
@@ -487,15 +487,16 @@ Una actividad puede ser un bloque normal (desayuno, trabajo, una reunión…), e
 
 **Jefes finales.** Una tarea con prioridad *Jefe final* y subtareas es una batalla: **cada subtarea es un golpe** y le quita un corazón. Al caer el último, el jefe se derrota solo: pantalla de **victoria**, su XP y un **botín extra de +50 XP**. Reabrir el jefe le devuelve toda la vida.
 
-**Pomodoro.** 25 min de enfoque + 5 de descanso (configurable), y descanso largo cada 4. Cada enfoque terminado se registra como sesión de estudio (2 XP/min). Suena una melodía 8-bit animada para estudiar y otra tranquila para descansar (**original y sintetizada**, sin archivos); se controla con el botón «Música 8-bit». Se abre desde el 🍅 de la barra superior, que muestra el reloj cuando está en marcha (también en el título de la pestaña), y sobrevive a recargar la página. «Empezar enfoque» en Hoy lo abre con el curso del siguiente paso ya elegido.
+**Pomodoro.** 25 min de enfoque + 5 de descanso (configurable), y descanso largo cada 4. Cada enfoque terminado se registra como sesión de estudio (0,8 XP/min). Suena una melodía 8-bit animada para estudiar y otra tranquila para descansar (**original y sintetizada**, sin archivos); se controla con el botón «Música 8-bit». Se abre desde el 🍅 de la barra superior, que muestra el reloj cuando está en marcha (también en el título de la pestaña), y sobrevive a recargar la página. «Empezar enfoque» en Hoy lo abre con el curso del siguiente paso ya elegido.
 
 **Eventos de racha.**
 
 | Evento | Cuándo | Qué da |
 | --- | --- | --- |
-| **Bonus de fin de semana** | Sábado y domingo, por cada hábito completado | **+50%** de su XP |
-| **Combo ×2** | Al completar **3 hábitos** en el mismo día | Duplica el XP de esos hábitos (tope 200) |
-| **Cofre diario** | Una vez al día en Hoy (sección «Más») | 20–60 monedas + 2 por cada día de racha (máx. +60) y, a veces, +25 XP |
+| **Bonus de fin de semana** | Sábado y domingo, por cada hábito completado | **+5 XP** de Disciplina |
+| **Combo** | Al completar **3 hábitos** en el mismo día | **+15 XP** de Disciplina |
+| **Cadena completa** | Al cerrar todos los eslabones de una rutina del día | **+15 XP** de Disciplina |
+| **Cofre diario** | Una vez al día en Hoy (sección «Más») | 20–60 monedas + 2 por cada día de racha (máx. +60) y, a veces, +10 XP de Disciplina |
 
 Los bonos se cobran **una sola vez** (se anotan en el perfil): deshacer y rehacer un hábito no los repite.
 
@@ -503,17 +504,27 @@ Los bonos se cobran **una sola vez** (se anotan en el perfil): deshacer y rehace
 
 | Concepto | Regla |
 | --- | --- |
-| **Nivel** | El nivel *L* cuesta `250 × L` XP (nivel 12 → 3 000 XP). Cada nivel tiene un mundo (`3-4`) y un rango. |
-| **Monedas** | 1 moneda por cada 4 XP. Subir de nivel da +500. Cada logro da su premio. |
-| **Tarea** | Da su XP al pasar a *Superada*. Reabrirla lo devuelve. Prioridad: baja 20 · media 35 · alta 50 · jefe final 120 (+50 de botín al derrotarlo). |
-| **Hábito** | Da su XP al alcanzar el objetivo del día, **una sola vez**. Bajar del objetivo lo devuelve. La **versión mínima** (opcional) mantiene la racha del hábito pero solo da el XP proporcional y ningún bono. |
-| **Dificultad** | Tareas y hábitos tienen nivel **Fácil (×0,5) · Normal (×1) · Difícil (×1,5) · Épica (×2)**. No cambia las reglas: propone el XP (el de la prioridad en una tarea, 30 en un hábito) multiplicado por el nivel, redondeado a múltiplos de 5, y ese XP es el que se cobra y se devuelve al deshacer. Si ya personalizaste el XP a mano, cambiar la dificultad no lo pisa. |
-| **Tema de curso** | XP del módulo repartido entre sus temas. |
-| **Sesión de estudio** | 2 XP por minuto (también cada Pomodoro de enfoque). |
-| **Repaso** | +10 XP por repaso superado; +40 más al dominar el tema. |
-| **Reto semanal** | Alcanzar tus horas objetivo (15 h por defecto) desbloquea +200 XP. |
+| **Atributos** | Todo el XP va a seis atributos: **Fuerza, Vitalidad, Intelecto, Disciplina, Espíritu y Creatividad**. Cada tarea, hábito, curso, meta y proyecto tiene una **categoría** (se sugiere por el título y se puede cambiar) con un atributo primario, que recibe el **70 %**, y uno secundario opcional, que recibe el **30 %**. Gimnasio → Fuerza/Vitalidad, Estudio → Intelecto/Disciplina… El reparto también se puede elegir a mano. |
+| **Nivel de atributo** | Pasar del nivel *n* al *n+1* cuesta `round(40 × n^1,6)` XP. Máximo, nivel 50. |
+| **Nivel del personaje** | Sale de la **suma** del XP de los seis atributos (no hay un XP aparte): pasar del nivel *L* al *L+1* cuesta `round(100 × L^1,6)`. Cada nivel tiene un mundo (`3-4`) y un rango. |
+| **Monedas** | 1 moneda por cada 2 XP. Subir de nivel el personaje da +250. Cada logro da su premio. |
+| **XP base** | Por dificultad: **Fácil 10 · Normal 20 · Difícil 35 · Épica 50** (tareas y hábitos). Un jefe final suma +15. |
+| **Multiplicadores** | Se suman y multiplican el XP base: **racha** +5 % por cada 7 días (tope +25 %) · **primera acción del día** en ese atributo +10 % · **regreso** tras 3 días o más sin actividad en el atributo +20 % · **Forma baja** (menos del 50 %) −10 %. |
+| **Disciplina extra** | Al completar cualquier cosa con la racha viva, +2 de Disciplina. Una tarea con fecha cumplida a tiempo, +5 más. |
+| **Títulos** | Cada atributo tiene título según su nivel (1 · 5 · 15 · 30 · 50). Intelecto: Aprendiz → Estudiante → Erudito → Sabio → Archimago. La lista está en [`core/progression/titles.ts`](src/core/progression/titles.ts). |
+| **Clase** | La dan tus **dos atributos más altos**: INT+DIS Erudito, FUE+VIT Guerrero, ESP+CRE Bardo, INT+CRE Inventor, FUE+DIS Paladín, VIT+ESP Monje… (15 parejas). Hasta tener 150 XP y dos atributos con XP eres Aventurero. Para no cambiar a cada empate, la clase solo cambia si la pareja nueva supera a la actual en un 10 %. Al cambiar, se anuncia. |
+| **Desbloqueos** | Por cada atributo: **insignia** al nivel 5, **marco de avatar** al 10, **skin del héroe** al 20 y **poder del héroe** al 30. Se entregan solos y nunca se pierden, ni al deshacer; no se pueden comprar. |
+| **Forma** | Cada atributo tiene una barra de 0 a 100 %. Tras 2 días sin actividad baja un 5 % al día, y cada día con actividad sube un 25 %. Nunca quita XP ni niveles: solo, por debajo del 50 %, rebaja un 10 % lo que ganas en ese atributo. |
+| **Tarea** | Da su XP al pasar a *Superada*. Reabrirla lo devuelve. |
+| **Hábito** | Da su XP en proporción a lo avanzado y el total al alcanzar el objetivo del día, **una sola vez**. Bajar del objetivo lo devuelve. La **versión mínima** (opcional) mantiene la racha del hábito pero solo da el XP proporcional y ningún bono. |
+| **Tema de curso** | 15 XP, a los atributos del curso. |
+| **Sesión de estudio** | 0,8 XP por minuto (un Pomodoro de 25 min = 20), hasta 120 por sesión. Va a los atributos del curso, o a Intelecto/Disciplina si es libre. |
+| **Repaso** | 5 XP por repaso superado; 20 al dominar el tema. |
+| **Hito · Checkpoint · Certificación** | 35 · 20 · 50 XP, a los atributos de su meta, proyecto o curso. |
+| **Reto semanal** | Alcanzar tus horas objetivo (15 h por defecto) da +50 XP de Disciplina. |
+| **Una sola vez** | El XP se guarda en un registro con una fila por acción, día y atributo. Repetir una acción la reemplaza (no se duplica) y deshacerla la borra. Todos los números están en [`core/progression/config.ts`](src/core/progression/config.ts). |
 | **Racha** | Días consecutivos con XP neto positivo. Si hoy aún no hay actividad, la racha de ayer sigue viva hasta que acabe el día. |
-| **Congelar racha** | Poder de la tienda (×3): marca un día como activo sin ganar XP. |
+| **Congeladores de racha** | Cada **7 días seguidos** de racha ganas uno, mientras tengas menos de 2 (los comprados en la tienda, ×3, van aparte y no tienen tope). **Se usan solos**: si un día se pasa sin XP y la racha venía viva, al abrir la app ese día queda congelado (cuenta como activo, sin dar XP). Si el hueco es más largo de lo que cubren, no se gasta ninguno. Hoy nunca se congela: aún se puede salvar. |
 | **Progreso de curso** | Temas completados / totales. Un módulo se completa con todos sus temas y desbloquea el siguiente. Cada tema guarda el día en que se completó, y de ahí sale tu ritmo (temas por semana, últimas 4 semanas). |
 | **Plazo de un curso** | La fecha que fijas al editarlo; si no, la de su última tarea abierta. Con ella ves cuánto falta y los temas por semana que necesitas. Si venció o tu ritmo no alcanza, la ficha propone un **plan de recuperación**: mover el plazo según tu ritmo o repartir los temas pendientes en tareas con fecha. |
 | **Reto del mes** | Eliges qué medir (días de estudio, horas, tareas o XP) y cuánto; solo cuenta lo que logres **desde que lo fijas**. Al cumplirlo cobras monedas (10 por día de estudio, 12 por hora, 6 por tarea, 1 por cada 10 XP), **una sola vez**. Es de un solo mes y no da XP. |
@@ -597,11 +608,13 @@ Puntos a respetar en el adaptador: `habitLogs.upsert` debe ser **único por háb
 
 | Tabla | Tipo | Contenido |
 | --- | --- | --- |
-| `profiles` | `data jsonb` | Nombre, XP, monedas, inventario, equipado, logros, congeladores y las últimas 26 revisiones semanales |
+| `profiles` | `data jsonb` | Nombre, monedas, inventario, equipado, logros, congeladores y las últimas 26 revisiones semanales (el XP no se guarda aquí: sale de `xp_events`) |
 | `tasks` · `habits` · `courses` · `goals` · `projects` · `personal_rewards` | `data jsonb` | Entidades con estructura anidada. Área, meta enlazada (`goalId`), versión mínima, «si… entonces…» y plazo/medida de las metas viven aquí dentro: no hacen falta migraciones |
 | `habit_logs` | relacional | `habit_id`, `day`, `value`, `steps_done` — único por `(user_id, habit_id, day)` |
 | `study_sessions` | relacional | `day`, `minutes`, `course_id` |
-| `xp_events` | relacional | `day`, `amount`, `source`, `label` — fuente de la racha y del mapa de actividad |
+| `xp_events` | relacional | Ledger de XP, **fuente de verdad** del progreso: `day`, `attribute_id`, `amount` (≥ 0), `source`, `source_id`, `label`, `multipliers` — único por `(user_id, source, source_id, day, attribute_id)`. Se escribe con el RPC idempotente `replace_xp`. De aquí salen el XP, los niveles, la Forma, la racha y el mapa de actividad |
+| `attributes` | catálogo | Los seis atributos (solo lectura). Nombres, íconos y colores viven en el código |
+| `user_attributes` | relacional | Resumen por atributo: `xp_total`, `last_activity`. Lo mantiene `replace_xp`; los niveles y la Forma se calculan en la app |
 | `notifications` | relacional | `category`, `title`, `body`, `read` |
 | `calendar_events` | `data jsonb` | Actividades del calendario, una fila por serie |
 | `push_subscriptions` | relacional | Dispositivos suscritos a push: `endpoint`, claves, `timezone` — único por `(user_id, endpoint)` |
@@ -637,6 +650,7 @@ También hay pruebas de componentes (`*.test.tsx`, con jsdom y Testing Library) 
 | Al guardar la clave en mi cuenta sale un error | Falta ejecutar `0004_user_secrets.sql` en el SQL Editor de Supabase. La clave sí funciona en el dispositivo mientras tanto. |
 | Al guardar un apunte sale un error | Falta ejecutar `0006_notes.sql` en el SQL Editor de Supabase (crea la tabla `notes`). |
 | Al registrar una certificación sale un error al guardar | Falta ejecutar `0005_certifications.sql` en el SQL Editor de Supabase (crea la tabla `certifications`). |
+| Al completar algo sale «function replace_xp does not exist» | Falta ejecutar `0009_attributes.sql` (crea el ledger por atributo y su RPC). La primera vez reemplaza el `xp_events` antiguo: el XP de antes se pierde a propósito. |
 | «Frase incorrecta» al desbloquear | La frase es la que elegiste al guardarla (distingue mayúsculas). Si la perdiste, pulsa «Olvidé mi frase», que borra la copia cifrada de tu cuenta, y pega la clave otra vez (la sigues viendo en Google AI Studio). |
 | «Google no aceptó tu clave» | La clave está mal copiada, borrada o restringida. Crea otra en [Google AI Studio](https://aistudio.google.com/apikey) y pégala de nuevo (Perfil → Funciones inteligentes). |
 | «Se agotó la cuota gratuita…» | El modelo llegó a su límite por minuto o por día (los límites son por proyecto y por modelo). Con el cambio automático activado la app prueba otros modelos gratuitos sola; si todos se agotaron, espera unos minutos (o a medianoche, hora del Pacífico, para el límite diario) o usa una plantilla. Puedes ver tus cifras en aistudio.google.com/rate-limit. |
@@ -654,7 +668,7 @@ También hay pruebas de componentes (`*.test.tsx`, con jsdom y Testing Library) 
 
 - Los avisos de cursos (parado hace 3 o más días, plazo a 3 días o vencido) salen dentro de la app, al abrirla. No se envían como push.
 - Los hábitos y bloques del calendario vinculados a un curso solo informan: marcarlos no registra una sesión ni avance del curso.
-- **Pomodoro y hábitos medidos en minutos son independientes:** una sesión de enfoque suma sus 2 XP/min y un hábito de «estudiar 30 min» se registra aparte. No se vinculan automáticamente para no tocar la economía del juego; registra cada cosa una vez.
+- **Pomodoro y hábitos medidos en minutos son independientes:** una sesión de enfoque suma su XP por minuto y un hábito de «estudiar 30 min» se registra aparte. No se vinculan automáticamente para no tocar la economía del juego; registra cada cosa una vez.
 - Las prioridades de la semana se eligen en la revisión semanal; sin revisión, «tus 3 prioridades» se deducen solas de las fechas y la prioridad de las tareas.
 - **Cola offline:** ante conflictos entre dispositivos gana la última escritura (*last write wins*).
 - **El héroe 3D necesita WebGL** (cualquier navegador actual lo tiene). Sin él se ve la ficha y la tienda, pero no el modelo.

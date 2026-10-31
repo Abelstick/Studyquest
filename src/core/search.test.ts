@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Course, Goal, Habit, Note, Project, Task } from './domain';
 import { matchesQuery, searchAll, type SearchSource } from './search';
 
-const task = (id: string, title: string, status: Task['status'] = 'todo'): Task => ({ id, title, courseId: null, priority: 'mid', status, dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null });
+const task = (id: string, title: string, status: Task['status'] = 'todo'): Task => ({ id, title, courseId: null, priority: 'mid', status, dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null });
 const note = (id: string, title: string, body = ''): Note => ({ id, title, body, courseId: null, topicId: null, tags: [], pinned: false, link: null, createdAt: '', updatedAt: '' });
 
 const src = (s: Partial<SearchSource> = {}): SearchSource => ({ courses: [], tasks: [], habits: [], notes: [], goals: [], projects: [], ...s });

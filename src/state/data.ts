@@ -1,14 +1,20 @@
 import { create } from 'zustand';
 import type {
-  AgendaEvent, AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, MonthChallenge, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, WeekReview, XpEvent, XpSource,
+  AgendaEvent, AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, MonthChallenge, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, WeekReview, XpEvent,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
-  LEVEL_UP_BONUS, SESSION_XP_PER_MIN, WEEKLY_BONUS_XP, coinsForXp, computeStreak, defaultProfile, habitCreditXp, hoursInWeek, levelFromXp, logFor, rankFor, topicXp, worldFor,
+  LEVEL_UP_BONUS, WEEKLY_BONUS_XP, activeDays, coinsForXp, computeStreak, defaultProfile, habitProgress, hoursInWeek, levelFromXp, logFor, rankFor, worldFor,
 } from '@/core/game';
+import {
+  ATTRIBUTE_IDS, BONUS_XP, SOURCE_BASE_XP, applyGrant, attributeDelta, attributeLevelUps, attributeOf, attributeTotals, classOf, classPairText, isClassId, levelsOf, nextClass, pendingUnlocks, certificationMapping, courseMapping, goalMapping, habitBaseXp, habitMapping, isOnTime,
+  daysToFreeze, earnFreezers, streakStart,
+  categorizeCourse, categorizeGoal, categorizeHabit, categorizeProject, categorizeTask, planAction, planBonus, projectMapping, sameRows, sessionBaseXp, sessionMapping, splitRevert, taskBaseXp, taskMapping, totalXp, withMissingCategories,
+  type ActionSpec, type BonusSpec, type GrantContext, type XpRef,
+} from '@/core/progression';
 import { canOpenChest, chestReward, dayBonusOf, habitBonus, habitsDoneOn } from '@/core/events';
 import { gradeReview, startReview, type Rating } from '@/core/review';
-import { isBoss, spawnNext, taskReward } from '@/core/tasks';
+import { isBoss, spawnNext } from '@/core/tasks';
 import { CERT_XP } from '@/core/certifications';
 import { CHAIN_BONUS_XP, chainsToReward, cleanChains } from '@/core/chains';
 import { CATCH_UP_DAYS, canCatchUp } from '@/core/catchup';
@@ -133,7 +139,6 @@ export interface DataState extends Data {
   equipHero: (slot: HeroSlot, itemId: string | null) => void;
 
   logSession: (input: { minutes: number; courseId: ID | null; label?: string }) => void;
-  freezeToday: () => void;
   claimWeeklyBonus: () => void;
   /** Fija (o quita, con null) el reto del mes. */
   setChallenge: (challenge: MonthChallenge | null) => void;
@@ -236,44 +241,143 @@ export function createDataStore(repo: Repository) {
       checkCity();
     };
 
-    /** Suma (o resta, si es negativo) XP y monedas; detecta subidas de nivel y logros. */
     /**
-     * `on` es el día al que corresponde el XP. Por defecto hoy, pero al ponerse al día con un
-     * hábito olvidado se fecha en SU día: así la racha se recalcula bien (se mide por los días
-     * con XP), que es justo lo que arregla haber olvidado marcarlo.
+     * Deja en el ledger las filas de `ref` exactamente como `rows` (otorgar, ajustar un avance o deshacer)
+     * y ajusta las monedas con la diferencia. El XP, el nivel y los atributos no se guardan aparte: salen del
+     * ledger. Las filas llevan su día: al ponerse al día con un hábito olvidado se fechan en SU día, y así la
+     * racha (que se mide por los días con XP) se repara.
      */
-    const award = (amount: number, source: XpSource, label: string, title = '¡Misión completada!', on: string = today()) => {
-      const p = get().profile;
-      const before = levelFromXp(p.xp);
-      const xp = Math.max(0, p.xp + amount);
-      const after = levelFromXp(xp);
+    const commitXp = (ref: XpRef, rows: XpEvent[], title = '¡Misión completada!') => {
+      const s = get();
+      const before = s.xpEvents;
+      const { kept, removed } = splitRevert(before, ref);
+      if (sameRows(removed, rows)) return void sfx.click();
+      const after = applyGrant(kept, rows);
+      const amount = totalXp(after) - totalXp(before);
+      const p = s.profile;
+      const lvBefore = levelFromXp(totalXp(before));
+      const lvAfter = levelFromXp(totalXp(after));
       let credits = Math.max(0, p.credits + coinsForXp(amount));
-      const gained = after > before;
-      if (gained) credits += LEVEL_UP_BONUS * (after - before);
-      const event: XpEvent = { id: newId(), date: on, amount, source, label };
+      const gained = lvAfter > lvBefore;
+      if (gained) credits += LEVEL_UP_BONUS * (lvAfter - lvBefore);
       run(
-        (s) => ({ xpEvents: [...s.xpEvents, event], profile: { ...s.profile, xp, credits } }),
+        (st) => ({ xpEvents: applyGrant(splitRevert(st.xpEvents, ref).kept, rows), profile: { ...st.profile, credits } }),
         async () => {
-          await repo.xpEvents.create(event);
-          await repo.profile.update({ xp, credits });
+          await repo.xpEvents.replace(ref, rows);
+          await repo.profile.update({ credits });
         },
       );
       const ui = useUi.getState();
       if (amount > 0) {
-        ui.toast({ kind: 'xp', title, body: label, xp: amount, coins: coinsForXp(amount) });
+        const delta = attributeDelta(before, after);
+        const gains = ATTRIBUTE_IDS.flatMap((id) => ((delta[id] ?? 0) > 0 ? [{ attribute: id, xp: delta[id] ?? 0 }] : []));
+        ui.toast({ kind: 'xp', title, body: rows[0]?.label, xp: amount, coins: coinsForXp(amount), gains });
         sfx.coin();
+      } else if (amount < 0) sfx.click();
+      // Subir de nivel un atributo se celebra aparte (y queda en las notificaciones).
+      for (const up of attributeLevelUps(attributeTotals(before), attributeTotals(after))) {
+        const a = attributeOf(up.attribute);
+        ui.toast({ kind: 'unlock', attribute: up.attribute, title: `¡${a.name} sube al nivel ${up.to}!`, body: a.hint, to: '/heroe' });
+        notify({ category: 'achievement', title: `${a.name} · nivel ${up.to}`, body: `Tu ${a.name.toLowerCase()} creció con lo que haces: ${a.hint.toLowerCase()}` });
+        if (!gained) sfx.levelUp();
       }
+      claimUnlocks(after);
+      if (amount > 0) syncClass(after, true);
+      syncFreezers(amount > 0);
       if (gained) {
-        ui.showLevelUp({ level: after, rank: rankFor(after), world: worldFor(after), bonus: LEVEL_UP_BONUS * (after - before) });
-        notify({ category: 'achievement', title: `¡Subiste al nivel ${after}!`, body: `${rankFor(after)} · Mundo ${worldFor(after)}` });
+        ui.showLevelUp({ level: lvAfter, rank: rankFor(lvAfter), world: worldFor(lvAfter), bonus: LEVEL_UP_BONUS * (lvAfter - lvBefore) });
+        notify({ category: 'achievement', title: `¡Subiste al nivel ${lvAfter}!`, body: `${rankFor(lvAfter)} · Mundo ${worldFor(lvAfter)}` });
         sfx.levelUp();
         // Aviso solo al cruzar el umbral de una etapa nueva, no en cada nivel.
         const hero = p.hero;
-        if (hero && stageForLevel(after) > stageForLevel(before) && canEvolve(hero, after))
-          notify({ category: 'achievement', title: `${hero.name} puede evolucionar`, body: `Ya puede llegar a ${stageName(hero.race, hero.stage + 1)}. Entra en Héroe 3D y pulsa «Evolucionar».` });
+        if (hero && stageForLevel(lvAfter) > stageForLevel(lvBefore) && canEvolve(hero, lvAfter))
+          notify({ category: 'achievement', title: `${hero.name} puede evolucionar`, body: `Ya puede llegar a ${stageName(hero.race, hero.stage + 1)}. Entra en Personaje y pulsa «Evolucionar».` });
       }
       checkAchievements();
     };
+
+    /** El XP de un hábito en un día sigue a su avance: proporcional a medias, entero al cumplirlo y nada si baja a 0. */
+    const syncHabitXp = (h: Habit, log: HabitLog, date: ISODate, title?: string) =>
+      grant({ source: 'habit', sourceId: h.id, date, label: h.title, base: habitBaseXp(h), mapping: habitMapping(h, get().courses), progress: habitProgress(h, log) }, title);
+
+    /**
+     * Contexto para calcular una acción. La racha se mide SIN la propia acción: así completar un hábito
+     * en dos pasos da lo mismo que completarlo de golpe (su avance parcial no «crea» la racha que premia).
+     */
+    /** Entrega lo que los atributos ya alcanzaron (insignias, marcos, skins y poderes). Nunca se quita. */
+    const claimUnlocks = (events: XpEvent[], announce = true) => {
+      const p = get().profile;
+      const fresh = pendingUnlocks(levelsOf(attributeTotals(events)), p.inventory);
+      if (!fresh.length) return;
+      patchProfile({ inventory: [...p.inventory, ...fresh.map((u) => u.id)] });
+      for (const u of fresh) {
+        const where = u.kind === 'skin' || u.kind === 'power' ? '/heroe' : '/arsenal';
+        if (announce) useUi.getState().toast({ kind: 'unlock', attribute: u.attribute, title: `¡Desbloqueaste ${u.title}!`, body: u.blurb, to: where });
+        notify({ category: 'achievement', title: `Desbloqueaste «${u.title}»`, body: u.blurb });
+      }
+      if (announce) sfx.unlock();
+    };
+
+    /**
+     * Congeladores: si ayer (o unos días) se pasaron sin XP y la racha venía viva, se gastan solos para cubrirlos; y
+     * la racha de ahora entrega los que haya ganado. `spend` en falso (al deshacer) no gasta nada: deshacer el
+     * hábito de ayer no debería costarte un congelador al instante. Lo pendiente se cubre al volver a abrir la app.
+     */
+    const syncFreezers = (spend: boolean) => {
+      const s = get();
+      const p = s.profile;
+      const now = today();
+      const gap = spend ? daysToFreeze(activeDays(s.xpEvents, p.frozenDates), now, p.streakFreezes) : [];
+      const frozenDates = gap.length ? [...p.frozenDates, ...gap] : p.frozenDates;
+      const streak = computeStreak(s.xpEvents, frozenDates, now);
+      const seen = p.freezerMilestones ?? [];
+      const won = earnFreezers(streak.current, streakStart(streak.days, now), p.streakFreezes - gap.length, seen);
+      if (!gap.length && won.seen.length === seen.length && won.seen.every((k, i) => k === seen[i])) return;
+      patchProfile({ streakFreezes: p.streakFreezes - gap.length + won.earned, frozenDates, freezerMilestones: won.seen });
+      const ui = useUi.getState();
+      if (gap.length) {
+        const body = `${gap.length === 1 ? 'Un día sin XP quedó cubierto' : `${gap.length} días sin XP quedaron cubiertos`}: tu racha de ${streak.current} días sigue viva.`;
+        ui.toast({ kind: 'info', title: gap.length === 1 ? 'Usamos un congelador' : `Usamos ${gap.length} congeladores`, body });
+        notify({ category: 'streak', title: 'Racha protegida', body });
+        sfx.oneUp();
+      }
+      if (won.earned) {
+        const body = `${streak.current} días seguidos. Si un día fallas, se usa solo y la racha sigue.`;
+        ui.toast({ kind: 'unlock', title: won.earned === 1 ? '¡Ganaste un congelador!' : `¡Ganaste ${won.earned} congeladores!`, body });
+        notify({ category: 'streak', title: 'Congelador de racha', body });
+      }
+    };
+
+    /** Recalcula la clase con memoria y, si cambia (y no es por deshacer), lo celebra. */
+    const syncClass = (events: XpEvent[], announce: boolean) => {
+      const p = get().profile;
+      const current = isClassId(p.characterClass) ? p.characterClass : undefined;
+      const next = nextClass(current, attributeTotals(events));
+      if (next === current) return;
+      patchProfile({ characterClass: next });
+      if (!announce || next === 'aventurero') return;
+      const c = classOf(next);
+      useUi.getState().toast({ kind: 'unlock', title: `¡Ahora eres ${c.name}!`, body: `${classPairText(c)} · ${c.blurb}`, to: '/heroe' });
+      notify({ category: 'achievement', title: `Tu clase: ${c.name}`, body: `${classPairText(c)}. ${c.blurb}` });
+      sfx.star();
+    };
+
+    const grantContext = (ref: XpRef): GrantContext => {
+      const s = get();
+      return { events: s.xpEvents, streak: computeStreak(splitRevert(s.xpEvents, ref).kept, s.profile.frozenDates).current, newId };
+    };
+    /** Otorga (o ajusta, si ya estaba) el XP de una acción según su reparto de atributos. Con avance 0 la deshace. */
+    const grant = (spec: ActionSpec, title?: string) => {
+      const ref = { source: spec.source, sourceId: spec.sourceId, date: spec.date };
+      commitXp(ref, planAction(spec, grantContext(ref)), title);
+    };
+    /** Bono fijo a un atributo (combo, cadena, cofre…). */
+    const grantBonus = (spec: BonusSpec, title?: string) => {
+      const ref = { source: spec.source, sourceId: spec.sourceId, date: spec.date };
+      commitXp(ref, planBonus(spec, grantContext(ref)), title);
+    };
+    /** Devuelve el XP de un origen (de un día o de todos). */
+    const revert = (ref: XpRef) => commitXp(ref, []);
 
     /** Bonus de fin de semana y combo ×2: se cobran una sola vez (quedan anotados en el perfil). */
     const claimHabitBonuses = (h: Habit, date: string) => {
@@ -282,9 +386,9 @@ export function createDataStore(repo: Repository) {
       const b = habitBonus(h, done, dayBonusOf(s.profile, date), date);
       if (b.xp <= 0) return;
       patchProfile({ dayBonus: b.next });
-      if (b.weekend) award(b.weekend, 'combo', `Bonus de fin de semana · ${h.title}`, '¡Bonus de fin de semana!');
+      if (b.weekend) grantBonus({ source: 'combo', sourceId: `weekend:${h.id}`, date, attribute: 'dis', amount: BONUS_XP.weekend, label: `Bonus de fin de semana · ${h.title}` }, '¡Bonus de fin de semana!');
       if (b.combo) {
-        award(b.combo, 'combo', `Combo ×2 · ${done.length} hábitos hoy`, '¡COMBO ×2!');
+        grantBonus({ source: 'combo', sourceId: 'combo', date, attribute: 'dis', amount: BONUS_XP.combo, label: `Combo · ${done.length} hábitos hoy` }, '¡COMBO!');
         sfx.combo();
       }
     };
@@ -297,7 +401,7 @@ export function createDataStore(repo: Repository) {
       const [completed] = chainsToReward(s.profile.chains ?? [], s.habits, s.habitLogs, h.id, claimed, date);
       if (!completed) return;
       patchProfile({ dayBonus: { ...bonus, chains: [...claimed, completed.chain.id] } });
-      award(CHAIN_BONUS_XP, 'combo', `Cadena completa · ${completed.chain.name}`, '¡CADENA COMPLETA!');
+      grantBonus({ source: 'combo', sourceId: `chain:${completed.chain.id}`, date, attribute: 'dis', amount: CHAIN_BONUS_XP, label: `Cadena completa · ${completed.chain.name}` }, '¡CADENA COMPLETA!');
       notify({ category: 'streak', title: `Cadena completa: ${completed.chain.name}`, body: `${completed.dueCount} hábitos enlazados hoy. +${CHAIN_BONUS_XP} XP.` });
       sfx.combo();
     };
@@ -337,6 +441,27 @@ export function createDataStore(repo: Repository) {
       );
     };
 
+    /**
+     * Lo creado antes de que existieran las categorías recibe la sugerida por su título (una sola vez: después
+     * ya la tiene guardada y se puede cambiar a mano).
+     */
+    const assignMissingCategories = () => {
+      const fix = withMissingCategories(get());
+      const swap = <T extends { id: ID }>(list: T[], changed: T[]) => (changed.length ? list.map((x) => changed.find((c) => c.id === x.id) ?? x) : list);
+      if (!fix.courses.length && !fix.tasks.length && !fix.habits.length && !fix.goals.length && !fix.projects.length) return;
+      run(
+        (s) => ({ courses: swap(s.courses, fix.courses), tasks: swap(s.tasks, fix.tasks), habits: swap(s.habits, fix.habits), goals: swap(s.goals, fix.goals), projects: swap(s.projects, fix.projects) }),
+        async () => {
+          // `createMany` es un upsert por id: guarda los documentos ya con su categoría.
+          if (fix.courses.length) await repo.courses.createMany(fix.courses);
+          if (fix.habits.length) await repo.habits.createMany(fix.habits);
+          if (fix.goals.length) await repo.goals.createMany(fix.goals);
+          if (fix.projects.length) await repo.projects.createMany(fix.projects);
+          if (fix.tasks.length) await repo.tasks.createMany(fix.tasks);
+        },
+      );
+    };
+
     /** Al borrar un hábito o una tarea, sus bloques del calendario se quedan como actividades sueltas. */
     const unlinkAgenda = (ref: { habitId?: ID; taskId?: ID }) => {
       const s = get();
@@ -363,6 +488,11 @@ export function createDataStore(repo: Repository) {
           ]);
           const ensured = profile ?? (await repo.profile.save(defaultProfile(userId)));
           set({ profile: ensured, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events, status: 'ready', error: null });
+          assignMissingCategories();
+          // Lo que ya se había alcanzado (o cambió con el balance) se pone al día sin avisos en pantalla.
+          claimUnlocks(xpEvents, false);
+          syncClass(xpEvents, false);
+          syncFreezers(true);
           useUi.getState().setWorld(worldIdOf(ensured.equipped.world));
           // Al abrir la app: avisos de cursos parados o por vencer (sin repetir los de hoy).
           if (ensured.onboarded) get().checkCourseAlerts();
@@ -440,7 +570,7 @@ export function createDataStore(repo: Repository) {
 
       /* ---------- Tareas ---------- */
       createTask(draft) {
-        const task: Task = { ...draft, id: newId(), createdAt: isoNow(), completedAt: draft.status === 'done' ? today() : null };
+        const task: Task = categorizeTask({ ...draft, id: newId(), createdAt: isoNow(), completedAt: draft.status === 'done' ? today() : null }, get().courses);
         run((s) => ({ tasks: [...s.tasks, task] }), () => repo.tasks.create(task));
         sfx.jump();
         return task.id;
@@ -453,7 +583,7 @@ export function createDataStore(repo: Repository) {
         if (status && status !== cur.status) get().setTaskStatus(id, status);
       },
       createTasks(drafts) {
-        const made: Task[] = drafts.map((d) => ({ ...d, id: newId(), createdAt: isoNow(), completedAt: d.status === 'done' ? today() : null }));
+        const made: Task[] = drafts.map((d) => categorizeTask({ ...d, id: newId(), createdAt: isoNow(), completedAt: d.status === 'done' ? today() : null }, get().courses));
         if (!made.length) return [];
         run(
           (s) => ({ tasks: [...s.tasks, ...made] }),
@@ -494,14 +624,19 @@ export function createDataStore(repo: Repository) {
           },
         );
         if (becameDone) {
-          const reward = taskReward(t);
-          award(reward, 'task', t.title, isBoss(t) ? '¡Jefe derrotado!' : undefined);
+          const on = today();
+          const before = totalXp(get().xpEvents);
+          grant(
+            { source: 'task', sourceId: t.id, date: on, label: t.title, base: taskBaseXp(t), mapping: taskMapping(t, get().courses), onTime: isOnTime(t, on) },
+            isBoss(t) ? '¡Jefe derrotado!' : undefined,
+          );
           if (isBoss(t)) {
+            const reward = totalXp(get().xpEvents) - before;
             sfx.victory();
             useUi.getState().showVictory({ title: t.title, xp: reward, coins: coinsForXp(reward), hits: t.subtasks.length });
           }
           if (spawned?.dueDate) useUi.getState().toast({ kind: 'info', title: 'Tarea repetida', body: `La próxima vence el ${spawned.dueDate.split('-').reverse().join('/')}.` });
-        } else if (reopened) award(-taskReward(t), 'task', `Deshacer: ${t.title}`);
+        } else if (reopened) revert({ source: 'task', sourceId: t.id });
         else sfx.click();
       },
       toggleSubtask(taskId, subId) {
@@ -521,7 +656,7 @@ export function createDataStore(repo: Repository) {
 
       /* ---------- Hábitos ---------- */
       createHabit(draft) {
-        const habit: Habit = { ...draft, id: newId(), createdAt: isoNow(), startDate: today() };
+        const habit: Habit = categorizeHabit({ ...draft, id: newId(), createdAt: isoNow(), startDate: today() }, get().courses);
         run((s) => ({ habits: [...s.habits, habit] }), () => repo.habits.create(habit));
         sfx.jump();
       },
@@ -573,16 +708,12 @@ export function createDataStore(repo: Repository) {
         run((s) => ({ habitLogs: upsertBy(s.habitLogs, log) }), () => repo.habitLogs.upsert(log));
         const was = (prev?.value ?? 0) >= h.target;
         const now = value >= h.target;
-        // El avance parcial también da XP (proporcional); al completar solo se cobra lo que faltaba.
-        const delta = habitCreditXp(h, log) - habitCreditXp(h, prev);
+        // El avance parcial también da XP (proporcional): la fila del día se ajusta, nunca se duplica.
+        syncHabitXp(h, log, date, now && !was ? undefined : '¡Sigues avanzando!');
         if (now && !was) {
-          if (delta !== 0) award(delta, 'habit', h.title);
           claimHabitBonuses(h, date);
           claimChainBonus(h, date);
-        } else if (was && !now) award(delta, 'habit', `Deshacer: ${h.title}`);
-        else if (delta > 0) award(delta, 'habit', `Avance: ${h.title} · ${value}/${h.target}`, '¡Sigues avanzando!');
-        else if (delta < 0) award(delta, 'habit', `Ajuste: ${h.title}`);
-        else sfx.click();
+        }
       },
       setHabitValueOn(habitId, date, rawValue) {
         const h = get().habits.find((x) => x.id === habitId);
@@ -600,13 +731,10 @@ export function createDataStore(repo: Repository) {
 
         const was = (prev?.value ?? 0) >= h.target;
         const nowDone = value >= h.target;
-        // El avance a medias también cuenta (6 de 10 vasos = 60 % del XP), igual que hoy.
-        const delta = habitCreditXp(h, log) - habitCreditXp(h, prev);
-        if (delta === 0) return void sfx.click();
-        // El XP se fecha en SU día para que la racha se repare. Los bonos del día (finde,
-        // combo, cadena) no se cobran hacia atrás: son mecánicas de «hoy».
-        const label = nowDone ? 'Recuperado' : delta > 0 ? 'Avance' : 'Ajuste';
-        award(delta, 'habit', `${label}: ${h.title} · ${date} · ${value}/${h.target}`, nowDone && !was ? '¡Te pusiste al día!' : delta > 0 ? '¡Avance guardado!' : 'Marca quitada', date);
+        // El avance a medias también cuenta (6 de 10 vasos = 60 % del XP), igual que hoy. El XP se fecha
+        // en SU día para que la racha se repare. Los bonos del día (finde, combo, cadena) no se cobran
+        // hacia atrás: son mecánicas de «hoy».
+        syncHabitXp(h, log, date, nowDone && !was ? '¡Te pusiste al día!' : '¡Avance guardado!');
         if (nowDone && !was) sfx.oneUp();
       },
       toggleHabitStep(habitId, stepId, on) {
@@ -621,11 +749,8 @@ export function createDataStore(repo: Repository) {
         else done.add(stepId);
         const log: HabitLog = { id: prev?.id ?? newId(), habitId, date, value: prev?.value ?? 0, stepsDone: [...done] };
         run((s) => ({ habitLogs: upsertBy(s.habitLogs, log) }), () => repo.habitLogs.upsert(log));
-        const h = habit;
         // Cada paso hecho también suma su parte de XP; deshacerlo la devuelve.
-        const delta = h ? habitCreditXp(h, log) - habitCreditXp(h, prev) : 0;
-        if (h && delta > 0) award(delta, 'habit', `Paso: ${h.title}`, '¡Sigues avanzando!', date);
-        else if (h && delta < 0) award(delta, 'habit', `Ajuste: ${h.title}`, 'Marca quitada', date);
+        if (habit) syncHabitXp(habit, log, date, '¡Sigues avanzando!');
         else sfx.click();
       },
 
@@ -642,7 +767,7 @@ export function createDataStore(repo: Repository) {
       },
 
       createCourse(draft) {
-        const course: Course = { ...draft, id: newId(), createdAt: isoNow() };
+        const course: Course = categorizeCourse({ ...draft, id: newId(), createdAt: isoNow() });
         run((s) => ({ courses: [...s.courses, course] }), () => repo.courses.create(course));
         sfx.jump();
       },
@@ -684,7 +809,7 @@ export function createDataStore(repo: Repository) {
         );
       },
       addModule(courseId, title) {
-        mutateCourse(courseId, (c) => ({ ...c, modules: [...c.modules, { id: newId(), title, summary: '', xp: 200, topics: [] }] }));
+        mutateCourse(courseId, (c) => ({ ...c, modules: [...c.modules, { id: newId(), title, summary: '', topics: [] }] }));
       },
       addTopic(courseId, moduleId, title) {
         mutateCourse(courseId, (c) => ({
@@ -701,9 +826,9 @@ export function createDataStore(repo: Repository) {
         const was = found.topic.status;
         // Se anota el día en que se completa (para medir el ritmo) y se borra si se reabre.
         mutateCourse(courseId, (c) => mapTopic(c, topicId, (t) => ({ ...t, status, doneAt: status === 'done' ? today() : undefined })));
-        const xp = topicXp(found.module);
-        if (status === 'done') award(xp, 'topic', found.topic.title);
-        else if (was === 'done') award(-xp, 'topic', `Deshacer: ${found.topic.title}`);
+        if (status === 'done')
+          grant({ source: 'topic', sourceId: topicId, date: today(), label: found.topic.title, base: SOURCE_BASE_XP.topic, mapping: courseMapping(course) });
+        else if (was === 'done') revert({ source: 'topic', sourceId: topicId });
         else sfx.click();
       },
       toggleTopicReview(courseId, topicId) {
@@ -722,14 +847,21 @@ export function createDataStore(repo: Repository) {
         const res = gradeReview(found.topic, rating);
         mutateCourse(courseId, (c) => mapTopic(c, topicId, (t) => ({ ...t, ...res.patch })));
         if (res.xp > 0) {
-          award(res.xp, 'review', res.mastered ? `Dominado: ${found.topic.title}` : `Repaso: ${found.topic.title}`, res.mastered ? '¡Tema dominado!' : '¡Repaso superado!');
+          // Un repaso por etapa: la clave no choca aunque se repase dos veces el mismo día.
+          grant(
+            {
+              source: 'review', sourceId: `${topicId}:${found.topic.reviewStage ?? 0}`, date: today(), label: res.mastered ? `Dominado: ${found.topic.title}` : `Repaso: ${found.topic.title}`,
+              base: res.mastered ? SOURCE_BASE_XP.mastered : SOURCE_BASE_XP.review, mapping: courseMapping(course),
+            },
+            res.mastered ? '¡Tema dominado!' : '¡Repaso superado!',
+          );
           if (res.mastered) sfx.unlock();
         } else sfx.click();
       },
 
       /* ---------- Metas ---------- */
       createGoal(draft) {
-        const goal: Goal = { ...draft, id: newId(), createdAt: isoNow() };
+        const goal: Goal = categorizeGoal({ ...draft, id: newId(), createdAt: isoNow() });
         run((s) => ({ goals: [...s.goals, goal] }), () => repo.goals.create(goal));
         sfx.jump();
       },
@@ -765,12 +897,13 @@ export function createDataStore(repo: Repository) {
         if (!g || !m || m.done === done) return;
         const milestones = g.milestones.map((x) => (x.id === milestoneId ? { ...x, done, skills: done ? x.skills.map((k) => ({ ...k, done: true })) : x.skills } : x));
         run((s) => ({ goals: s.goals.map((x) => (x.id === goalId ? { ...x, milestones } : x)) }), () => repo.goals.update(goalId, { milestones }));
-        award(done ? m.xp : -m.xp, 'milestone', done ? m.title : `Deshacer: ${m.title}`);
+        if (done) grant({ source: 'milestone', sourceId: m.id, date: today(), label: m.title, base: SOURCE_BASE_XP.milestone, mapping: goalMapping(g) });
+        else revert({ source: 'milestone', sourceId: m.id });
       },
 
       /* ---------- Proyectos ---------- */
       createProject(draft) {
-        const project: Project = { ...draft, id: newId(), createdAt: isoNow() };
+        const project: Project = categorizeProject({ ...draft, id: newId(), createdAt: isoNow() });
         run((s) => ({ projects: [...s.projects, project] }), () => repo.projects.create(project));
         sfx.jump();
       },
@@ -784,7 +917,8 @@ export function createDataStore(repo: Repository) {
         if (!p || !c) return;
         const checkpoints = p.checkpoints.map((x) => (x.id === checkpointId ? { ...x, done: !x.done } : x));
         run((s) => ({ projects: s.projects.map((x) => (x.id === projectId ? { ...x, checkpoints } : x)) }), () => repo.projects.update(projectId, { checkpoints }));
-        award(c.done ? -c.xp : c.xp, 'checkpoint', c.done ? `Deshacer: ${c.title}` : c.title);
+        if (c.done) revert({ source: 'checkpoint', sourceId: c.id });
+        else grant({ source: 'checkpoint', sourceId: c.id, date: today(), label: c.title, base: SOURCE_BASE_XP.checkpoint, mapping: projectMapping(p) });
       },
 
       /* ---------- Recompensas personales ---------- */
@@ -846,7 +980,10 @@ export function createDataStore(repo: Repository) {
       createCertification(draft) {
         const cert: Certification = { ...draft, id: newId(), createdAt: isoNow() };
         run((s) => ({ certifications: [...s.certifications, cert] }), () => repo.certifications.create(cert));
-        award(CERT_XP, 'certification', cert.title, '¡Certificación conseguida!');
+        grant(
+          { source: 'certification', sourceId: cert.id, date: today(), label: cert.title, base: CERT_XP, mapping: certificationMapping(cert.courseId, get().courses) },
+          '¡Certificación conseguida!',
+        );
         notify({ category: 'achievement', title: `Certificación: ${cert.title}`, body: cert.issuer ? `Emitida por ${cert.issuer}.` : 'Ya forma parte de tu museo.' });
         unlockAchievements();
         checkCity();
@@ -858,7 +995,7 @@ export function createDataStore(repo: Repository) {
         const cert = get().certifications.find((c) => c.id === id);
         if (!cert) return;
         run((s) => ({ certifications: s.certifications.filter((c) => c.id !== id) }), () => repo.certifications.remove(id));
-        award(-CERT_XP, 'certification', `Quitada: ${cert.title}`); // se devuelve el XP que dio al registrarla
+        revert({ source: 'certification', sourceId: cert.id }); // se devuelve el XP que dio al registrarla
         checkCity();
         sfx.stomp();
       },
@@ -890,7 +1027,8 @@ export function createDataStore(repo: Repository) {
       buy(itemId) {
         const item = shopItem(itemId);
         const p = get().profile;
-        if (!item || item.locked) return;
+        // Lo que se gana con los atributos no se vende.
+        if (!item || item.locked || item.unlock) return;
         if (!item.consumable && p.inventory.includes(item.id)) return;
         if (p.credits < item.price) {
           notifyError('Te faltan monedas', `Necesitas ${item.price - p.credits} más para "${item.title}".`);
@@ -938,7 +1076,7 @@ export function createDataStore(repo: Repository) {
       evolveHero() {
         const p = get().profile;
         const hero = p.hero;
-        if (!hero || !canEvolve(hero, levelFromXp(p.xp))) return;
+        if (!hero || !canEvolve(hero, levelFromXp(totalXp(get().xpEvents)))) return;
         const stage = hero.stage + 1;
         patchProfile({ hero: { ...hero, stage } });
         const nombre = stageName(hero.race, stage);
@@ -951,7 +1089,8 @@ export function createDataStore(repo: Repository) {
         const item = heroItem(itemId);
         const p = get().profile;
         const hero = p.hero;
-        if (!item || !hero || p.inventory.includes(item.id)) return;
+        // Lo que se gana con los atributos no se vende.
+        if (!item || !hero || p.inventory.includes(item.id) || item.unlock) return;
         if (item.stage > hero.stage) {
           notifyError('Todavía no', `"${item.title}" se desbloquea al evolucionar a ${stageName(hero.race, item.stage)}.`);
           return;
@@ -983,15 +1122,10 @@ export function createDataStore(repo: Repository) {
         const session: StudySession = { id: newId(), date: today(), minutes, courseId, label: label ?? 'Sesión de estudio' };
         run((s) => ({ sessions: [...s.sessions, session] }), () => repo.sessions.create(session));
         const course = get().courses.find((c) => c.id === courseId)?.title;
-        award(minutes * SESSION_XP_PER_MIN, 'session', `${minutes} min${course ? ` de ${course}` : ' de estudio'}`);
-      },
-      freezeToday() {
-        const p = get().profile;
-        const now = today();
-        if (p.streakFreezes < 1 || p.frozenDates.includes(now)) return;
-        patchProfile({ streakFreezes: p.streakFreezes - 1, frozenDates: [...p.frozenDates, now] });
-        useUi.getState().toast({ kind: 'info', title: '¡Racha congelada!', body: 'Hoy cuenta como día activo.' });
-        sfx.oneUp();
+        grant({
+          source: 'session', sourceId: session.id, date: session.date, label: `${minutes} min${course ? ` de ${course}` : ' de estudio'}`,
+          base: sessionBaseXp(minutes), mapping: sessionMapping(courseId, get().courses),
+        });
       },
       claimWeeklyBonus() {
         const s = get();
@@ -999,7 +1133,7 @@ export function createDataStore(repo: Repository) {
         if (s.profile.weeklyBonusClaimed === from) return;
         if (hoursInWeek(s.sessions, from) < s.profile.weeklyGoalHours) return;
         patchProfile({ weeklyBonusClaimed: from });
-        award(WEEKLY_BONUS_XP, 'bonus', 'Reto semanal completado');
+        grantBonus({ source: 'bonus', sourceId: `weekly:${from}`, date: today(), attribute: 'dis', amount: WEEKLY_BONUS_XP, label: 'Reto semanal completado' });
       },
 
       addPlan(plan) {
@@ -1079,7 +1213,7 @@ export function createDataStore(repo: Repository) {
         patchProfile({ lastChest: now, chests: (p.chests ?? 0) + 1, credits: p.credits + reward.coins });
         useUi.getState().toast({ kind: 'unlock', title: '¡Cofre diario abierto!', body: reward.xp ? `+${reward.xp} XP de regalo` : 'Vuelve mañana por otro', coins: reward.coins });
         sfx.chest();
-        if (reward.xp) award(reward.xp, 'bonus', 'Cofre diario', '¡Sorpresa en el cofre!');
+        if (reward.xp) grantBonus({ source: 'bonus', sourceId: 'chest', date: now, attribute: 'dis', amount: reward.xp, label: 'Cofre diario' }, '¡Sorpresa en el cofre!');
         else checkAchievements();
       },
 

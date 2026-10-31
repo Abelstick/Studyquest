@@ -1,6 +1,7 @@
 import type { AgendaEvent, AppNotification, Certification, Course, Note, Goal, Habit, HabitLog, ID, PersonalReward, Profile, Project, StudySession, Task, XpEvent } from '@/core/domain';
 import type { AuthPort, AuthUser, Collection, DataLayer, Repository } from '../ports';
 import { defaultProfile } from '@/core/game';
+import { applyGrant, splitRevert, xpKey } from '@/core/progression/ledger';
 
 /** Mínimo común entre localStorage y un almacén en memoria (para tests). */
 export interface KeyValueStorage {
@@ -56,6 +57,10 @@ class LocalCollection<T extends { id: ID }> implements Collection<T> {
   async remove(id: ID) {
     this.write(this.read().filter((x) => x.id !== id));
   }
+  /** Reemplaza la colección entera de una vez. */
+  replaceAll(items: T[]) {
+    this.write(items);
+  }
   clear() {
     this.storage.removeItem(this.key);
   }
@@ -74,7 +79,8 @@ export function createLocalRepository(storage: KeyValueStorage): Repository {
   const certifications = c<Certification>('certifications');
   const personalRewards = c<PersonalReward>('personal_rewards');
   const sessions = c<StudySession>('study_sessions');
-  const xpEvents = c<XpEvent>('xp_events');
+  // `xp_ledger` y no `xp_events`: el ledger cambió de forma (una fila por atributo) y lo viejo no se migra.
+  const xpEvents = c<XpEvent>('xp_ledger');
   const notifications = c<AppNotification>('notifications');
   const events = c<AgendaEvent>('calendar_events');
   const all = [tasks, habits, logs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events];
@@ -126,7 +132,16 @@ export function createLocalRepository(storage: KeyValueStorage): Repository {
     certifications,
     personalRewards,
     sessions,
-    xpEvents,
+    xpEvents: {
+      list: () => xpEvents.list(),
+      // Misma semántica que el RPC `replace_xp` de Supabase: la clave manda y el id de la fila que ya estaba se conserva.
+      async replace(ref, rows) {
+        const { kept, removed } = splitRevert(await xpEvents.list(), ref);
+        const ids = new Map(removed.map((e) => [xpKey(e), e.id]));
+        xpEvents.replaceAll(applyGrant(kept, rows.map((r) => ({ ...r, id: ids.get(xpKey(r)) ?? r.id }))));
+      },
+      createMany: (items) => xpEvents.createMany(items),
+    },
     notifications: {
       list: () => notifications.list(),
       create: (n) => notifications.create(n),

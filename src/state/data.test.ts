@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStorage, createLocalRepository } from '@/data/local';
 import type { Repository } from '@/data/ports';
 import { createDataStore } from './data';
+import { BONUS_XP, coinsForXp, totalXp } from '@/core/progression';
 import { useUi } from './ui';
-import { computeStreak, levelFromXp, xpAtLevelStart } from '@/core/game';
-import { CERT_XP } from '@/core/certifications';
+import { LEVEL_UP_BONUS, computeStreak, levelFromXp, xpAtLevelStart } from '@/core/game';
 import { CHAIN_BONUS_XP } from '@/core/chains';
 import { computeStats } from '@/core/stats';
 import { planMembers } from '@/core/plans';
@@ -13,6 +13,17 @@ import { today } from '@/core/dates';
 
 let repo: Repository;
 let store: ReturnType<typeof createDataStore>;
+/** XP total del personaje: la suma del ledger. */
+const xp = () => totalXp(store.getState().xpEvents);
+/** Acción normal (20 base) a un solo atributo, siendo la primera del día: 20 × 1,1. */
+const TASK_XP = 22;
+/** «Leer» completo → Lectura recreativa: 15 Espíritu + 7 Intelecto (14 y 6, × 1,1 de primera del día). */
+const LEER_XP = 15 + 7;
+/** Certificación sin curso (50 base) → Cursos: 39 Intelecto + 17 Disciplina. */
+const CERT_TOTAL = 39 + 17;
+/** Deja XP ya ganado hace tiempo (en Creatividad, para no tocar los multiplicadores de lo que se prueba). */
+const seedXp = (amount: number) =>
+  store.setState({ xpEvents: [{ id: 'seed', date: '2026-01-01', attribute: 'cre', amount, source: 'bonus', sourceId: 'seed', label: 'Semilla' }] });
 
 /** Deja que la cola de escritura termine sus promesas pendientes. */
 const flush = () => new Promise((r) => setTimeout(r, 20));
@@ -25,7 +36,7 @@ const snapshotOf = () => {
 };
 
 const draft = (over = {}) => ({
-  title: 'Tarea', courseId: null, priority: 'mid' as const, status: 'todo' as const, dueDate: null, estimateMin: 30, xp: 40, subtasks: [], tags: [], ...over,
+  title: 'Tarea', courseId: null, priority: 'mid' as const, status: 'todo' as const, dueDate: null, estimateMin: 30, subtasks: [], tags: [], ...over,
 });
 
 /** Miércoles 16-sep-2026: los tests no dependen del día en que se ejecutan (el fin de semana da bonus). */
@@ -45,7 +56,7 @@ beforeEach(async () => {
 describe('store de datos', () => {
   it('crea el perfil la primera vez y pide onboarding', () => {
     expect(store.getState().status).toBe('ready');
-    expect(store.getState().profile.xp).toBe(0);
+    expect(xp()).toBe(0);
     expect(useUi.getState().modal?.type).toBe('welcome');
   });
 
@@ -53,13 +64,14 @@ describe('store de datos', () => {
     store.getState().createTask(draft());
     const id = store.getState().tasks[0].id;
     store.getState().setTaskStatus(id, 'done');
-    expect(store.getState().profile.xp).toBe(40);
-    expect(store.getState().profile.credits).toBeGreaterThanOrEqual(10); // 40/4 monedas (+ logros)
+    expect(xp()).toBe(TASK_XP);
+    expect(store.getState().profile.credits).toBeGreaterThanOrEqual(coinsForXp(TASK_XP)); // (+ logros)
     expect(store.getState().tasks[0].completedAt).toBe(today());
     await flush();
-    expect((await repo.profile.get())?.xp).toBe(40);
+    expect(totalXp(await repo.xpEvents.list())).toBe(TASK_XP);
     expect((await repo.tasks.list())[0].status).toBe('done');
-    expect((await repo.xpEvents.list()).some((e) => e.amount === 40)).toBe(true);
+    // «Tarea» suena a Estudio: 15 Intelecto + 7 Disciplina, una fila por atributo y ligadas a la tarea.
+    expect((await repo.xpEvents.list()).map((e) => [e.attribute, e.amount, e.sourceId])).toEqual([['int', 15, id], ['dis', 7, id]]);
   });
 
   it('reabrir una tarea revierte el XP', () => {
@@ -67,45 +79,47 @@ describe('store de datos', () => {
     const id = store.getState().tasks[0].id;
     store.getState().setTaskStatus(id, 'done');
     store.getState().setTaskStatus(id, 'todo');
-    expect(store.getState().profile.xp).toBe(0);
+    expect(xp()).toBe(0);
     expect(store.getState().tasks[0].completedAt).toBeNull();
   });
 
   it('cruzar un nivel dispara la pantalla de subida y da bono de monedas', () => {
-    store.getState().updateProfile({ xp: xpAtLevelStart(2) - 10 });
-    store.getState().createTask(draft({ xp: 50 }));
+    seedXp(xpAtLevelStart(2) - 10);
+    store.getState().createTask(draft({}));
     store.getState().setTaskStatus(store.getState().tasks[0].id, 'done');
-    expect(levelFromXp(store.getState().profile.xp)).toBe(2);
+    expect(levelFromXp(xp())).toBe(2);
     expect(useUi.getState().levelUp?.level).toBe(2);
-    expect(store.getState().profile.credits).toBeGreaterThanOrEqual(500);
+    expect(store.getState().profile.credits).toBeGreaterThanOrEqual(LEVEL_UP_BONUS);
   });
 
   it('un hábito da XP en proporción a lo avanzado, el total al completarlo y una sola vez', () => {
-    store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'pages', target: 20, xp: 25, reminder: null, steps: [] });
+    store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'pages', target: 20, reminder: null, steps: [] });
     const id = store.getState().habits[0].id;
     store.getState().setHabitValue(id, 12);
-    expect(store.getState().profile.xp).toBe(15); // 12/20 de 25 XP: lo avanzado no se pierde
+    // «Leer» → Lectura recreativa: Espíritu 70 % / Intelecto 30 %, con el +10 % de primera del día.
+    expect(xp()).toBe(9 + 4); // 12/20 de (14 ESP + 6 INT) × 1,1: lo avanzado no se pierde
     store.getState().setHabitValue(id, 20);
-    expect(store.getState().profile.xp).toBe(25); // al completar solo se cobra lo que faltaba
+    expect(xp()).toBe(15 + 7); // al completar, la fila del día pasa al total (no se suma otra)
     store.getState().setHabitValue(id, 25);
-    expect(store.getState().profile.xp).toBe(25);
+    expect(xp()).toBe(15 + 7);
     expect(store.getState().habitLogs).toHaveLength(1);
+    expect(store.getState().xpEvents.map((e) => e.attribute).sort()).toEqual(['esp', 'int']);
     store.getState().setHabitValue(id, 5);
-    expect(store.getState().profile.xp).toBe(6); // bajar el contador devuelve el XP de más
+    expect(xp()).toBe(4 + 2); // bajar el contador devuelve el XP de más
     store.getState().setHabitValue(id, 0);
-    expect(store.getState().profile.xp).toBe(0);
+    expect(xp()).toBe(0);
   });
 
   describe('dejar un mal hábito', () => {
     const quit = () => {
-      store.getState().createHabit({ title: 'Mirar el celular en la cama', kind: 'quit', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 30, reminder: null, steps: [] });
+      store.getState().createHabit({ title: 'Mirar el celular en la cama', kind: 'quit', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [] });
       return store.getState().habits[0].id;
     };
 
     it('«hoy resistí» da el XP del hábito, como cualquier hábito', () => {
       const id = quit();
       store.getState().setHabitValue(id, 1);
-      expect(store.getState().profile.xp).toBe(30);
+      expect(xp()).toBe(TASK_XP);
     });
 
     it('«recaí» anota el día, devuelve el XP de hoy y reinicia los días limpio', () => {
@@ -116,7 +130,7 @@ describe('store de datos', () => {
       const h = store.getState().habits[0];
       expect(h.slips).toEqual([today()]);
       expect(store.getState().habitLogs[0].value).toBe(0);
-      expect(store.getState().profile.xp).toBe(0);
+      expect(xp()).toBe(0);
     });
 
     it('recaer dos veces el mismo día no duplica nada', () => {
@@ -130,7 +144,7 @@ describe('store de datos', () => {
       const id = quit();
       store.getState().recordSlip(id);
       store.getState().setHabitValue(id, 1);
-      expect(store.getState().profile.xp).toBe(0);
+      expect(xp()).toBe(0);
       expect(store.getState().habitLogs.every((l) => l.value === 0)).toBe(true);
     });
 
@@ -140,11 +154,11 @@ describe('store de datos', () => {
       store.getState().undoSlip(id);
       expect(store.getState().habits[0].slips).toEqual([]);
       store.getState().setHabitValue(id, 1);
-      expect(store.getState().profile.xp).toBe(30);
+      expect(xp()).toBe(TASK_XP);
     });
 
     it('las recaídas solo existen en hábitos a dejar', () => {
-      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 10, reminder: null, steps: [] });
+      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [] });
       store.getState().recordSlip(store.getState().habits[0].id);
       expect(store.getState().habits[0].slips).toBeUndefined();
     });
@@ -158,24 +172,25 @@ describe('store de datos', () => {
   });
 
   it('un día pasado a medias (6 de 10) se guarda, da XP proporcional y se puede completar después', () => {
-    store.getState().createHabit({ title: 'Agua', frequency: { type: 'daily' }, measure: 'times', target: 10, xp: 20, reminder: null, steps: [] });
+    store.getState().createHabit({ title: 'Agua', frequency: { type: 'daily' }, measure: 'times', target: 10, reminder: null, steps: [] });
     const id = store.getState().habits[0].id;
     const ayer = addDays(today(), -1);
     store.getState().updateHabit(id, { startDate: addDays(today(), -5) });
     store.getState().setHabitValueOn(id, ayer, 6);
     expect(store.getState().habitLogs.find((l) => l.date === ayer)?.value).toBe(6);
-    expect(store.getState().profile.xp).toBe(12); // 6/10 de 20 XP
+    // «Agua» → Hidratación: Vitalidad 70 % / Disciplina 30 %.
+    expect(xp()).toBe(9 + 4); // 6/10 de (14 VIT + 6 DIS) × 1,1
     store.getState().setHabitValueOn(id, ayer, 10);
-    expect(store.getState().profile.xp).toBe(20);
+    expect(xp()).toBe(15 + 7);
   });
 
   it('marcar pasos de un hábito con desglose suma su parte de XP', () => {
-    store.getState().createHabit({ title: 'Rutina', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [{ id: 'a', title: 'A', minutes: 5 }, { id: 'b', title: 'B', minutes: 5 }] });
+    store.getState().createHabit({ title: 'Rutina', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [{ id: 'a', title: 'A', minutes: 5 }, { id: 'b', title: 'B', minutes: 5 }] });
     const id = store.getState().habits[0].id;
     store.getState().toggleHabitStep(id, 'a');
-    expect(store.getState().profile.xp).toBe(10);
+    expect(xp()).toBe(Math.round(TASK_XP / 2)); // 1 de 2 pasos
     store.getState().toggleHabitStep(id, 'a');
-    expect(store.getState().profile.xp).toBe(0);
+    expect(xp()).toBe(0);
   });
 
   it('comprar sin monedas suficientes no cambia nada', () => {
@@ -200,18 +215,17 @@ describe('store de datos', () => {
     expect(store.getState().profile.equipped.avatar).toBeNull();
   });
 
-  it('el poder "congelar racha" suma 3 congeladores y se puede consumir uno', () => {
+  it('el poder "congelar racha" suma 3 congeladores', () => {
     store.getState().updateProfile({ credits: 300 });
     store.getState().buy('power-freeze');
     expect(store.getState().profile.streakFreezes).toBe(3);
-    store.getState().freezeToday();
-    expect(store.getState().profile.streakFreezes).toBe(2);
-    expect(store.getState().profile.frozenDates).toContain(today());
   });
 
-  it('las sesiones de estudio dan 2 XP por minuto', () => {
+  it('las sesiones de estudio dan XP por minuto, a Intelecto y Disciplina', () => {
     store.getState().logSession({ minutes: 20, courseId: null });
-    expect(store.getState().profile.xp).toBe(40);
+    // 20 min × 0,8 = 16 base → 12 INT + 5 DIS (con el +10 % de primera del día).
+    expect(xp()).toBe(12 + 5);
+    expect(store.getState().xpEvents.map((e) => e.attribute).sort()).toEqual(['dis', 'int']);
     expect(store.getState().sessions).toHaveLength(1);
   });
 
@@ -234,10 +248,10 @@ describe('store de datos', () => {
     expect(useUi.getState().toasts.at(-1)?.kind).toBe('error');
   });
 
-  it('cargar el mundo de ejemplo deja nivel 12 y una racha de 18 días', async () => {
+  it('cargar el mundo de ejemplo deja un personaje con nivel y una racha de 18 días', async () => {
     await store.getState().finishOnboarding(true);
     const { profile, tasks, courses, habits, xpEvents } = store.getState();
-    expect(levelFromXp(profile.xp)).toBe(12);
+    expect(levelFromXp(totalXp(xpEvents))).toBeGreaterThan(1);
     expect(profile.onboarded).toBe(true);
     expect(tasks.length).toBeGreaterThan(0);
     expect(courses).toHaveLength(3);
@@ -250,7 +264,7 @@ describe('store de datos', () => {
     await store.getState().finishOnboarding(true);
     await store.getState().resetAll();
     expect(store.getState().tasks).toHaveLength(0);
-    expect(store.getState().profile.xp).toBe(0);
+    expect(xp()).toBe(0);
     expect(await repo.tasks.list()).toHaveLength(0);
   });
 
@@ -280,7 +294,7 @@ describe('store de datos', () => {
       store.getState().setTaskStatus(id, 'todo');
       expect(store.getState().tasks).toHaveLength(1);
       expect(store.getState().tasks[0].spawnedId).toBeUndefined();
-      expect(store.getState().profile.xp).toBe(0);
+      expect(xp()).toBe(0);
     });
 
     it('si la siguiente ya se empezó, se conserva al reabrir', () => {
@@ -300,7 +314,7 @@ describe('store de datos', () => {
   });
 
   describe('jefes finales', () => {
-    const boss = () => draft({ title: 'Jefe', priority: 'boss', xp: 120, subtasks: ['a', 'b', 'c'].map((t) => ({ id: t, title: t, done: false })) });
+    const boss = () => draft({ title: 'Jefe', priority: 'boss', subtasks: ['a', 'b', 'c'].map((t) => ({ id: t, title: t, done: false })) });
 
     it('cada subtarea es un golpe; el último derrota al jefe, da botín y muestra la victoria', () => {
       store.getState().createTask(boss());
@@ -313,8 +327,9 @@ describe('store de datos', () => {
       const t = store.getState().tasks[0];
       expect(t.status).toBe('done');
       expect(t.completedAt).toBe(today());
-      expect(store.getState().profile.xp).toBe(120 + 50);
-      expect(useUi.getState().victory).toMatchObject({ title: 'Jefe', xp: 170, hits: 3 });
+      // Dificultad normal (20) + 15 por ser jefe, × 1,1 de primera del día.
+      expect(xp()).toBe(39);
+      expect(useUi.getState().victory).toMatchObject({ title: 'Jefe', hits: 3 });
     });
 
     it('reabrir un jefe le devuelve la vida y quita el XP', () => {
@@ -323,7 +338,7 @@ describe('store de datos', () => {
       ['a', 'b', 'c'].forEach((s) => store.getState().toggleSubtask(id, s));
       store.getState().setTaskStatus(id, 'todo');
       expect(store.getState().tasks[0].subtasks.every((x) => !x.done)).toBe(true);
-      expect(store.getState().profile.xp).toBe(0);
+      expect(xp()).toBe(0);
     });
 
     it('deshacer un golpe cura al jefe sin dar victoria', () => {
@@ -343,7 +358,7 @@ describe('store de datos', () => {
 
   describe('eventos de racha', () => {
     const makeHabits = (n: number) => {
-      for (let i = 0; i < n; i++) store.getState().createHabit({ title: `H${i}`, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+      for (let i = 0; i < n; i++) store.getState().createHabit({ title: `H${i}`, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [] });
       return store.getState().habits.map((h) => h.id);
     };
     const xpOf = (source: string) => store.getState().xpEvents.filter((e) => e.source === source).reduce((a, e) => a + e.amount, 0);
@@ -353,34 +368,34 @@ describe('store de datos', () => {
       ids.slice(0, 2).forEach((id) => store.getState().setHabitValue(id, 1));
       expect(xpOf('combo')).toBe(0);
       store.getState().setHabitValue(ids[2], 1);
-      expect(xpOf('combo')).toBe(60); // duplica los 3 hábitos (3 × 20)
+      expect(xpOf('combo')).toBe(BONUS_XP.combo);
       store.getState().setHabitValue(ids[3], 1);
-      expect(xpOf('combo')).toBe(60);
+      expect(xpOf('combo')).toBe(BONUS_XP.combo);
       // Deshacer y rehacer no lo cobra otra vez
       store.getState().setHabitValue(ids[2], 0);
       store.getState().setHabitValue(ids[2], 1);
-      expect(xpOf('combo')).toBe(60);
+      expect(xpOf('combo')).toBe(BONUS_XP.combo);
       expect(store.getState().profile.dayBonus).toMatchObject({ combo: true });
     });
 
-    it('en fin de semana cada hábito da +50% una vez al día', () => {
+    it('en fin de semana cada hábito da un bonus una vez al día', () => {
       vi.setSystemTime(new Date(2026, 8, 19, 12)); // sábado
       const [id] = makeHabits(1);
       store.getState().setHabitValue(id, 1);
-      expect(xpOf('combo')).toBe(10);
+      expect(xpOf('combo')).toBe(BONUS_XP.weekend);
       store.getState().setHabitValue(id, 0);
       store.getState().setHabitValue(id, 1);
-      expect(xpOf('combo')).toBe(10);
+      expect(xpOf('combo')).toBe(BONUS_XP.weekend);
       expect(store.getState().xpEvents.some((e) => e.label.startsWith('Bonus de fin de semana'))).toBe(true);
     });
 
     it('los bonos se reinician al día siguiente', () => {
       const ids = makeHabits(3);
       ids.forEach((id) => store.getState().setHabitValue(id, 1));
-      expect(xpOf('combo')).toBe(60);
+      expect(xpOf('combo')).toBe(BONUS_XP.combo);
       vi.setSystemTime(new Date(2026, 8, 17, 12));
       ids.forEach((id) => store.getState().setHabitValue(id, 1));
-      expect(xpOf('combo')).toBe(120);
+      expect(xpOf('combo')).toBe(2 * BONUS_XP.combo);
     });
   });
 
@@ -411,8 +426,8 @@ describe('store de datos', () => {
 
   describe('hábitos', () => {
     it('borrar un hábito borra también sus registros, en pantalla y en la base', async () => {
-      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
-      store.getState().createHabit({ title: 'Correr', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [] });
+      store.getState().createHabit({ title: 'Correr', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [] });
       const [leer, correr] = store.getState().habits.map((h) => h.id);
       store.getState().setHabitValue(leer, 1);
       store.getState().setHabitValue(correr, 1);
@@ -438,8 +453,8 @@ describe('store de datos', () => {
       store.getState().createCertification(draft());
       const cert = store.getState().certifications[0];
       expect(cert).toMatchObject({ title: 'AWS Cloud Practitioner', url: 'https://aws.amazon.com/verify/1' });
-      expect(store.getState().profile.xp).toBe(CERT_XP);
-      expect(store.getState().xpEvents.some((e) => e.source === 'certification' && e.amount === CERT_XP)).toBe(true);
+      expect(xp()).toBe(CERT_TOTAL);
+      expect(store.getState().xpEvents.filter((e) => e.source === 'certification').map((e) => e.attribute).sort()).toEqual(['dis', 'int']);
       await flush();
       expect((await repo.certifications.list())[0].title).toBe('AWS Cloud Practitioner');
     });
@@ -449,7 +464,7 @@ describe('store de datos', () => {
       const id = store.getState().certifications[0].id;
       store.getState().deleteCertification(id);
       expect(store.getState().certifications).toHaveLength(0);
-      expect(store.getState().profile.xp).toBe(0);
+      expect(xp()).toBe(0);
     });
 
     it('cuenta como pieza del museo, junto a los logros', () => {
@@ -462,7 +477,7 @@ describe('store de datos', () => {
       store.getState().createCertification(draft());
       const id = store.getState().certifications[0].id;
       store.getState().updateCertification(id, { title: 'Otro nombre' });
-      expect(store.getState().profile.xp).toBe(CERT_XP);
+      expect(xp()).toBe(CERT_TOTAL);
       expect(store.getState().certifications[0].title).toBe('Otro nombre');
     });
 
@@ -492,7 +507,7 @@ describe('store de datos', () => {
 
   describe('cadenas de hábitos', () => {
     const mkHabits = (names: string[]) => {
-      names.forEach((t) => store.getState().createHabit({ title: t, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] }));
+      names.forEach((t) => store.getState().createHabit({ title: t, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [] }));
       return store.getState().habits.map((h) => h.id);
     };
     const chainXp = () => store.getState().xpEvents.filter((e) => e.label.startsWith('Cadena completa')).reduce((a, e) => a + e.amount, 0);
@@ -518,7 +533,7 @@ describe('store de datos', () => {
       store.getState().saveChain({ id: 'ch1', name: 'Rutina', habitIds: [a, b, c] });
       store.getState().setHabitValue(c, 1);
       expect(store.getState().habitLogs.find((l) => l.habitId === c)?.value).toBe(1);
-      expect(store.getState().profile.xp).toBeGreaterThan(0); // cobró su XP normal
+      expect(xp()).toBeGreaterThan(0); // cobró su XP normal
       expect(chainXp()).toBe(0); // pero no el bonus de cadena
     });
 
@@ -620,7 +635,7 @@ describe('store de datos', () => {
 
   describe('ponerse al día con un hábito olvidado', () => {
     const crear = () => {
-      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [] });
       // El hábito nace hoy; se retrasa su inicio para poder rellenar días anteriores.
       const id = store.getState().habits[0].id;
       store.getState().updateHabit(id, { startDate: '2026-09-01' });
@@ -632,7 +647,7 @@ describe('store de datos', () => {
       const id = crear();
       store.getState().setHabitValueOn(id, '2026-09-15', 1);
       expect(store.getState().habitLogs.find((l) => l.date === '2026-09-15')?.value).toBe(1);
-      expect(store.getState().profile.xp).toBe(20);
+      expect(xp()).toBe(LEER_XP);
       await flush();
       expect((await repo.habitLogs.list()).some((l) => l.date === '2026-09-15')).toBe(true);
     });
@@ -643,7 +658,7 @@ describe('store de datos', () => {
       store.getState().setHabitValueOn(id, '2026-09-14', 1);
       store.getState().setHabitValueOn(id, '2026-09-15', 1);
       store.getState().setHabitValue(id, 1);
-      const fechas = store.getState().xpEvents.filter((e) => e.source === 'habit').map((e) => e.date).sort();
+      const fechas = [...new Set(store.getState().xpEvents.filter((e) => e.source === 'habit').map((e) => e.date))].sort();
       expect(fechas).toEqual(['2026-09-14', '2026-09-15', '2026-09-16']);
       expect(rachaHoy()).toBe(3);
     });
@@ -651,9 +666,9 @@ describe('store de datos', () => {
     it('desmarcar un día pasado devuelve el XP de ese día', () => {
       const id = crear();
       store.getState().setHabitValueOn(id, '2026-09-15', 1);
-      expect(store.getState().profile.xp).toBe(20);
+      expect(xp()).toBe(LEER_XP);
       store.getState().setHabitValueOn(id, '2026-09-15', 0);
-      expect(store.getState().profile.xp).toBe(0);
+      expect(xp()).toBe(0);
       expect(rachaHoy()).toBe(0);
     });
 
@@ -661,7 +676,7 @@ describe('store de datos', () => {
       const id = crear();
       store.getState().setHabitValueOn(id, '2026-09-15', 1);
       store.getState().setHabitValueOn(id, '2026-09-15', 1);
-      expect(store.getState().profile.xp).toBe(20);
+      expect(xp()).toBe(LEER_XP);
     });
 
     it('NO deja marcar el futuro ni más atrás del límite', () => {
@@ -669,12 +684,12 @@ describe('store de datos', () => {
       store.getState().setHabitValueOn(id, '2026-09-17', 1); // mañana
       store.getState().setHabitValueOn(id, '2026-09-02', 1); // hace 14 días
       expect(store.getState().habitLogs).toHaveLength(0);
-      expect(store.getState().profile.xp).toBe(0);
+      expect(xp()).toBe(0);
       expect(useUi.getState().toasts.at(-1)?.kind).toBe('error');
     });
 
     it('un día que no tocaba tampoco se rellena', () => {
-      store.getState().createHabit({ title: 'Gym', frequency: { type: 'days', days: [0, 4] }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+      store.getState().createHabit({ title: 'Gym', frequency: { type: 'days', days: [0, 4] }, measure: 'boolean', target: 1, reminder: null, steps: [] });
       const id = store.getState().habits[0].id;
       store.getState().updateHabit(id, { startDate: '2026-09-01' });
       store.getState().setHabitValueOn(id, '2026-09-15', 1); // martes, no tocaba
@@ -683,20 +698,21 @@ describe('store de datos', () => {
 
     it('rellenar un día pasado NO cobra los bonos de hoy (combo ni finde)', () => {
       const ids = ['A', 'B', 'C'].map((t) => {
-        store.getState().createHabit({ title: t, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [] });
+        store.getState().createHabit({ title: t, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [] });
         return store.getState().habits.at(-1)!.id;
       });
       ids.forEach((id) => store.getState().updateHabit(id, { startDate: '2026-09-01' }));
       // Tres hábitos rellenados en un día pasado: el combo ×2 es de «hoy», no se cobra hacia atrás.
       ids.forEach((id) => store.getState().setHabitValueOn(id, '2026-09-15', 1));
       expect(store.getState().xpEvents.some((e) => e.source === 'combo')).toBe(false);
-      expect(store.getState().profile.xp).toBe(60);
+      // A, B y C → General (Disciplina): A lleva el +10 % de primera del día; B y C, +2 por la racha viva.
+      expect(xp()).toBe(22 + 22 + 22);
     });
 
     it('con la fecha de hoy se comporta como el marcado normal', () => {
       const id = crear();
       store.getState().setHabitValueOn(id, today(), 1);
-      expect(store.getState().profile.xp).toBe(20);
+      expect(xp()).toBe(LEER_XP);
       expect(store.getState().habitLogs[0].date).toBe(today());
     });
   });
@@ -708,8 +724,8 @@ describe('store de datos', () => {
         planId,
         course: { id: 'c1', planId, title: 'Guitarra', professor: 'Plan inteligente', field: 'plan de estudio', mentor: null, modules: [], createdAt: '' },
         goal: { id: 'g1', planId, title: 'Guitarra', rewardTitle: '', rewardDescription: '', milestones: [], createdAt: '' },
-        habit: { id: 'h1', planId, title: 'Estudiar Guitarra', frequency: { type: 'daily' as const }, measure: 'minutes' as const, target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-09-01', createdAt: '' },
-        tasks: [{ id: 't1', planId, title: 'Semana 1', courseId: 'c1', priority: 'mid' as const, status: 'todo' as const, dueDate: null, estimateMin: 60, xp: 40, subtasks: [], tags: ['plan'], createdAt: '', completedAt: null }],
+        habit: { id: 'h1', planId, title: 'Estudiar Guitarra', frequency: { type: 'daily' as const }, measure: 'minutes' as const, target: 30, reminder: null, steps: [], startDate: '2026-09-01', createdAt: '' },
+        tasks: [{ id: 't1', planId, title: 'Semana 1', courseId: 'c1', priority: 'mid' as const, status: 'todo' as const, dueDate: null, estimateMin: 60, subtasks: [], tags: ['plan'], createdAt: '', completedAt: null }],
       };
     };
 
@@ -757,7 +773,7 @@ describe('store de datos', () => {
 
   describe('repaso espaciado', () => {
     const setup = () => {
-      store.getState().createCourse({ title: 'C', professor: '', field: '', mentor: null, modules: [{ id: 'm1', title: 'M', summary: '', xp: 100, topics: [{ id: 't1', title: 'Tema', status: 'done', review: false, markedAt: null }] }] });
+      store.getState().createCourse({ title: 'C', professor: '', field: '', mentor: null, modules: [{ id: 'm1', title: 'M', summary: '', topics: [{ id: 't1', title: 'Tema', status: 'done', review: false, markedAt: null }] }] });
       const courseId = store.getState().courses[0].id;
       const topic = () => store.getState().courses[0].modules[0].topics[0];
       return { courseId, topic };
@@ -781,10 +797,12 @@ describe('store de datos', () => {
         days.push(topic().nextReview);
       }
       expect(days).toEqual(['2026-09-19', '2026-09-23', '2026-09-30']);
-      expect(store.getState().profile.xp).toBe(30);
+      const three = xp();
+      // Cada repaso es su propia acción: el segundo no pisa al primero.
+      expect(new Set(store.getState().xpEvents.filter((e) => e.source === 'review').map((e) => e.sourceId)).size).toBe(3);
       store.getState().reviewTopic(courseId, 't1', 'good');
       expect(topic().review).toBe(false);
-      expect(store.getState().profile.xp).toBe(30 + 10 + 40);
+      expect(xp() - three).toBeGreaterThan(three / 3); // dominarlo vale más que un repaso
       expect(store.getState().xpEvents.some((e) => e.label === 'Dominado: Tema')).toBe(true);
     });
 
@@ -794,7 +812,9 @@ describe('store de datos', () => {
       store.getState().reviewTopic(courseId, 't1', 'good');
       store.getState().reviewTopic(courseId, 't1', 'again');
       expect(topic()).toMatchObject({ reviewStage: 0, nextReview: '2026-09-17' });
-      expect(store.getState().profile.xp).toBe(10);
+      // Solo cuenta el repaso superado.
+      expect(new Set(store.getState().xpEvents.filter((e) => e.source === 'review').map((e) => e.sourceId)).size).toBe(1);
+      expect(xp()).toBeGreaterThan(0);
     });
 
     it('guarda las tarjetas del tema', async () => {
@@ -834,7 +854,7 @@ describe('store de datos', () => {
       store.getState().setHabitValue(habitId, 1);
     };
     const habit = () => {
-      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 10, reminder: null, steps: [] });
+      store.getState().createHabit({ title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [] });
       return store.getState().habits[0].id;
     };
     const cityNotes = () => store.getState().notifications.filter((n) => /^(Casa|Biblioteca|Academia|Laboratorio|Arena|Museo):/.test(n.title));
@@ -923,7 +943,7 @@ describe('store de datos', () => {
       store.getState().createHero('protoss', 'Zen');
       store.getState().evolveHero();
       expect(hero().stage).toBe(0);
-      store.getState().updateProfile({ xp: xpAtLevelStart(10) });
+      seedXp(xpAtLevelStart(10));
       store.getState().evolveHero();
       expect(hero().stage).toBe(1);
       store.getState().evolveHero();
@@ -981,9 +1001,9 @@ describe('store de datos', () => {
 
     it('avisa al cruzar el nivel de una etapa nueva', () => {
       store.getState().createHero('saiyajin', 'Kai');
-      store.getState().updateProfile({ xp: xpAtLevelStart(5) - 10 });
-      store.getState().logSession({ minutes: 10, courseId: null });
-      expect(levelFromXp(store.getState().profile.xp)).toBe(5);
+      seedXp(xpAtLevelStart(5) - 10);
+      store.getState().logSession({ minutes: 15, courseId: null }); // 12 base → 9 INT + 4 DIS
+      expect(levelFromXp(xp())).toBe(5);
       expect(store.getState().notifications.some((n) => n.title === 'Kai puede evolucionar')).toBe(true);
     });
   });
@@ -1014,16 +1034,16 @@ describe('agenda', () => {
   });
 
   it('marcar el bloque de un hábito como hecho no registra el hábito', () => {
-    store.getState().createHabit({ title: 'Agua', frequency: { type: 'daily' }, measure: 'times', target: 8, xp: 10, reminder: null, steps: [] });
+    store.getState().createHabit({ title: 'Agua', frequency: { type: 'daily' }, measure: 'times', target: 8, reminder: null, steps: [] });
     const habitId = store.getState().habits[0].id;
     const id = store.getState().createEvent(block({ title: '', habitId, repeat: { type: 'habit' as const } }));
     store.getState().setEventStatus(id, '2026-09-16', 'done');
     expect(store.getState().habitLogs).toHaveLength(0);
-    expect(store.getState().profile.xp).toBe(0);
+    expect(xp()).toBe(0);
   });
 
   it('borrar un hábito deja sus bloques como actividades sueltas', async () => {
-    store.getState().createHabit({ title: 'Ejercicio', frequency: { type: 'daily' }, measure: 'minutes', target: 10, xp: 10, reminder: null, steps: [] });
+    store.getState().createHabit({ title: 'Ejercicio', frequency: { type: 'daily' }, measure: 'minutes', target: 10, reminder: null, steps: [] });
     const habitId = store.getState().habits[0].id;
     store.getState().createEvent(block({ title: '', habitId, repeat: { type: 'habit' as const } }));
     store.getState().deleteHabit(habitId);

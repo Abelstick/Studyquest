@@ -5,25 +5,27 @@ import { computeStreak, courseProgress, frequencyLabel, habitStreaks, isCounter,
 
 const NOW = '2026-09-20'; // domingo
 
-const ev = (date: string, amount = 50): XpEvent => ({ id: date + amount, date, amount, source: 'session', label: '' });
+const ev = (date: string, amount = 50): XpEvent => ({ id: date + amount, date, amount, source: 'session', sourceId: 's', attribute: 'int', label: '' });
 const habit = (over: Partial<Habit>): Habit => ({
-  id: 'h', title: 'h', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...over,
+  id: 'h', title: 'h', frequency: { type: 'daily' }, measure: 'minutes', target: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...over,
 });
 const log = (habitId: string, date: string, value: number): HabitLog => ({ id: habitId + date, habitId, date, value, stepsDone: [] });
 
 describe('niveles', () => {
-  it('nivel 12 cuesta 3.000 XP y arranca en 16.500', () => {
-    expect(xpAtLevelStart(12)).toBe(16_500);
-    expect(xpAtLevelStart(13) - xpAtLevelStart(12)).toBe(3_000);
+  // El nivel es el del personaje: sale de la suma del XP de los atributos con su propia curva (core/progression).
+  it('el nivel L cuesta round(100 · L^1,6) XP', () => {
+    expect(xpAtLevelStart(1)).toBe(0);
+    expect(xpAtLevelStart(2)).toBe(100);
+    expect(xpAtLevelStart(13) - xpAtLevelStart(12)).toBe(Math.round(100 * 12 ** 1.6));
   });
-  it('19.390 XP = nivel 12 con 2.890 / 3.000', () => {
-    const p = levelProgress(19_390);
-    expect(p).toMatchObject({ level: 12, into: 2_890, needed: 3_000, left: 110 });
+  it('el avance dentro del nivel cuadra con los umbrales', () => {
+    const p = levelProgress(xpAtLevelStart(12) + 50);
+    expect(p).toMatchObject({ level: 12, into: 50, needed: xpAtLevelStart(13) - xpAtLevelStart(12) });
   });
   it('los límites de nivel son exactos', () => {
     expect(levelFromXp(0)).toBe(1);
-    expect(levelFromXp(249)).toBe(1);
-    expect(levelFromXp(250)).toBe(2);
+    expect(levelFromXp(99)).toBe(1);
+    expect(levelFromXp(100)).toBe(2);
     expect(levelFromXp(xpAtLevelStart(13) - 1)).toBe(12);
     expect(levelFromXp(xpAtLevelStart(13))).toBe(13);
     expect(levelFromXp(-50)).toBe(1);
@@ -165,8 +167,8 @@ describe('cursos', () => {
     const topic = (id: string, status: 'done' | 'todo') => ({ id, title: 't', status, review: false, markedAt: null });
     const course = {
       id: 'c', title: 'c', professor: '', field: '', mentor: null, createdAt: '',
-      modules: [{ id: 'm', title: 'm', summary: '', xp: 100, topics: [topic('1', 'done'), topic('2', 'todo'), topic('3', 'todo'), topic('4', 'done')] }],
+      modules: [{ id: 'm', title: 'm', summary: '', topics: [topic('1', 'done'), topic('2', 'todo'), topic('3', 'todo'), topic('4', 'done')] }],
     };
-    expect(courseProgress(course)).toMatchObject({ total: 4, done: 2, pct: 50, xp: 50 });
+    expect(courseProgress(course)).toMatchObject({ total: 4, done: 2, pct: 50 });
   });
 });

@@ -18,12 +18,12 @@ const course = (topics: TopicSpec[], extra: Partial<Course> = {}): Course => ({
   field: '',
   mentor: null,
   createdAt: '',
-  modules: [{ id: 'm', title: 'M', summary: '', xp: 40, topics: topics.map((t, i) => ({ id: `t${i}`, title: `Tema ${i}`, status: t.status ?? 'todo', review: false, markedAt: null, ...(t.doneAt ? { doneAt: t.doneAt } : {}) })) }],
+  modules: [{ id: 'm', title: 'M', summary: '', topics: topics.map((t, i) => ({ id: `t${i}`, title: `Tema ${i}`, status: t.status ?? 'todo', review: false, markedAt: null, ...(t.doneAt ? { doneAt: t.doneAt } : {}) })) }],
   ...extra,
 });
 const done = (doneAt?: string): TopicSpec => ({ status: 'done', doneAt });
 const session = (date: string, minutes = 30, courseId: string | null = 'c1'): StudySession => ({ id: `${date}-${minutes}-${courseId}`, date, minutes, courseId, label: '' });
-const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: 'c1', priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: 'c1', priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 
 describe('ritmo real de un curso', () => {
   it('sin ningún tema con fecha no hay ritmo (los hechos antes de guardarla no cuentan)', () => {
@@ -143,7 +143,7 @@ describe('avisos por curso', () => {
 });
 
 describe('reto del mes', () => {
-  const xp = (date: string, amount: number): XpEvent => ({ id: date + amount, date, amount, source: 'task', label: '' });
+  const xp = (date: string, amount: number): XpEvent => ({ id: date + amount, date, amount, source: 'task', sourceId: 's', attribute: 'int', label: '' });
   const src = { sessions: [session('2026-09-01'), session('2026-09-01', 60), session('2026-09-05'), session('2026-08-30')], tasks: [task('a', { status: 'done', completedAt: '2026-09-03' }), task('b', { status: 'done', completedAt: '2026-08-31' })], xpEvents: [xp('2026-09-02', 120), xp('2026-09-03', -20), xp('2026-08-01', 999)] };
 
   it('calcula el avance solo con lo de este mes', () => {
@@ -172,10 +172,10 @@ describe('mapa de calor', () => {
   });
 
   it('53 semanas de lunes a domingo, la última es la actual, y cuenta días activos', () => {
-    const h = yearHeat([{ id: '1', date: NOW, amount: 200, source: 'task', label: '' }, { id: '2', date: '2026-09-14', amount: 20, source: 'task', label: '' }], ['2026-09-15'], NOW);
+    const h = yearHeat([{ id: '1', date: NOW, amount: 200, source: 'task', sourceId: 's', attribute: 'int', label: '' }, { id: '2', date: '2026-09-14', amount: 20, source: 'task', sourceId: 's', attribute: 'int', label: '' }], ['2026-09-15'], NOW);
     expect(h.weeks).toHaveLength(53);
     expect(h.weeks[52][0].date).toBe('2026-09-14');
-    expect(h.weeks[52].find((c) => c.date === NOW)).toMatchObject({ level: 3, xp: 200 });
+    expect(h.weeks[52].find((c) => c.date === NOW)).toMatchObject({ level: 3 });
     expect(h.weeks[52].find((c) => c.date === '2026-09-18')).toMatchObject({ future: true, level: 0 });
     expect(h.activeDays).toBe(3);
     expect(h.best).toBe(200);

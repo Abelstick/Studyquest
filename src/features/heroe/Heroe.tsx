@@ -1,14 +1,18 @@
-import { lazy, Suspense, useState } from 'react';
-import { useData } from '@/state';
+import { lazy, Suspense, useMemo, useState } from 'react';
+import { useData, useTotalXp } from '@/state';
 import type { Hero, HeroRace, HeroSlot } from '@/core/domain';
-import { levelFromXp, xpAtLevelStart } from '@/core/game';
+import { levelProgress, xpAtLevelStart } from '@/core/game';
+import { today } from '@/core/dates';
+import { attributeOf, attributeTotals, characterSheet, classFor, classOf, classPairText, isClassId } from '@/core/progression';
 import {
-  HERO_NAME_MAX, HERO_STAGES, RACES, SLOT_LABEL, STAT_KEYS, STAT_LABEL, bonusText, canEvolve, describeHero, heroStats, itemState, itemsFor, nextStage,
-  paletteFor, raceOf, stageName, type HeroItem, type HeroLook, type StatKey,
+  HERO_NAME_MAX, HERO_STAGES, RACES, SLOT_LABEL, canEvolve, describeHero, itemState, itemsFor, nextStage,
+  paletteFor, raceOf, stageName, type HeroItem, type HeroLook,
 } from '@/core/hero';
 import { Bar, Button, Field, PageHead, Segmented, TextInput, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { ItemIcon, PaletteSwatch } from './ItemIcon';
+import { AttributeRadar } from './AttributeRadar';
+import { AttributeSheet } from './AttributeSheet';
 import { Icon } from '@/ui/Icon';
 
 // three.js pesa: solo se descarga al abrir esta pantalla.
@@ -28,7 +32,6 @@ function Viewer({ look, label, celebrate }: { look: HeroLook; label: string; cel
   );
 }
 
-const STAT_TONE: Record<StatKey, 'red' | 'blue' | 'green' | 'yellow'> = { fuerza: 'red', defensa: 'blue', velocidad: 'green', energia: 'yellow' };
 const coins = (n: number) => n.toLocaleString('en-US');
 
 /* ---------- Elegir raza (al crear o al cambiar) ---------- */
@@ -79,16 +82,7 @@ function RacePicker({ current, onDone }: { current?: Hero; onDone: () => void })
           ))}
         </fieldset>
         <p className="small">{r.blurb}</p>
-        <dl className="hstats hstats--mini">
-          {STAT_KEYS.map((k) => (
-            <div key={k} className="hstat">
-              <dt>{STAT_LABEL[k]}</dt>
-              <dd>
-                <Bar pct={(r.base[k] / 12) * 100} tone={STAT_TONE[k]} label={`${STAT_LABEL[k]} inicial de ${r.name}`} />
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <p className="muted small">La raza es su aspecto. Lo que lo hace fuerte son tus hábitos y tareas: cada uno alimenta sus atributos.</p>
         <Field label="Nombre de tu héroe">
           {(fid) => <TextInput id={fid} className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={r.defaultName} maxLength={HERO_NAME_MAX} />}
         </Field>
@@ -131,7 +125,7 @@ function Evolution({ hero, level, xp, onEvolve }: { hero: Hero; level: number; x
         </Button>
       ) : next ? (
         <p className="small evo__next">
-          Siguiente evolución al <strong>nivel {next.minLevel}</strong>: te faltan {coins(Math.max(0, xpAtLevelStart(next.minLevel) - xp))} XP. Cada tarea, hábito y sesión cuenta.
+          Siguiente evolución al <strong>nivel {next.minLevel}</strong>: te faltan {coins(Math.max(0, xpAtLevelStart(next.minLevel) - xp))} XP, sumando todos tus atributos.
         </p>
       ) : (
         <p className="small evo__next">
@@ -162,6 +156,12 @@ function ItemCard({ item, hero, previewing, onPreview }: { item: HeroItem; hero:
         Equipar
       </Button>
     );
+  else if (state === 'earn' && item.unlock)
+    cta = (
+      <Button small disabled>
+        <Icon name="lock" size={10} /> {attributeOf(item.unlock.attribute).name} nv. {item.unlock.level}
+      </Button>
+    );
   else if (state === 'locked')
     cta = (
       <Button small disabled>
@@ -181,16 +181,14 @@ function ItemCard({ item, hero, previewing, onPreview }: { item: HeroItem; hero:
       </Button>
     );
 
-  const bonus = bonusText(item.bonus);
   return (
-    <li className={cx('hitem', state === 'equipped' && 'is-equipped', (state === 'locked' || state === 'poor') && 'is-dim', previewing && 'is-preview')}>
+    <li className={cx('hitem', state === 'equipped' && 'is-equipped', (state === 'locked' || state === 'poor' || state === 'earn') && 'is-dim', previewing && 'is-preview')}>
       <span className="hitem__art">{item.slot === 'skin' ? <PaletteSwatch palette={paletteFor(hero.race, item.id)} /> : <ItemIcon item={item} />}</span>
       <div className="hitem__body">
         <p className="hitem__title">{item.title}</p>
         <p className="muted small">{item.blurb}</p>
         <p className="hitem__meta">
-          {bonus && <span className="tag tag--green">{bonus}</span>}
-          {state !== 'equipped' && state !== 'owned' && (
+          {state !== 'equipped' && state !== 'owned' && state !== 'earn' && (
             <span className="price">
               <Sprite name="coin" size={12} /> {coins(item.price)}
             </span>
@@ -253,7 +251,10 @@ export default function Heroe() {
   const [preview, setPreview] = useState<Preview>(null);
   const [celebrate, setCelebrate] = useState(0);
   const hero = profile.hero;
-  const level = levelFromXp(profile.xp);
+  const xp = useTotalXp();
+  const events = useData((s) => s.xpEvents);
+  const sheet = useMemo(() => characterSheet(events, today()), [events]);
+  const level = sheet.level.level;
 
   const wallet = (
     <div className="wallet" aria-label={`${profile.credits} monedas`}>
@@ -270,7 +271,7 @@ export default function Heroe() {
           title={hero ? 'Cambiar raza o nombre' : 'Crea tu héroe'}
           sprite="knight"
           right={wallet}
-          hint="Tu héroe crece contigo: cada nivel que subes estudiando lo hace más fuerte, y con las monedas le compras armas, poderes y skins."
+          hint="Tu héroe crece contigo: cada hábito y cada tarea alimenta uno de sus seis atributos, y con las monedas le compras armas, poderes y skins."
         />
         <RacePicker current={hero} onDone={() => setEditing(false)} />
       </div>
@@ -279,9 +280,9 @@ export default function Heroe() {
   const r = raceOf(hero.race);
   // Lo que se ve: el héroe tal cual, o probándose algo de la tienda.
   const shown: Hero = preview ? { ...hero, [preview.slot]: preview.id } : hero;
-  const stats = heroStats(hero, level);
-  const previewStats = preview ? heroStats(shown, level) : null;
-  const scale = Math.max(...STAT_KEYS.map((k) => (previewStats ?? stats).total[k])) * 1.15;
+  const lp = levelProgress(xp);
+  // La clase guardada (con memoria); si aún no hay, la que dicen los números.
+  const cls = classOf(isClassId(profile.characterClass) ? profile.characterClass : classFor(attributeTotals(events)));
   const toggle = (s: HeroSlot, id: string | null) => setPreview((p) => (p && p.slot === s && p.id === id ? null : { slot: s, id }));
   const previewTitle = preview ? (preview.id ? itemsFor(preview.slot).find((i) => i.id === preview.id)?.title : 'Original') : null;
 
@@ -293,7 +294,7 @@ export default function Heroe() {
 
   return (
     <div className="stack">
-      <PageHead kicker="Tu personaje" title="Héroe 3D" sprite="knight" right={wallet} />
+      <PageHead kicker="Tu personaje" title="Personaje" sprite="knight" right={wallet} />
 
       <div className="hero-page">
         <section className="panel hero-card" aria-labelledby="hero-name">
@@ -316,6 +317,11 @@ export default function Heroe() {
               <h2 id="hero-name" className="hero-card__name">
                 {hero.name}
               </h2>
+              <p className="charclass">
+                <span className="charclass__name">{cls.name}</span>
+                {cls.pair.length > 0 && <span className="charclass__pair">{classPairText(cls)}</span>}
+              </p>
+              <p className="small muted charclass__blurb">{cls.blurb}</p>
               <span className="tag tag--xp">
                 Etapa {hero.stage + 1}/4 · {stageName(hero.race, hero.stage)}
               </span>
@@ -324,44 +330,29 @@ export default function Heroe() {
               Cambiar raza o nombre
             </Button>
           </div>
-          <Evolution hero={hero} level={level} xp={profile.xp} onEvolve={evolve} />
+          <div className="charlevel">
+            <p className="charlevel__n" aria-label={`Nivel de personaje ${lp.level}`}>
+              <span className="charlevel__tag" aria-hidden="true">Nivel</span>
+              {lp.level}
+            </p>
+            <div className="charlevel__bar">
+              <Bar pct={lp.pct} tone="yellow" tall label={`${lp.into} de ${lp.needed} XP para el nivel ${lp.level + 1}`} />
+              <p className="small muted">
+                {coins(lp.left)} XP para el nivel {lp.level + 1} · {coins(sheet.totalXp)} XP entre los seis atributos
+              </p>
+            </div>
+          </div>
+          <Evolution hero={hero} level={level} xp={xp} onEvolve={evolve} />
         </section>
 
         <div className="stack">
-          <section className="panel" aria-labelledby="hero-stats">
-            <div className="split">
-              <h2 id="hero-stats" className="section-title">
-                Estadísticas
-              </h2>
-              <p className="hpower">
-                Poder <strong>{stats.power}</strong>
-                {previewStats && previewStats.power !== stats.power && (
-                  <span className={cx('hpower__delta', previewStats.power > stats.power ? 'is-up' : 'is-down')}>
-                    {' '}
-                    → {previewStats.power}
-                  </span>
-                )}
-              </p>
-            </div>
-            <dl className="hstats">
-              {STAT_KEYS.map((k) => {
-                const v = (previewStats ?? stats).total[k];
-                const extra = (previewStats ?? stats).bonus[k];
-                return (
-                  <div key={k} className="hstat">
-                    <dt>{STAT_LABEL[k]}</dt>
-                    <dd>
-                      <Bar pct={(v / scale) * 100} tone={STAT_TONE[k]} label={`${STAT_LABEL[k]}: ${v}`} />
-                      <span className="hstat__n">
-                        {v}
-                        {extra > 0 && <small className="hstat__bonus"> (+{extra})</small>}
-                      </span>
-                    </dd>
-                  </div>
-                );
-              })}
-            </dl>
-            <p className="muted small">Suben con tu nivel (ahora {level}), se multiplican al evolucionar y el arma y el poder suman su extra.</p>
+          <section className="panel attrs" aria-labelledby="hero-attrs">
+            <h2 id="hero-attrs" className="section-title">
+              Tus atributos
+            </h2>
+            <p className="muted small attrs__lead">Cada hábito y cada tarea alimenta los atributos de su categoría. Toca uno para ver qué lo hace crecer.</p>
+            <AttributeRadar attributes={sheet.attributes} />
+            <AttributeSheet attributes={sheet.attributes} />
           </section>
 
           <section className="panel" aria-labelledby="hero-shop">

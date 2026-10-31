@@ -7,8 +7,8 @@ const WED = '2026-09-16';
 const SAT = '2026-09-19';
 let n = 0;
 const ev = (extra: Partial<AgendaEvent>): AgendaEvent => ({ id: `e${++n}`, title: 'Bloque', category: 'other', date: MON, start: '09:00', minutes: 60, rev: 0, createdAt: '', updatedAt: '', ...extra });
-const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Estudiar SQL', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
-const task = (extra: Partial<Task> = {}): Task => ({ id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: WED, estimateMin: 30, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const habit = (extra: Partial<Habit> = {}): Habit => ({ id: 'h1', title: 'Estudiar SQL', frequency: { type: 'daily' }, measure: 'minutes', target: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
+const task = (extra: Partial<Task> = {}): Task => ({ id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: WED, estimateMin: 30, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 
 /** Yo trabajo de lunes a viernes de 8:30 a 18:00. */
 const work = (extra: Partial<AgendaEvent> = {}) => ev({ title: 'Jornada laboral', category: 'work', start: '08:30', minutes: 570, repeat: { type: 'weekly', every: 1, days: [0, 1, 2, 3, 4] }, ...extra });
@@ -102,7 +102,7 @@ describe('a qué hora hacer un hábito', () => {
   });
 
   it('varias veces al día se reparten y no se pisan', () => {
-    const r = suggestHabitTimes(habit({ title: 'Beber agua', measure: 'minutes', target: 5, xp: 5 }), ctx([work()]), MON, 3);
+    const r = suggestHabitTimes(habit({ title: 'Beber agua', measure: 'minutes', target: 5 }), ctx([work()]), MON, 3);
     expect(r?.times.length).toBeGreaterThanOrEqual(2);
     const mins = r?.times.map((t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3))) ?? [];
     for (let i = 1; i < mins.length; i++) expect(mins[i] - mins[i - 1]).toBeGreaterThanOrEqual(65);

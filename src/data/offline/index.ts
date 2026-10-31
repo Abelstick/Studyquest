@@ -18,7 +18,7 @@ import { createQueueStorage, type QueueStorage, type QueuedOp } from './storage'
 
 export { MemoryQueueStorage, type QueueStorage, type QueuedOp } from './storage';
 
-export const WRITES = new Set(['create', 'createMany', 'update', 'remove', 'removeByHabit', 'upsert', 'save', 'markAllRead']);
+export const WRITES = new Set(['create', 'createMany', 'update', 'remove', 'removeByHabit', 'upsert', 'save', 'markAllRead', 'replace']);
 export const READS = new Set(['get', 'list']);
 /** Espacios de nombres que nunca se encolan (requieren conexión). */
 // Cosas del dispositivo/cuenta que no deben esperar en la cola de escritura ni encolarse: se intentan al momento.

@@ -59,20 +59,21 @@ function StreakStrip({ streak }: Readonly<{ streak: ReturnType<typeof computeStr
   );
 }
 
-/** Congelar el día cuando la racha peligra: el atajo vive en la propia casilla en vez de en un panel aparte. */
-function FreezeAction({ streak }: Readonly<{ streak: ReturnType<typeof computeStreak> }>) {
+/**
+ * Los congeladores se gastan solos si un día se pasa sin XP: aquí solo se ve cuántos quedan (y, si la racha peligra
+ * sin ninguno, dónde conseguirlos).
+ */
+function FreezeStatus({ streak }: Readonly<{ streak: ReturnType<typeof computeStreak> }>) {
   const freezes = useData((s) => s.profile.streakFreezes);
-  const frozenToday = useData((s) => s.profile.frozenDates.includes(today()));
-  const freeze = useData((s) => s.freezeToday);
-  if (streak.activeToday || frozenToday) return null;
   if (freezes > 0) {
     return (
-      <button type="button" className="link daysum__link" onClick={freeze}>
-        Congelar hoy ({freezes})
-      </button>
+      <span className="daysum__link daysum__freeze" title="Si un día se pasa sin XP, se usa uno solo y la racha sigue">
+        <Sprite name="snowflake" size={12} />
+        {freezes} {freezes === 1 ? 'congelador' : 'congeladores'} · automáticos
+      </span>
     );
   }
-  if (streak.current > 0) {
+  if (streak.current > 0 && !streak.activeToday) {
     return (
       <Link className="daysum__link" to="/arsenal" title="Congelar racha, en el Arsenal">
         Sin congeladores
@@ -150,7 +151,7 @@ export function DaySummary({ progress, scopes, habitWeek, streak }: Readonly<Pro
       </Tile>
       <Tile tone="streak" sprite="fire" label="Racha" value={`${streak.current} ${streak.current === 1 ? 'día' : 'días'}`} note={danger ? 'Peligra hoy' : `Récord ${streak.best}`} alert={danger}>
         <StreakStrip streak={streak} />
-        <FreezeAction streak={streak} />
+        <FreezeStatus streak={streak} />
       </Tile>
     </section>
   );

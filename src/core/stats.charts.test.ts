@@ -3,7 +3,7 @@ import type { Course, Snapshot, StudySession, XpEvent } from './domain';
 import { courseLastStudied, coursesInPlay, hoursBetween, weeklyXp, xpBetween, xpBySource, xpByWeekday } from './stats';
 
 const NOW = '2026-09-16'; // miércoles
-const ev = (date: string, amount: number, source: XpEvent['source'] = 'task'): XpEvent => ({ id: date + amount + source, date, amount, source, label: '' });
+const ev = (date: string, amount: number, source: XpEvent['source'] = 'task'): XpEvent => ({ id: date + amount + source, date, amount, source, sourceId: 's', attribute: 'int', label: '' });
 const snap = (over: Partial<Snapshot>): Snapshot => ({ xpEvents: [], sessions: [], ...over }) as Snapshot;
 
 describe('datos del dashboard', () => {
@@ -40,7 +40,7 @@ describe('cursos del Inicio', () => {
     field: '',
     mentor: null,
     createdAt,
-    modules: [{ id: `m-${id}`, title: 'M', summary: '', xp: 50, topics: [{ id: `t-${id}`, title: 'T', status: done ? 'done' : 'todo', review: false, markedAt: null }] }],
+    modules: [{ id: `m-${id}`, title: 'M', summary: '', topics: [{ id: `t-${id}`, title: 'T', status: done ? 'done' : 'todo', review: false, markedAt: null }] }],
   });
   const session = (courseId: string, date: string): StudySession => ({ id: courseId + date, courseId, date, minutes: 20, label: '' });
 

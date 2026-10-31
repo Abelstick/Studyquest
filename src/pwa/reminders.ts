@@ -49,7 +49,7 @@ export function saveReminderState(file: ReminderFile, storage: Pick<Storage, 'se
 export const habitRows = (habits: Habit[]): HabitRow[] =>
   habits
     .filter((h) => h.reminder)
-    .map((h) => ({ id: h.id, data: { title: h.title, reminder: h.reminder, reminderRepeatMin: h.reminderRepeatMin, frequency: h.frequency, target: h.target, startDate: h.startDate, xp: h.xp } }));
+    .map((h) => ({ id: h.id, data: { title: h.title, reminder: h.reminder, reminderRepeatMin: h.reminderRepeatMin, frequency: h.frequency, target: h.target, startDate: h.startDate } }));
 
 export interface TickInput {
   habits: Habit[];
@@ -69,7 +69,7 @@ export interface TickInput {
 }
 
 export const taskRows = (tasks: Task[]): TaskRow[] =>
-  tasks.filter((t) => t.dueDate && t.dueTime).map((t) => ({ id: t.id, data: { title: t.title, status: t.status, dueDate: t.dueDate, dueTime: t.dueTime, xp: t.xp } }));
+  tasks.filter((t) => t.dueDate && t.dueTime).map((t) => ({ id: t.id, data: { title: t.title, status: t.status, dueDate: t.dueDate, dueTime: t.dueTime } }));
 
 /** Lo que se le enseña al usuario, venga de un hábito o de una tarea. */
 export type Notice = Pick<PlannedReminder, 'title' | 'body' | 'url' | 'tag'>;

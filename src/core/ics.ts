@@ -16,6 +16,7 @@ import type { AgendaEvent, Course, Habit, ISODate, Task } from './domain';
 import { addDays, clockToMinutes, fromISODate, weekdayIndex } from './dates';
 import { DAY_MIN, categoryInfo, displayTitle, occurrencesBetween, occursOn, repeatLabel, type AgendaContext } from './agenda';
 import { dueTimeOf } from './tasks';
+import { taskBaseXp } from './progression/rewards';
 
 const pad = (n: number, w = 2) => String(n).padStart(w, '0');
 const icsDate = (d: string) => d.replaceAll('-', '');
@@ -201,7 +202,7 @@ export function taskDeadline(t: Task, courses: Pick<Course, 'id' | 'title'>[]): 
     kind: 'deadline',
     uid: `${t.id}@studyquest`,
     title: `${time ? '⏰' : '📌'} ${t.title}`,
-    description: [`Fecha límite · ${course} · +${t.xp} XP`, ...t.subtasks.filter((s) => !s.done).map((s) => `- ${s.title}`)].join('\n'),
+    description: [`Fecha límite · ${course} · +${taskBaseXp(t)} XP`, ...t.subtasks.filter((s) => !s.done).map((s) => `- ${s.title}`)].join('\n'),
     categories: ['Fecha límite', ...t.tags],
     date: t.dueDate as string,
     time: time ? clockToMinutes(time) : null,

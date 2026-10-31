@@ -6,7 +6,7 @@ import { inDaysLabel, nextDueDate, quotaInfo, quotaText } from './periods';
 
 const NOW = '2026-09-16'; // miércoles
 const habit = (over: Partial<Habit>): Habit => ({
-  id: 'h', title: 'h', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...over,
+  id: 'h', title: 'h', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...over,
 });
 const log = (date: string, value = 1): HabitLog => ({ id: date, habitId: 'h', date, value, stepsDone: [] });
 

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { useData } from '@/state';
+import { useData, useTotalXp } from '@/state';
 import { useUi } from '@/state/ui';
 import { dayLabel, today } from '@/core/dates';
 import { computeStreak, goalLabel, habitCreditXp, habitProgress, isCounter, levelProgress, logFor, rankFor } from '@/core/game';
 import { dailyMissions, dayProgress, deadlineText, tips } from '@/core/missions';
+import { habitBaseXp, taskBaseXp } from '@/core/progression';
 import { habitWeek, taskScopes } from '@/core/overview';
 import { nextStep, type NextStep } from '@/core/nextStep';
 import { HabitAction, HabitMinimumButton, HabitRecovery } from '@/features/habitos/HabitAction';
@@ -193,7 +194,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
     case 'task-today': {
       const t = step.task;
       title = t.title;
-      detail = [courseName(t.courseId), deadlineText(t), `+${t.xp} XP`].filter(Boolean).join(' · ');
+      detail = [courseName(t.courseId), deadlineText(t), `+${taskBaseXp(t)} XP`].filter(Boolean).join(' · ');
       action = (
         <Button
           variant="primary"
@@ -214,7 +215,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
       const prog = habitProgress(h, log);
       title = h.title;
       // Con avance a medias el hábito sigue siendo el paso (aún no está cumplido), pero se ve lo que ya llevas y ganaste.
-      detail = prog > 0 ? `Hábito · ${goalLabel(h)} · llevas el ${Math.round(prog * 100)} % · ya ganaste +${habitCreditXp(h, log)} de ${h.xp} XP` : `Hábito · ${goalLabel(h)} · +${h.xp} XP`;
+      detail = prog > 0 ? `Hábito · ${goalLabel(h)} · llevas el ${Math.round(prog * 100)} % · ya ganaste +${habitCreditXp(h, log)} de ${habitBaseXp(h)} XP` : `Hábito · ${goalLabel(h)} · +${habitBaseXp(h)} XP`;
       progressBar = prog > 0 ? <Bar className="nextstep__bar" pct={prog * 100} tone="yellow" label={`Avance de hoy de ${h.title}`} /> : null;
       action = isCounter(h) ? (
         <HabitAction habit={h} log={logFor(logs, h.id, today())} />
@@ -299,7 +300,7 @@ function NextStepCard({ step }: { step: NextStep | null }) {
  */
 function LevelCard({ profile }: { profile: Profile }) {
   const openModal = useUi((s) => s.openModal);
-  const lp = levelProgress(profile.xp);
+  const lp = levelProgress(useTotalXp());
   return (
     <section className="levelcard" aria-label={`Nivel ${lp.level}, ${rankFor(lp.level)}`}>
       <div className="levelcard__level" aria-hidden="true">

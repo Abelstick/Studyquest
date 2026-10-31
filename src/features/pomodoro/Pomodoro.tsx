@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { usePomodoro } from '@/state/pomodoro';
-import { POMODORO_LABEL, SESSION_XP_PER_MIN } from '@/core/game';
+import { POMODORO_LABEL } from '@/core/game';
+import { sessionBaseXp } from '@/core/progression';
 import { today } from '@/core/dates';
 import { PHASE_LABEL, formatClock, phaseMinutes } from '@/core/pomodoro';
 import { Bar, Button, ChipGroup, Field, PageHead, Panel, cx } from '@/ui/kit';
@@ -121,7 +122,7 @@ export default function Pomodoro() {
               <Icon name="sync" size={12} /> Reiniciar
             </Button>
           </div>
-          {p.phase === 'focus' && <p className="muted small pomo__hint">Al terminar el enfoque ganas <b className="xp-text">+{p.config.focus * SESSION_XP_PER_MIN} XP</b> y se registra como sesión de estudio.</p>}
+          {p.phase === 'focus' && <p className="muted small pomo__hint">Al terminar el enfoque ganas <b className="xp-text">+{sessionBaseXp(p.config.focus)} XP</b> y se registra como sesión de estudio.</p>}
         </Panel>
 
         <div className="stack">

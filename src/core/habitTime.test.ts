@@ -4,7 +4,7 @@ import { firstMinute, habitTimesMap, habitTimesOn, timesText } from './habitTime
 
 // Miércoles 16-sep-2026.
 const NOW = '2026-09-16';
-const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 10, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
+const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
 const block = (habitId: string, start: string, extra: Partial<AgendaEvent> = {}): AgendaEvent => ({
   id: `${habitId}-${start}`, title: '', category: 'personal', date: '2026-09-01', start, minutes: 30, repeat: { type: 'daily', every: 1 }, habitId, taskId: null, rev: 0, createdAt: '', updatedAt: '', ...extra,
 });

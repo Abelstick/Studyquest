@@ -5,7 +5,7 @@ import { focusedReviews } from './review';
 const NOW = '2026-09-16';
 const topic = (id: string, extra: Partial<Topic> = {}): Topic => ({ id, title: id, status: 'todo', review: false, markedAt: null, ...extra });
 const due = (id: string, nextReview = NOW) => topic(id, { review: true, markedAt: '2026-09-10', nextReview, cards: [{ id: `${id}-q`, q: '¿?', a: '!' }] });
-const course = (id: string, topics: Topic[]): Course => ({ id, title: `Curso ${id}`, professor: '', field: '', modules: [{ id: `${id}-m`, title: 'M', summary: '', xp: 0, topics }], mentor: null, createdAt: '' });
+const course = (id: string, topics: Topic[]): Course => ({ id, title: `Curso ${id}`, professor: '', field: '', modules: [{ id: `${id}-m`, title: 'M', summary: '', topics }], mentor: null, createdAt: '' });
 
 const courses = [course('a', [due('a1'), due('a2', '2026-09-14'), topic('a3', { cards: [{ id: 'x', q: 'Q', a: 'A' }] })]), course('b', [due('b1')])];
 

@@ -3,7 +3,7 @@ import { MemoryStorage, createLocalRepository } from './index';
 import type { HabitLog, Task } from '@/core/domain';
 
 const task = (id: string): Task => ({
-  id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null,
+  id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null,
 });
 
 describe('adaptador local', () => {
@@ -40,7 +40,7 @@ describe('adaptador local', () => {
   it('wipe borra todo', async () => {
     const repo = createLocalRepository(new MemoryStorage());
     await repo.tasks.create(task('a'));
-    await repo.profile.update({ xp: 5 });
+    await repo.profile.update({ credits: 5 });
     await repo.wipe();
     expect(await repo.tasks.list()).toHaveLength(0);
     expect(await repo.profile.get()).toBeNull();

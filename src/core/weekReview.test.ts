@@ -9,8 +9,8 @@ import {
 
 const WEEK = '2026-09-14'; // lunes
 const NOW = '2026-09-16'; // miércoles
-const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
-const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
+const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
 const log = (habitId: string, date: string, value = 1): HabitLog => ({ id: `${habitId}-${date}`, habitId, date, value, stepsDone: [] });
 const snap = (over: Partial<Snapshot> = {}): Snapshot => ({
   profile: defaultProfile('u'), tasks: [], habits: [], habitLogs: [], courses: [], goals: [], projects: [], notes: [], certifications: [], personalRewards: [], sessions: [], xpEvents: [], notifications: [], events: [], ...over,
@@ -103,10 +103,10 @@ describe('construir la revisión', () => {
   });
 
   it('una meta avanzó si se conquistó un hito, se cerró una tarea enlazada o se cumplió un hábito enlazado', () => {
-    const goal = { id: 'g', title: 'Meta', rewardTitle: '', rewardDescription: '', createdAt: '2026-08-01T00:00:00.000Z', milestones: [{ id: 'm', title: 'Hito', summary: '', xp: 10, done: false, skills: [] }, { id: 'm2', title: 'Otro', summary: '', xp: 10, done: false, skills: [] }] };
+    const goal = { id: 'g', title: 'Meta', rewardTitle: '', rewardDescription: '', createdAt: '2026-08-01T00:00:00.000Z', milestones: [{ id: 'm', title: 'Hito', summary: '', done: false, skills: [] }, { id: 'm2', title: 'Otro', summary: '', done: false, skills: [] }] };
     const quiet = buildWeekReview(snap({ goals: [goal] }), WEEK, NOW);
     expect(quiet.goals[0].moved).toBe(false);
-    const xp: XpEvent = { id: 'x', date: NOW, amount: 10, source: 'milestone', label: 'Hito' };
+    const xp: XpEvent = { id: 'x', date: NOW, amount: 10, source: 'milestone', sourceId: 's', attribute: 'int', label: 'Hito' };
     const moved = buildWeekReview(snap({ goals: [{ ...goal, milestones: [{ ...goal.milestones[0], done: true }, goal.milestones[1]] }], xpEvents: [xp], tasks: [task('t', { goalId: 'g', status: 'done', completedAt: NOW })] }), WEEK, NOW);
     expect(moved.goals[0]).toMatchObject({ milestones: 1, tasksDone: 1, moved: true });
     const undone = buildWeekReview(snap({ goals: [{ ...goal, milestones: [{ ...goal.milestones[0], done: true }, goal.milestones[1]] }], xpEvents: [xp, { ...xp, id: 'y', amount: -10, label: 'Deshacer: Hito' }] }), WEEK, NOW);

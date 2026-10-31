@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { usePomodoro } from '@/state/pomodoro';
-import { SESSION_XP_PER_MIN } from '@/core/game';
+import { sessionBaseXp } from '@/core/progression';
 import { Button, ChipGroup, Field, Modal, NumberInput } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
 
@@ -73,7 +73,7 @@ export function SessionModal({ courseId: initialCourse, minutes: initialMinutes 
           )}
         </Field>
         <p className="muted">
-          Ganas <b className="xp-text">+{minutes * SESSION_XP_PER_MIN} XP</b> por estos {minutes} min.
+          Ganas <b className="xp-text">+{sessionBaseXp(minutes)} XP</b> por estos {minutes} min.
         </p>
 
         <div className="session__choice">

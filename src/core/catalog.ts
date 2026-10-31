@@ -1,4 +1,7 @@
 import type { SpriteName } from '@/ui/sprites';
+import type { AttributeId } from './domain';
+import { attributeOf } from './progression/attributes';
+import { unlocksOfKind } from './progression/unlocks';
 
 export type ShopKind = 'avatar' | 'frame' | 'world' | 'badge' | 'power' | 'mentor';
 
@@ -19,6 +22,8 @@ export interface ShopItem {
   consumable?: boolean;
   /** No disponible todavía (depende de un mentor real). */
   locked?: boolean;
+  /** No se compra: se gana al llevar un atributo a ese nivel (core/progression/unlocks.ts). */
+  unlock?: { attribute: AttributeId; level: number };
 }
 
 /** Catálogo fijo: no vive en la base de datos, así que cambiar de backend no exige migrarlo. */
@@ -65,6 +70,15 @@ export const SHOP: ShopItem[] = [
   { id: 'badge-boss', kind: 'badge', category: 'Insignia', title: 'Cazajefes', price: 1100, sprite: 'boss' },
   { id: 'badge-crown', kind: 'badge', category: 'Insignia', title: 'Corona del estudioso', price: 1500, sprite: 'crown' },
   { id: 'mentor-review', kind: 'mentor', category: 'De la profesora', title: 'Revisión 1:1 de portafolio', price: 1500, sprite: 'sword', locked: true },
+  // Insignias y marcos que se ganan con los atributos (no se venden).
+  ...(['badge', 'frame'] as const).flatMap((kind) =>
+    unlocksOfKind(kind).map(
+      (u): ShopItem => ({
+        id: u.id, kind, category: kind === 'badge' ? 'Insignia de atributo' : 'Marco de atributo', title: u.title, price: 0,
+        sprite: attributeOf(u.attribute).sprite, unlock: { attribute: u.attribute, level: u.level },
+      }),
+    ),
+  ),
 ];
 
 export const shopItem = (id: string | null | undefined) => SHOP.find((i) => i.id === id);

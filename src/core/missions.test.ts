@@ -3,8 +3,8 @@ import type { Habit, Snapshot, Task } from './domain';
 import { dailyMissions, dayProgress, daySummary, deadlineText, habitDayState, missionUrgency, taskBucket } from './missions';
 
 const NOW = '2026-09-16';
-const task = (id: string, dueDate: string | null): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null });
-const habit: Habit = { id: 'h', title: 'Agua', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '' };
+const task = (id: string, dueDate: string | null): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null });
+const habit: Habit = { id: 'h', title: 'Agua', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '' };
 
 describe('misiones de hoy', () => {
   it('no deja fuera a los hábitos aunque haya muchas tareas con fecha', () => {
@@ -39,9 +39,9 @@ describe('qué hacer hoy', () => {
 
 describe('avance del día', () => {
   it('cuenta hábitos y tareas hechos, el XP pendiente y las vencidas', () => {
-    const done = { ...task('d', NOW), status: 'done' as const, completedAt: NOW, xp: 30 };
+    const done = { ...task('d', NOW), status: 'done' as const, completedAt: NOW };
     const s = { habits: [habit], habitLogs: [], courses: [], tasks: [task('a', '2026-09-14'), task('b', NOW), done] } as unknown as Snapshot; // solo hacen falta estos campos
-    expect(dayProgress(dailyMissions(s, NOW), NOW)).toEqual({ habitsDone: 0, habitsTotal: 1, tasksDone: 1, tasksTotal: 3, done: 1, total: 4, pct: 25, xpLeft: 40, late: 1 });
+    expect(dayProgress(dailyMissions(s, NOW), NOW)).toEqual({ habitsDone: 0, habitsTotal: 1, tasksDone: 1, tasksTotal: 3, done: 1, total: 4, pct: 25, xpLeft: 3 * 20, late: 1 }); // un hábito y dos tareas normales pendientes
   });
 
   it('las tareas sin fecha o para más adelante no entran: si el día tenía 7 cosas, hacerlas es el 100 %', () => {

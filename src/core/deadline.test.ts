@@ -6,7 +6,7 @@ import type { Snapshot } from './domain';
 
 const NOW = '2026-09-16';
 const task = (dueDate: string | null, dueTime?: string, over: Partial<Task> = {}): Task => ({
-  id: 't', title: 't', courseId: null, priority: 'mid', status: 'todo', dueDate, dueTime, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...over,
+  id: 't', title: 't', courseId: null, priority: 'mid', status: 'todo', dueDate, dueTime, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...over,
 });
 const at = (h: number, m = 0) => h * 60 + m;
 

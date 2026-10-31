@@ -11,6 +11,8 @@ import { cleanDays, isQuit } from '@/core/quit';
 import { HabitAction, HabitRecovery, minimumLabel } from '@/features/habitos/HabitAction';
 import { isMinimumMet, minimumOf } from '@/core/minimum';
 import { areaInfo } from '@/core/areas';
+import { gainsText, habitBaseXp, habitGains } from '@/core/progression';
+import { Gains } from '@/ui/Attribute';
 import { IfThenList } from '@/ui/IfThenList';
 import { HabitScheduler } from '@/features/calendario/HabitScheduler';
 import { HabitWeek } from '@/features/habitos/HabitWeek';
@@ -31,6 +33,7 @@ const STATE_TAG: Record<HabitDayState, { tone: 'green' | 'xp' | 'plain'; label: 
 export function HabitDetailModal({ id }: { id: string }) {
   const habit = useData((s) => s.habits.find((h) => h.id === id));
   const logs = useData((s) => s.habitLogs);
+  const courses = useData((s) => s.courses);
   const chains = useData((s) => s.profile.chains) ?? NO_CHAINS;
   const goal = useData((s) => s.goals.find((g) => g.id === habit?.goalId));
   const course = useData((s) => s.courses.find((c) => c.id === habit?.courseId));
@@ -64,7 +67,7 @@ export function HabitDetailModal({ id }: { id: string }) {
   const facts: [string, string][] = [
     ['Frecuencia', frequencyLabel(habit.frequency)],
     ['Objetivo', goalLabel(habit)],
-    ['Recompensa', `+${habit.xp} XP`],
+    ['Recompensa', `+${habitBaseXp(habit)} XP · ${gainsText(habitGains(habit, courses))}`],
     ['Recordatorio', habit.reminder ?? 'Sin recordatorio'],
     ...(minimumOf(habit) !== null ? ([['Versión mínima', `${minimumLabel(habit)} (mantiene la racha)`]] as [string, string][]) : []),
     ...(habit.area ? ([['Área', areaInfo(habit.area).label]] as [string, string][]) : []),
@@ -86,7 +89,7 @@ export function HabitDetailModal({ id }: { id: string }) {
           ) : (
             status.label
           )}</Tag>
-        <Tag tone="xp">+{habit.xp} XP</Tag>
+        <Gains gains={habitGains(habit, courses)} className="tag tag--xp" />
         {minMet && <Tag tone="green">Mínimo cumplido</Tag>}
         {stats.current > 0 && <Tag tone="plain">Racha {stats.current}</Tag>}
       </div>

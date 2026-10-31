@@ -1,4 +1,7 @@
-import type { Course, ISODate, Snapshot } from './domain';
+import type { Course, ISODate, Snapshot, XpEvent } from './domain';
+import { activeDaysOf, attributeTotals, distinctActions, totalXp } from './progression/ledger';
+import { classFor, levelsOf } from './progression/titles';
+import { categoryIdOf } from './progression/suggest';
 import { addDays, today, weekStart } from './dates';
 import { POMODORO_LABEL, computeStreak, hoursInWeek, isCourseComplete, levelFromXp } from './game';
 
@@ -37,14 +40,46 @@ export interface Stats {
   heroStage: number;
   /** Armas, poderes y skins del héroe comprados. */
   heroItems: number;
+  /** Nivel del atributo más alto y del más bajo. */
+  maxAttrLevel: number;
+  minAttrLevel: number;
+  /** Ya tiene una clase (dejó de ser «Aventurero»). */
+  hasClass: boolean;
+  /** Vasos de agua registrados en hábitos de hidratación. */
+  waterGlasses: number;
+  /** Mejor racha de días seguidos con XP de Intelecto (estudiando). */
+  bestStudyStreak: number;
+}
+
+/** Días seguidos más largos dentro de un conjunto de días. */
+export function longestRun(days: ReadonlySet<ISODate>): number {
+  const sorted = [...days].sort();
+  let best = 0;
+  let run = 0;
+  sorted.forEach((d, i) => {
+    run = i > 0 && addDays(sorted[i - 1], 1) === d ? run + 1 : 1;
+    best = Math.max(best, run);
+  });
+  return best;
+}
+
+/** Vasos de agua: lo registrado en hábitos de hidratación que se cuentan por veces (o hecho / no hecho, 1 al día). */
+function waterGlasses(s: Snapshot): number {
+  const water = new Set(s.habits.filter((h) => categoryIdOf(h) === 'hidratacion' && (h.measure === 'times' || h.measure === 'boolean')).map((h) => h.id));
+  return s.habitLogs.filter((l) => water.has(l.habitId)).reduce((a, l) => a + Math.max(0, l.value), 0);
 }
 
 export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
   const habitTarget = new Map(s.habits.map((h) => [h.id, h.target]));
   const streak = computeStreak(s.xpEvents, s.profile.frozenDates, now);
+  const xp = totalXp(s.xpEvents);
+  const totals = attributeTotals(s.xpEvents);
+  const levels = levelsOf(totals);
+  // Una acción puede repartirse en dos atributos (dos filas): se cuentan acciones, no filas.
+  const actions = (pick: (e: XpEvent) => boolean) => distinctActions(s.xpEvents, pick).length;
   return {
-    xp: s.profile.xp,
-    level: levelFromXp(s.profile.xp),
+    xp,
+    level: levelFromXp(xp),
     tasksDone: s.tasks.filter((t) => t.status === 'done').length,
     habitCompletions: s.habitLogs.filter((l) => l.value >= (habitTarget.get(l.habitId) ?? Infinity)).length,
     streak: streak.current,
@@ -54,12 +89,12 @@ export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
     milestonesDone: s.goals.reduce((a, g) => a + g.milestones.filter((m) => m.done).length, 0),
     purchases: s.profile.inventory.length,
     hoursTotal: s.sessions.reduce((a, x) => a + x.minutes, 0) / 60,
-    reviews: s.xpEvents.filter((e) => e.source === 'review' && e.amount > 0).length,
-    mastered: s.xpEvents.filter((e) => e.source === 'review' && e.amount > 0 && e.label.startsWith('Dominado')).length,
+    reviews: actions((e) => e.source === 'review' && e.amount > 0),
+    mastered: actions((e) => e.source === 'review' && e.amount > 0 && e.label.startsWith('Dominado')),
     bosses: s.tasks.filter((t) => t.priority === 'boss' && t.status === 'done').length,
     pomodoros: s.sessions.filter((x) => x.label === POMODORO_LABEL).length,
-    combos: s.xpEvents.filter((e) => e.source === 'combo' && e.amount > 0 && e.label.startsWith('Combo')).length,
-    weekendBonuses: s.xpEvents.filter((e) => e.source === 'combo' && e.amount > 0 && e.label.startsWith('Bonus de fin')).length,
+    combos: actions((e) => e.source === 'combo' && e.sourceId === 'combo'),
+    weekendBonuses: actions((e) => e.source === 'combo' && e.sourceId.startsWith('weekend:')),
     recurringDone: s.tasks.filter((t) => t.status === 'done' && t.recurrence).length,
     worlds: s.profile.inventory.filter((i) => i.startsWith('world-')).length,
     avatars: s.profile.inventory.filter((i) => i.startsWith('avatar-')).length,
@@ -67,12 +102,17 @@ export function computeStats(s: Snapshot, now: ISODate = today()): Stats {
     topicsDone: s.courses.reduce((a, c) => a + c.modules.reduce((b, m) => b + m.topics.filter((t) => t.status === 'done').length, 0), 0),
     modulesDone: s.courses.reduce((a, c) => a + c.modules.filter((m) => m.topics.length > 0 && m.topics.every((t) => t.status === 'done')).length, 0),
     checkpointsDone: s.projects.reduce((a, p) => a + p.checkpoints.filter((c) => c.done).length, 0),
-    weeklyChallenges: s.xpEvents.filter((e) => e.source === 'bonus' && e.amount > 0 && e.label === 'Reto semanal completado').length,
+    weeklyChallenges: actions((e) => e.source === 'bonus' && e.sourceId.startsWith('weekly:')),
     achievementsCount: s.profile.achievements.length,
     certifications: s.certifications.length,
     notes: s.notes.filter((n) => n.body.trim() || n.title.trim() || n.link).length,
     heroStage: s.profile.hero ? s.profile.hero.stage : -1,
     heroItems: s.profile.inventory.filter((i) => i.startsWith('hero-')).length,
+    maxAttrLevel: Math.max(...Object.values(levels)),
+    minAttrLevel: Math.min(...Object.values(levels)),
+    hasClass: classFor(totals) !== 'aventurero',
+    waterGlasses: waterGlasses(s),
+    bestStudyStreak: longestRun(activeDaysOf(s.xpEvents, 'int')),
   };
 }
 

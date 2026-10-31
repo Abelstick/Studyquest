@@ -98,11 +98,7 @@ export function spawnNext(task: Task, newId: () => ID, now: ISODate = today()): 
 
 /* ---------- Jefes finales ---------- */
 
-export const BOSS_BONUS_XP = 50;
 export const isBoss = (t: Pick<Task, 'priority'>) => t.priority === 'boss';
-
-/** Lo que da completar la tarea: su XP y, si es un jefe, el botín extra. */
-export const taskReward = (t: Pick<Task, 'priority' | 'xp'>) => t.xp + (isBoss(t) ? BOSS_BONUS_XP : 0);
 
 /** Vida del jefe: una vida por subtarea pendiente. Sin subtareas, tiene 1 (se derrota completándolo). */
 export function bossHp(t: Pick<Task, 'subtasks' | 'status'>) {

@@ -8,6 +8,7 @@ import { Bar, Button, Panel, cx } from '@/ui/kit';
 import { HabitAction, HabitRecovery, minimumLabel } from './HabitAction';
 import { minimumOf } from '@/core/minimum';
 import { areaInfo } from '@/core/areas';
+import { gainsText, habitBaseXp, habitGains } from '@/core/progression';
 import { IfThenList } from '@/ui/IfThenList';
 import { HabitWeek } from './HabitWeek';
 import { HabitHistory } from './HabitHistory';
@@ -19,6 +20,7 @@ export default function HabitoDetalle() {
   const { id } = useParams();
   const habit = useData((s) => s.habits.find((h) => h.id === id));
   const logs = useData((s) => s.habitLogs);
+  const courses = useData((s) => s.courses);
   const toggleStep = useData((s) => s.toggleHabitStep);
   const openModal = useUi((s) => s.openModal);
   const now = today();
@@ -50,7 +52,7 @@ export default function HabitoDetalle() {
     ['Frecuencia', frequencyLabel(habit.frequency)],
     ['Medición', habit.measure === 'boolean' ? 'Hecho / no hecho' : MEASURE_LABEL[habit.measure].plural],
     ['Objetivo', goalLabel(habit)],
-    ['Recompensa', `+${habit.xp} XP`],
+    ['Recompensa', `+${habitBaseXp(habit)} XP · ${gainsText(habitGains(habit, courses))}`],
     ['Recordatorio', habit.reminder ?? 'Sin recordatorio'],
     ...(minimumOf(habit) !== null ? ([['Versión mínima', minimumLabel(habit)]] as [string, string][]) : []),
     ...(habit.area ? ([['Área', areaInfo(habit.area).label]] as [string, string][]) : []),
@@ -66,7 +68,7 @@ export default function HabitoDetalle() {
           <p className="kicker">Habilidad pasiva · nivel {level}</p>
           <h1 className="page-title page-title--big">{habit.title}</h1>
           <p className="muted upper">
-            {frequencyLabel(habit.frequency)} — {goalLabel(habit)} — +{habit.xp} XP
+            {frequencyLabel(habit.frequency)} — {goalLabel(habit)} — +{habitBaseXp(habit)} XP
           </p>
         </div>
         <div className="page-head__right">

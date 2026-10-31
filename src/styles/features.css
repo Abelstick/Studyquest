@@ -16,6 +16,30 @@
   box-shadow: 0 0 0 3px var(--line), 0 0 0 6px var(--yellow), 0 0 0 9px var(--violet);
   margin: 9px;
 }
+/* Marcos de atributo (se ganan al nivel 10): doble anillo en el color del atributo, con una muesca dorada. */
+.avatar[class*='avatar--attr-'] {
+  border-color: var(--attr);
+  box-shadow: 0 0 0 3px var(--line), 0 0 0 6px var(--attr), 0 0 0 8px var(--yellow);
+  margin: 8px;
+}
+.avatar--attr-fue {
+  --attr: var(--attr-fue);
+}
+.avatar--attr-vit {
+  --attr: var(--attr-vit);
+}
+.avatar--attr-int {
+  --attr: var(--attr-int);
+}
+.avatar--attr-dis {
+  --attr: var(--attr-dis);
+}
+.avatar--attr-esp {
+  --attr: var(--attr-esp);
+}
+.avatar--attr-cre {
+  --attr: var(--attr-cre);
+}
 
 /* ---------- Insignia de la barra lateral ---------- */
 .badge--nav {
@@ -2867,67 +2891,512 @@ select.input {
   }
 }
 
-/* Estadísticas */
-.hpower {
+/* Clase del personaje: la dan sus dos atributos más altos. */
+.charclass {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
   margin: 0;
+}
+.charclass__name {
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  color: var(--xp-text);
+}
+.charclass__pair {
   font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
-  white-space: nowrap;
+  color: var(--muted);
 }
-.hpower strong {
-  font-size: 16px;
+.charclass__blurb {
+  margin: 2px 0 10px;
+  max-width: 48ch;
+}
+
+/* Nivel del personaje: la cifra grande sale de la suma de los seis atributos. */
+.charlevel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0;
+}
+.charlevel__n {
+  display: grid;
+  justify-items: center;
+  margin: 0;
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: var(--fs-2xl);
+  line-height: 1;
   color: var(--xp-text);
 }
-.hpower__delta {
-  font-size: 12px;
-}
-.hpower__delta.is-up {
-  color: var(--green-text);
-}
-.hpower__delta.is-down {
-  color: var(--red-text);
-}
-.hstats {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-}
-.hstat {
-  display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-}
-.hstat dt {
-  font-size: 13px;
+.charlevel__tag {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
   font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
 }
-.hstat dd {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
+.charlevel__bar {
+  display: grid;
+  gap: 6px;
   min-width: 0;
 }
-.hstat dd .bar {
-  flex: 1;
+.charlevel__bar p {
+  margin: 0;
 }
-.hstat__n {
-  min-width: 4.5em;
+
+/* Atributos: radar arriba y hoja de personaje debajo. */
+.attrs__lead {
+  margin: 4px 0 0;
+  max-width: 60ch;
+}
+.radar {
+  margin: var(--sp-3) auto var(--sp-2);
+  max-width: 300px;
+}
+.radar__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.radar__ring {
+  fill: none;
+  stroke: var(--line-soft);
+  stroke-width: 1;
+}
+.radar__ring--outer {
+  fill: var(--panel-2);
+  stroke: var(--line);
+  stroke-width: 2;
+}
+.radar__axis {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+/* La silueta del personaje: dorada, como todo lo que es XP. */
+.radar__shape {
+  fill: color-mix(in srgb, var(--yellow) 38%, transparent);
+  stroke: var(--xp-text);
+  stroke-width: 2;
+  stroke-linejoin: miter;
+  transition: all 0.6s var(--ease-out);
+}
+.radar__dot {
+  fill: var(--attr);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.radar__label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--text);
+}
+.radar__lv {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  fill: var(--muted);
+}
+.radar__caption {
+  margin: 4px 0 0;
+  text-align: center;
+}
+
+/* Hoja de personaje: una fila por atributo, con su color como marca. */
+.asheet {
+  display: grid;
+  gap: 0;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--bw) solid var(--line-soft);
+}
+.arow {
+  border-bottom: var(--bw) solid var(--line-soft);
+}
+.arow__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'badge name lv chev'
+    'meters meters meters meters';
+  align-items: center;
+  gap: 8px 12px;
+  width: 100%;
+  padding: 12px 4px;
+  text-align: left;
+  color: var(--text);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.arow__head:hover {
+  background: color-mix(in srgb, var(--attr) 8%, transparent);
+}
+.arow__head:focus-visible {
+  outline: var(--bw-strong) solid var(--focus);
+  outline-offset: -2px;
+}
+.arow.is-open .arow__head {
+  background: color-mix(in srgb, var(--attr) 12%, transparent);
+}
+.arow__badge {
+  grid-area: badge;
+}
+.arow__name {
+  grid-area: name;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.arow__title {
+  font-size: var(--fs-md);
+  font-weight: 800;
+}
+.arow__rank {
+  margin-left: 4px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.arow__pace {
+  color: var(--muted);
+  line-height: 1.35;
+}
+.arow__lv {
+  grid-area: lv;
+  display: grid;
+  justify-items: center;
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  line-height: 1;
+}
+.arow__lvtag {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.arow__chev {
+  grid-area: chev;
+  color: var(--muted);
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+.arow.is-open .arow__chev {
+  transform: rotate(180deg);
+}
+.arow__meters {
+  grid-area: meters;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 12px;
+}
+.arow__meter {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.arow__num {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+/* XP del nivel: el color del atributo. Forma: neutra, y más apagada cuando descansa (nunca roja: no es un castigo). */
+.ameter .bar__fill {
+  background-color: var(--attr);
+}
+.ameter--forma {
+  height: 8px;
+}
+.ameter--forma .bar__fill {
+  background-color: color-mix(in srgb, var(--attr) 45%, var(--muted));
+}
+.ameter--forma.is-low .bar__fill {
+  background-color: var(--line-soft);
+}
+.arow.is-resting .arow__badge {
+  filter: saturate(0.4);
+}
+.arow__body {
+  padding: 4px 4px 16px;
+}
+.arow__note {
+  margin: 0 0 10px;
+  color: var(--muted);
+}
+
+/* Camino del atributo: título siguiente y los cuatro desbloqueos (insignia, marco, skin, poder). */
+.aroad {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 var(--sp-4);
+}
+.aroad__title {
+  margin: 0;
+}
+.aroad__steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.aroad__step {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 8px;
+  background: var(--panel-2);
+  border: var(--bw) solid var(--line-soft);
+  color: var(--muted);
+}
+.aroad__step.is-got {
+  background: color-mix(in srgb, var(--attr) 18%, var(--panel));
+  border-color: var(--attr);
+  color: var(--text);
+}
+.aroad__step.is-next {
+  border-style: dashed;
+  border-color: var(--attr);
+}
+.aroad__lv {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+.aroad__name {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.aroad__kind {
+  font-size: var(--fs-xs);
+}
+.aroad__state {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+@media (max-width: 520px) {
+  .aroad__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Detalle de un atributo: lo que lo alimenta y su historial, lado a lado si cabe. */
+.adetail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--sp-5);
+}
+.adetail__part {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+.adetail__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.adetail__title {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+}
+.adetail__empty {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+.adetail__empty p {
+  margin: 0;
+}
+.feeders {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.feeder {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 0;
+  cursor: pointer;
+}
+.feeder:hover {
+  background: color-mix(in srgb, var(--attr) 14%, var(--panel-2));
+}
+.feeder:focus-visible {
+  outline: var(--bw-strong) solid var(--focus);
+  outline-offset: 1px;
+}
+.feeder__kind {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.feeder__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.feeder__share {
   font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 14px;
-  text-align: right;
+}
+/* Historial: una columna por día, que crece a saltos como un medidor de recreativa. */
+.ahist {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: 4px;
+  height: 96px;
+  margin: 0;
+  padding: 0 0 18px;
+  list-style: none;
+  border-bottom: var(--bw) solid var(--line);
+}
+.ahist--month {
+  gap: 2px;
+  padding-bottom: 0;
+}
+.ahist__day {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+.ahist__bar {
+  width: 100%;
+  height: max(var(--h), 3px);
+  background: var(--attr);
+  transition: height 0.45s var(--bar-ease);
+}
+.ahist__day.is-zero .ahist__bar {
+  background: var(--line-soft);
+}
+.ahist__day.is-today .ahist__bar {
+  outline: var(--bw) solid var(--text);
+  outline-offset: 1px;
+}
+.ahist__wd {
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  right: 0;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-align: center;
+  color: var(--muted);
+}
+.arecent {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.arecent__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: baseline;
+  font-size: var(--fs-sm);
+}
+.arecent__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.hstat__bonus {
-  font-family: var(--font-body);
-  font-size: 12px;
+.arecent__date {
+  font-size: var(--fs-xs);
+}
+.arecent__xp {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
-  color: var(--green-text);
+  color: var(--xp-text);
+}
+@media (max-width: 420px) {
+  .arow__meters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .feeder {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .feeder__kind {
+    grid-column: 1 / -1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radar__shape,
+  .ahist__bar,
+  .arow__chev {
+    transition: none;
+  }
+}
+
+/* Formulario: categoría y reparto de atributos de una tarea, hábito o curso. */
+.catfield {
+  display: grid;
+  gap: 6px;
+}
+.catfield__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.catfield__row .input {
+  flex: 1 1 220px;
+}
+.catfield__preview {
+  margin: 0;
 }
 
 /* Tienda del héroe */

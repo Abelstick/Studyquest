@@ -67,7 +67,13 @@ Las dependencias van en un solo sentido: `features/` y `ui/` → `state/` →
 - Las fechas de negocio son el día local `YYYY-MM-DD`, nunca UTC. No uses
   `toISOString().slice(0, 10)` para "hoy", rachas, hábitos ni `xp_events`.
 - Tienda y logros viven en código (`core/catalog.ts`, `core/achievements.ts`),
-  no en la base de datos.
+  no en la base de datos. Atributos y categorías también
+  (`core/progression/`); la tabla `attributes` solo existe para la integridad
+  del ledger.
+- Ledger de XP (`xp_events`): una fila por `source + sourceId + date +
+  attribute`, única. Se escribe solo con `xpEvents.replace(ref, rows)` (RPC
+  `replace_xp` en Supabase), que es idempotente: otorgar dos veces no duplica y
+  `rows` vacío revierte. En el store todo pasa por `commitXp`/`grant`/`revert`.
 - Agenda (`core/agenda.ts`): una fila por actividad o serie, nunca una por
   repetición; los cambios de una ocurrencia van en `exceptions`. Los bloques
   vinculados guardan solo el id del hábito o la tarea y nunca registran
@@ -79,13 +85,22 @@ Las dependencias van en un solo sentido: `features/` y `ui/` → `state/` →
 La tabla completa está en la sección "Reglas del juego" del README. Lo que no
 debe romperse:
 
-- El nivel L cuesta `250 × L` XP. 1 moneda por cada 4 XP. Subir de nivel da +500.
+- Todo el XP es de atributos (FUE, VIT, INT, DIS, ESP, CRE). La categoría de
+  cada cosa reparte 70 % al primario y 30 % al secundario; el reparto elegido a
+  mano manda. No existe un XP global guardado: el total, el nivel del
+  personaje, los niveles de atributo, la Forma y la racha se derivan del ledger.
+- Todos los números del balance viven en `core/progression/config.ts`; la
+  lógica no lleva constantes sueltas.
 - El XP se otorga una sola vez y se devuelve al deshacer: una tarea lo da al
-  pasar a "Superada" y lo quita al reabrirla; un hábito lo da al alcanzar el
-  objetivo del día y lo quita si baja del objetivo.
-- Sesión de estudio: 2 XP por minuto.
+  pasar a "Superada" y lo quita al reabrirla; un hábito lo da en proporción a lo
+  avanzado y lo ajusta si baja. Deshacer BORRA filas del ledger; nunca se
+  escriben montos negativos.
+- Nunca se pierden niveles ni XP por inactividad: la Forma solo rebaja un poco
+  lo que se gana mientras está baja.
 - Racha: días consecutivos con XP neto positivo. La de ayer sigue viva hasta
-  que termine hoy. Un día congelado cuenta como activo sin dar XP.
+  que termine hoy. Un día congelado cuenta como activo sin dar XP. Los
+  congeladores se gastan solos (no hay botón) y se ganan con la racha
+  (`core/progression/freezers.ts`).
 
 Todo cambio en estas reglas lleva su prueba en Vitest y la actualización del README.
 

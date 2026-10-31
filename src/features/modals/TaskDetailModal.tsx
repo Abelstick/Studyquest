@@ -4,7 +4,8 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { difficultyInfo, difficultyOf } from '@/core/difficulty';
 import { deadlineText } from '@/core/missions';
-import { NEXT_STATUS, PRIORITY_LABEL, STATUS_LABEL, bossHp, isBoss, isOverdue, recurrenceLabel, taskReward, timeLeftLabel } from '@/core/tasks';
+import { NEXT_STATUS, PRIORITY_LABEL, STATUS_LABEL, bossHp, isBoss, isOverdue, recurrenceLabel, timeLeftLabel } from '@/core/tasks';
+import { gainsText, taskBaseXp, taskGains } from '@/core/progression';
 import type { TaskStatus } from '@/core/domain';
 import { Bar, Button, Modal, Tag, cx } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
@@ -17,6 +18,7 @@ const STATUS_TONE: Record<TaskStatus, 'plain' | 'blue' | 'green'> = { todo: 'pla
 export function TaskDetailModal({ id }: { id: string }) {
   const task = useData((s) => s.tasks.find((t) => t.id === id));
   const course = useData((s) => s.courses.find((c) => c.id === task?.courseId));
+  const courses = useData((s) => s.courses);
   const setTaskStatus = useData((s) => s.setTaskStatus);
   const toggleSubtask = useData((s) => s.toggleSubtask);
   const close = useUi((s) => s.closeModal);
@@ -45,7 +47,7 @@ export function TaskDetailModal({ id }: { id: string }) {
     ...(difficultyOf(task) !== 'normal' ? ([['Dificultad', difficultyInfo(difficultyOf(task)).label]] as [string, string][]) : []),
     ...(task.recurrence ? ([['Se repite', recurrenceLabel(task.recurrence)]] as [string, string][]) : []),
     ...(task.tags.length > 0 ? ([['Etiquetas', task.tags.join(', ')]] as [string, string][]) : []),
-    ['Recompensa', `+${taskReward(task)} XP`],
+    ['Recompensa', `+${taskBaseXp(task)} XP · ${gainsText(taskGains(task, courses))}`],
   ];
 
   return (

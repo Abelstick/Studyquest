@@ -1,4 +1,6 @@
-import type { Hero, HeroRace, HeroSlot } from './domain';
+import type { AttributeId, Hero, HeroRace, HeroSlot } from './domain';
+import { attributeOf } from './progression/attributes';
+import { unlocksOfKind } from './progression/unlocks';
 
 /*
  * Héroe 3D: razas, evolución, estadísticas, tienda y el modelo de bloques.
@@ -43,16 +45,6 @@ export const stageForLevel = (level: number): number => {
 export const canEvolve = (hero: Pick<Hero, 'stage'>, level: number): boolean => hero.stage < stageForLevel(level);
 export const nextStage = (hero: Pick<Hero, 'stage'>): StageDef | null => HERO_STAGES[hero.stage + 1] ?? null;
 
-/* ---------- Estadísticas ---------- */
-
-export type StatKey = 'fuerza' | 'defensa' | 'velocidad' | 'energia';
-export type Stats = Record<StatKey, number>;
-export const STAT_KEYS: StatKey[] = ['fuerza', 'defensa', 'velocidad', 'energia'];
-export const STAT_LABEL: Record<StatKey, string> = { fuerza: 'Fuerza', defensa: 'Defensa', velocidad: 'Velocidad', energia: 'Energía' };
-export const STAT_SHORT: Record<StatKey, string> = { fuerza: 'FUE', defensa: 'DEF', velocidad: 'VEL', energia: 'ENE' };
-
-/** Cada evolución multiplica lo que ya da el nivel. */
-export const STAGE_MULT = [1, 1.15, 1.35, 1.6];
 /** El modelo crece un poco con cada etapa. */
 export const STAGE_SCALE = [1, 1.06, 1.12, 1.2];
 
@@ -80,8 +72,6 @@ export interface RaceDef {
   /** Qué se gana al evolucionar, contado para esta raza. */
   evolution: string;
   stageNames: [string, string, string, string];
-  base: Stats;
-  growth: Stats;
   palette: Palette;
 }
 
@@ -94,8 +84,6 @@ export const RACES: RaceDef[] = [
     blurb: 'Raza guerrera: cuanto más pelea (y estudia), más fuerte se vuelve. Gi naranja, pelo en punta y mucha hambre.',
     evolution: 'Super Saiyajin: pelo dorado y aura. Luego rayos y, en la fase 3, melena hasta la cintura.',
     stageNames: ['Guerrero Saiyajin', 'Super Saiyajin', 'Super Saiyajin 2', 'Super Saiyajin 3'],
-    base: { fuerza: 9, defensa: 5, velocidad: 7, energia: 9 },
-    growth: { fuerza: 1.6, defensa: 0.8, velocidad: 1.1, energia: 1.5 },
     palette: { primary: '#f07c1d', secondary: '#1f4e9c', accent: '#f5f5f5', skin: '#f5c89a', hair: '#161616', eye: '#161616', glow: '#ffe14d', boots: '#1f4e9c' },
   },
   {
@@ -106,8 +94,6 @@ export const RACES: RaceDef[] = [
     blurb: 'El fontanero más famoso: gorra roja, bigote y peto azul. Salta, corre y nunca se rinde.',
     evolution: 'De Mario pequeño a Súper Mario, Mario de fuego (con bolas de fuego) y Mario capa.',
     stageNames: ['Mario pequeño', 'Súper Mario', 'Mario de fuego', 'Mario capa'],
-    base: { fuerza: 8, defensa: 6, velocidad: 10, energia: 6 },
-    growth: { fuerza: 1.2, defensa: 1.0, velocidad: 1.7, energia: 1.1 },
     palette: { primary: '#e52521', secondary: '#2048c0', accent: '#ffd23f', skin: '#fcd8a8', hair: '#6b3a1e', eye: '#2255dd', glow: '#fff3a0', boots: '#6b3a1e' },
   },
   {
@@ -118,8 +104,6 @@ export const RACES: RaceDef[] = [
     blurb: 'Lentos pero duros de pelar: un buen caparazón los protege de casi todo.',
     evolution: 'Le salen alas, luego el casco del Hermano Martillo y al final se convierte en Bowser.',
     stageNames: ['Koopa Troopa', 'Koopa Paratroopa', 'Hermano Martillo', 'Rey Bowser'],
-    base: { fuerza: 8, defensa: 12, velocidad: 4, energia: 6 },
-    growth: { fuerza: 1.3, defensa: 1.8, velocidad: 0.7, energia: 1.2 },
     palette: { primary: '#2bab3d', secondary: '#fff4c8', accent: '#ffffff', skin: '#ffd23f', hair: '#e53935', eye: '#1a1a2e', glow: '#fff3a0', boots: '#f28c28' },
   },
   {
@@ -130,8 +114,6 @@ export const RACES: RaceDef[] = [
     blurb: 'Armadura dorada, hojas psiónicas y ninguna boca: hablan con la mente.',
     evolution: 'De Zelote a Alto Templario (levita), Templario Oscuro y, al final, un Arconte de pura energía.',
     stageNames: ['Zelote', 'Alto Templario', 'Templario Oscuro', 'Arconte'],
-    base: { fuerza: 5, defensa: 6, velocidad: 7, energia: 12 },
-    growth: { fuerza: 0.8, defensa: 1.0, velocidad: 1.2, energia: 2.0 },
     palette: { primary: '#d4a72c', secondary: '#2f5fb3', accent: '#5ec8ff', skin: '#8a7a6a', hair: '#6b5a4a', eye: '#7ef9ff', glow: '#5ec8ff', boots: '#b8891f' },
   },
   {
@@ -142,8 +124,6 @@ export const RACES: RaceDef[] = [
     blurb: 'Soldados con armadura de combate, visor y rifle gauss. Duros y disciplinados.',
     evolution: 'Marine con hombreras, Firebat con lanzallamas y Comandante con mochila propulsora.',
     stageNames: ['Recluta', 'Marine', 'Firebat', 'Comandante'],
-    base: { fuerza: 8, defensa: 10, velocidad: 6, energia: 6 },
-    growth: { fuerza: 1.3, defensa: 1.4, velocidad: 1.1, energia: 1.2 },
     palette: { primary: '#2f5fb8', secondary: '#3b3f46', accent: '#f5c518', skin: '#f1c27d', hair: '#3b2a1e', eye: '#ffb13b', glow: '#ffb13b', boots: '#23272e' },
   },
   {
@@ -154,8 +134,6 @@ export const RACES: RaceDef[] = [
     blurb: 'Evolucionan sin parar: garras de hueso, caparazón morado y un hambre infinita.',
     evolution: 'De Zergling a Hidralisco (capucha de cobra), Ultralisco (cuchillas gigantes) y la Reina de Espadas.',
     stageNames: ['Zergling', 'Hidralisco', 'Ultralisco', 'Reina de Espadas'],
-    base: { fuerza: 9, defensa: 5, velocidad: 10, energia: 6 },
-    growth: { fuerza: 1.4, defensa: 0.8, velocidad: 1.8, energia: 1.0 },
     palette: { primary: '#6b2d7b', secondary: '#a0522d', accent: '#efe0b9', skin: '#8c3f6e', hair: '#efe0b9', eye: '#ffb000', glow: '#ffb000', boots: '#4a1f55' },
   },
 ];
@@ -178,88 +156,85 @@ export interface HeroItem {
   price: number;
   /** Etapa mínima para comprarlo (0 = desde el principio). */
   stage: number;
-  bonus: Partial<Stats>;
   /** Color principal (armas y poderes); las skins traen su paleta. */
   color: string;
   shape?: WeaponShape;
   effect?: PowerEffect;
   palette?: Partial<Palette>;
+  /** No se compra: se gana al llevar un atributo a ese nivel (core/progression/unlocks.ts). */
+  unlock?: { attribute: AttributeId; level: number };
 }
+
+/*
+ * Aspecto de cada atributo en el héroe 3D. Los tonos siguen a los tokens --attr-* de styles/tokens.css; aquí van en
+ * hexadecimal porque el visor 3D no lee CSS.
+ */
+const ATTRIBUTE_LOOK: Record<AttributeId, { palette: Partial<Palette>; effect: PowerEffect }> = {
+  fue: { palette: { primary: '#d2452b', secondary: '#5c1a10', accent: '#ffb199', boots: '#3a120b', glow: '#ff8c42' }, effect: 'llamas' },
+  vit: { palette: { primary: '#d6457f', secondary: '#5e1435', accent: '#ffc2da', boots: '#3b0d22', glow: '#ff8fc0' }, effect: 'escudo' },
+  int: { palette: { primary: '#3a78c9', secondary: '#13305c', accent: '#a9cdff', boots: '#0d2142', glow: '#7ec8ff' }, effect: 'rayo' },
+  dis: { palette: { primary: '#d9822b', secondary: '#5a3410', accent: '#ffd9a8', boots: '#3a220a', glow: '#ffd23f' }, effect: 'chispas' },
+  esp: { palette: { primary: '#8457c8', secondary: '#2e1756', accent: '#d9c2ff', boots: '#1e0f3a', glow: '#e0aaff' }, effect: 'escarcha' },
+  cre: { palette: { primary: '#2a9d75', secondary: '#0f4433', accent: '#a8f0d4', boots: '#0a2e22', glow: '#7dffd0' }, effect: 'alas' },
+};
 
 export const HERO_SHOP: HeroItem[] = [
   // Armas: dan fuerza sobre todo, cada una con su estilo.
-  { id: 'hero-w-espada', slot: 'weapon', title: 'Espada de entrenamiento', blurb: 'Madera dura y buen equilibrio.', price: 250, stage: 0, bonus: { fuerza: 3 }, color: '#b5793c', shape: 'espada' },
-  { id: 'hero-w-martillo', slot: 'weapon', title: 'Martillo de ladrillo', blurb: 'Rompe bloques y excusas.', price: 450, stage: 0, bonus: { fuerza: 5, defensa: 1 }, color: '#c0392b', shape: 'martillo' },
-  { id: 'hero-w-arco', slot: 'weapon', title: 'Arco de viento', blurb: 'Ligero: te hace más rápido.', price: 500, stage: 0, bonus: { fuerza: 2, velocidad: 3 }, color: '#27ae60', shape: 'arco' },
-  { id: 'hero-w-baston', slot: 'weapon', title: 'Bastón rúnico', blurb: 'Canaliza la energía de lo que estudias.', price: 700, stage: 1, bonus: { energia: 6 }, color: '#8e44ad', shape: 'baston' },
-  { id: 'hero-w-blaster', slot: 'weapon', title: 'Cañón de plasma', blurb: 'Dispara ráfagas de luz azul.', price: 900, stage: 1, bonus: { fuerza: 6, energia: 2 }, color: '#95a5a6', shape: 'blaster' },
-  { id: 'hero-w-garras', slot: 'weapon', title: 'Garras de quitina', blurb: 'Una en cada mano. Rápidas y afiladas.', price: 900, stage: 1, bonus: { fuerza: 4, velocidad: 4 }, color: '#e9c46a', shape: 'garras' },
-  { id: 'hero-w-hoja', slot: 'weapon', title: 'Hoja de luz', blurb: 'Una espada hecha de pura energía.', price: 1400, stage: 2, bonus: { fuerza: 6, energia: 6 }, color: '#48dbfb', shape: 'hoja' },
-  { id: 'hero-w-lanza', slot: 'weapon', title: 'Lanza estelar', blurb: 'Forjada con polvo de estrellas. Solo para leyendas.', price: 2200, stage: 3, bonus: { fuerza: 10, velocidad: 5, energia: 5 }, color: '#ffd23f', shape: 'lanza' },
+  { id: 'hero-w-espada', slot: 'weapon', title: 'Espada de entrenamiento', blurb: 'Madera dura y buen equilibrio.', price: 250, stage: 0, color: '#b5793c', shape: 'espada' },
+  { id: 'hero-w-martillo', slot: 'weapon', title: 'Martillo de ladrillo', blurb: 'Rompe bloques y excusas.', price: 450, stage: 0, color: '#c0392b', shape: 'martillo' },
+  { id: 'hero-w-arco', slot: 'weapon', title: 'Arco de viento', blurb: 'Ligero: te hace más rápido.', price: 500, stage: 0, color: '#27ae60', shape: 'arco' },
+  { id: 'hero-w-baston', slot: 'weapon', title: 'Bastón rúnico', blurb: 'Canaliza la energía de lo que estudias.', price: 700, stage: 1, color: '#8e44ad', shape: 'baston' },
+  { id: 'hero-w-blaster', slot: 'weapon', title: 'Cañón de plasma', blurb: 'Dispara ráfagas de luz azul.', price: 900, stage: 1, color: '#95a5a6', shape: 'blaster' },
+  { id: 'hero-w-garras', slot: 'weapon', title: 'Garras de quitina', blurb: 'Una en cada mano. Rápidas y afiladas.', price: 900, stage: 1, color: '#e9c46a', shape: 'garras' },
+  { id: 'hero-w-hoja', slot: 'weapon', title: 'Hoja de luz', blurb: 'Una espada hecha de pura energía.', price: 1400, stage: 2, color: '#48dbfb', shape: 'hoja' },
+  { id: 'hero-w-lanza', slot: 'weapon', title: 'Lanza estelar', blurb: 'Forjada con polvo de estrellas. Solo para leyendas.', price: 2200, stage: 3, color: '#ffd23f', shape: 'lanza' },
   // Poderes: un efecto visible alrededor del héroe.
-  { id: 'hero-p-chispas', slot: 'power', title: 'Chispas', blurb: 'Pequeñas estrellas que te rodean.', price: 300, stage: 0, bonus: { energia: 2 }, color: '#ffe066', effect: 'chispas' },
-  { id: 'hero-p-escarcha', slot: 'power', title: 'Escarcha', blurb: 'Orbes de hielo que giran a tu alrededor.', price: 550, stage: 0, bonus: { defensa: 3, energia: 1 }, color: '#9be7ff', effect: 'escarcha' },
-  { id: 'hero-p-escudo', slot: 'power', title: 'Escudo de energía', blurb: 'Dos anillos que paran los golpes.', price: 800, stage: 1, bonus: { defensa: 6 }, color: '#4dabf7', effect: 'escudo' },
-  { id: 'hero-p-llamas', slot: 'power', title: 'Aura de llamas', blurb: 'Fuego que sube desde tus pies.', price: 1000, stage: 1, bonus: { fuerza: 4, energia: 3 }, color: '#ff8c42', effect: 'llamas' },
-  { id: 'hero-p-rayo', slot: 'power', title: 'Tormenta de rayos', blurb: 'Relámpagos que orbitan sin parar.', price: 1500, stage: 2, bonus: { velocidad: 3, energia: 6 }, color: '#d0a8ff', effect: 'rayo' },
-  { id: 'hero-p-alas', slot: 'power', title: 'Alas de luz', blurb: 'Te elevan por encima de todo.', price: 2500, stage: 3, bonus: { velocidad: 6, energia: 6 }, color: '#fff3b0', effect: 'alas' },
+  { id: 'hero-p-chispas', slot: 'power', title: 'Chispas', blurb: 'Pequeñas estrellas que te rodean.', price: 300, stage: 0, color: '#ffe066', effect: 'chispas' },
+  { id: 'hero-p-escarcha', slot: 'power', title: 'Escarcha', blurb: 'Orbes de hielo que giran a tu alrededor.', price: 550, stage: 0, color: '#9be7ff', effect: 'escarcha' },
+  { id: 'hero-p-escudo', slot: 'power', title: 'Escudo de energía', blurb: 'Dos anillos que paran los golpes.', price: 800, stage: 1, color: '#4dabf7', effect: 'escudo' },
+  { id: 'hero-p-llamas', slot: 'power', title: 'Aura de llamas', blurb: 'Fuego que sube desde tus pies.', price: 1000, stage: 1, color: '#ff8c42', effect: 'llamas' },
+  { id: 'hero-p-rayo', slot: 'power', title: 'Tormenta de rayos', blurb: 'Relámpagos que orbitan sin parar.', price: 1500, stage: 2, color: '#d0a8ff', effect: 'rayo' },
+  { id: 'hero-p-alas', slot: 'power', title: 'Alas de luz', blurb: 'Te elevan por encima de todo.', price: 2500, stage: 3, color: '#fff3b0', effect: 'alas' },
   // Skins: solo cambian el aspecto.
-  { id: 'hero-s-noche', slot: 'skin', title: 'Sigilo nocturno', blurb: 'Negro y gris para moverse sin ser visto.', price: 300, stage: 0, bonus: {}, color: '#2b2d42', palette: { primary: '#2b2d42', secondary: '#1b1b2f', accent: '#8d99ae', boots: '#141423', glow: '#8d99ae' } },
-  { id: 'hero-s-bosque', slot: 'skin', title: 'Guardabosques', blurb: 'Verdes de hoja y corteza.', price: 300, stage: 0, bonus: {}, color: '#2d6a4f', palette: { primary: '#2d6a4f', secondary: '#6b4f2a', accent: '#95d5b2', boots: '#3b2a16' } },
-  { id: 'hero-s-portatil', slot: 'skin', title: 'Monocromo portátil', blurb: 'Cuatro tonos de verde, como las consolas de bolsillo.', price: 450, stage: 0, bonus: {}, color: '#306230', palette: { primary: '#306230', secondary: '#0f380f', accent: '#8bac0f', hair: '#0f380f', boots: '#0f380f', glow: '#9bbc0f' } },
-  { id: 'hero-s-glaciar', slot: 'skin', title: 'Glaciar', blurb: 'Blanco nieve y azul hielo.', price: 450, stage: 0, bonus: {}, color: '#a5d8ff', palette: { primary: '#e7f5ff', secondary: '#4dabf7', accent: '#a5d8ff', boots: '#1c7ed6', glow: '#a5d8ff' } },
-  { id: 'hero-s-magma', slot: 'skin', title: 'Magma', blurb: 'Roca negra con grietas de lava.', price: 600, stage: 1, bonus: {}, color: '#e8590c', palette: { primary: '#3b1f1f', secondary: '#212121', accent: '#ff6b00', boots: '#141414', glow: '#ff8c42' } },
-  { id: 'hero-s-neon', slot: 'skin', title: 'Neón 84', blurb: 'Magenta y cian de sala recreativa.', price: 800, stage: 1, bonus: {}, color: '#f72585', palette: { primary: '#f72585', secondary: '#240046', accent: '#4cc9f0', boots: '#10002b', glow: '#4cc9f0' } },
-  { id: 'hero-s-dorado', slot: 'skin', title: 'Dorado real', blurb: 'Oro de pies a cabeza.', price: 1500, stage: 2, bonus: {}, color: '#f5c518', palette: { primary: '#f5c518', secondary: '#9c6f00', accent: '#fff3b0', boots: '#6b4c00', glow: '#fff3b0' } },
-  { id: 'hero-s-cosmos', slot: 'skin', title: 'Cósmico', blurb: 'Un trozo de galaxia. La skin de las leyendas.', price: 2000, stage: 3, bonus: {}, color: '#5a189a', palette: { primary: '#3c096c', secondary: '#10002b', accent: '#e0aaff', hair: '#e0aaff', boots: '#10002b', glow: '#e0aaff' } },
+  { id: 'hero-s-noche', slot: 'skin', title: 'Sigilo nocturno', blurb: 'Negro y gris para moverse sin ser visto.', price: 300, stage: 0, color: '#2b2d42', palette: { primary: '#2b2d42', secondary: '#1b1b2f', accent: '#8d99ae', boots: '#141423', glow: '#8d99ae' } },
+  { id: 'hero-s-bosque', slot: 'skin', title: 'Guardabosques', blurb: 'Verdes de hoja y corteza.', price: 300, stage: 0, color: '#2d6a4f', palette: { primary: '#2d6a4f', secondary: '#6b4f2a', accent: '#95d5b2', boots: '#3b2a16' } },
+  { id: 'hero-s-portatil', slot: 'skin', title: 'Monocromo portátil', blurb: 'Cuatro tonos de verde, como las consolas de bolsillo.', price: 450, stage: 0, color: '#306230', palette: { primary: '#306230', secondary: '#0f380f', accent: '#8bac0f', hair: '#0f380f', boots: '#0f380f', glow: '#9bbc0f' } },
+  { id: 'hero-s-glaciar', slot: 'skin', title: 'Glaciar', blurb: 'Blanco nieve y azul hielo.', price: 450, stage: 0, color: '#a5d8ff', palette: { primary: '#e7f5ff', secondary: '#4dabf7', accent: '#a5d8ff', boots: '#1c7ed6', glow: '#a5d8ff' } },
+  { id: 'hero-s-magma', slot: 'skin', title: 'Magma', blurb: 'Roca negra con grietas de lava.', price: 600, stage: 1, color: '#e8590c', palette: { primary: '#3b1f1f', secondary: '#212121', accent: '#ff6b00', boots: '#141414', glow: '#ff8c42' } },
+  { id: 'hero-s-neon', slot: 'skin', title: 'Neón 84', blurb: 'Magenta y cian de sala recreativa.', price: 800, stage: 1, color: '#f72585', palette: { primary: '#f72585', secondary: '#240046', accent: '#4cc9f0', boots: '#10002b', glow: '#4cc9f0' } },
+  { id: 'hero-s-dorado', slot: 'skin', title: 'Dorado real', blurb: 'Oro de pies a cabeza.', price: 1500, stage: 2, color: '#f5c518', palette: { primary: '#f5c518', secondary: '#9c6f00', accent: '#fff3b0', boots: '#6b4c00', glow: '#fff3b0' } },
+  { id: 'hero-s-cosmos', slot: 'skin', title: 'Cósmico', blurb: 'Un trozo de galaxia. La skin de las leyendas.', price: 2000, stage: 3, color: '#5a189a', palette: { primary: '#3c096c', secondary: '#10002b', accent: '#e0aaff', hair: '#e0aaff', boots: '#10002b', glow: '#e0aaff' } },
+  // Se ganan con los atributos (nv 20 la skin, nv 30 el poder): no se venden.
+  ...unlocksOfKind('skin').map(
+    (u): HeroItem => ({
+      id: u.id, slot: 'skin', title: u.title, blurb: `Los colores de tu ${attributeOf(u.attribute).name.toLowerCase()}.`, price: 0, stage: 0,
+      color: ATTRIBUTE_LOOK[u.attribute].palette.primary ?? '#000000', palette: ATTRIBUTE_LOOK[u.attribute].palette, unlock: { attribute: u.attribute, level: u.level },
+    }),
+  ),
+  ...unlocksOfKind('power').map(
+    (u): HeroItem => ({
+      id: u.id, slot: 'power', title: u.title, blurb: `Lo que irradia tu ${attributeOf(u.attribute).name.toLowerCase()}.`, price: 0, stage: 0,
+      color: ATTRIBUTE_LOOK[u.attribute].palette.glow ?? '#ffffff', effect: ATTRIBUTE_LOOK[u.attribute].effect, unlock: { attribute: u.attribute, level: u.level },
+    }),
+  ),
 ];
 
 export const SLOT_LABEL: Record<HeroSlot, string> = { weapon: 'Armas', power: 'Poderes', skin: 'Skins' };
 export const heroItem = (id: string | null | undefined): HeroItem | undefined => (id ? HERO_SHOP.find((i) => i.id === id) : undefined);
 export const itemsFor = (slot: HeroSlot) => HERO_SHOP.filter((i) => i.slot === slot);
 
-export type ItemState = 'equipped' | 'owned' | 'locked' | 'poor' | 'buyable';
+/** `earn`: se gana con un atributo, no se compra. */
+export type ItemState = 'equipped' | 'owned' | 'earn' | 'locked' | 'poor' | 'buyable';
 
 /** Qué puede hacer el jugador con un objeto ahora mismo. */
 export function itemState(item: HeroItem, ctx: { inventory: string[]; credits: number; hero: Hero }): ItemState {
   if (ctx.hero[item.slot] === item.id) return 'equipped';
   if (ctx.inventory.includes(item.id)) return 'owned';
+  if (item.unlock) return 'earn';
   if (item.stage > ctx.hero.stage) return 'locked';
   if (ctx.credits < item.price) return 'poor';
   return 'buyable';
 }
-
-const emptyStats = (): Stats => ({ fuerza: 0, defensa: 0, velocidad: 0, energia: 0 });
-
-export interface HeroStats {
-  base: Stats;
-  bonus: Stats;
-  total: Stats;
-  /** Suma de todo: el número grande de la pantalla. */
-  power: number;
-}
-
-/** Lo que da la raza con el nivel y la etapa, más lo que suman el arma y el poder equipados. */
-export function heroStats(hero: Pick<Hero, 'race' | 'stage' | 'weapon' | 'power'>, level: number): HeroStats {
-  const r = raceOf(hero.race);
-  const mult = STAGE_MULT[clampStage(hero.stage)];
-  const lv = Math.max(1, Math.floor(level));
-  const base = emptyStats();
-  const bonus = emptyStats();
-  const total = emptyStats();
-  for (const k of STAT_KEYS) base[k] = Math.round((r.base[k] + r.growth[k] * (lv - 1)) * mult);
-  for (const id of [hero.weapon, hero.power]) {
-    const it = heroItem(id);
-    if (it) for (const k of STAT_KEYS) bonus[k] += it.bonus[k] ?? 0;
-  }
-  for (const k of STAT_KEYS) total[k] = base[k] + bonus[k];
-  return { base, bonus, total, power: STAT_KEYS.reduce((a, k) => a + total[k], 0) };
-}
-
-export const bonusText = (b: Partial<Stats>) =>
-  STAT_KEYS.filter((k) => b[k])
-    .map((k) => `+${b[k]} ${STAT_SHORT[k]}`)
-    .join(' · ');
 
 /** Frase que describe al héroe para quien no puede ver el 3D. */
 export function describeHero(hero: Hero): string {

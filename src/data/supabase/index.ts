@@ -98,8 +98,10 @@ const sessionMapper: Mapper<StudySession> = {
   fromRow: (r) => ({ id: r.id, date: r.day, minutes: r.minutes, courseId: r.course_id, label: r.label }),
 };
 const xpMapper: Mapper<XpEvent> = {
-  toRow: (e) => ({ id: e.id, day: e.date, amount: e.amount, source: e.source, label: e.label }),
-  fromRow: (r) => ({ id: r.id, date: r.day, amount: r.amount, source: r.source, label: r.label }),
+  toRow: (e) => ({ id: e.id, day: e.date, attribute_id: e.attribute, amount: e.amount, source: e.source, source_id: e.sourceId, label: e.label, multipliers: e.mult ?? null }),
+  fromRow: (r) => ({
+    id: r.id, date: r.day, attribute: r.attribute_id, amount: Number(r.amount), source: r.source, sourceId: r.source_id, label: r.label, ...(r.multipliers ? { mult: r.multipliers } : {}),
+  }),
 };
 const notifMapper: Mapper<AppNotification> = {
   toRow: (n) => ({ id: n.id, category: n.category, title: n.title, body: n.body, read: n.read, created_at: n.createdAt }),
@@ -123,7 +125,21 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
   const certifications = new SupabaseTable<Certification>(db, 'certifications', docMapper());
   const personalRewards = new SupabaseTable<PersonalReward>(db, 'personal_rewards', docMapper());
   const sessions = new SupabaseTable<StudySession>(db, 'study_sessions', sessionMapper);
-  const xpEvents = new SupabaseTable<XpEvent>(db, 'xp_events', xpMapper);
+  const xpTable = new SupabaseTable<XpEvent>(db, 'xp_events', xpMapper);
+  const xpEvents: Repository['xpEvents'] = {
+    list: () => xpTable.list(),
+    // El RPC es idempotente por (source, source_id, day, attribute_id) y mantiene `user_attributes` al día.
+    async replace(ref, rows) {
+      const { error } = await db.rpc('replace_xp', {
+        p_source: ref.source,
+        p_source_id: ref.sourceId,
+        p_day: ref.date ?? null,
+        p_rows: rows.map((e) => ({ id: e.id, day: e.date, attribute_id: e.attribute, amount: e.amount, label: e.label, multipliers: e.mult ?? null })),
+      });
+      fail(error);
+    },
+    createMany: (items) => xpTable.createMany(items),
+  };
   const notifications = new SupabaseTable<AppNotification>(db, 'notifications', notifMapper);
   const events = new SupabaseTable<AgendaEvent>(db, 'calendar_events', docMapper());
 
@@ -226,6 +242,9 @@ function createSupabaseRepository(db: SupabaseClient): Repository {
         const { error } = await db.from(t).delete().not('id', 'is', null);
         fail(error);
       }
+      // El resumen por atributo no tiene columna `id`: su clave es (user_id, attribute_id).
+      const { error } = await db.from('user_attributes').delete().not('user_id', 'is', null);
+      fail(error);
     },
   };
 }

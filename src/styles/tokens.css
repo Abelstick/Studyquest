@@ -84,6 +84,14 @@
   --habit: var(--green); /* hábitos: constancia */
   --task: var(--blue); /* tareas: plazos */
   --late: var(--red-text); /* vencido o en peligro */
+  /* Atributos del personaje (core/progression/attributes.ts). Tonos medios para barras, marcas y el radar:
+   * se leen sobre crema y sobre carbón. Nunca se usan como color de texto. */
+  --attr-fue: #d2452b;
+  --attr-vit: #d6457f;
+  --attr-int: #3a78c9;
+  --attr-dis: #d9822b;
+  --attr-esp: #8457c8;
+  --attr-cre: #2a9d75;
   --on-red: #fbf6ea;
   --on-yellow: #17191f;
   --ink: #17191f;

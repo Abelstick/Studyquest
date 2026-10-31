@@ -4,9 +4,10 @@
  */
 import type { Certification, ID, ISODate } from './domain';
 import { diffDays, today } from './dates';
+import { SOURCE_BASE_XP } from './progression/config';
 
 /** XP por registrar una certificación (y las monedas que salen de ese XP). Se devuelve al borrarla. */
-export const CERT_XP = 300;
+export const CERT_XP = SOURCE_BASE_XP.certification;
 
 /** Con menos de estos días para caducar se avisa. */
 export const EXPIRING_SOON_DAYS = 60;

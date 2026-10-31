@@ -3,13 +3,13 @@ import type { AgendaEvent, Habit, Task } from './domain';
 import { buildCalendarIcs, buildIcs, eventToExport, foldLine, icsText, localToUtcMs, selectExport, tzOffsetMin, vtimezone } from './ics';
 
 const task = (over: Partial<Task>): Task => ({
-  id: 'id-1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-10-13', estimateMin: 0, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null, ...over,
+  id: 'id-1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-10-13', estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...over,
 });
 const ev = (over: Partial<AgendaEvent> = {}): AgendaEvent => ({
   id: 'ev-1', title: 'Jornada', category: 'work', date: '2026-10-12', start: '09:00', minutes: 540, rev: 3, createdAt: '2026-10-01T10:00:00.000Z', updatedAt: '2026-10-02T10:00:00.000Z', ...over,
 });
 const habit = (over: Partial<Habit> = {}): Habit => ({
-  id: 'h1', title: 'Ejercicio', frequency: { type: 'daily' }, measure: 'minutes', target: 10, xp: 10, reminder: null, steps: [], startDate: '2026-10-01', createdAt: '', ...over,
+  id: 'h1', title: 'Ejercicio', frequency: { type: 'daily' }, measure: 'minutes', target: 10, reminder: null, steps: [], startDate: '2026-10-01', createdAt: '', ...over,
 });
 const STAMP = new Date(Date.UTC(2026, 9, 10, 12, 0, 0));
 const unfold = (s: string) => s.replace(/\r\n /g, '');

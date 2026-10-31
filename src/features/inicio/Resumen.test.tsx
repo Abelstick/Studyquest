@@ -15,8 +15,8 @@ import { CoursesToday } from './CoursesToday';
 const NOW = new Date(2026, 8, 16, 12, 0, 0);
 const TODAY = '2026-09-16';
 
-const task = (id: string, dueDate: string | null, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
-const habit: Habit = { id: 'h1', title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '' };
+const task = (id: string, dueDate: string | null, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const habit: Habit = { id: 'h1', title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '' };
 const course = (id: string, extra: Partial<Course> = {}): Course => ({
   id,
   title: id,
@@ -24,7 +24,7 @@ const course = (id: string, extra: Partial<Course> = {}): Course => ({
   field: '',
   mentor: null,
   createdAt: '',
-  modules: [{ id: `${id}m`, title: 'M', summary: '', xp: 40, topics: [{ id: `${id}t0`, title: 'Tema 0', status: 'todo', review: false, markedAt: null }] }],
+  modules: [{ id: `${id}m`, title: 'M', summary: '', topics: [{ id: `${id}t0`, title: 'Tema 0', status: 'todo', review: false, markedAt: null }] }],
   ...extra,
 });
 const session = (courseId: string, date: string, minutes = 30): StudySession => ({ id: `${courseId}${date}`, courseId, date, minutes, label: '' });

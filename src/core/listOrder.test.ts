@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Course, Habit, Snapshot, Task } from './domain';
 import { arrangeCourses, byRecentlyDone, courseStatus, sortHabitCards } from './listOrder';
 
-const habit = (id: string): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 10, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '' });
+const habit = (id: string): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '' });
 const card = (id: string, o: { due?: boolean; done?: boolean; pct?: number } = {}) => ({ h: habit(id), due: o.due ?? true, done: o.done ?? false, pct: o.pct ?? 50 });
 
 const course = (id: string, title: string, statuses: ('todo' | 'doing' | 'done')[]): Course => ({
@@ -12,7 +12,7 @@ const course = (id: string, title: string, statuses: ('todo' | 'doing' | 'done')
   field: '',
   mentor: null,
   createdAt: '',
-  modules: [{ id: `${id}m`, title: 'M', summary: '', xp: 40, topics: statuses.map((status, i) => ({ id: `${id}t${i}`, title: `T${i}`, status, review: false, markedAt: null })) }],
+  modules: [{ id: `${id}m`, title: 'M', summary: '', topics: statuses.map((status, i) => ({ id: `${id}t${i}`, title: `T${i}`, status, review: false, markedAt: null })) }],
 });
 // Del registro de estudio solo importan el curso y el día.
 const session = (courseId: string, date: string) => ({ id: courseId + date, courseId, minutes: 30, date }) as Snapshot['sessions'][number];
@@ -65,7 +65,7 @@ describe('cursos', () => {
   });
 
   it('el plazo también sale de la última tarea abierta del curso', () => {
-    const t = { id: 't', title: 't', courseId: 'n', priority: 'mid', status: 'todo', dueDate: '2026-01-05', estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null } as Task;
+    const t = { id: 't', title: 't', courseId: 'n', priority: 'mid', status: 'todo', dueDate: '2026-01-05', estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null } as Task;
     const conTarea = { ...nuevo, id: 'n2', title: 'ConTarea' };
     const r = arrangeCourses([course('x', 'X', ['todo']), conTarea], [], 'all', 'deadline', [{ ...t, courseId: 'n2' }]);
     expect(r.map((c) => c.id)).toEqual(['n2', 'x']);

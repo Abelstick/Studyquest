@@ -4,6 +4,7 @@ import { isDueOn, isHabitDone, logFor } from './game';
 import { isQuit } from './quit';
 import { dueReviews, type DueReview } from './review';
 import { dueTimeOf, isOverdue } from './tasks';
+import { taskBaseXp } from './progression/rewards';
 
 /**
  * El «siguiente paso» de la pantalla Hoy: una sola cosa concreta que hacer ahora.
@@ -37,11 +38,11 @@ export function nextStep(s: NextStepInput, now: ISODate = today(), nowMin: numbe
   // 1. Vencidas: la más antigua primero (por fecha y, dentro del día, por hora límite).
   const late = open
     .filter((t) => isOverdue(t, now, nowMin))
-    .sort((a, b) => (a.dueDate as string).localeCompare(b.dueDate as string) || dueMinute(a) - dueMinute(b) || b.xp - a.xp);
+    .sort((a, b) => (a.dueDate as string).localeCompare(b.dueDate as string) || dueMinute(a) - dueMinute(b) || taskBaseXp(b) - taskBaseXp(a));
   if (late[0]) return { kind: 'task-late', task: late[0], courseId: late[0].courseId };
 
   // 2. Vencen hoy y aún hay tiempo: la de hora límite más cercana.
-  const dueToday = open.filter((t) => t.dueDate === now).sort((a, b) => dueMinute(a) - dueMinute(b) || b.xp - a.xp);
+  const dueToday = open.filter((t) => t.dueDate === now).sort((a, b) => dueMinute(a) - dueMinute(b) || taskBaseXp(b) - taskBaseXp(a));
   if (dueToday[0]) return { kind: 'task-today', task: dueToday[0], courseId: dueToday[0].courseId };
 
   // 3. Hábitos que tocan hoy y no están cumplidos. Los de «dejar» se marcan al final del día, no son una acción.

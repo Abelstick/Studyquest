@@ -10,9 +10,10 @@
 import type { Habit, HabitChain, HabitLog, ID, ISODate } from './domain';
 import { today } from './dates';
 import { isDueOn, isHabitDone, logFor } from './game';
+import { BONUS_XP } from './progression/config';
 
 /** XP por completar hoy todos los eslabones que tocaban. Se cobra una vez al día por cadena. */
-export const CHAIN_BONUS_XP = 100;
+export const CHAIN_BONUS_XP = BONUS_XP.chain;
 
 /** Cuántos hábitos caben en una cadena: más de esto deja de leerse como una rutina. */
 export const MAX_CHAIN_LINKS = 8;

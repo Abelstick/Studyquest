@@ -10,14 +10,14 @@ import { existingPlanFor } from './plans';
 import { addDays } from './dates';
 
 const NOW = '2026-09-16'; // miércoles
-const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
-const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
+const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'minutes', target: 30, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...extra });
 const log = (habitId: string, date: string, value: number): HabitLog => ({ id: `${habitId}-${date}`, habitId, date, value, stepsDone: [] });
 const goal = (extra: Partial<Goal> = {}): Goal => ({
   id: 'g1', title: 'Programar mejor', rewardTitle: '', rewardDescription: '', createdAt: '2026-08-17T10:00:00.000Z',
   milestones: [
-    { id: 'm1', title: 'SQL', summary: '', xp: 100, done: false, skills: [] },
-    { id: 'm2', title: 'API', summary: '', xp: 100, done: false, skills: [] },
+    { id: 'm1', title: 'SQL', summary: '', done: false, skills: [] },
+    { id: 'm2', title: 'API', summary: '', done: false, skills: [] },
   ],
   ...extra,
 });

@@ -8,7 +8,7 @@ const at = (min: number) => new Date(T19 + min * 60_000);
 const TZ = 'America/Lima';
 
 const habit = (over: Partial<Habit> = {}): Habit => ({
-  id: 'h1', title: 'Estudiar Python', frequency: { type: 'daily' }, measure: 'minutes', target: 30, xp: 30, reminder: '19:00', steps: [], startDate: '2026-01-01', createdAt: '', ...over,
+  id: 'h1', title: 'Estudiar Python', frequency: { type: 'daily' }, measure: 'minutes', target: 30, reminder: '19:00', steps: [], startDate: '2026-01-01', createdAt: '', ...over,
 });
 const empty: ReminderFile = { day: '2026-09-20', items: {} };
 const tick = (over: Partial<TickInput> & { min: number }) =>
@@ -71,7 +71,7 @@ describe('tickReminders (recordatorios dentro de la web)', () => {
 });
 
 describe('tickReminders con tareas de hora límite', () => {
-  const task: Task = { id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-09-20', dueTime: '19:30', estimateMin: 0, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null };
+  const task: Task = { id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-09-20', dueTime: '19:30', estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null };
   it('avisa una hora antes y una sola vez', () => {
     const first = tick({ min: 0, habits: [], tasks: [task] });
     expect(first.effects).toHaveLength(1);

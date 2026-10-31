@@ -19,10 +19,12 @@ export interface UnlockedAchievement {
 export interface Profile {
   id: ID;
   displayName: string;
-  xp: number;
   credits: number;
+  /** Congeladores de racha (ganados y comprados). Se gastan solos al saltarse un día. */
   streakFreezes: number;
   frozenDates: ISODate[];
+  /** Hitos de racha que ya dieron (o intentaron dar) congelador: «primer día+7». core/progression/freezers.ts */
+  freezerMilestones?: string[];
   weeklyGoalHours: number;
   /** Lunes de la semana cuyo bono semanal ya se reclamó. */
   weeklyBonusClaimed: ISODate | null;
@@ -45,6 +47,8 @@ export interface Profile {
   weeklyDigest?: boolean;
   /** Tu héroe 3D. Opcional: no existe hasta que eliges raza. */
   hero?: Hero;
+  /** Última clase anunciada del personaje (core/progression/titles.ts). Se guarda para no cambiarla a cada empate. */
+  characterClass?: string;
   /** Revisiones semanales guardadas (las últimas semanas). Son reflexiones y decisiones, no registros: viven con el perfil. */
   reviews?: WeekReview[];
   /** Reto del mes que te pusiste. Es configuración con su propio avance calculado, no un registro. */
@@ -96,6 +100,34 @@ export interface WeekReview {
   savedAt: ISODateTime;
 }
 
+/* ---------- Atributos del personaje ---------- */
+/** Los seis atributos: Fuerza, Vitalidad, Intelecto, Disciplina, Espíritu y Creatividad. El catálogo vive en core/progression. */
+export type AttributeId = 'fue' | 'vit' | 'int' | 'dis' | 'esp' | 'cre';
+
+/** Categoría de una actividad: decide a qué atributos va su XP. El catálogo vive en core/progression/categories.ts. */
+export type CategoryId =
+  | 'gimnasio' | 'deporte' | 'caminar' | 'hidratacion' | 'sueno' | 'alimentacion' | 'descanso'
+  | 'estudio' | 'curso' | 'idiomas' | 'lectura_tecnica' | 'codigo'
+  | 'trabajo' | 'finanzas'
+  | 'meditacion' | 'journaling' | 'lectura' | 'ocio'
+  | 'proyecto' | 'arte' | 'escritura'
+  | 'general';
+
+/** Reparto del XP: el primario se lleva el 70 % y el secundario (si hay) el 30 %. */
+export interface AttributeMapping {
+  primary: AttributeId;
+  secondary: AttributeId | null;
+}
+
+/**
+ * Lo que alimenta a los atributos. `category` se sugiere al crear (o se infiere del título la primera vez que se carga);
+ * `attributes` es el reparto elegido a mano y manda sobre el de la categoría.
+ */
+export interface Progressable {
+  category?: CategoryId;
+  attributes?: AttributeMapping;
+}
+
 /* ---------- Héroe 3D ---------- */
 export type HeroRace = 'saiyajin' | 'mario' | 'koopa' | 'protoss' | 'terran' | 'zerg';
 export type HeroSlot = 'weapon' | 'power' | 'skin';
@@ -136,7 +168,7 @@ export interface Recurrence {
   interval: number;
 }
 
-export interface Task {
+export interface Task extends Progressable {
   id: ID;
   title: string;
   courseId: ID | null;
@@ -146,7 +178,6 @@ export interface Task {
   /** Hora local límite («18:00») del día `dueDate`. Sin definir = vale todo el día. Solo tiene sentido con fecha. */
   dueTime?: string;
   estimateMin: number;
-  xp: number;
   subtasks: Subtask[];
   tags: string[];
   createdAt: ISODateTime;
@@ -189,13 +220,12 @@ export interface HabitStep {
   minutes: number;
 }
 
-export interface Habit {
+export interface Habit extends Progressable {
   id: ID;
   title: string;
   frequency: Frequency;
   measure: Measure;
   target: number;
-  xp: number;
   reminder: string | null;
   /** Minutos entre avisos mientras no se haga (0 = no repetir). Sin definir = 30. */
   reminderRepeatMin?: number;
@@ -272,7 +302,6 @@ export interface Module {
   id: ID;
   title: string;
   summary: string;
-  xp: number;
   topics: Topic[];
 }
 
@@ -283,7 +312,7 @@ export interface Mentor {
   feedbackAt: ISODate | null;
 }
 
-export interface Course {
+export interface Course extends Progressable {
   id: ID;
   title: string;
   professor: string;
@@ -312,12 +341,11 @@ export interface Milestone {
   id: ID;
   title: string;
   summary: string;
-  xp: number;
   done: boolean;
   skills: Skill[];
 }
 
-export interface Goal {
+export interface Goal extends Progressable {
   id: ID;
   title: string;
   rewardTitle: string;
@@ -340,11 +368,10 @@ export interface Checkpoint {
   id: ID;
   title: string;
   summary: string;
-  xp: number;
   done: boolean;
 }
 
-export interface Project {
+export interface Project extends Progressable {
   id: ID;
   title: string;
   summary: string;
@@ -494,14 +521,38 @@ export interface StudySession {
   label: string;
 }
 
-export type XpSource = 'task' | 'habit' | 'topic' | 'session' | 'milestone' | 'checkpoint' | 'bonus' | 'review' | 'combo' | 'certification' | 'legacy';
+export type XpSource = 'task' | 'habit' | 'topic' | 'session' | 'milestone' | 'checkpoint' | 'bonus' | 'review' | 'combo' | 'certification';
 
+/** Con qué se calculó un evento de XP. Se guarda para explicarlo y para no recalcularlo al ajustar un avance. */
+export interface XpMultipliers {
+  /** Parte del XP base que recibe este atributo (0,7 · 0,3 · 1). */
+  share: number;
+  streak: number;
+  first: number;
+  comeback: number;
+  /** Penalización por Forma baja (0 o negativa). */
+  forma: number;
+  /** Avance de 0 a 1 (hábitos a medias). */
+  progress: number;
+  /** XP fijo sumado aparte (Disciplina por racha o por cumplir a tiempo). */
+  flat: number;
+}
+
+/**
+ * Una fila del ledger de XP: la ÚNICA fuente de verdad del progreso (XP total, nivel, atributos y racha salen
+ * de aquí). Es única por `source + sourceId + date + attribute`: otorgar otra vez lo mismo reemplaza la fila
+ * y deshacer la borra, así que nunca hay montos negativos.
+ */
 export interface XpEvent {
   id: ID;
   date: ISODate;
+  attribute: AttributeId;
   amount: number;
   source: XpSource;
+  /** Qué lo originó: id de la tarea, del hábito, del tema… o una clave fija para los bonos («combo», «chest»). */
+  sourceId: string;
   label: string;
+  mult?: XpMultipliers;
 }
 
 export interface AppNotification {

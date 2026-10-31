@@ -5,7 +5,7 @@ import { MemoryQueueStorage, NEVER_QUEUED, READS, WRITES, isNetworkError, method
 import type { Task } from '@/core/domain';
 
 const task = (id: string, title = id): Task => ({
-  id, title, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null,
+  id, title, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null,
 });
 
 interface Net {
@@ -68,7 +68,7 @@ const PORT_METHODS: { [K in keyof Namespaces]: Record<keyof Namespaces[K], true>
   certifications: { list: true, create: true, createMany: true, update: true, remove: true },
   personalRewards: { list: true, create: true, createMany: true, update: true, remove: true },
   sessions: { list: true, create: true, createMany: true, remove: true },
-  xpEvents: { list: true, create: true, createMany: true },
+  xpEvents: { list: true, replace: true, createMany: true },
   notifications: { list: true, create: true, createMany: true, update: true, markAllRead: true },
   events: { list: true, create: true, createMany: true, update: true, remove: true },
 };

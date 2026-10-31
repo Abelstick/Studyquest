@@ -11,8 +11,8 @@ import { HabitDetailModal } from '../modals/HabitDetailModal';
 import { TaskDetailModal } from '../modals/TaskDetailModal';
 import { MissionBoard } from './MissionBoard';
 
-const task = (id: string, title: string, patch: Partial<Task> = {}): Task => ({ id, title, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...patch });
-const habit: Habit = { id: 'h1', title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '' };
+const task = (id: string, title: string, patch: Partial<Task> = {}): Task => ({ id, title, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...patch });
+const habit: Habit = { id: 'h1', title: 'Leer', frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '' };
 
 const late = task('t1', 'Entregar informe', { dueDate: addDays(today(), -2), priority: 'high' });
 const soon = task('t2', 'Preparar examen', { dueDate: today(), subtasks: [{ id: 's1', title: 'Repasar', done: false }] });

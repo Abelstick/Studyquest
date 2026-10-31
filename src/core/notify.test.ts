@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { planTaskReminders, TASK_LEAD_MIN, type TaskRow } from '../../supabase/functions/_shared/taskReminders';
-import { digestMessage, isDigestTime, weeklyDigest } from '../../supabase/functions/_shared/weekly';
+import { ATTRIBUTE_NAMES, digestMessage, isDigestTime, weeklyDigest } from '../../supabase/functions/_shared/weekly';
+import { ATTRIBUTES } from './progression';
 
 // 2026-09-21 00:00Z = domingo 20 de septiembre a las 19:00 en Lima (UTC-5)
 const T19 = Date.UTC(2026, 8, 21, 0, 0, 0);
@@ -65,9 +66,19 @@ describe('resumen semanal', () => {
   });
 
   it('arma un mensaje legible', () => {
-    expect(digestMessage({ xp: 140, activeDays: 2, overdue: 1, oldestOverdue: 'Antigua', dueNextWeek: 3 }).body).toBe(
-      '+140 XP en 2 días activos de 7. 1 tarea vencida (empieza por «Antigua»). 3 tareas vencen esta semana.',
+    expect(digestMessage({ xp: 140, activeDays: 2, overdue: 1, oldestOverdue: 'Antigua', dueNextWeek: 3, topAttribute: '🧠 Intelecto' }).body).toBe(
+      '+140 XP en 2 días activos de 7. Tu fuerte: 🧠 Intelecto. 1 tarea vencida (empieza por «Antigua»). 3 tareas vencen esta semana.',
     );
-    expect(digestMessage({ xp: 0, activeDays: 0, overdue: 0, oldestOverdue: null, dueNextWeek: 0 }).body).toBe('Esta semana no sumaste XP. ¡Mañana es buen día para volver!');
+    expect(digestMessage({ xp: 0, activeDays: 0, overdue: 0, oldestOverdue: null, dueNextWeek: 0, topAttribute: null }).body).toBe(
+      'Esta semana no sumaste XP. Tus atributos siguen intactos: ¡mañana es buen día para volver!',
+    );
+  });
+
+  it('nombra el atributo que más creció en la semana', () => {
+    const d = weeklyDigest([{ day: '2026-09-15', amount: 30, attribute: 'fue' }, { day: '2026-09-16', amount: 50, attribute: 'int' }, { day: '2026-09-10', amount: 500, attribute: 'cre' }], [], DAY);
+    expect(d.topAttribute).toBe('🧠 Intelecto');
+    expect(weeklyDigest([{ day: '2026-09-15', amount: 30 }], [], DAY).topAttribute).toBeNull();
+    // La copia de nombres del push no se separa del catálogo.
+    expect(ATTRIBUTE_NAMES).toEqual(Object.fromEntries(ATTRIBUTES.map((a) => [a.id, `${a.emoji} ${a.name}`])));
   });
 });

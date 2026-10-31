@@ -98,6 +98,10 @@
 .section-title {
   margin-bottom: 14px;
 }
+/* Dentro de un panel el rótulo va sobre la superficie del panel, no sobre la página: toma su color de texto. */
+.panel .section-title {
+  color: var(--text);
+}
 .cols {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
@@ -512,6 +516,38 @@ a.btn {
 }
 .tag--btn:active {
   transform: translateY(1px);
+}
+/* Atributos: marca (sprite sobre su color) y XP repartido («+14 FUE · +6 VIT»). El color va en --attr. */
+.attr-badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  padding: 3px;
+  background: color-mix(in srgb, var(--attr) 26%, var(--panel));
+  border: var(--bw) solid var(--attr);
+  border-radius: var(--r-sm);
+}
+.gains {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+.gain {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.gain__dot {
+  width: 8px;
+  height: 8px;
+  background: var(--attr);
+  outline: 1px solid var(--ink);
 }
 .chips {
   display: flex;
@@ -1013,6 +1049,17 @@ textarea.input {
 /* Desbloqueos y compras: el aviso brilla con el halo del mundo. */
 .toast--unlock {
   box-shadow: var(--fx-glow);
+}
+/* XP por atributo dentro del aviso, y un atributo que sube de nivel: su color en la franja y la marca da un salto. */
+.toast__gains {
+  margin-top: 2px;
+  color: var(--hud-text);
+}
+.toast--attr {
+  border-left-color: var(--attr);
+}
+.toast__attr {
+  animation: coin-jump 0.5s steps(6) 2;
 }
 /*
  * ===== Vista previa de un mundo =====

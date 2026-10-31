@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { addMonths } from './dates';
 import type { Course, Habit, Task, Topic } from './domain';
 import { REVIEW_INTERVALS, cardsFor, cardsToText, cleanCards, dueReviews, gradeReview, parseCards, reviewDueDate, startReview } from './review';
-import { BOSS_BONUS_XP, bossHp, nextOccurrence, projectOccurrences, recurrenceLabel, spawnNext, taskReward } from './tasks';
-import { COMBO_CAP, activeEvents, chestReward, comboBonus, freshDayBonus, habitBonus, weekendBonus } from './events';
+import { bossHp, nextOccurrence, projectOccurrences, recurrenceLabel, spawnNext } from './tasks';
+import { SOURCE_BASE_XP, habitBaseXp, taskBaseXp } from './progression';
+import { activeEvents, chestReward, freshDayBonus, habitBonus } from './events';
+import { BONUS_XP } from './progression/config';
 import { calendarDays, monthGrid } from './calendar';
 import { DEFAULT_POMODORO, formatClock, nextPhase, sanitizeConfig } from './pomodoro';
 import { ACHIEVEMENTS } from './achievements';
@@ -20,11 +22,11 @@ import { isReadyToFinish, missionParts, type Mission } from './missions';
 const NOW = '2026-09-16'; // miércoles
 
 const topic = (over: Partial<Topic> = {}): Topic => ({ id: 't', title: 'Tema', status: 'done', review: true, markedAt: '2026-09-15', ...over });
-const course = (topics: Topic[]): Course => ({ id: 'c', title: 'Curso', professor: '', field: '', mentor: null, createdAt: '', modules: [{ id: 'm', title: 'M', summary: '', xp: 100, topics }] });
+const course = (topics: Topic[]): Course => ({ id: 'c', title: 'Curso', professor: '', field: '', mentor: null, createdAt: '', modules: [{ id: 'm', title: 'M', summary: '', topics }] });
 const task = (over: Partial<Task> = {}): Task => ({
-  id: 'x', title: 'T', courseId: null, priority: 'mid', status: 'todo', dueDate: NOW, estimateMin: 0, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null, ...over,
+  id: 'x', title: 'T', courseId: null, priority: 'mid', status: 'todo', dueDate: NOW, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...over,
 });
-const habit = (id: string, xp = 20): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '' });
+const habit = (id: string): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '' });
 
 describe('repaso espaciado', () => {
   it('los intervalos son 1, 3, 7 y 14 días', () => {
@@ -49,7 +51,7 @@ describe('repaso espaciado', () => {
 
   it('el último escalón (o un «fácil» que lo sobrepasa) domina el tema', () => {
     const last = gradeReview(topic({ reviewStage: 3 }), 'good', NOW);
-    expect(last).toMatchObject({ mastered: true, nextInDays: null, xp: 50 });
+    expect(last).toMatchObject({ mastered: true, nextInDays: null });
     expect(last.patch.review).toBe(false);
     expect(gradeReview(topic({ reviewStage: 2 }), 'easy', NOW).mastered).toBe(true);
   });
@@ -143,33 +145,23 @@ describe('jefes finales', () => {
     expect(bossHp({ subtasks: [], status: 'todo' })).toEqual({ hp: 1, max: 1, pct: 100 });
   });
 
-  it('el botín extra solo lo dan los jefes', () => {
-    expect(taskReward({ priority: 'boss', xp: 120 })).toBe(120 + BOSS_BONUS_XP);
-    expect(taskReward({ priority: 'high', xp: 50 })).toBe(50);
+  it('el extra de XP solo lo dan los jefes', () => {
+    expect(taskBaseXp({ priority: 'boss' })).toBe(taskBaseXp({ priority: 'high' }) + SOURCE_BASE_XP.boss);
+    expect(taskBaseXp({ priority: 'high', difficulty: 'hard' })).toBe(35);
   });
 });
 
 describe('eventos de racha', () => {
-  it('el combo duplica el XP de los hábitos de hoy, con tope', () => {
-    expect(comboBonus([20, 20, 20])).toBe(60);
-    expect(comboBonus([100, 100, 100])).toBe(COMBO_CAP);
-  });
-
-  it('el bonus de finde es +50% (mínimo 1)', () => {
-    expect(weekendBonus(20)).toBe(10);
-    expect(weekendBonus(1)).toBe(1);
-  });
-
-  it('habitBonus combina finde y combo y anota lo cobrado', () => {
+  it('habitBonus combina finde y combo (XP fijo de Disciplina) y anota lo cobrado', () => {
     const hs = [habit('a'), habit('b'), habit('c')];
     const sat = '2026-09-19';
     const b = habitBonus(hs[2], hs, freshDayBonus(sat), sat);
-    expect(b).toMatchObject({ weekend: 10, combo: 60, xp: 70 });
+    expect(b).toMatchObject({ weekend: BONUS_XP.weekend, combo: BONUS_XP.combo, xp: BONUS_XP.weekend + BONUS_XP.combo });
     expect(b.next).toEqual({ date: sat, weekend: ['c'], combo: true });
     // ya cobrado: no repite
     expect(habitBonus(hs[2], hs, b.next, sat).xp).toBe(0);
     // entre semana solo hay combo
-    expect(habitBonus(hs[2], hs, freshDayBonus(NOW), NOW)).toMatchObject({ weekend: 0, combo: 60 });
+    expect(habitBonus(hs[2], hs, freshDayBonus(NOW), NOW)).toMatchObject({ weekend: 0, combo: BONUS_XP.combo });
     // con 2 hábitos no hay combo
     expect(habitBonus(hs[1], hs.slice(0, 2), freshDayBonus(NOW), NOW).xp).toBe(0);
   });
@@ -376,8 +368,8 @@ describe('guía de conceptos (tareas, hábitos, metas y proyectos)', () => {
 });
 
 describe('desglose de las misiones del inicio', () => {
-  const taskMission = (t: Task): Mission => ({ kind: 'task', id: `t:${t.id}`, title: t.title, subtitle: '', xp: t.xp, done: t.status === 'done', task: t });
-  const habitMission = (h: Habit, done = false): Mission => ({ kind: 'habit', id: `h:${h.id}`, title: h.title, subtitle: '', xp: h.xp, done, habit: h });
+  const taskMission = (t: Task): Mission => ({ kind: 'task', id: `t:${t.id}`, title: t.title, subtitle: '', xp: taskBaseXp(t), done: t.status === 'done', task: t });
+  const habitMission = (h: Habit, done = false): Mission => ({ kind: 'habit', id: `h:${h.id}`, title: h.title, subtitle: '', xp: habitBaseXp(h), done, habit: h });
   const withSteps = (): Habit => ({ ...habit('h1'), steps: [{ id: 's1', title: 'Calentar', minutes: 5 }, { id: 's2', title: 'Tocar', minutes: 10 }] });
 
   it('una tarea aporta sus subtareas', () => {

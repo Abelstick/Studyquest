@@ -10,12 +10,11 @@ import { describeExtras, planOfCourse } from '@/core/plans';
 import { AreaChips } from '@/ui/Area';
 import { ConceptHint } from '../help/ConceptGuide';
 import { Fold, IfThenEditor } from './LifeFields';
+import { SOURCE_BASE_XP, courseCtx } from '@/core/progression';
+import { CategoryField, progressToSave, type ProgressDraft } from './CategoryField';
 
-/** "Título | 120" → { title, xp }. */
-const parseXpLine = (line: string, fallback: number) => {
-  const [title, xp] = line.split('|').map((p) => p.trim());
-  return { title: title || line, xp: Number(xp) > 0 ? Number(xp) : fallback };
-};
+/** El título de una línea. Antes se podía añadir «| 300» para dar XP: ahora el XP sale de la tabla del juego y ese sufijo se ignora. */
+const lineTitle = (line: string) => line.split('|')[0].trim() || line;
 
 export function CourseModal({ id }: { id?: string }) {
   const close = useUi((s) => s.closeModal);
@@ -34,6 +33,7 @@ export function CourseModal({ id }: { id?: string }) {
   const [mentorName, setMentorName] = useState(editing?.mentor?.name ?? '');
   const [mentorSkills, setMentorSkills] = useState(editing?.mentor?.skills ?? '');
   const [feedback, setFeedback] = useState(editing?.mentor?.feedback ?? '');
+  const [progress, setProgress] = useState<ProgressDraft>({ category: editing?.category, attributes: editing?.attributes });
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,14 +41,13 @@ export function CourseModal({ id }: { id?: string }) {
     const mentor: Mentor | null = mentorName.trim()
       ? { name: mentorName.trim(), skills: mentorSkills.trim(), feedback: feedback.trim(), feedbackAt: feedback.trim() && feedback.trim() !== editing?.mentor?.feedback ? today() : (editing?.mentor?.feedbackAt ?? null) }
       : null;
-    const base = { title: title.trim(), professor: professor.trim(), field: field.trim(), mentor, link: safeUrl(link) ?? undefined, studyDaysPerWeek: studyDays > 0 ? studyDays : undefined, dueDate: dueDate || undefined };
+    const base = { title: title.trim(), professor: professor.trim(), field: field.trim(), mentor, link: safeUrl(link) ?? undefined, studyDaysPerWeek: studyDays > 0 ? studyDays : undefined, dueDate: dueDate || undefined, ...progressToSave(progress, title.trim(), courseCtx({ field })) };
     if (editing) updateCourse(editing.id, base);
     else {
       createCourse({
         ...base,
         modules: linesToList(modules).map((l) => {
-          const { title: t, xp } = parseXpLine(l, 200);
-          return { id: newId(), title: t, summary: '', xp, topics: [] };
+          return { id: newId(), title: lineTitle(l), summary: '', topics: [] };
         }),
       });
     }
@@ -63,6 +62,7 @@ export function CourseModal({ id }: { id?: string }) {
           <Field label="Profesor/a">{(fid) => <TextInput id={fid} className="input" value={professor} onChange={(e) => setProfessor(e.target.value)} placeholder="Prof. Marta Núñez" />}</Field>
           <Field label="Área">{(fid) => <TextInput id={fid} className="input" value={field} onChange={(e) => setField(e.target.value)} placeholder="ciencia de datos" />}</Field>
         </div>
+        <CategoryField title={`${title} ${field}`} ctx={courseCtx({ field })} value={progress} onChange={setProgress} base={SOURCE_BASE_XP.topic} />
         <Field label="Enlace del curso (opcional)" hint="Si es de una plataforma (Udemy, Coursera, YouTube…), para abrirlo desde aquí.">
           {(fid) => <TextInput id={fid} className="input" value={link} onChange={(e) => setLink(e.target.value)} placeholder="udemy.com/course/..." spellCheck={false} aria-invalid={badLink || undefined} />}
         </Field>
@@ -82,8 +82,8 @@ export function CourseModal({ id }: { id?: string }) {
           )}
         </Field>
         {!editing && (
-          <Field label="Módulos" hint="Uno por línea; añade «| 300» para darle XP. Los temas los agregas después, dentro del curso.">
-            {(fid) => <textarea id={fid} className="input" rows={4} value={modules} onChange={(e) => setModules(e.target.value)} placeholder={'Fundamentos | 300\nSQL | 600\nPandas | 600'} />}
+          <Field label="Módulos" hint="Uno por línea. Los temas los agregas después, dentro del curso; cada tema terminado da XP a los atributos del curso.">
+            {(fid) => <textarea id={fid} className="input" rows={4} value={modules} onChange={(e) => setModules(e.target.value)} placeholder={'Fundamentos\nSQL\nPandas'} />}
           </Field>
         )}
         <fieldset className="fieldset">
@@ -140,7 +140,7 @@ const GOAL_DEADLINES = [
 /**
  * Crear o editar una meta. Además de los hitos y la recompensa, guía a definirla con criterio SMART:
  * plazo, cómo se mide y por qué importa. Todo es opcional: una meta sin completar sigue siendo válida.
- * Al editar, los hitos existentes no se tocan (su XP ya está contabilizado); solo se pueden añadir nuevos.
+ * Al editar, los hitos existentes no se tocan; solo se pueden añadir nuevos.
  */
 export function GoalModal({ id }: { id?: string }) {
   const close = useUi((s) => s.closeModal);
@@ -164,8 +164,7 @@ export function GoalModal({ id }: { id?: string }) {
     e.preventDefault();
     if (!canSave) return;
     const fresh = items.map((l) => {
-      const { title: t, xp } = parseXpLine(l, 100);
-      return { id: newId(), title: t, summary: '', xp, done: false, skills: [] };
+      return { id: newId(), title: lineTitle(l), summary: '', done: false, skills: [] };
     });
     const data = {
       title: title.trim(),
@@ -191,9 +190,9 @@ export function GoalModal({ id }: { id?: string }) {
         </Field>
         <Field
           label={editing ? 'Añadir hitos' : 'Hitos'}
-          hint={editing ? `Uno por línea; se suman a los ${editing.milestones.length} que ya tiene. Los hitos existentes no se cambian aquí.` : 'Uno por línea, en orden. Añade «| 300» para darle XP (por defecto 100).'}
+          hint={editing ? `Uno por línea; se suman a los ${editing.milestones.length} que ya tiene. Los hitos existentes no se cambian aquí.` : `Uno por línea, en orden. Cada hito conquistado da ${SOURCE_BASE_XP.milestone} XP.`}
         >
-          {(fid) => <textarea id={fid} className="input" rows={editing ? 3 : 5} value={milestones} onChange={(e) => setMilestones(e.target.value)} placeholder={'Aprender Excel | 100\nAprender SQL | 200\nProyecto final | 1000'} required={!editing} />}
+          {(fid) => <textarea id={fid} className="input" rows={editing ? 3 : 5} value={milestones} onChange={(e) => setMilestones(e.target.value)} placeholder={'Aprender Excel\nAprender SQL\nProyecto final'} required={!editing} />}
         </Field>
         <Field label="Plazo" hint="Una fecha límite convierte el deseo en compromiso y permite ver si vas a tiempo.">
           {(fid) => (
@@ -246,8 +245,7 @@ export function ProjectModal() {
       summary: summary.trim(),
       kind,
       checkpoints: items.map((l) => {
-        const { title: t, xp } = parseXpLine(l, 100);
-        return { id: newId(), title: t, summary: '', xp, done: false };
+        return { id: newId(), title: lineTitle(l), summary: '', done: false };
       }),
     });
     close();
@@ -272,8 +270,8 @@ export function ProjectModal() {
             />
           )}
         </Field>
-        <Field label="Checkpoints" hint="Uno por línea, en orden. Añade «| 300» para darle XP (por defecto 100).">
-          {(fid) => <textarea id={fid} className="input" rows={5} value={checkpoints} onChange={(e) => setCheckpoints(e.target.value)} placeholder={'Diseñar la página | 150\nCrear el frontend | 300\nPublicar | 300'} required />}
+        <Field label="Checkpoints" hint={`Uno por línea, en orden. Cada checkpoint da ${SOURCE_BASE_XP.checkpoint} XP.`}>
+          {(fid) => <textarea id={fid} className="input" rows={5} value={checkpoints} onChange={(e) => setCheckpoints(e.target.value)} placeholder={'Diseñar la página\nCrear el frontend\nPublicar'} required />}
         </Field>
         <div className="modal__actions">
           <Button variant="primary" type="submit" disabled={!title.trim() || !items.length}>

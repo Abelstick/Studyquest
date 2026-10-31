@@ -10,6 +10,7 @@ import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
 import { Scramble } from '@/ui/motion';
 import { WorldShop } from './WorldShop';
+import { attributeOf } from '@/core/progression';
 
 const EQUIP_KEY: Partial<Record<ShopItem['kind'], keyof Equipped>> = { avatar: 'avatar', frame: 'frame', world: 'world' };
 
@@ -20,10 +21,17 @@ function ShopCard({ item }: { item: ShopItem }) {
   const slot = EQUIP_KEY[item.kind];
   const equipped = slot ? profile.equipped[slot] === item.id : false;
   const missing = item.price - profile.credits;
-  const unavailable = !!item.locked || (!owned && missing > 0);
+  const earned = item.unlock;
+  const unavailable = !!item.locked || (!owned && (earned ? true : missing > 0));
 
   let cta: React.ReactNode;
   if (item.locked) cta = <Button small disabled>Bloqueado</Button>;
+  else if (earned && !owned)
+    cta = (
+      <Button small disabled>
+        <Icon name="lock" size={10} /> {attributeOf(earned.attribute).name} nv. {earned.level}
+      </Button>
+    );
   else if (owned && !item.consumable && slot)
     cta = (
       <Button small variant={equipped ? 'green' : 'primary'} onClick={() => equip(slot, equipped ? null : item.id)} aria-pressed={equipped}>
@@ -82,7 +90,7 @@ export default function Arsenal() {
         sprite="mushroom"
         hint={
           <>
-            ¿Buscas armas, poderes o skins para tu personaje? Están en la tienda de tu <Link to="/heroe">Héroe 3D</Link>.
+            ¿Buscas armas, poderes o skins para tu personaje? Están en la tienda de tu <Link to="/heroe">Personaje</Link>.
           </>
         }
         right={

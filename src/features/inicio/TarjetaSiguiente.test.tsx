@@ -12,9 +12,9 @@ import Inicio from './Inicio';
 const NOW = new Date(2026, 8, 16, 12, 0, 0);
 const TODAY = '2026-09-16';
 
-const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 20, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
+const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
 const log = (habitId: string, value: number, date = TODAY): HabitLog => ({ id: `${habitId}-${date}`, habitId, date, value, stepsDone: [] });
-const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const task = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate: null, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 
 const card = () => document.querySelector('.nextstep') as HTMLElement;
 const title = () => card().querySelector('.nextstep__title')?.textContent;
@@ -65,10 +65,10 @@ describe('tarjeta grande de «Siguiente paso»', () => {
   });
 
   it('con un hábito a medias sigue siendo el paso, pero enseña lo que llevas y el XP que ya ganaste', () => {
-    useData.setState({ habits: [habit('Leer', { measure: 'pages', target: 20, xp: 25 })], habitLogs: [log('Leer', 12)] });
+    useData.setState({ habits: [habit('Leer', { measure: 'pages', target: 20 })], habitLogs: [log('Leer', 12)] });
     home();
     expect(title()).toBe('Leer');
-    expect(within(card()).getByText(/llevas el 60 % · ya ganaste \+15 de 25 XP/)).toBeTruthy();
+    expect(within(card()).getByText(/llevas el 60 % · ya ganaste \+12 de 20 XP/)).toBeTruthy();
     expect(within(card()).getByRole('progressbar', { name: 'Avance de hoy de Leer' })).toBeTruthy();
   });
 

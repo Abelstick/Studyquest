@@ -1,7 +1,8 @@
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { sfx } from '@/audio/sfx';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { dataLayer, useData } from '@/state';
+import { dataLayer, useData, useTotalXp } from '@/state';
+import { totalXp } from '@/core/progression';
 import { useUi } from '@/state/ui';
 import { today, longDate, weekStart } from '@/core/dates';
 import { WEEKLY_BONUS_XP, computeStreak, hoursInWeek, isDueOn, isHabitDone, levelProgress, logFor, rankFor, worldFor } from '@/core/game';
@@ -111,7 +112,8 @@ function Sidebar() {
   const navOpen = useUi((s) => s.navOpen);
   const setNavOpen = useUi((s) => s.setNavOpen);
   const setSideHidden = useUi((s) => s.setSideHidden);
-  const { level, into, needed, pct } = levelProgress(profile.xp);
+  const xp = useTotalXp();
+  const { level, into, needed, pct } = levelProgress(xp);
   const sound = useUi((s) => s.sound);
   const toggleSound = useUi((s) => s.toggleSound);
   const theme = useUi((s) => s.theme);
@@ -334,7 +336,7 @@ function Hud() {
       <div className="hud__stats" aria-label="Marcadores">
         <span className="stat stat--desk stat--xp" title="Puntos de experiencia totales">
           <span className="stat__k">XP</span>
-          <Scramble className="stat__v" value={String(profile.xp).padStart(6, '0')} />
+          <Scramble className="stat__v" value={String(totalXp(events)).padStart(6, '0')} />
         </span>
         <span className="stat stat--desk" title="Monedas">
           <Sprite name="coin" size={16} />

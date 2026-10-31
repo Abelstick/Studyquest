@@ -135,9 +135,9 @@ Deno.serve(async (req) => {
           .upsert({ user_id: userId, week: date, sent_at: nowIso }, { onConflict: 'user_id,week', ignoreDuplicates: true })
           .select();
         if (claim?.length) {
-          const { data: events } = await db.from('xp_events').select('day,amount').eq('user_id', userId).gte('day', addDays(date, -6));
+          const { data: events } = await db.from('xp_events').select('day,amount,attribute_id').eq('user_id', userId).gte('day', addDays(date, -6));
           const { data: openTasks } = await db.from('tasks').select('id,data').eq('user_id', userId).neq('data->>status', 'done');
-          const digest = weeklyDigest((events ?? []).map((e) => ({ day: e.day, amount: Number(e.amount) })), (openTasks ?? []) as TaskRow[], date);
+          const digest = weeklyDigest((events ?? []).map((e) => ({ day: e.day, amount: Number(e.amount), attribute: e.attribute_id })), (openTasks ?? []) as TaskRow[], date);
           const msg = digestMessage(digest);
           await sendToDevices(userId, devices, JSON.stringify({ ...msg, url: '/progreso', tag: 'weekly-digest' }));
         }

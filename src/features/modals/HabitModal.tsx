@@ -9,7 +9,9 @@ import { Fold, IfThenEditor, OrganizeFields } from './LifeFields';
 import { cleanMinimum } from '@/core/minimum';
 import { cleanIfThen } from '@/core/ifthen';
 import { isQuit } from '@/core/quit';
-import { DIFFICULTIES, HABIT_BASE_XP, difficultyInfo, difficultyOf, xpForDifficulty } from '@/core/difficulty';
+import { DIFFICULTIES, difficultyInfo, difficultyOf } from '@/core/difficulty';
+import { habitBaseXp, habitCtx } from '@/core/progression';
+import { CategoryField, progressToSave, type ProgressDraft } from './CategoryField';
 import { Icon } from '@/ui/Icon';
 
 const FREQS: { value: Frequency['type']; label: string }[] = [
@@ -70,13 +72,8 @@ export function HabitModal({ id, goalId: presetGoal, courseId: presetCourse }: {
   const [measure, setMeasure] = useState<Measure>(editing?.measure ?? 'minutes');
   const [target, setTarget] = useState(editing?.target ?? 30);
   const [difficulty, setDifficulty] = useState<Difficulty>(editing ? difficultyOf(editing) : 'normal');
-  const [xp, setXp] = useState(editing?.xp ?? HABIT_BASE_XP);
-  // Si el XP ya no coincide con el que propone su dificultad, es que lo personalizaste: no se lo pisamos.
-  const [xpTouched, setXpTouched] = useState(!!editing && editing.xp !== xpForDifficulty(HABIT_BASE_XP, difficultyOf(editing)));
-  const pickDifficulty = (d: Difficulty) => {
-    setDifficulty(d);
-    if (!xpTouched) setXp(xpForDifficulty(HABIT_BASE_XP, d));
-  };
+  // Sin categoría guardada, la sugerida sigue al título mientras escribes.
+  const [progress, setProgress] = useState<ProgressDraft>({ category: editing?.category, attributes: editing?.attributes });
   const [reminder, setReminder] = useState(editing?.reminder ?? '');
   const [repeat, setRepeat] = useState(editing?.reminderRepeatMin ?? 30);
   const [steps, setSteps] = useState(editing?.steps.map(stepLine).join('\n') ?? '');
@@ -88,6 +85,7 @@ export function HabitModal({ id, goalId: presetGoal, courseId: presetCourse }: {
   const [minTarget, setMinTarget] = useState(editing?.minTarget ?? 0);
   const [ifThen, setIfThen] = useState<IfThen[]>(editing?.ifThen ?? []);
 
+  const suggestCtx = habitCtx({ area: area || undefined, courseId: courseId || undefined }, courses);
   const toggleDay = (d: number) => setDays((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d].sort()));
   const addDate = () => {
     if (dateDraft && !dates.includes(dateDraft)) setDates([...dates, dateDraft].sort());
@@ -127,8 +125,8 @@ export function HabitModal({ id, goalId: presetGoal, courseId: presetCourse }: {
       frequency: quit ? ({ type: 'daily' } as const) : buildFrequency(),
       measure: quit ? ('boolean' as const) : measure,
       target: quit || measure === 'boolean' ? 1 : Math.max(1, target),
-      xp: Math.max(0, xp),
       difficulty,
+      ...progressToSave(progress, title.trim(), suggestCtx),
       reminder: reminder || null,
       reminderRepeatMin: repeat,
       steps: quit ? [] : parsedSteps,
@@ -223,12 +221,12 @@ export function HabitModal({ id, goalId: presetGoal, courseId: presetCourse }: {
         )}
 
         {!quit && <Field label="Forma de medición">{() => <ChipGroup label="Forma de medición" value={measure} options={MEASURES} onChange={setMeasure} />}</Field>}
-        <Field label="Dificultad" hint={`${difficultyInfo(difficulty).hint} Ajusta el XP que propone el hábito; puedes cambiarlo abajo.`}>
-          {() => <ChipGroup label="Dificultad" value={difficulty} options={DIFFICULTIES.map((d) => ({ value: d.value, label: d.label }))} onChange={pickDifficulty} />}
+        <Field label="Dificultad" hint={`${difficultyInfo(difficulty).hint} Decide el XP que da el hábito cada día que lo cumples.`}>
+          {() => <ChipGroup label="Dificultad" value={difficulty} options={DIFFICULTIES.map((d) => ({ value: d.value, label: d.label }))} onChange={(d: Difficulty) => setDifficulty(d)} />}
         </Field>
+        <CategoryField title={title} ctx={suggestCtx} value={progress} onChange={setProgress} base={habitBaseXp({ difficulty })} />
         <div className="form__row">
           {!quit && measure !== 'boolean' && <Field label="Objetivo">{(fid) => <NumberInput id={fid} className="input" min={1} value={target} onValue={(n) => setTarget(n)}/>}</Field>}
-          <Field label="Recompensa (XP)">{(fid) => <NumberInput id={fid} className="input input--xp" min={0} step={5} value={xp} onValue={(n) => { setXp(n); setXpTouched(true); }}/>}</Field>
           <Field label="Hora a la que lo harás" hint="Se ve en Hoy y ordena tu día. También te avisa a esa hora, dentro de la app (con sonido) y, si activas los push en Perfil, con la app cerrada.">
             {(fid) => <input id={fid} className="input" type="time" value={reminder} onChange={(e) => setReminder(e.target.value)} />}
           </Field>

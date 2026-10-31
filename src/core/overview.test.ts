@@ -4,7 +4,7 @@ import { habitWeek, taskScopes, taskTally } from './overview';
 
 // Miércoles 16-sep-2026: la semana va del 14 al 20.
 const NOW = '2026-09-16';
-const task = (id: string, dueDate: string | null, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const task = (id: string, dueDate: string | null, extra: Partial<Task> = {}): Task => ({ id, title: id, courseId: null, priority: 'mid', status: 'todo', dueDate, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 const done = (id: string, dueDate: string | null, completedAt: string) => task(id, dueDate, { status: 'done', completedAt });
 
 describe('tareas por periodo', () => {
@@ -38,7 +38,7 @@ describe('tareas por periodo', () => {
 });
 
 describe('hábitos de la semana', () => {
-  const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, xp: 10, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
+  const habit = (id: string, extra: Partial<Habit> = {}): Habit => ({ id, title: id, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [], startDate: '2026-01-01', createdAt: '', ...extra });
   const log = (habitId: string, date: string): HabitLog => ({ id: `${habitId}-${date}`, habitId, date, value: 1, stepsDone: [] });
 
   it('cuenta de lunes a hoy lo cumplido sobre lo que tocaba', () => {

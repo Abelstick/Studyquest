@@ -5,6 +5,7 @@ import { useUi } from '@/state/ui';
 import { Bar, Button, Empty, PageHead, Panel, Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { CONCEPTS } from '@/core/concepts';
+import { SOURCE_BASE_XP, gainsText, milestoneGains } from '@/core/progression';
 import { GuideButton } from '@/features/help/ConceptGuide';
 import { GoalActionsPanel, GoalIfThenPanel, GoalSmartPanel } from './GoalPanels';
 import { Icon } from '@/ui/Icon';
@@ -53,8 +54,8 @@ export default function Metas() {
   // La meta abierta no desaparece al buscar; la búsqueda solo acota las pestañas que se pueden elegir.
   const matched = goals.filter((g) => matchesQuery([g.title, ...g.milestones.flatMap((m) => [m.title, ...m.skills.map((k) => k.label)])], query));
   const done = goal.milestones.filter((m) => m.done).length;
-  const totalXp = goal.milestones.reduce((a, m) => a + m.xp, 0);
-  const earnedXp = goal.milestones.filter((m) => m.done).reduce((a, m) => a + m.xp, 0);
+  const totalXp = goal.milestones.length * SOURCE_BASE_XP.milestone;
+  const earnedXp = done * SOURCE_BASE_XP.milestone;
   const activeIdx = goal.milestones.findIndex((m) => !m.done);
   const complete = activeIdx === -1;
 
@@ -113,7 +114,7 @@ export default function Metas() {
                       <h2 className="path__title">{m.title}</h2>
                       {m.summary && <p className="muted small">{m.summary}</p>}
                     </div>
-                    <Tag tone={state === 'active' ? 'xp' : 'plain'}>{m.xp} XP</Tag>
+                    <Tag tone={state === 'active' ? 'xp' : 'plain'}>{SOURCE_BASE_XP.milestone} XP</Tag>
                   </div>
                   {state === 'active' && (
                     <div className="path__body">
@@ -130,7 +131,7 @@ export default function Metas() {
                         </>
                       )}
                       <Button variant="green" small onClick={() => setMilestoneDone(goal.id, m.id, true)}>
-                        Conquistar hito (+{m.xp} XP)
+                        Conquistar hito ({gainsText(milestoneGains(goal))})
                       </Button>
                     </div>
                   )}

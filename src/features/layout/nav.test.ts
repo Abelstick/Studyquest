@@ -30,7 +30,7 @@ describe('navegación en secciones', () => {
     expect(tabsOf('estudiar').map((t) => t.label)).toEqual(['Cursos', 'Apuntes', 'Repaso']);
     expect(tabsOf('planear').map((t) => t.label)).toEqual(['Tareas', 'Calendario', 'Planificador']);
     expect(tabsOf('lograr').map((t) => t.label)).toEqual(['Hábitos', 'Metas', 'Proyectos', 'Certificaciones']);
-    expect(tabsOf('juego').map((t) => t.label)).toEqual(['Progreso', 'Héroe 3D', 'Ciudad', 'Arsenal', 'Perfil']);
+    expect(tabsOf('juego').map((t) => t.label)).toEqual(['Progreso', 'Personaje', 'Ciudad', 'Arsenal', 'Perfil']);
   });
 
   it('deduce la sección de la ruta, también en rutas de detalle', () => {

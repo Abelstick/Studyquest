@@ -1,18 +1,13 @@
 /**
- * Eventos de racha: bonus de fin de semana, combo ×2 y cofre diario.
+ * Eventos de racha: bonus de fin de semana, combo y cofre diario. Son XP fijo de Disciplina (core/progression/config.ts).
  * Los bonos se cobran una vez (y se anotan en el perfil), así que deshacer y rehacer un hábito no los repite.
  */
 import type { DayBonus, Habit, HabitLog, ISODate, Profile } from './domain';
 import { isWeekend, today } from './dates';
 import { isHabitDone, logFor } from './game';
+import { BONUS_XP } from './progression/config';
 
-export const WEEKEND_BONUS_RATE = 0.5;
 export const COMBO_THRESHOLD = 3;
-export const COMBO_CAP = 200;
-
-export const weekendBonus = (xp: number) => Math.max(1, Math.round(xp * WEEKEND_BONUS_RATE));
-/** Combo ×2: el XP de los hábitos de hoy se duplica (con tope). */
-export const comboBonus = (xps: number[]) => Math.min(COMBO_CAP, xps.reduce((a, b) => a + b, 0));
 
 export const freshDayBonus = (date: ISODate): DayBonus => ({ date, weekend: [], combo: false });
 export const dayBonusOf = (p: Pick<Profile, 'dayBonus'>, date: ISODate = today()): DayBonus => (p.dayBonus?.date === date ? p.dayBonus : freshDayBonus(date));
@@ -32,11 +27,11 @@ export function habitBonus(habit: Habit, doneToday: Habit[], claimed: DayBonus, 
   let weekend = 0;
   let combo = 0;
   if (isWeekend(date) && !next.weekend.includes(habit.id)) {
-    weekend = weekendBonus(habit.xp);
+    weekend = BONUS_XP.weekend;
     next.weekend.push(habit.id);
   }
   if (!next.combo && doneToday.length >= COMBO_THRESHOLD) {
-    combo = comboBonus(doneToday.map((h) => h.xp));
+    combo = BONUS_XP.combo;
     next.combo = true;
   }
   return { xp: weekend + combo, weekend, combo, next };
@@ -54,16 +49,16 @@ export interface GameEvent {
 /** Eventos visibles hoy en Inicio. */
 export function activeEvents(habits: Habit[], logs: HabitLog[], profile: Pick<Profile, 'dayBonus'>, date: ISODate = today()): GameEvent[] {
   const out: GameEvent[] = [];
-  if (isWeekend(date)) out.push({ id: 'weekend', title: '¡Bonus de fin de semana!', body: `Cada hábito que completes hoy da +${Math.round(WEEKEND_BONUS_RATE * 100)}% de XP.`, active: true });
+  if (isWeekend(date)) out.push({ id: 'weekend', title: '¡Bonus de fin de semana!', body: `Cada hábito que completes hoy da +${BONUS_XP.weekend} XP de Disciplina.`, active: true });
   const done = habitsDoneOn(habits, logs, date).length;
   if (dayBonusOf(profile, date).combo) {
-    out.push({ id: 'combo', title: '¡Combo ×2 cobrado!', body: 'Hoy ya has duplicado el XP de tus hábitos. Mañana, otra vez.', pct: 100, active: true });
+    out.push({ id: 'combo', title: '¡Combo cobrado!', body: `Hoy ya ganaste +${BONUS_XP.combo} XP de Disciplina por tu constancia. Mañana, otra vez.`, pct: 100, active: true });
   } else if (habits.length >= COMBO_THRESHOLD) {
     const left = COMBO_THRESHOLD - done;
     out.push({
       id: 'combo',
-      title: 'Combo ×2',
-      body: left <= 0 ? 'Completa un hábito más para cobrarlo.' : `Completa ${COMBO_THRESHOLD} hábitos hoy y su XP se duplica${done ? ` (te ${left === 1 ? 'falta 1' : `faltan ${left}`})` : ''}.`,
+      title: 'Combo',
+      body: left <= 0 ? 'Completa un hábito más para cobrarlo.' : `Completa ${COMBO_THRESHOLD} hábitos hoy y gana +${BONUS_XP.combo} XP de Disciplina${done ? ` (te ${left === 1 ? 'falta 1' : `faltan ${left}`})` : ''}.`,
       pct: Math.min(100, Math.round((done / COMBO_THRESHOLD) * 100)),
       active: false,
     });
@@ -87,7 +82,7 @@ export interface ChestReward {
 /** El botín de un día es siempre el mismo (no se puede «rerollear»); la racha lo mejora. */
 export function chestReward(date: ISODate, streak: number): ChestReward {
   const h = hash(date);
-  return { coins: 20 + (h % 41) + Math.min(30, Math.max(0, streak)) * 2, xp: h % 5 === 0 ? 25 : 0 };
+  return { coins: 20 + (h % 41) + Math.min(30, Math.max(0, streak)) * 2, xp: h % 5 === 0 ? BONUS_XP.chest : 0 };
 }
 
 export const canOpenChest = (p: Pick<Profile, 'lastChest'>, date: ISODate = today()) => p.lastChest !== date;

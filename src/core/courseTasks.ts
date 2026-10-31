@@ -5,6 +5,7 @@
 import type { ID, ISODate, Task } from './domain';
 import { today } from './dates';
 import { dueTimeOf } from './tasks';
+import { taskBaseXp } from './progression/rewards';
 
 export interface CourseTasks {
   /** Abiertas, por vencimiento: primero las que vencen antes; sin fecha, al final. */
@@ -20,7 +21,7 @@ const dueKey = (t: Task) => `${t.dueDate ?? '9999'} ${dueTimeOf(t) ?? '99'}`;
 
 export function courseTasks(tasks: Task[], courseId: ID, now: ISODate = today()): CourseTasks {
   const mine = tasks.filter((t) => t.courseId === courseId);
-  const open = mine.filter((t) => t.status !== 'done').sort((a, b) => dueKey(a).localeCompare(dueKey(b)) || b.xp - a.xp);
+  const open = mine.filter((t) => t.status !== 'done').sort((a, b) => dueKey(a).localeCompare(dueKey(b)) || taskBaseXp(b) - taskBaseXp(a));
   return {
     open,
     late: open.filter((t) => t.dueDate && t.dueDate < now).length,

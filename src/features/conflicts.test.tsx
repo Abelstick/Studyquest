@@ -15,7 +15,7 @@ const NOW = new Date(2026, 9, 19, 10, 0, 0);
 const base = { rev: 0, createdAt: '', updatedAt: '' };
 const work: AgendaEvent = { ...base, id: 'w', title: 'Jornada laboral', category: 'work', date: '2026-10-19', start: '08:30', minutes: 570, repeat: { type: 'weekly', every: 1, days: [0, 1, 2, 3, 4] } };
 const slot = (id: string, title: string, start: string, date = '2026-10-20'): AgendaEvent => ({ ...base, id, title, category: 'personal', date, start, minutes: 60, taskId: 't1' });
-const task = (extra: Partial<Task> = {}): Task => ({ id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-10-23', estimateMin: 60, xp: 20, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
+const task = (extra: Partial<Task> = {}): Task => ({ id: 't1', title: 'Informe', courseId: null, priority: 'mid', status: 'todo', dueDate: '2026-10-23', estimateMin: 60, subtasks: [], tags: [], createdAt: '', completedAt: null, ...extra });
 
 const changeEventOccurrence = vi.fn();
 const wrap = (ui: React.ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);

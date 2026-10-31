@@ -4,7 +4,7 @@ import { calendarDays, overdueTasks, undatedTasks, weekDays } from './calendar';
 
 const NOW = '2026-09-16'; // miércoles
 const habit = (over: Partial<Habit>): Habit => ({
-  id: 'h', title: 'Agua', frequency: { type: 'daily' }, measure: 'times', target: 10, xp: 20, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...over,
+  id: 'h', title: 'Agua', frequency: { type: 'daily' }, measure: 'times', target: 10, reminder: null, steps: [], startDate: '2026-08-01', createdAt: '', ...over,
 });
 const log = (date: string, value: number): HabitLog => ({ id: date, habitId: 'h', date, value, stepsDone: [] });
 const session = (date: string, minutes: number): StudySession => ({ id: date, date, minutes, courseId: null, label: '' });
@@ -34,7 +34,7 @@ describe('calendario', () => {
   });
 
   it('separa vencidas y sin fecha', () => {
-    const t = (id: string, dueDate: string | null, status: 'todo' | 'done' = 'todo') => ({ id, title: id, courseId: null, priority: 'mid', status, dueDate, estimateMin: 0, xp: 10, subtasks: [], tags: [], createdAt: '', completedAt: null }) as never;
+    const t = (id: string, dueDate: string | null, status: 'todo' | 'done' = 'todo') => ({ id, title: id, courseId: null, priority: 'mid', status, dueDate, estimateMin: 0, subtasks: [], tags: [], createdAt: '', completedAt: null }) as never;
     const tasks = [t('a', '2026-09-10'), t('b', null), t('c', '2026-09-10', 'done'), t('d', '2026-09-30')];
     expect(overdueTasks(tasks, NOW).map((x: { id: string }) => x.id)).toEqual(['a']);
     expect(undatedTasks(tasks).map((x: { id: string }) => x.id)).toEqual(['b']);

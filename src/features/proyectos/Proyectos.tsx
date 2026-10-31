@@ -9,11 +9,13 @@ import { Icon } from '@/ui/Icon';
 import { ListSearch } from '@/ui/ListSearch';
 import { ResultCount } from '@/ui/ResultCount';
 import { LIST_SEARCH_FROM, matchesQuery } from '@/core/search';
+import { SOURCE_BASE_XP } from '@/core/progression';
 
+/** Avance de un proyecto: checkpoints hechos (todos valen lo mismo) y el XP base que eso supone. */
 const progress = (p: Project) => {
-  const total = p.checkpoints.reduce((a, c) => a + c.xp, 0);
-  const done = p.checkpoints.filter((c) => c.done).reduce((a, c) => a + c.xp, 0);
-  return { total, done, pct: total ? Math.round((done / total) * 100) : 0, count: p.checkpoints.filter((c) => c.done).length };
+  const count = p.checkpoints.filter((c) => c.done).length;
+  const total = p.checkpoints.length * SOURCE_BASE_XP.checkpoint;
+  return { total, done: count * SOURCE_BASE_XP.checkpoint, pct: p.checkpoints.length ? Math.round((count / p.checkpoints.length) * 100) : 0, count };
 };
 
 function Track({ project }: { project: Project }) {
@@ -31,7 +33,7 @@ function Track({ project }: { project: Project }) {
             <div className="track__line" aria-hidden="true" />
             <p className="track__title">{c.title}</p>
             {c.summary && <p className="muted small">{c.summary}</p>}
-            <p className="track__xp">+{c.xp} XP</p>
+            <p className="track__xp">+{SOURCE_BASE_XP.checkpoint} XP</p>
           </li>
         );
       })}

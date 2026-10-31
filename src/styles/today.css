@@ -345,6 +345,11 @@
   font-size: var(--fs-sm);
   font-weight: 700;
 }
+.daysum__freeze {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 
 /* ---------- Tablero de misiones ---------- */
 .today-board {

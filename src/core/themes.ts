@@ -6,7 +6,7 @@ import { SHOP } from './catalog';
  */
 
 /** Timbre de los efectos de sonido. Lo interpreta audio/sfx; aquí solo se elige. */
-export type SoundVoice = 'arcade' | 'cave' | 'forge' | 'abyss' | 'frost' | 'dune' | 'haunt';
+export type SoundVoice = 'arcade' | 'cave' | 'forge' | 'abyss' | 'frost' | 'dune' | 'haunt' | 'tactical' | 'stellar';
 
 export interface WorldTheme {
   /** Valor de `data-world` en <html>; `null` es el mundo por defecto (sin atributo). */
@@ -88,6 +88,24 @@ export const WORLD_THEMES: WorldTheme[] = [
     traits: ['Títulos con luz de neón', 'Paneles con halo violeta', 'Niebla en la barra lateral', 'Botones que brillan'],
     effects: ['Aparición entre la niebla', 'Sonido de theremín'],
     voice: 'haunt',
+  },
+  {
+    world: 'tactical',
+    itemId: 'world-tactical',
+    style: 'Shooter táctico',
+    description: 'Una interfaz de competición: hueso y pizarra, rojo coral para actuar y cortes en diagonal.',
+    traits: ['Rótulos condensados en mayúsculas espaciadas', 'Esquinas cortadas en rojo coral', 'Rayado diagonal en la barra lateral', 'Movimiento seco, sin rebotes'],
+    effects: ['Corte en diagonal al entrar', 'Clics secos de mira'],
+    voice: 'tactical',
+  },
+  {
+    world: 'stellar',
+    itemId: 'world-stellar',
+    style: 'Estrategia espacial',
+    description: 'El puente de una nave de mando: metal pavonado, chaflanes holográficos y luces de estado.',
+    traits: ['Paneles con chaflanes de luz azul', 'Retícula de radar en la barra lateral', 'Botones con halo holográfico', 'Planeta anillado en la pantalla del mundo'],
+    effects: ['El holograma se abre desde el centro', 'Sonido de comunicaciones'],
+    voice: 'stellar',
   },
 ];
 

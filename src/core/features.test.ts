@@ -7,6 +7,7 @@ import { COMBO_CAP, activeEvents, chestReward, comboBonus, freshDayBonus, habitB
 import { calendarDays, monthGrid } from './calendar';
 import { DEFAULT_POMODORO, formatClock, nextPhase, sanitizeConfig } from './pomodoro';
 import { ACHIEVEMENTS } from './achievements';
+import type { Stats } from './stats';
 import { SHOP } from './catalog';
 import { SPRITE_NAMES } from '@/ui/sprites';
 import { TRACKS, midiToFreq } from '@/audio/music';
@@ -259,8 +260,13 @@ describe('catálogo y logros', () => {
     for (const a of ACHIEVEMENTS) expect(SPRITE_NAMES, a.id).toContain(a.sprite);
   });
 
-  it('hay 6 mundos y todos tienen estilos (el logro «todos los mundos» pide 6)', () => {
-    expect(SHOP.filter((i) => i.kind === 'world')).toHaveLength(6);
+  it('hay 8 mundos y el logro «todos los mundos» los pide todos', () => {
+    const worlds = SHOP.filter((i) => i.kind === 'world');
+    expect(worlds).toHaveLength(8);
+    const all = ACHIEVEMENTS.find((a) => a.id === 'worlds-all');
+    expect(all?.hint).toContain('8');
+    expect(all?.check({ worlds: 7 } as Stats)).toBe(false);
+    expect(all?.check({ worlds: 8 } as Stats)).toBe(true);
   });
 });
 

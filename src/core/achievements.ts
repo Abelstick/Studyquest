@@ -1,6 +1,10 @@
 import type { SpriteName } from '@/ui/sprites';
 import type { Stats } from './stats';
 import { MAX_LEVEL, cityStates, cityTotal } from './city';
+import { SHOP } from './catalog';
+
+/** «Todos los mundos» son los del catálogo: añadir uno a la tienda sube el listón del logro. */
+const WORLD_COUNT = SHOP.filter((i) => i.kind === 'world').length;
 
 export interface AchievementDef {
   id: string;
@@ -53,7 +57,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'chest-30', title: 'Dragón del tesoro', hint: 'Abre 30 cofres diarios', sprite: 'chest', reward: 400, check: (s) => s.chests >= 30 },
   { id: 'avatars-3', title: 'Cambio de look', hint: 'Consigue 3 avatares', sprite: 'cat', reward: 100, check: (s) => s.avatars >= 3 },
   { id: 'worlds-3', title: 'Viajero', hint: 'Consigue 3 mundos visuales', sprite: 'drop', reward: 150, check: (s) => s.worlds >= 3 },
-  { id: 'worlds-all', title: 'Dueño de todos los mundos', hint: 'Consigue los 6 mundos visuales', sprite: 'castle', reward: 500, check: (s) => s.worlds >= 6 },
+  { id: 'worlds-all', title: 'Dueño de todos los mundos', hint: `Consigue los ${WORLD_COUNT} mundos visuales`, sprite: 'castle', reward: 500, check: (s) => s.worlds >= WORLD_COUNT },
   { id: 'city-1', title: 'Primera piedra', hint: 'Sube cualquier edificio de tu ciudad al nivel 1', sprite: 'house', reward: 30, check: (s) => cityTotal(s) >= 1 },
   { id: 'city-all', title: 'Sin solares vacíos', hint: 'Construye los 6 edificios de tu ciudad', sprite: 'castle', reward: 100, check: (s) => cityStates(s).every((b) => b.level >= 1) },
   { id: 'city-town', title: 'Alcalde', hint: 'Lleva tu ciudad al rango de Pueblo (8 niveles en total)', sprite: 'tree', reward: 150, check: (s) => cityTotal(s) >= 8 },

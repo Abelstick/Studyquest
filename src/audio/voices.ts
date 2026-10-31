@@ -32,4 +32,8 @@ export const VOICES: Record<SoundVoice, Voice> = {
   frost: { wave: 'triangle', pitch: 1.5, decay: 0.9, gain: 1.2, echo: { delay: 0.09, gain: 0.25 }, motif: [659, 784, 988, 1319] },
   dune: { wave: 'sawtooth', pitch: 0.9, decay: 0.8, gain: 0.55, bend: 0.97, motif: [440, 466, 554, 659] },
   haunt: { wave: 'sine', pitch: 1, decay: 1.4, gain: 1.6, vibrato: { rate: 6, depth: 0.03 }, motif: [392, 466, 587, 554] },
+  /** Seco y corto, como el clic de una mira: ni eco ni cola. */
+  tactical: { pitch: 1.1, decay: 0.6, gain: 0.9, bend: 0.94, motif: [880, 660, 1320, 1760] },
+  /** Radio de la nave: onda suave que sube y un rebote corto, como un canal de comunicaciones. */
+  stellar: { wave: 'triangle', pitch: 1.2, decay: 1.1, gain: 1.3, bend: 1.04, echo: { delay: 0.11, gain: 0.3 }, motif: [523, 784, 698, 1047] },
 };

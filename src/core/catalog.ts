@@ -55,6 +55,8 @@ export const SHOP: ShopItem[] = [
   { id: 'world-snow', kind: 'world', category: 'Mundo visual', title: 'Montaña nevada', price: 550, sprite: 'snowflake' },
   { id: 'world-desert', kind: 'world', category: 'Mundo visual', title: 'Desierto de cactus', price: 550, sprite: 'cactus' },
   { id: 'world-ghost', kind: 'world', category: 'Mundo visual', title: 'Casa encantada', price: 650, sprite: 'moon' },
+  { id: 'world-tactical', kind: 'world', category: 'Mundo visual', title: 'Protocolo táctico', price: 700, sprite: 'sword' },
+  { id: 'world-stellar', kind: 'world', category: 'Mundo visual', title: 'Puente de mando estelar', price: 750, sprite: 'astronaut' },
   { id: 'power-freeze', kind: 'power', category: 'Poder', title: 'Congelar racha ×3', price: 200, sprite: 'star', consumable: true },
   { id: 'badge-star', kind: 'badge', category: 'Insignia', title: 'Sello Superestrella', price: 900, sprite: 'trophy' },
   { id: 'badge-tomato', kind: 'badge', category: 'Insignia', title: 'Sello Pomodoro', price: 600, sprite: 'tomato' },

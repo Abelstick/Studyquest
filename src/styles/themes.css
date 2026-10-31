@@ -575,6 +575,194 @@
   --nav-active-bg: var(--panel-3);
 }
 
+/* ---------- Protocolo táctico · shooter competitivo: hueso y pizarra, rojo coral, cortes en diagonal ---------- */
+:root[data-world='tactical'],
+[data-world-preview='tactical'] {
+  --page: #0f1923;
+  --on-page: #ece8e1;
+  --on-page-muted: #9ba6b1;
+  --panel: #ece8e1;
+  --panel-2: #e1dcd3;
+  --panel-3: #d3cdc1;
+  --field: #f7f4ef;
+  --field-edge: var(--line);
+  --text: #0f1923;
+  --muted: #47525d;
+  --ink-soft: #545f6a;
+  --line: #0f1923;
+  --line-soft: #c6c0b5;
+  --shadow: #0b131b;
+  --bar-bg: #d3cdc1;
+  --xp-text: #6b4a00;
+  --red: #c2392e;
+  --red-text: #9e261c;
+  --green: #22784b;
+  --green-text: #1a5c39;
+  --blue: #2a5a8c;
+  --violet: #5c4a9e;
+  --on-green: #f7f4ef;
+  --on-blue: #f7f4ef;
+  --hud: #0b131b;
+  --hud-2: #16222d;
+  --hud-edge: #2c3b48;
+  --hud-text: #ece8e1;
+  --side: #0f1923;
+  --side-text: #ece8e1;
+  --side-plate: rgba(236, 232, 225, 0.04);
+  --side-plate-hi: rgba(255, 90, 79, 0.1);
+  --side-edge: rgba(236, 232, 225, 0.16);
+  /* Rayado diagonal fino, como la cinta de una zona de entrenamiento. */
+  --side-bg: repeating-linear-gradient(135deg, rgba(255, 90, 79, 0.06) 0 2px, transparent 2px 14px), linear-gradient(180deg, #13202b, #0b131b);
+  --nav-mark: #ff5a4f;
+  --nav-mark-ease: cubic-bezier(0.7, 0, 0.3, 1);
+  --nav-active-bg: var(--panel);
+  --primary: #ff5a4f;
+  --on-primary: #0f1923;
+  --primary-edge: #0f1923;
+  --primary-glow: 0 0 0 transparent;
+  --focus: #ff5a4f;
+  --focus-ink: #0f1923;
+  --accent: #ff5a4f;
+  --turf: #8a96a3;
+  --turf-2: #4a5663;
+  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
+  --display-stretch: 75%;
+  --btn-case: uppercase;
+  --btn-caps: normal;
+  --r-sm: 0;
+  --r-md: 0;
+  --r-lg: 0;
+  --bw: 1px;
+  /* Esquina cortada en coral arriba a la derecha y una muesca de medición abajo a la izquierda. */
+  --panel-deco: linear-gradient(225deg, var(--primary) 0 11px, transparent 11px) top right / 22px 22px no-repeat, linear-gradient(var(--muted), var(--muted)) left 10px bottom 10px / 18px 2px no-repeat, linear-gradient(var(--muted), var(--muted)) left 10px bottom 10px / 2px 8px no-repeat;
+  --panel-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+  --title-glow: none;
+  --fx-glow: 0 0 0 2px #ff5a4f, 0 0 18px rgba(255, 90, 79, 0.4);
+  --backdrop: rgba(8, 13, 19, 0.86);
+  --bar-ease: cubic-bezier(0.7, 0, 0.3, 1);
+  --hover-lift: -1px;
+  --page-art: none;
+}
+:root[data-theme='dark'][data-world='tactical'],
+:root[data-theme='dark'] [data-world-preview='tactical'] {
+  --panel: #1b2631;
+  --panel-2: #22303c;
+  --panel-3: #2c3c4a;
+  --field: #131d26;
+  --field-edge: #6c7e8e;
+  --text: #ece8e1;
+  --muted: #a9b3bd;
+  --ink-soft: #95a2ae;
+  --line: #3a4b5a;
+  --line-soft: #2c3c4a;
+  --shadow: #05090d;
+  --bar-bg: #131d26;
+  --xp-text: #f2c230;
+  --red: #ff6a5f;
+  --red-text: #ff9a90;
+  --green: #4fbf86;
+  --green-text: #86dcb0;
+  --blue: #6fa6e0;
+  --violet: #a99be6;
+  --on-green: #0b131b;
+  --on-blue: #0b131b;
+  --nav-active-bg: var(--panel-3);
+}
+
+/* ---------- Puente de mando estelar · estrategia espacial: metal pavonado, chaflanes holográficos ---------- */
+:root[data-world='stellar'],
+[data-world-preview='stellar'] {
+  --page: #0a121c;
+  --on-page: #e4ecf4;
+  --on-page-muted: #92a4b8;
+  --panel: #e2e8ee;
+  --panel-2: #d5dde5;
+  --panel-3: #c5d0db;
+  --field: #f2f5f8;
+  --field-edge: var(--line);
+  --text: #0b1420;
+  --muted: #3b4a5b;
+  --ink-soft: #485869;
+  --line: #0b1420;
+  --line-soft: #b0bdca;
+  --shadow: #060c14;
+  --bar-bg: #c5d0db;
+  --xp-text: #6a4c00;
+  --red: #b8361f;
+  --red-text: #962713;
+  --green: #217246;
+  --green-text: #1a5a37;
+  --blue: #1f5d9c;
+  --violet: #5a4aa0;
+  --on-green: #f2f5f8;
+  --on-blue: #f2f5f8;
+  --hud: #070d15;
+  --hud-2: #111c29;
+  --hud-edge: #263a52;
+  --hud-text: #e4ecf4;
+  --side: #0a121c;
+  --side-text: #e4ecf4;
+  --side-plate: rgba(111, 208, 255, 0.05);
+  --side-plate-hi: rgba(111, 208, 255, 0.12);
+  --side-edge: rgba(111, 208, 255, 0.24);
+  /* Retícula de radar y la luz de la consola desde arriba. */
+  --side-bg: linear-gradient(rgba(111, 208, 255, 0.07) 1px, transparent 1px) 0 0 / 24px 24px, linear-gradient(90deg, rgba(111, 208, 255, 0.07) 1px, transparent 1px) 0 0 / 24px 24px, radial-gradient(120% 45% at 50% 0%, rgba(74, 168, 255, 0.2), transparent 70%), #0a121c;
+  --nav-mark: #6fd0ff;
+  --nav-mark-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --nav-active-bg: var(--panel);
+  --primary: #4aa8ff;
+  --on-primary: #06121f;
+  --primary-edge: #06121f;
+  --primary-glow: 0 0 16px rgba(74, 168, 255, 0.45);
+  --focus: #6fd0ff;
+  --focus-ink: #06121f;
+  --accent: #6fd0ff;
+  --turf: #5a6b80;
+  --turf-2: #2c3a4c;
+  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
+  --display-stretch: 82%;
+  --btn-case: uppercase;
+  --btn-caps: normal;
+  --r-sm: 2px;
+  --r-md: 3px;
+  --r-lg: 4px;
+  --bw: 1px;
+  /* Chaflanes de luz en las cuatro esquinas: el marco de una pantalla de la consola. */
+  --panel-deco: linear-gradient(135deg, transparent 0 7px, var(--primary) 7px 9px, transparent 9px) top left / 16px 16px no-repeat, linear-gradient(225deg, transparent 0 7px, var(--primary) 7px 9px, transparent 9px) top right / 16px 16px no-repeat, linear-gradient(45deg, transparent 0 7px, var(--primary) 7px 9px, transparent 9px) bottom left / 16px 16px no-repeat, linear-gradient(315deg, transparent 0 7px, var(--primary) 7px 9px, transparent 9px) bottom right / 16px 16px no-repeat;
+  --panel-shadow: 0 0 0 1px rgba(111, 208, 255, 0.15), 0 6px 18px rgba(0, 10, 25, 0.35);
+  --title-glow: 0 0 10px rgba(111, 208, 255, 0.6);
+  --fx-glow: 0 0 24px rgba(74, 168, 255, 0.55);
+  --backdrop: rgba(4, 8, 16, 0.86);
+  --bar-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --hover-lift: -2px;
+  --page-art: none;
+}
+:root[data-theme='dark'][data-world='stellar'],
+:root[data-theme='dark'] [data-world-preview='stellar'] {
+  --panel: #142130;
+  --panel-2: #1a2a3c;
+  --panel-3: #22364c;
+  --field: #0e1925;
+  --field-edge: #5a7a9c;
+  --text: #e4ecf4;
+  --muted: #a3b4c6;
+  --ink-soft: #8ea2b6;
+  --line: #2f4a66;
+  --line-soft: #22364c;
+  --shadow: #03070c;
+  --bar-bg: #0e1925;
+  --xp-text: #f2c230;
+  --red: #e0553a;
+  --red-text: #ff9a80;
+  --green: #5fd08a;
+  --green-text: #8fe6b0;
+  --blue: #6fb6ff;
+  --violet: #ab9be6;
+  --on-green: #06121f;
+  --on-blue: #06121f;
+  --nav-active-bg: var(--panel-3);
+}
+
 /*
  * ===== Cambio de mundo =====
  * Con la API View Transitions (si el navegador la tiene y no se pidió menos movimiento), la interfaz nueva
@@ -612,6 +800,14 @@
   animation-name: theme-in-mist;
   animation-timing-function: ease-out;
 }
+:root[data-world='tactical']::view-transition-new(root) {
+  animation-name: theme-in-slice;
+  animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
+}
+:root[data-world='stellar']::view-transition-new(root) {
+  animation-name: theme-in-holo;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
 /* Recreativa y cripta: la pantalla nueva se revela por franjas, a saltos. */
 @keyframes theme-in-pixel {
   from {
@@ -642,6 +838,22 @@
 @keyframes theme-in-dune {
   from {
     clip-path: inset(0 100% 0 0);
+  }
+}
+/* Protocolo táctico: un corte en diagonal barre la pantalla. */
+@keyframes theme-in-slice {
+  from {
+    clip-path: polygon(0 0, 0 0, -20% 100%, -20% 100%);
+  }
+  to {
+    clip-path: polygon(0 0, 120% 0, 100% 100%, -20% 100%);
+  }
+}
+/* Puente de mando: el holograma se abre desde la línea central. */
+@keyframes theme-in-holo {
+  from {
+    clip-path: inset(50% 0 50% 0);
+    filter: brightness(1.6) saturate(1.4);
   }
 }
 /* Mansión: aparece entre la niebla. */

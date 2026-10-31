@@ -207,6 +207,25 @@ const ground = (top, top2, soil, soil2, stroke) => {
   );
 };
 
+/** Suelo de placas: cubierta metálica u hormigón, con franjas de aviso. Mosaico de 96 px (las franjas cada 16 encajan). */
+const deck = (top, stroke, base, accent) => {
+  const W = 96;
+  const H = 44;
+  let stripes = '';
+  for (let x = -8; x < W; x += 16) stripes += path(`M${x} 18L${x + 8} 18L${x + 14} 24L${x + 6} 24Z`, accent, { opacity: 0.85 });
+  return svg(
+    W,
+    H,
+    rect(0, 10, W, H, base) +
+      rect(0, 10, W, 8, top) +
+      rect(0, 10, W, 3, stroke) +
+      stripes +
+      rect(0, 24, W, 2, stroke, { opacity: 0.6 }) +
+      rect(47, 26, 2, H, stroke, { opacity: 0.4 }) +
+      [10, 58, 86].map((x) => circle(x, 34, 2, top)).join(''),
+  );
+};
+
 /* ---------- Escenarios ---------- */
 
 const SKY_W = 1200;
@@ -370,6 +389,85 @@ const WORLDS = {
         circle(320, NEAR_H - 70, 22, '#b8f0ff', { opacity: 0.15 }),
     ),
     ground: ground('#5a4a80', '#3a2d5c', '#2a2040', '#1e1630', '#140c26'),
+  },
+  /* Protocolo táctico: un campo de entrenamiento al atardecer, siluetas angulosas, cajas y cinta de aviso. */
+  ":root[data-world='tactical'] .stage": {
+    sky: 'linear-gradient(180deg, #2b3a55 0%, #b8697a 58%, #f2b48a 100%)',
+    skybits: svg(
+      SKY_W,
+      SKY_H,
+      circle(960, 120, 96, '#ffd9b8', { opacity: 0.18 }) +
+        circle(960, 120, 58, '#ffe2c6', { opacity: 0.9 }) +
+        [[80, 60, 340], [520, 40, 260]].map(([x, y, w]) => path(`M${x} ${y + 30}L${x + w} ${y}`, 'none', { stroke: '#fff4ea', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.45 })).join('') +
+        stars([[200, 30, 1.5, 0.6], [700, 20, 1.5, 0.5], [1120, 40, 1.5, 0.6]], '#fff4ea'),
+    ),
+    far: svg(
+      FAR_W,
+      FAR_H,
+      [[60, 120, 150], [230, 90, 210], [420, 140, 130], [620, 100, 190], [790, 110, 160]]
+        .map(([x, w, h]) => path(`M${x} ${FAR_H}V${FAR_H - h + 24}L${x + w * 0.7} ${FAR_H - h}L${x + w} ${FAR_H - h + 18}V${FAR_H}Z`, '#5a5470', { opacity: 0.85 }))
+        .join(''),
+    ),
+    mid: svg(
+      MID_W,
+      MID_H,
+      [[40, 220, 120], [400, 260, 150]]
+        .map(([x, w, h]) => {
+          const d = `M${x} ${MID_H + 4}V${MID_H - h + 30}L${x + 40} ${MID_H - h}H${x + w}V${MID_H + 4}Z`;
+          return path(d, '#3b4459', { stroke: '#151d2a', 'stroke-width': 4, 'stroke-linejoin': 'round' }) + clipped(path(d, '#000'), rect(x - 10, MID_H - h * 0.55, w + 20, 10, '#ff5a4f') + rect(x - 10, MID_H - h * 0.55 + 14, w + 20, 3, '#ece8e1', { opacity: 0.6 }));
+        })
+        .join(''),
+    ),
+    near: svg(
+      NEAR_W,
+      NEAR_H,
+      [[60, 70], [140, 54], [420, 64]]
+        .map(([x, s]) => {
+          const y = NEAR_H - s;
+          return rect(x, y, s, s, '#c9b79a', { stroke: '#151d2a', 'stroke-width': 4 }) + path(`M${x + 6} ${y + 6}L${x + s - 6} ${y + s - 6}M${x + s - 6} ${y + 6}L${x + 6} ${y + s - 6}`, 'none', { stroke: '#8a7a60', 'stroke-width': 4 });
+        })
+        .join('') + rect(250, NEAR_H - 18, 110, 18, '#ece8e1', { stroke: '#151d2a', 'stroke-width': 3 }) + [0, 1, 2, 3, 4].map((i) => path(`M${254 + i * 22} ${NEAR_H - 15}l10 0l-8 12l-10 0Z`, '#ff5a4f')).join(''),
+    ),
+    ground: deck('#9aa3ad', '#151d2a', '#5d6672', '#ff5a4f'),
+  },
+  /* Puente de mando estelar: espacio profundo, un planeta anillado, estaciones y cubierta de hangar. */
+  ":root[data-world='stellar'] .stage": {
+    sky: 'linear-gradient(180deg, #02040c 0%, #0a1530 60%, #1a2c5a 100%)',
+    skybits: svg(
+      SKY_W,
+      SKY_H,
+      circle(300, 120, 110, '#6a4ab0', { opacity: 0.12 }) +
+        circle(380, 90, 70, '#3a8ad0', { opacity: 0.1 }) +
+        stars([[40, 30, 1.5, 0.8], [130, 190, 1.2, 0.6], [220, 60, 2, 0.9], [470, 200, 1.2, 0.5], [560, 40, 1.8, 0.8], [650, 150, 1.2, 0.6], [740, 30, 1.5, 0.7], [1080, 200, 1.5, 0.6], [1150, 60, 2, 0.9]], '#e4ecf4') +
+        sparkle(600, 100, 7, '#9fd4ff', 0.9) +
+        circle(900, 120, 52, '#2f5f9e') +
+        clipped(circle(900, 120, 52, '#000'), circle(880, 100, 52, '#4a86c8') + rect(840, 112, 120, 6, '#6fa0d8', { opacity: 0.5 })) +
+        `<ellipse cx='900' cy='124' rx='96' ry='20' fill='none' stroke='#9fd4ff' stroke-width='4' opacity='0.75'/>` +
+        circle(1040, 60, 10, '#c5d0db'),
+    ),
+    far: svg(
+      FAR_W,
+      FAR_H,
+      [[110, 46, 170], [300, 70, 120], [520, 40, 200], [740, 60, 140]]
+        .map(([x, w, h]) => rect(x - w / 2, FAR_H - h, w, h + 4, '#14223a') + rect(x - 2, FAR_H - h - 40, 4, 40, '#14223a') + circle(x, FAR_H - h - 42, 4, '#5fd08a', { opacity: 0.9 }))
+        .join(''),
+    ),
+    mid: svg(
+      MID_W,
+      MID_H,
+      hill({ cx: 200, base: MID_H, rx: 160, ry: 90, fill: '#2c3e58', stroke: '#060c18', shine: '#6fd0ff' }) +
+        hill({ cx: 580, base: MID_H, rx: 120, ry: 120, fill: '#26364e', stroke: '#060c18', shine: '#6fd0ff' }) +
+        rect(372, MID_H - 120, 36, 124, '#33475f', { stroke: '#060c18', 'stroke-width': 4 }) +
+        rect(360, MID_H - 132, 60, 16, '#4aa8ff', { stroke: '#060c18', 'stroke-width': 4 }),
+    ),
+    near: svg(
+      NEAR_W,
+      NEAR_H,
+      [[90, 100, '#6fd0ff'], [330, 76, '#5fd08a'], [520, 90, '#6fd0ff']]
+        .map(([x, h, light]) => rect(x - 4, NEAR_H - h, 8, h, '#46586f', { stroke: '#060c18', 'stroke-width': 3 }) + circle(x, NEAR_H - h - 4, 6, light) + circle(x, NEAR_H - h - 4, 16, light, { opacity: 0.2 }))
+        .join(''),
+    ),
+    ground: deck('#3a4a60', '#060c18', '#1f2b3c', '#6fd0ff'),
   },
 };
 

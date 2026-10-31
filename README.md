@@ -120,7 +120,7 @@ El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañ
 | **Proyectos** | Operación principal y *side quests* con checkpoints que dan XP. |
 | **Progreso** | Informe de la semana con su **revisión semanal** (ver abajo) y resumen de tu ciudad, horas por semana, distribución del tiempo por curso y mapa de actividad del último año. Filtro 30 / 90 días, 6 meses o todo. |
 | **Héroe 3D** | Tu personaje en **3D con bloques**: eliges raza (**Saiyajin, Mario, Koopa, Protoss, Terran o Zerg**), **evoluciona** en 4 etapas a medida que subes de nivel estudiando y le compras **armas, poderes y skins** con tus monedas (puedes **probarlos antes de comprar**). Arrástralo para girarlo. |
-| **Arsenal** | Tienda de Toad (21 avatares, marcos, **6 mundos visuales** que se pueden **probar gratis** antes de canjearlos, insignias, poderes), **51 logros** y recompensas personales de la vida real. |
+| **Arsenal** | Tienda de Toad (21 avatares, marcos, **8 mundos visuales** que se pueden **probar gratis** antes de canjearlos, insignias, poderes), **51 logros** y recompensas personales de la vida real. |
 | **Personajes** | **21 avatares** con arte pixel propio (búho, mago, ninja, astronauta, zorro, pingüino, rana, murciélago, ajolote, dragón…) y **cada uno con su gesto de reposo**: el fantasma flota, el slime se aplasta, el ninja parpadea de sitio, el dragón respira. Se ven moviéndose ya en la tienda, antes de comprarlos. |
 | **Perfil** | Camino de aprendizaje, insignias, ajustes, **experiencia** (mundo, día/noche, sonido con volumen y animaciones reducidas), instalar la app, **recordatorios**, **exportar/importar tu partida**, cerrar sesión y reiniciar partida. |
 
@@ -458,6 +458,10 @@ Cada mundo de la tienda cambia **toda** la interfaz, no solo el fondo: barra lat
 | Montaña nevada | Cumbre helada (fantasía de hielo) | Blancos con filo de escarcha, nieve en la barra lateral, campanillas |
 | Desierto | Dunas del ocaso (aventura) | Cenefa tejida en cada panel, zigzag de bazar, acción principal turquesa, cuerdas pulsadas |
 | Casa encantada | Mansión espectral (fantasía oscura) | Neón violeta en los títulos, halo en paneles y botones, niebla, theremín |
+| Protocolo táctico | Shooter táctico competitivo | Hueso y pizarra, acción en rojo coral, esquinas cortadas en diagonal, rayado de entrenamiento, clics secos |
+| Puente de mando estelar | Estrategia espacial | Metal pavonado, chaflanes de luz azul, retícula de radar, planeta anillado, sonido de comunicaciones |
+
+Los dos últimos toman el *lenguaje visual* de esos géneros (paletas, cortes, retículas), nunca nombres, logotipos ni recursos de juegos concretos. El logro «Dueño de todos los mundos» pide todos los del catálogo (ahora 8).
 
 - **Probar antes de comprar.** En Arsenal, cada mundo tiene su ficha con una **miniatura pintada con su CSS real**, qué cambia, sus efectos, su precio y su estado (*por desbloquear*, *en tu colección*, *activo* o *probándolo*). **Probar** lo aplica a toda la app para que navegues con él: no cuesta monedas ni se guarda, y **Salir** (o `Escape`) devuelve el mundo equipado. Desde la barra de la prueba se puede canjear o equipar.
 - **Lo que no cambia nunca:** la estructura, el orden de las acciones, la jerarquía de títulos y textos, y el **dorado de XP y monedas**, que significa lo mismo en todos los mundos.

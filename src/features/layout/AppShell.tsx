@@ -218,7 +218,7 @@ function Sidebar() {
                   setNavOpen(false);
                 }}
               >
-                <Sprite name={s.sprite} size={20} />
+                <Sprite name={s.sprite} size={20} themed />
                 <span className="nav__text">
                   <span className="nav__label">{s.label}</span>
                   <span className="nav__sub">{tabsOf(s.id).map((t) => t.label).join(' · ')}</span>
@@ -397,7 +397,7 @@ function MobileNav() {
           return (
             <Link key={s.id} to={hrefFor(s.id)} className={cx('bottom-nav__link', on && 'is-active')} aria-current={on ? 'true' : undefined}>
               <span className="bottom-nav__icon">
-                <Sprite name={s.sprite} size={22} />
+                <Sprite name={s.sprite} size={22} themed />
                 {b && (
                   <span className={cx('bottom-nav__badge', `bottom-nav__badge--${b.tone}`)} aria-hidden="true">
                     {b.count > 9 ? '9+' : b.count}

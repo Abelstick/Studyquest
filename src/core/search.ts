@@ -46,6 +46,6 @@ export function searchAll(s: SearchSource, query: string, limit = 8): SearchHit[
     ...s.habits.filter((h) => hit(h.title)).map((h): SearchHit => ({ key: `h:${h.id}`, label: h.title, kind: 'Hábito', to: `/habitos/${q(h.id)}` })),
     ...searchNotes(s.notes, query).map((n): SearchHit => ({ key: `n:${n.id}`, label: n.title || 'Sin título', kind: 'Apunte', to: `/apuntes?nota=${q(n.id)}` })),
     ...s.goals.filter((g) => hit(g.title)).map((g): SearchHit => ({ key: `g:${g.id}`, label: g.title, kind: 'Meta', to: `/metas?meta=${q(g.id)}` })),
-    ...s.projects.filter((p) => hit(p.title)).map((p): SearchHit => ({ key: `p:${p.id}`, label: p.title, kind: 'Proyecto', to: '/proyectos' })),
+    ...s.projects.filter((p) => hit(p.title)).map((p): SearchHit => ({ key: `p:${p.id}`, label: p.title, kind: 'Proyecto', to: `/proyectos?proyecto=${q(p.id)}` })),
   ].slice(0, limit);
 }

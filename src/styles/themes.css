@@ -18,18 +18,18 @@
   --page: #12161f;
   --on-page: #e3e9ff;
   --on-page-muted: #a3aed0;
-  --panel: #dde3f0;
-  --panel-2: #cfd7e8;
-  --panel-3: #c0cae0;
-  --field: #eef1f8;
+  --panel: #d6d5dc;
+  --panel-2: #c9c8d2;
+  --panel-3: #b9b8c6;
+  --field: #e9e8ee;
   --field-edge: var(--line);
   --text: #0e1428;
   --muted: #3d4766;
   --ink-soft: #4a5577;
   --line: #0e1428;
-  --line-soft: #a9b4cf;
+  --line-soft: #a3a2b3;
   --shadow: #0a0f22;
-  --bar-bg: #c0cae0;
+  --bar-bg: #b9b8c6;
   --xp-text: #6a4a00;
   --red: #c2412b;
   --red-text: #962914;
@@ -61,10 +61,11 @@
   --accent: #5be0ff;
   --turf: #6f86c4;
   --turf-2: #3d4d7a;
-  --font-display: 'Pixelify Sans Variable', ui-monospace, 'Courier New', monospace;
+  --font-display: 'Pixelify Sans Rotulo', ui-monospace, 'Courier New', monospace;
   --display-stretch: 100%;
   --btn-case: uppercase;
   --btn-caps: normal;
+  --font-btn: var(--font-body); /* a 13-15 px la letra pixel confunde C/O y E/6: los botones van en la de lectura */
   --r-sm: 0;
   --r-md: 0;
   --r-lg: 0;
@@ -103,6 +104,11 @@
   --on-green: #0a0f22;
   --on-blue: #0a0f22;
   --nav-active-bg: var(--panel-3);
+}
+/* El rótulo pixel tiene el peso limitado (ver tokens.css): que el navegador no lo engorde por su cuenta. */
+:root[data-world='underground'],
+[data-world-preview='underground'] {
+  font-synthesis-weight: none;
 }
 
 /* ---------- Fortaleza de lava · castillo: RPG medieval, pergamino, oro y piedra ---------- */
@@ -159,6 +165,7 @@
   --display-stretch: 100%;
   --btn-case: none;
   --btn-caps: small-caps;
+  --font-btn: var(--font-display);
   --r-sm: 2px;
   --r-md: 3px;
   --r-lg: 4px;
@@ -253,6 +260,7 @@
   --display-stretch: 100%;
   --btn-case: none;
   --btn-caps: normal;
+  --font-btn: var(--font-display);
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 20px;
@@ -347,6 +355,7 @@
   --display-stretch: 88%;
   --btn-case: uppercase;
   --btn-caps: normal;
+  --font-btn: var(--font-display);
   --r-sm: 6px;
   --r-md: 8px;
   --r-lg: 12px;
@@ -363,18 +372,18 @@
 }
 :root[data-theme='dark'][data-world='snow'],
 :root[data-theme='dark'] [data-world-preview='snow'] {
-  --panel: #1a2533;
-  --panel-2: #202d3d;
-  --panel-3: #2a3a4e;
-  --field: #131c27;
-  --field-edge: #66809c;
+  --panel: #14283f;
+  --panel-2: #19314c;
+  --panel-3: #213e5e;
+  --field: #0e1e30;
+  --field-edge: #6f93b8;
   --text: #eef6ff;
-  --muted: #a9bdd2;
-  --ink-soft: #94aac1;
-  --line: #3b5068;
-  --line-soft: #2a3a4e;
+  --muted: #a9c2dc;
+  --ink-soft: #94aecb;
+  --line: #35587c;
+  --line-soft: #213e5e;
   --shadow: #070b10;
-  --bar-bg: #131c27;
+  --bar-bg: #0e1e30;
   --xp-text: #f2c230;
   --red: #e0553a;
   --red-text: #ff9a80;
@@ -441,6 +450,7 @@
   --display-stretch: 75%;
   --btn-case: uppercase;
   --btn-caps: normal;
+  --font-btn: var(--font-display);
   --r-sm: 3px;
   --r-md: 4px;
   --r-lg: 6px;
@@ -535,6 +545,7 @@
   --display-stretch: 100%;
   --btn-case: uppercase;
   --btn-caps: normal;
+  --font-btn: var(--font-display);
   --r-sm: 4px;
   --r-md: 6px;
   --r-lg: 10px;
@@ -629,6 +640,7 @@
   --display-stretch: 75%;
   --btn-case: uppercase;
   --btn-caps: normal;
+  --font-btn: var(--font-display);
   --r-sm: 0;
   --r-md: 0;
   --r-lg: 0;
@@ -645,18 +657,18 @@
 }
 :root[data-theme='dark'][data-world='tactical'],
 :root[data-theme='dark'] [data-world-preview='tactical'] {
-  --panel: #1b2631;
-  --panel-2: #22303c;
-  --panel-3: #2c3c4a;
-  --field: #131d26;
-  --field-edge: #6c7e8e;
+  --panel: #251d22;
+  --panel-2: #2e242a;
+  --panel-3: #3a2e35;
+  --field: #1a1418;
+  --field-edge: #8a7480;
   --text: #ece8e1;
-  --muted: #a9b3bd;
-  --ink-soft: #95a2ae;
-  --line: #3a4b5a;
-  --line-soft: #2c3c4a;
+  --muted: #bdb0b3;
+  --ink-soft: #a89b9f;
+  --line: #54424b;
+  --line-soft: #3a2e35;
   --shadow: #05090d;
-  --bar-bg: #131d26;
+  --bar-bg: #1a1418;
   --xp-text: #f2c230;
   --red: #ff6a5f;
   --red-text: #ff9a90;
@@ -723,6 +735,7 @@
   --display-stretch: 82%;
   --btn-case: uppercase;
   --btn-caps: normal;
+  --font-btn: var(--font-display);
   --r-sm: 2px;
   --r-md: 3px;
   --r-lg: 4px;
@@ -739,18 +752,18 @@
 }
 :root[data-theme='dark'][data-world='stellar'],
 :root[data-theme='dark'] [data-world-preview='stellar'] {
-  --panel: #142130;
-  --panel-2: #1a2a3c;
-  --panel-3: #22364c;
-  --field: #0e1925;
-  --field-edge: #5a7a9c;
+  --panel: #0f1826;
+  --panel-2: #141f30;
+  --panel-3: #1c2b42;
+  --field: #090f18;
+  --field-edge: #4f7fb5;
   --text: #e4ecf4;
   --muted: #a3b4c6;
   --ink-soft: #8ea2b6;
-  --line: #2f4a66;
-  --line-soft: #22364c;
+  --line: #2c5a8f;
+  --line-soft: #1c2b42;
   --shadow: #03070c;
-  --bar-bg: #0e1925;
+  --bar-bg: #090f18;
   --xp-text: #f2c230;
   --red: #e0553a;
   --red-text: #ff9a80;

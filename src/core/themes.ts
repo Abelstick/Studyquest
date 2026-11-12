@@ -40,7 +40,7 @@ export const WORLD_THEMES: WorldTheme[] = [
     itemId: 'world-underground',
     style: 'Cripta de cristal',
     description: 'Arcade de los 80 bajo tierra: letra pixel, ladrillo azul y cristales cian que brillan.',
-    traits: ['Letra pixel en títulos y botones', 'Bordes gruesos y sombras duras', 'Barra lateral de ladrillo', 'Remaches cian en los paneles'],
+    traits: ['Letra pixel en los títulos', 'Bordes gruesos y sombras duras', 'Barra lateral de ladrillo', 'Remaches cian en los paneles'],
     effects: ['Entrada por franjas a saltos', 'Sonido con eco de caverna'],
     voice: 'cave',
   },

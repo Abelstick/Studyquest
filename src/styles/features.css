@@ -465,6 +465,14 @@
   --chip: var(--violet);
   cursor: default;
 }
+/* Evaluación de un curso: es un enlace a su ficha, no una tarea. */
+.chip-task--exam {
+  --chip: var(--yellow);
+  text-decoration: none;
+}
+.chip-task--exam:hover {
+  text-decoration: underline;
+}
 .chip-task.is-done {
   text-decoration: line-through;
   opacity: 0.75;
@@ -997,8 +1005,8 @@
   gap: 6px;
 }
 .tstep__btn {
-  width: 30px;
-  height: 30px;
+  width: max(30px, var(--tap));
+  height: max(30px, var(--tap));
   font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
@@ -2544,7 +2552,8 @@ select.input {
   width: 100%;
   display: grid;
   gap: 6px;
-  padding: 12px 40px 12px 12px;
+  /* El hueco de la derecha es para la estrella de fijar (28 px, o 44 con el dedo) más su margen. */
+  padding: 12px calc(max(28px, var(--tap)) + 12px) 12px 12px;
   text-align: left;
   background: var(--panel);
   border: var(--bw) solid var(--line);
@@ -2579,8 +2588,8 @@ select.input {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 28px;
-  height: 28px;
+  width: max(28px, var(--tap));
+  height: max(28px, var(--tap));
   background: transparent;
   display: inline-flex;
   align-items: center;
@@ -4356,7 +4365,15 @@ button.week__day--rich {
   padding: 2px;
   width: fit-content;
   max-width: 100%;
-  background: var(--hud);
+  /* Si las pestañas no caben (móvil), un brillo en el borde avisa de que hay más hacia ese lado. Las dos primeras
+     capas se mueven con el contenido y tapan el brillo cuando ya estás en ese extremo. */
+  --tabs-more: color-mix(in srgb, var(--hud-text) 55%, transparent);
+  background:
+    linear-gradient(to right, var(--hud) 40%, transparent) left / 36px 100% no-repeat local,
+    linear-gradient(to left, var(--hud) 40%, transparent) right / 36px 100% no-repeat local,
+    linear-gradient(to right, var(--tabs-more), transparent) left / 14px 100% no-repeat scroll,
+    linear-gradient(to left, var(--tabs-more), transparent) right / 14px 100% no-repeat scroll,
+    var(--hud);
   color: var(--hud-text);
   border: var(--bw) solid var(--ink);
   overflow-x: auto;
@@ -4524,7 +4541,8 @@ a.chip {
 }
 
 /* Tarjeta a la que se llega por enlace directo (búsqueda, calendario): se marca un momento para encontrarla. */
-.task.is-target {
+.task.is-target,
+.is-found {
   outline: 4px solid var(--focus);
   outline-offset: 3px;
   animation: target-pulse 0.5s steps(2) 3;
@@ -4535,7 +4553,8 @@ a.chip {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .task.is-target {
+  .task.is-target,
+  .is-found {
     animation: none;
   }
 }

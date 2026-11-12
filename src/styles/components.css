@@ -334,7 +334,7 @@
   color: var(--fg);
   border: var(--bw) solid var(--edge);
   border-radius: var(--r-sm);
-  font-family: var(--font-display);
+  font-family: var(--font-btn);
   font-stretch: var(--display-stretch);
   font-size: 15px;
   font-weight: 700;
@@ -825,6 +825,8 @@ textarea.input {
 .counter__value {
   flex: 1;
   text-align: center;
+  /* «12/20» no se parte tras la barra cuando el panel es estrecho. */
+  white-space: nowrap;
   font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
   font-weight: 700;

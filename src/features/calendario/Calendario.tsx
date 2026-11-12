@@ -14,7 +14,7 @@ import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
 import { TimeGrid } from './TimeGrid';
 import { AgendaList } from './AgendaList';
-import { DayHabitRow, HabitDot, TaskChip, eventClass, hoursLabel, kindIcon, occurrenceLabel, rangeLabel } from './parts';
+import { DayHabitRow, ExamChip, HabitDot, TaskChip, eventClass, hoursLabel, kindIcon, occurrenceLabel, rangeLabel } from './parts';
 
 const MAX_CHIPS = 3;
 type View = 'month' | 'week' | 'day' | 'agenda';
@@ -162,7 +162,7 @@ export default function Calendario() {
     },
   });
 
-  const dayIsEmpty = !dayOccs.length && (!entry || (!entry.tasks.length && !entry.upcoming.length && !entry.reviews.length && !entry.habits.length && !entry.minutes));
+  const dayIsEmpty = !dayOccs.length && (!entry || (!entry.tasks.length && !entry.exams.length && !entry.upcoming.length && !entry.reviews.length && !entry.habits.length && !entry.minutes));
 
   return (
     <div className="stack">
@@ -285,6 +285,11 @@ export default function Calendario() {
                           </li>
                         ))}
                         {mine.length > shown.length && <li className="calday__more">+{mine.length - shown.length} actividades</li>}
+                        {e?.exams.map((x) => (
+                          <li key={x.evaluation.id}>
+                            <ExamChip exam={x} />
+                          </li>
+                        ))}
                         {e?.tasks.slice(0, MAX_CHIPS).map((t) => (
                           <li key={t.id}>
                             <TaskChip t={t} now={now} onOpen={openTask} onSelect={() => setSelected(d)} />
@@ -363,6 +368,18 @@ export default function Calendario() {
                     <DayHabitRow key={hd.habit.id} hd={hd} date={selected} now={now} />
                   ))}
                 </ul>
+                {entry.exams.length > 0 && (
+                  <>
+                    <p className="kicker">Evaluaciones</p>
+                    <ul className="list">
+                      {entry.exams.map((x) => (
+                        <li key={x.evaluation.id}>
+                          <ExamChip exam={x} />
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
                 {(entry.tasks.length > 0 || entry.upcoming.length > 0) && <p className="kicker">Tareas que vencen</p>}
                 <ul className="list">
                   {entry.tasks.map((t: Task) => (

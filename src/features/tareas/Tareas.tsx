@@ -307,7 +307,7 @@ export default function Tareas() {
                 }}
               >
                 <h2 className="column__head">
-                  <Sprite name={col.sprite} size={20} />
+                  <Sprite name={col.sprite} size={20} themed />
                   {col.title} <span className="column__n">{all.length}</span>
                 </h2>
                 {all.length === 0 && <p className="muted small column__empty">{col.status === 'done' ? 'Aún no has superado ninguna.' : 'Vacío.'} Arrastra una tarea aquí.</p>}

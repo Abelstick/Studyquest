@@ -180,12 +180,17 @@ svg {
   align-items: center;
   gap: 8px;
   padding: 0 10px;
-  /* Cede sitio antes que el título de la pantalla, pero sin quedarse inservible. El factor es enorme a propósito:
-     con uno normal el título perdía una fracción de píxel y eso bastaba para que saliera con puntos suspensivos. */
-  min-width: 150px;
+  /* Cede sitio antes que el título de la pantalla: si hace falta (mundos de letra ancha, pantallas medianas) se
+     queda en solo la lupa y vuelve a abrirse al enfocarlo. El factor es enorme a propósito: con uno normal el
+     título perdía una fracción de píxel y eso bastaba para que saliera con puntos suspensivos. */
+  min-width: 44px;
+  cursor: text;
   flex: 0 1000000 260px;
   background: var(--hud-2);
   border: var(--bw) solid var(--hud-edge);
+}
+.search:focus-within {
+  min-width: min(240px, 60vw);
 }
 .search__input {
   flex: 1;
@@ -239,8 +244,8 @@ svg {
 }
 
 .icon-btn--sm {
-  width: 28px;
-  height: 28px;
+  width: max(28px, var(--tap));
+  height: max(28px, var(--tap));
   font-size: 12px;
   background: transparent;
   color: var(--muted);

@@ -104,7 +104,7 @@ El menú tiene **cinco secciones**. Cada una agrupa sus pantallas como **pestañ
 | Pantalla | Qué hace |
 | --- | --- |
 | **Hoy** (Inicio) | Un panel del día. Arriba, la guía **«Empieza aquí»** (mientras falten pasos), **«Ahora»** (qué toca a esta hora) y un **resumen** con el avance del día, los hábitos y tareas hechos y tu racha; después el **siguiente paso** y la misión del día en **dos columnas**: **Hábitos** (verde: constancia) y **Tareas** (azul: plazos, agrupadas en vencidas, hoy, próximos 7 días…; rojo = vencida, indicador de 1-3 barras = prioridad). Cada columna lleva su barra por bloques y un **＋** para crear. Pulsa una tarjeta (o su título) para abrir su **ficha** —estado de hoy, plazo o racha, subtareas o pasos, semana del hábito— con las acciones a mano (completar, deshacer, editar, ver más); la casilla ✔ y el desglose siguen marcándose sin abrirla. En móvil se ve una columna a la vez. Entre el siguiente paso y el tablero aparecen, solo si hay algo que decir, **tus 3 prioridades del día** (vencidas, de hoy y las que elegiste en la revisión semanal; cada una con ✔ y «Mañana», con *Deshacer*) y **tu agenda de hoy** (los bloques con hora del calendario, con «Ahora» / «Siguiente»). El domingo y los primeros días de la semana, un aviso invita a **revisar tu semana**. El **resumen** da el avance de **hoy** (si el día tenía 7 cosas, hacerlas todas es el 100 %; las tareas sin fecha no cuentan), los hábitos con **cómo va la semana**, las tareas **por semana** con hoy, mes, año y abiertas al lado, y la racha con sus últimos 14 días. Más abajo, **«Cursos de esta semana»**: por curso, si hoy toca estudiarlo, tus días de la semana frente a tu meta, su **plazo**, el bloque y los hábitos de hoy y las tareas que debe. A un lado, el **reto del mes** y el cofre diario (una línea). |
-| **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Arriba, los cursos **en marcha** con su próximo tema. Marca temas como «necesito repasar», y desde cada tema abre **sus apuntes** o **repasa sus tarjetas**. En la ficha, **Evaluaciones** guarda tus exámenes y trabajos con su peso, fecha y nota: calcula tu **promedio ponderado** y **cuánto necesitas sacar en lo que falta para aprobar** (o si ya lo tienes asegurado, o si ya no alcanza). La escala (0-20, 0-10, 0-100, 0-7 o 0-5) y la nota de aprobar se eligen por curso. |
+| **Cursos** | Cada curso es un mundo: módulos (se desbloquean en orden), temas, rango `S/A/B+/B/C/D`, mentor y feedback. Arriba, los cursos **en marcha** con su próximo tema. Marca temas como «necesito repasar», y desde cada tema abre **sus apuntes** o **repasa sus tarjetas**. En la ficha, **Evaluaciones** guarda tus exámenes y trabajos con su peso, fecha y nota: calcula tu **promedio ponderado** y **cuánto necesitas sacar en lo que falta para aprobar** (o si ya lo tienes asegurado, o si ya no alcanza). La escala (0-20, 0-10, 0-100, 0-7 o 0-5) y la nota de aprobar se eligen por curso. Las evaluaciones con fecha salen en el **Calendario** (mes, semana, agenda y panel del día), la próxima aparece en **«Cursos de esta semana»** de Hoy, y a 3 días o menos llega un **aviso** dentro de la app. |
 | **Tareas** | Tablero *Por jugar / En juego / Superada* con **arrastrar y soltar**, prioridad, fecha y **hora límite**, subtareas, etiquetas, **repetición** (cada N días/semanas/meses) y **jefes finales con barra de vida**. |
 | **Planificador** | Le dices «quiero aprender análisis de datos en 3 meses» y genera la ruta (Excel → SQL → Python → Pandas → Power BI → proyecto final) y **un plan con fechas** según tu disponibilidad, tus tareas y tus hábitos. Con **IA (Gemini, gratis)** o con plantillas. |
 | **Certificaciones** | Vitrina de tus credenciales: título, quién la emite, fecha, **enlace al certificado** (se abre en una pestaña nueva), ID de credencial, caducidad con aviso y, si quieres, el curso con el que se relaciona. Cada una da XP y suma una pieza a tu museo. |
@@ -462,10 +462,12 @@ Son **fan art en bloques** hecho para este proyecto personal: los personajes per
 
 Cada mundo de la tienda cambia **toda** la interfaz, no solo el fondo: barra lateral y barra inferior del móvil, HUD, paneles, tarjetas, modales, botones, campos, pestañas, barras de progreso, avisos, foco del teclado, letra de los rótulos, forma (radios y grosor de borde), decoración, ritmo de las animaciones, la transición al entrar y el timbre de los efectos de sonido.
 
+También cambian los **iconos de sección** (Hoy, Estudiar, Planear y Lograr, en el menú, la cabecera de cada pantalla y las columnas de tareas y hábitos): la Cripta usa ladrillo, gema y slime; el táctico, escudo, mira y medalla; el estelar, planeta, robot y cohete… La estrella dorada de «Mi juego» es la misma en todos, igual que el dorado de XP y monedas. De noche cada mundo conserva su tinte (hielo azul, táctico granate, estelar casi negro con filos azules) en vez de fundirse en el mismo gris.
+
 | Mundo | Dirección artística | Lo que más se nota |
 | --- | --- | --- |
 | Mundo 1-1 (de serie) | Recreativa de barrio | Paneles crema, rótulos condensados, botón principal amarillo |
-| Mundo subterráneo | Cripta de cristal (arcade de los 80) | Letra pixel, bordes de 2 px y sombras duras, ladrillo, remaches cian, eco de caverna |
+| Mundo subterráneo | Cripta de cristal (arcade de los 80) | Títulos en letra pixel, paneles de piedra gris, bordes de 2 px y sombras duras, ladrillo, remaches cian, eco de caverna |
 | Castillo | Fortaleza de lava (RPG medieval) | Pergamino con escuadras doradas, títulos con serifa y botones en versalitas, piedra y antorchas, timbre de laúd |
 | Mundo submarino | Abismo bioluminiscente (ciencia ficción) | Cápsulas redondeadas, reflejos de cristal, burbujas, halo turquesa, sonido de burbuja |
 | Montaña nevada | Cumbre helada (fantasía de hielo) | Blancos con filo de escarcha, nieve en la barra lateral, campanillas |
@@ -680,7 +682,7 @@ También hay pruebas de componentes (`*.test.tsx`, con jsdom y Testing Library) 
 ## Límites conocidos
 
 - Los avisos de cursos (parado hace 3 o más días, plazo a 3 días o vencido) salen dentro de la app, al abrirla. No se envían como push.
-- Las evaluaciones de un curso solo informan: una nota no da ni quita XP, no cambia el avance del curso y su fecha no aparece en el calendario ni genera avisos. Si los pesos no suman 100 %, el cálculo se hace en proporción a lo que hay.
+- Las evaluaciones de un curso solo informan: una nota no da ni quita XP ni cambia el avance del curso. En el calendario se ven pero no se arrastran ni se exportan al `.ics`, y su aviso sale dentro de la app al abrirla (no como push). Si los pesos no suman 100 %, el cálculo se hace en proporción a lo que hay.
 - Los hábitos y bloques del calendario vinculados a un curso solo informan: marcarlos no registra una sesión ni avance del curso.
 - **Pomodoro y hábitos medidos en minutos son independientes:** una sesión de enfoque suma su XP por minuto y un hábito de «estudiar 30 min» se registra aparte. No se vinculan automáticamente para no tocar la economía del juego; registra cada cosa una vez.
 - Las prioridades de la semana se eligen en la revisión semanal; sin revisión, «tus 3 prioridades» se deducen solas de las fechas y la prioridad de las tareas.
@@ -693,7 +695,6 @@ También hay pruebas de componentes (`*.test.tsx`, con jsdom y Testing Library) 
 - Los avisos de las actividades del calendario solo llegan con la app abierta.
 - En el móvil, las actividades se mueven desde su formulario, no arrastrando.
 - El tour de novedades se marca como visto **en cada dispositivo** (se guarda en el navegador, no en tu cuenta).
-- Un proyecto encontrado con la búsqueda abre la lista de Proyectos, no el proyecto concreto.
 
 
 ## Créditos y marcas

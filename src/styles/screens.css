@@ -457,7 +457,7 @@
 /* Punto · (título + acciones debajo) · quitar: un título largo crece hacia abajo, no empuja los botones. */
 .topic {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
   gap: 12px;
   padding: 10px 0;
@@ -476,8 +476,8 @@
 }
 .topic__dot {
   flex: none;
-  width: 28px;
-  height: 28px;
+  width: max(28px, var(--tap));
+  height: max(28px, var(--tap));
   padding: 0;
   display: flex;
   align-items: center;
@@ -714,9 +714,18 @@
 }
 /* Recompensa del hábito: su XP y, debajo, a qué atributos va. */
 .habit__gain {
+  flex: none;
   display: grid;
   justify-items: end;
   gap: 4px;
+}
+/* Con un nombre largo se parte el título (por palabras), no la recompensa: esta se queda siempre arriba a la
+   derecha, también en móvil, donde el resto de `.split` salta de línea. */
+.habit .split--top {
+  flex-wrap: nowrap;
+}
+.habit .split--top > div {
+  min-width: 0;
 }
 .habit__title a {
   color: var(--text);

@@ -1,5 +1,5 @@
 /** Datos del calendario: qué cae en cada día. Funciones puras. */
-import type { Habit, HabitLog, ISODate, Snapshot, StudySession, Task } from './domain';
+import type { Course, Evaluation, Habit, HabitLog, ISODate, Snapshot, StudySession, Task } from './domain';
 import { addDays, toISODate, today, weekStart } from './dates';
 import { habitProgress, isDueOn, isHabitDone, logFor } from './game';
 import { isQuotaHabit, quotaInfo } from './periods';
@@ -26,8 +26,16 @@ export interface HabitDay {
   due: boolean;
 }
 
+/** Una evaluación (examen, entrega) de un curso que cae ese día. Solo informa: se abre en la ficha del curso. */
+export interface DayExam {
+  course: Pick<Course, 'id' | 'title'>;
+  evaluation: Evaluation;
+}
+
 export interface DayEntry {
   tasks: Task[];
+  /** Evaluaciones con fecha ese día (ver core/grades.ts). */
+  exams: DayExam[];
   /** Repeticiones futuras de tareas recurrentes (aún no existen como tarea). */
   upcoming: Task[];
   reviews: DueReview[];
@@ -36,7 +44,7 @@ export interface DayEntry {
   minutes: number;
 }
 
-const empty = (): DayEntry => ({ tasks: [], upcoming: [], reviews: [], habits: [], minutes: 0 });
+const empty = (): DayEntry => ({ tasks: [], exams: [], upcoming: [], reviews: [], habits: [], minutes: 0 });
 
 type CalendarSource = Pick<Snapshot, 'tasks' | 'courses'> & { habits?: Habit[]; habitLogs?: HabitLog[]; sessions?: StudySession[] };
 
@@ -69,6 +77,11 @@ export function calendarDays(s: CalendarSource, from: ISODate, to: ISODate, now:
   for (const t of s.tasks) {
     if (t.dueDate && t.dueDate >= from && t.dueDate <= to) at(t.dueDate).tasks.push(t);
     for (const d of projectOccurrences(t, from, to, now)) at(d).upcoming.push(t);
+  }
+  for (const c of s.courses) {
+    for (const e of c.evaluations ?? []) {
+      if (e.date && e.date >= from && e.date <= to) at(e.date).exams.push({ course: { id: c.id, title: c.title }, evaluation: e });
+    }
   }
   for (const r of scheduledReviews(s, now)) {
     const d = r.due < now ? now : r.due;

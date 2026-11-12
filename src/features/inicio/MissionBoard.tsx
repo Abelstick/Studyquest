@@ -104,7 +104,7 @@ function LaneSection({ kind, title, done, total, addLabel, onAdd, shown, childre
       <header className="lane__head">
         <h3 className="lane__title" id={`lane-${kind}`}>
           <FoldToggle open={open} onToggle={toggle} controls={bodyId}>
-            <Sprite name={kind === 'habit' ? 'flower' : 'qblock'} size={18} />
+            <Sprite name={kind === 'habit' ? 'flower' : 'qblock'} size={18} themed />
             {title}
             <span className="lane__count">
               {done}/{total}
@@ -219,7 +219,7 @@ export function MissionBoard({ missions, hasHabits, hasTasks }: Readonly<Mission
       <div className="tabs lane-switch" role="group" aria-label="Qué columna ver">
         {switcher.map((t) => (
           <button key={t.id} type="button" aria-pressed={t.id === lane} className={cx('tabs__tab', `tabs__tab--${t.id}`, t.id === lane && 'is-on')} onClick={() => setLane(t.id)}>
-            <Sprite name={t.sprite} size={16} />
+            <Sprite name={t.sprite} size={16} themed />
             {t.label}
             <span className="tabs__count">{t.count}</span>
             {!!t.alert && (

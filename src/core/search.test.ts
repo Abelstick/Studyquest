@@ -33,7 +33,7 @@ describe('búsqueda global', () => {
       'Hábito /habitos/h1',
       'Apunte /apuntes?nota=n1',
       'Meta /metas?meta=g1',
-      'Proyecto /proyectos',
+      'Proyecto /proyectos?proyecto=p1',
     ]);
   });
 

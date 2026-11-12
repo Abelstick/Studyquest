@@ -217,7 +217,7 @@
 /* ---------- Resumen del día: casillas de tamaños distintos ---------- */
 .daysum__tile {
   --tone: var(--yellow);
-  grid-column: span 2;
+  grid-column: span 3;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
@@ -231,20 +231,16 @@
   border-radius: var(--r-md);
   box-shadow: var(--panel-shadow);
 }
-.daysum__tile--main {
-  grid-column: span 4;
-}
+/* Cuatro casillas iguales: con anchos distintos, las estrechas (hábitos, racha) partían su texto en tres líneas.
+   La del progreso se distingue por su cifra grande, no por el ancho. */
 .daysum__tile--habit {
   --tone: var(--habit);
 }
 .daysum__tile--task {
   --tone: var(--task);
-  grid-column: span 3;
 }
-/* La racha lleva cifra, récord, tira y congeladores: en dos columnas se partía todo. */
 .daysum__tile--streak {
   --tone: var(--orange);
-  grid-column: span 3;
 }
 .daysum__tile--streak .daysum__v {
   white-space: nowrap;
@@ -252,7 +248,10 @@
 .daysum__tile.is-alert.daysum__tile--task {
   --tone: var(--red);
 }
+/* El texto ocupa todo el ancho y el sprite se apoya encima, en la esquina: solo la etiqueta le deja sitio. */
 .daysum__text {
+  grid-column: 1 / -1;
+  grid-row: 1;
   min-width: 0;
 }
 .daysum__sprite {
@@ -262,6 +261,7 @@
 }
 .daysum__k {
   margin: 0;
+  padding-right: 36px;
   font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: var(--tracking-caps);

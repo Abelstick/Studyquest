@@ -6,7 +6,7 @@ import type { ISODate } from '@/core/domain';
 import { dueTimeOf } from '@/core/tasks';
 import { cx } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
-import { TaskChip, eventClass, fmt, kindIcon, occurrenceLabel, rangeLabel } from './parts';
+import { ExamChip, TaskChip, eventClass, fmt, kindIcon, occurrenceLabel, rangeLabel } from './parts';
 
 /** Alto de una hora en píxeles. */
 const HOUR = 48;
@@ -178,6 +178,9 @@ export function TimeGrid(p: Props) {
                   <button key={o.key} type="button" className={cx(eventClass(o.event, o.status), 'agev--chip')} onClick={() => p.onOpen(o)} title={occurrenceLabel(o)} aria-label={occurrenceLabel(o)}>
                     {kindIcon(o)} {o.title}
                   </button>
+                ))}
+                {e?.exams.map((x) => (
+                  <ExamChip key={x.evaluation.id} exam={x} />
                 ))}
                 {deadlines.map((t) => (
                   <TaskChip key={t.id} t={t} now={p.now} onOpen={p.onOpenTask} onSelect={() => p.onSelectDay(date)} />

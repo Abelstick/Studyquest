@@ -24,6 +24,15 @@
   font-display: swap;
   src: url('../../node_modules/@fontsource-variable/pixelify-sans/files/pixelify-sans-latin-wght-normal.woff2') format('woff2-variations');
 }
+/* La misma letra pixel para ROTULAR (títulos y botones de la Cripta de cristal), fijada en su peso normal: en
+   negrita se le cierran los huecos y «C» se lee «O», «E» se lee «6» y «2» se lee «8». Mismo archivo, sin descarga extra. */
+@font-face {
+  font-family: 'Pixelify Sans Rotulo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../../node_modules/@fontsource-variable/pixelify-sans/files/pixelify-sans-latin-wght-normal.woff2') format('woff2-variations');
+}
 /* Heredada: las pantallas que aún no se migran la siguen usando a través de --font-pixel. */
 @font-face {
   font-family: 'Press Start 2P';
@@ -116,8 +125,8 @@
   /* --- Medidas del armazón --- */
   --side-w: 256px;
   --hud-h: 64px;
-  --stage-h: clamp(220px, 34vh, 360px); /* la pantalla del mundo en Inicio */
-  --stage-h-sm: 148px; /* en el resto de pantallas, una franja */
+  --stage-h: clamp(260px, 42vh, 440px); /* la pantalla del mundo en Inicio */
+  --stage-h-sm: 172px; /* en el resto de pantallas, una franja */
 
   /* --- Movimiento (equivalentes CSS de los easings de GSAP en ui/motion) --- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* expo.out */
@@ -205,6 +214,7 @@
   --display-stretch: 78%; /* condensada: más letra en menos ancho, aspecto de rótulo */
   --btn-case: uppercase;
   --btn-caps: normal; /* font-variant-caps de los botones */
+  --font-btn: var(--font-display); /* letra de los botones: la de rótulo, salvo donde no se lee a tamaño pequeño */
 
   /* --- Forma: radio 0, bordes de 1 px y UNA sombra dura reservada al botón principal --- */
   --r-sm: 0; /* botones, campos, etiquetas */

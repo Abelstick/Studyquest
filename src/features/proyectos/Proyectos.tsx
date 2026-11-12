@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import type { Project } from '@/core/domain';
@@ -47,6 +48,30 @@ export default function Proyectos() {
   const openModal = useUi((s) => s.openModal);
 
   const [query, setQuery] = useState('');
+  // Enlace directo a un proyecto (/proyectos?proyecto=<id>, desde la búsqueda): se trae a la vista y se resalta un momento.
+  const [params, setParams] = useSearchParams();
+  const target = params.get('proyecto');
+  const [found, setFound] = useState<string | null>(null);
+  const targetExists = !!target && projects.some((p) => p.id === target);
+  useEffect(() => {
+    if (!target || !targetExists) return;
+    setQuery('');
+    setFound(target);
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('proyecto');
+        return next;
+      },
+      { replace: true },
+    );
+  }, [target, targetExists, setParams]);
+  useEffect(() => {
+    if (!found) return;
+    document.getElementById(`proyecto-${found}`)?.scrollIntoView({ block: 'center' });
+    const t = setTimeout(() => setFound(null), 2500);
+    return () => clearTimeout(t);
+  }, [found]);
   const visible = projects.filter((p) => matchesQuery([p.title, p.summary, ...p.checkpoints.map((c) => c.title)], query));
   const main = visible.find((p) => p.kind === 'main');
   const others = visible.filter((p) => p !== main);
@@ -100,7 +125,7 @@ export default function Proyectos() {
       )}
 
       {main && mp && (
-        <section className="panel panel--yellow">
+        <section id={`proyecto-${main.id}`} className={cx('panel panel--yellow', found === main.id && 'is-found')}>
           <div className="split split--top">
             <div>
               <p className="kicker">
@@ -128,7 +153,7 @@ export default function Proyectos() {
         {others.map((p) => {
           const pr = progress(p);
           return (
-            <article key={p.id} className="card">
+            <article key={p.id} id={`proyecto-${p.id}`} className={cx('card', found === p.id && 'is-found')}>
               <div className="card__bar" />
               <div className="card__body">
                 <div className="split split--top">

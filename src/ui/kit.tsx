@@ -64,7 +64,7 @@ export function PageHead({ kicker, title, right, sprite, hint }: { kicker: strin
       <div className="page-head__text">
         <p className="kicker">{kicker}</p>
         <h1 className="page-title">
-          {sprite && <Sprite name={sprite} size={30} />}
+          {sprite && <Sprite name={sprite} size={30} themed />}
           {title}
         </h1>
         {hint && <p className="page-head__hint">{hint}</p>}

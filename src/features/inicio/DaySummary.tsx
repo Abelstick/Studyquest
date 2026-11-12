@@ -36,7 +36,7 @@ function Tile({ tone, sprite, label, value, note, alert, clear, bar, children }:
         </p>
         {note && <p className="daysum__note">{note}</p>}
       </div>
-      <Sprite name={sprite} size={tone === 'main' ? 40 : 24} className="daysum__sprite" />
+      <Sprite name={sprite} size={tone === 'main' ? 40 : 24} className="daysum__sprite" themed />
       {bar && <Bar className="daysum__bar" pct={bar.pct} segments={bar.segments} tone={bar.tone} label={label} />}
       {children}
     </div>

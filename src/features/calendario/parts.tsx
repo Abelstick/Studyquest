@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '@/state';
-import type { HabitDay } from '@/core/calendar';
+import type { DayExam, HabitDay } from '@/core/calendar';
+import { fmtGrade, fmtWeight } from '@/core/grades';
 import { catchUpDay } from '@/core/catchup';
 import type { AgendaEvent, ISODate, Task } from '@/core/domain';
 import { isCounter, stepForCounter } from '@/core/game';
@@ -39,6 +41,18 @@ export const kindIcon = (o: Occurrence) => <Icon name={o.event.habitId ? 'habit'
 export function HabitDot({ hd }: { hd: HabitDay }) {
   const state = hd.done ? 'done' : hd.progress > 0 ? 'partial' : 'due';
   return <span className={cx('hdot', `hdot--${state}`)} title={`${hd.habit.title}${hd.value > 0 ? ` · ${fmt(hd.value)}/${fmt(hd.habit.target)}` : ''}`} />;
+}
+
+/** Evaluación de un curso (examen, entrega) en forma de chip: lleva a la ficha del curso, donde se pone la nota. */
+export function ExamChip({ exam }: { exam: DayExam }) {
+  const { course, evaluation: e } = exam;
+  const graded = e.score !== undefined;
+  const detail = `${e.title} · ${course.title} · pesa ${fmtWeight(e.weight)}${graded ? ` · nota ${fmtGrade(e.score ?? 0)}` : ''}`;
+  return (
+    <Link className={cx('chip-task chip-task--exam', graded && 'is-done')} to={`/cursos/${encodeURIComponent(course.id)}`} title={`Evaluación: ${detail}`} aria-label={`Evaluación: ${detail}`}>
+      <Icon name="book" size={10} /> {e.title}
+    </Link>
+  );
 }
 
 /** Tarea arrastrable en forma de chip: sirve en el mes, en la semana y en las bandejas. */

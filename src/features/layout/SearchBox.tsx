@@ -53,7 +53,13 @@ export function SearchBox({ inline, onNavigate, autoFocus, id }: Props) {
   };
 
   return (
-    <div className={cx('search', inline && 'search--inline')}>
+    <div
+      className={cx('search', inline && 'search--inline')}
+      // Encogido a solo la lupa, pulsar en cualquier parte de la caja lleva al campo (y lo vuelve a abrir).
+      onClick={(e) => {
+        if (e.target instanceof Element && !e.target.closest('input, button')) inputRef.current?.focus();
+      }}
+    >
       <Sprite name="ring" size={16} />
       <input
         ref={inputRef}

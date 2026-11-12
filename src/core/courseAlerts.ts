@@ -6,7 +6,10 @@ import type { AppNotification, Course, ISODate, StudySession, Task } from './dom
 import { courseDeadline } from './courseDeadline';
 import { courseWeek } from './courseCadence';
 import { diffDays, toISODate, today } from './dates';
+import { evaluationWhen, fmtWeight } from './grades';
 
+/** Días a una evaluación sin nota a partir de los cuales se avisa. */
+export const EVALUATION_ALERT_DAYS = 3;
 /** Días sin estudiar a partir de los cuales se avisa. */
 export const IDLE_DAYS = 3;
 /** Días al plazo a partir de los cuales se avisa, si aún quedan temas. */
@@ -24,6 +27,14 @@ export interface CourseAlert {
 export function courseAlerts(courses: Course[], sessions: StudySession[], tasks: Task[], now: ISODate = today()): CourseAlert[] {
   const out: CourseAlert[] = [];
   for (const c of courses) {
+    // Evaluaciones cercanas sin nota: se avisa aunque el curso ya tenga todos sus temas hechos.
+    for (const e of c.evaluations ?? []) {
+      if (e.score !== undefined || !e.date) continue;
+      const left = diffDays(e.date, now);
+      if (left < 0 || left > EVALUATION_ALERT_DAYS) continue;
+      out.push({ title: `${e.title} de ${c.title}: ${evaluationWhen(e.date, now)}`, body: `Pesa el ${fmtWeight(e.weight)} de la nota. Abre el curso para ver cuánto necesitas sacar.`, silenceDays: 1 });
+    }
+
     const d = courseDeadline(c, tasks, now);
     if (d.state === 'done') continue;
     const w = courseWeek(c, sessions, now);

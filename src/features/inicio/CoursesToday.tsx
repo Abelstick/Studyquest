@@ -10,6 +10,7 @@ import { courseTasks, type CourseTasks } from '@/core/courseTasks';
 import { courseWeek, type CourseWeek } from '@/core/courseCadence';
 import { courseDeadline, type CourseDeadline } from '@/core/courseDeadline';
 import { DeadlineLine } from '@/features/cursos/DeadlineLine';
+import { evaluationWhen, nextEvaluation } from '@/core/grades';
 import type { Course } from '@/core/domain';
 import { Bar, Button, Tag, cx } from '@/ui/kit';
 import { FoldPanel } from '@/ui/Fold';
@@ -95,6 +96,9 @@ function CourseRow({ row }: Readonly<{ row: Row }>) {
   const p = courseProgress(course);
   const next = nextTopic(course);
   const line = workLine(work);
+  const now = today();
+  // La próxima evaluación sin nota: es la fecha que más pesa de un curso y aquí se ve sin abrirlo.
+  const exam = nextEvaluation(course.evaluations, now);
   const minutes = week.minutes >= 60 ? `${+(week.minutes / 60).toFixed(1)} h` : `${week.minutes} min`;
 
   return (
@@ -143,6 +147,14 @@ function CourseRow({ row }: Readonly<{ row: Row }>) {
             {p.done}/{p.total} · {p.pct}%
           </span>
         </div>
+        {exam?.date && (
+          <p className="hcourse__tasks">
+            <Icon name="book" size={11} />
+            <Link className="link" to={`/cursos/${encodeURIComponent(course.id)}`}>
+              {exam.title}: {evaluationWhen(exam.date, now)}
+            </Link>
+          </p>
+        )}
         {line && (
           <p className={cx('hcourse__tasks', work.late > 0 && 'is-late')}>
             <Icon name="task" size={11} />

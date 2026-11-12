@@ -323,6 +323,11 @@
   flex-direction: column;
   gap: 2px;
 }
+/* Cada mundo trae sus iconos de sección, y no todos son cuadrados: una casilla fija mantiene alineadas las etiquetas. */
+.nav__link > .sprite,
+.bottom-nav__icon > .sprite {
+  width: 24px;
+}
 .nav__link {
   position: relative;
   display: flex;

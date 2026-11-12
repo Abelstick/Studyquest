@@ -24,6 +24,16 @@ describe('calendario', () => {
     expect(days.get('2026-09-18')?.habits[0]).toMatchObject({ due: true, done: false }); // programado a futuro
   });
 
+  it('las evaluaciones de un curso caen en su día; las que no tienen fecha o quedan fuera del rango no salen', () => {
+    const course = {
+      id: 'c1', title: 'SQL', professor: '', field: '', mentor: null, modules: [], createdAt: '',
+      evaluations: [{ id: 'e1', title: 'Parcial', weight: 40, date: '2026-09-17' }, { id: 'e2', title: 'Final', weight: 60, date: '2026-12-01' }, { id: 'e3', title: 'Trabajo', weight: 0 }],
+    };
+    const days = calendarDays({ tasks: [], courses: [course] }, '2026-09-14', '2026-09-20', NOW);
+    expect(days.get('2026-09-17')?.exams).toEqual([{ course: { id: 'c1', title: 'SQL' }, evaluation: course.evaluations[0] }]);
+    expect([...days.keys()]).toEqual(['2026-09-17']);
+  });
+
   it('un hábito de cuota solo aparece cuando se hizo, y hoy mientras falte cuota', () => {
     const h = habit({ frequency: { type: 'custom', times: 2, per: 'week' } });
     const days = calendarDays({ tasks: [], courses: [], habits: [h], habitLogs: [log('2026-09-14', 10)] }, '2026-09-14', '2026-09-20', NOW);

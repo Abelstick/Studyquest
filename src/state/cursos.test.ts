@@ -5,6 +5,7 @@ import { createDataStore } from './data';
 import { useUi } from './ui';
 import { newChallenge } from '@/core/challenge';
 import { addDays, today } from '@/core/dates';
+import { courseAlerts } from '@/core/courseAlerts';
 
 let repo: Repository;
 let store: ReturnType<typeof createDataStore>;
@@ -147,6 +148,23 @@ describe('notas del curso', () => {
 });
 
 describe('avisos de cursos', () => {
+  it('avisa de una evaluación sin nota a 3 días o menos, y deja de avisar al ponerle nota', () => {
+    store.getState().createCourse(course());
+    const cid = store.getState().courses[0].id;
+    store.getState().saveEvaluation(cid, { title: 'Parcial', weight: 40, date: addDays(today(), 1) });
+    store.getState().saveEvaluation(cid, { title: 'Final', weight: 60, date: addDays(today(), 10) });
+    store.getState().saveEvaluation(cid, { title: 'Práctica', weight: 0, date: addDays(today(), -1) });
+    const titles = () => store.getState().notifications.map((n) => n.title);
+    store.getState().checkCourseAlerts();
+    expect(titles()).toEqual(['Parcial de SQL: mañana']);
+    store.getState().checkCourseAlerts();
+    expect(titles()).toHaveLength(1);
+
+    const parcial = store.getState().courses[0].evaluations?.find((e) => e.title === 'Parcial');
+    if (!parcial) throw new Error('no se guardó el parcial');
+    expect(courseAlerts([{ ...store.getState().courses[0], evaluations: [{ ...parcial, score: 15 }] }], [], [], today())).toEqual([]);
+  });
+
   it('avisa del plazo cercano y no repite el mismo aviso hoy', () => {
     store.getState().createCourse(course({ dueDate: addDays(today(), 2) }));
     store.getState().checkCourseAlerts();

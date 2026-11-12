@@ -5,7 +5,7 @@ import type { ISODate } from '@/core/domain';
 import { dueTimeOf } from '@/core/tasks';
 import { cx } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
-import { eventClass, kindIcon, occurrenceLabel, rangeLabel } from './parts';
+import { ExamChip, eventClass, kindIcon, occurrenceLabel, rangeLabel } from './parts';
 
 interface Props {
   from: ISODate;
@@ -28,8 +28,9 @@ export function AgendaList({ from, to, occs, entries, now, onOpen, onOpenTask, o
       items: occs.filter((o) => o.date === d),
       deadlines: (entries.get(d)?.tasks ?? []).filter((t) => t.status !== 'done'),
       habits: entries.get(d)?.habits ?? [],
+      exams: entries.get(d)?.exams ?? [],
     }))
-    .filter((r) => r.items.length || r.deadlines.length);
+    .filter((r) => r.items.length || r.deadlines.length || r.exams.length);
 
   if (!rows.length) return <p className="muted">No hay actividades ni fechas límite en los próximos días. Crea una con «Actividad» o pulsa una hora libre en la vista Día.</p>;
 
@@ -65,6 +66,11 @@ export function AgendaList({ from, to, occs, entries, now, onOpen, onOpenTask, o
                       <Icon name="pin" size={10} /> {o.event.location}
                     </span>}
                 </button>
+              </li>
+            ))}
+            {r.exams.map((x) => (
+              <li key={x.evaluation.id}>
+                <ExamChip exam={x} />
               </li>
             ))}
             {r.deadlines.map((t) => (

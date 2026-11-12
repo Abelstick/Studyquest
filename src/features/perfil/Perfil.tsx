@@ -10,6 +10,7 @@ import { Avatar } from '@/ui/Avatar';
 import { Button, Field, Panel, cx, NumberInput } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { useInstallPrompt } from '@/pwa/hooks';
+import { UpdateButton } from './UpdateButton';
 import { AiSetup } from '@/features/ai/AiSetup';
 import { ExperiencePanel } from './ExperiencePanel';
 import { useAi } from '@/ai/store';
@@ -283,16 +284,15 @@ export default function Perfil() {
                 Guardar
               </Button>
             </form>
-            {(canInstall || installed) && (
-              <div className="row row--top">
-                {canInstall && (
-                  <Button small variant="green" onClick={install}>
-                    Instalar app
-                  </Button>
-                )}
-                {installed && <span className="tag tag--green">App instalada</span>}
-              </div>
-            )}
+            <div className="row row--top">
+              {canInstall && (
+                <Button small variant="green" onClick={install}>
+                  Instalar app
+                </Button>
+              )}
+              {installed && <span className="tag tag--green">App instalada</span>}
+              <UpdateButton />
+            </div>
           </Panel>
 
           <Panel kicker="Experiencia" title="Mundo, sonido y movimiento">

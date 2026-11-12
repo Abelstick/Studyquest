@@ -235,7 +235,7 @@ La app es una **SPA estática**: Render solo sirve archivos y el backend es Supa
 - **Android / Chrome / Edge:** abre la web y pulsa *Instalar app* (Perfil → Ajustes) o el icono de instalar de la barra de direcciones.
 - **iPhone / iPad:** Safari → *Compartir* → *Añadir a pantalla de inicio*.
 - **Sin conexión:** todo el código se precachea, así que la app abre sin red, y con Supabase **también puedes guardar cambios sin conexión** (ver [Trabajar sin conexión](#trabajar-sin-conexión)).
-- **Actualizaciones:** cuando hay versión nueva aparece un aviso «Actualizar».
+- **Actualizaciones:** cuando hay versión nueva aparece un aviso «Actualizar». Para no esperar, *Perfil → Buscar actualización* la busca al momento y recarga la app si la hay.
 - **Accesos directos:** mantén pulsado el icono para *Nueva tarea*, *Hábitos de hoy*, *Pomodoro* o *Repasar flashcards* (Android, Windows y macOS; iOS no los admite).
 - **Datos al día al volver:** si la app estuvo más de 2 minutos en segundo plano, al regresar vuelve a leer tus datos (sin pantalla de carga y sin pisar lo que aún se está guardando), así ves lo que hiciste en otro dispositivo.
 - **Pantalla encendida en Pomodoro:** con el temporizador en marcha el celular no se bloquea (Android/Chrome; con ahorro de batería el sistema puede negarlo).

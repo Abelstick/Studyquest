@@ -223,6 +223,9 @@ function revertChange(cur: Data, before: Data, after: Partial<Data>): Partial<Da
   return patch as Partial<Data>;
 }
 
+/** Veces que la carga inicial vuelve a leer si se siguen marcando cosas mientras llega la respuesta. */
+const LOAD_RETRIES = 3;
+
 export function createDataStore(repo: Repository) {
   /** Cola de escritura: garantiza que los cambios llegan a la base de datos en el orden en que ocurrieron. */
   let queue: Promise<unknown> = Promise.resolve();
@@ -241,6 +244,30 @@ export function createDataStore(repo: Repository) {
         set(revertChange(pickData(get()), prev, next));
         notifyError('No se pudo guardar', e instanceof Error ? e.message : 'Revisa tu conexión e inténtalo otra vez.');
       });
+    };
+
+    /** Todo lo del usuario, tal como está guardado. El perfil viene vacío la primera vez. */
+    const readAll = async (): Promise<Omit<Data, 'profile'> & { profile: Profile | null }> => {
+      const [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events] = await Promise.all([
+        repo.profile.get(), repo.tasks.list(), repo.habits.list(), repo.habitLogs.list(), repo.courses.list(), repo.goals.list(),
+        repo.projects.list(), repo.notes.list(), repo.certifications.list(), repo.personalRewards.list(), repo.sessions.list(), repo.xpEvents.list(), repo.notifications.list(), repo.events.list(),
+      ]);
+      return { profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events };
+    };
+
+    /**
+     * Lee del servidor sin pisar la pantalla: espera a que termine lo que se está guardando y, si se marca algo
+     * mientras llega la respuesta, la descarta (devuelve null). Esa respuesta se pidió antes del cambio: aplicarla
+     * haría «reaparecer» lo recién hecho hasta recargar.
+     */
+    const readSettled = async () => {
+      let seen: number;
+      do {
+        seen = writes;
+        await queue;
+      } while (seen !== writes);
+      const fresh = await readAll();
+      return seen === writes ? fresh : null;
     };
 
     const patchProfile = (patch: Partial<Omit<Profile, 'id'>>) =>
@@ -533,21 +560,26 @@ export function createDataStore(repo: Repository) {
         if (hydrate) set({ ...hydrate, status: 'ready', error: null });
         else set({ status: 'loading', error: null });
         try {
-          const [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events] = await Promise.all([
-            repo.profile.get(), repo.tasks.list(), repo.habits.list(), repo.habitLogs.list(), repo.courses.list(), repo.goals.list(),
-            repo.projects.list(), repo.notes.list(), repo.certifications.list(), repo.personalRewards.list(), repo.sessions.list(), repo.xpEvents.list(), repo.notifications.list(), repo.events.list(),
-          ]);
-          const ensured = profile ?? (await repo.profile.save(defaultProfile(userId)));
-          set({ profile: ensured, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events, status: 'ready', error: null });
+          // Con la copia guardada la app ya se puede usar mientras llega la respuesta: lo que se marque entretanto
+          // es más nuevo que lo que se pidió. Se vuelve a leer con esos cambios ya guardados, nunca se pisa la pantalla.
+          let fresh = hydrate ? await readSettled() : await readAll();
+          for (let tries = 0; !fresh && tries < LOAD_RETRIES; tries++) fresh = await readSettled();
+          if (get().status !== (hydrate ? 'ready' : 'loading')) return; // se cerró la sesión mientras cargaba
+          if (fresh) {
+            const ensured = fresh.profile ?? (await repo.profile.save(defaultProfile(userId)));
+            set({ ...fresh, profile: ensured, status: 'ready', error: null });
+          }
+          // Si no hubo forma (no paraste de marcar cosas), la pantalla ya tiene lo más reciente: se sigue con ella.
+          const { profile, xpEvents } = get();
           assignMissingCategories();
           // Lo que ya se había alcanzado (o cambió con el balance) se pone al día sin avisos en pantalla.
           claimUnlocks(xpEvents, false);
           syncClass(xpEvents, false);
           syncFreezers(true);
-          useUi.getState().setWorld(worldIdOf(ensured.equipped.world));
+          useUi.getState().setWorld(worldIdOf(profile.equipped.world));
           // Al abrir la app: avisos de cursos parados o por vencer (sin repetir los de hoy).
-          if (ensured.onboarded) get().checkCourseAlerts();
-          if (!ensured.onboarded) useUi.getState().openModal({ type: 'welcome' });
+          if (profile.onboarded) get().checkCourseAlerts();
+          if (!profile.onboarded) useUi.getState().openModal({ type: 'welcome' });
         } catch (e) {
           (hydrate ? console.warn : console.error)('[load]', e);
           if (hydrate) useUi.getState().toast({ kind: 'info', title: 'Sin conexión', body: 'Mostrando los últimos datos guardados.' });
@@ -557,21 +589,11 @@ export function createDataStore(repo: Repository) {
       async refresh() {
         if (get().status !== 'ready') return;
         try {
-          // Primero se deja terminar lo que estaba guardándose: leer antes devolvería datos sin esos cambios.
-          let seen: number;
-          do {
-            seen = writes;
-            await queue;
-          } while (seen !== writes);
-          const [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events] = await Promise.all([
-            repo.profile.get(), repo.tasks.list(), repo.habits.list(), repo.habitLogs.list(), repo.courses.list(), repo.goals.list(),
-            repo.projects.list(), repo.notes.list(), repo.certifications.list(), repo.personalRewards.list(), repo.sessions.list(), repo.xpEvents.list(), repo.notifications.list(), repo.events.list(),
-          ]);
-          // Si marcaste algo mientras llegaba la respuesta, lo de pantalla es más nuevo: se descarta la lectura.
-          if (seen !== writes || get().status !== 'ready' || !profile) return;
-          set({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events });
-          claimUnlocks(xpEvents, false);
-          syncClass(xpEvents, false);
+          const fresh = await readSettled();
+          if (!fresh?.profile || get().status !== 'ready') return;
+          set({ ...fresh, profile: fresh.profile });
+          claimUnlocks(fresh.xpEvents, false);
+          syncClass(fresh.xpEvents, false);
           // Si al volver ya es otro día, los congeladores cubren los días sin XP igual que al abrir la app.
           syncFreezers(true);
         } catch (e) {

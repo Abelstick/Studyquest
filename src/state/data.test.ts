@@ -300,6 +300,34 @@ describe('store de datos', () => {
     expect(store.getState().tasks[0].status).toBe('done');
   });
 
+  it('al abrir con la copia guardada, lo que marcas mientras llegan los datos no se pierde', async () => {
+    // La app abre al instante con la última foto y ya se puede usar; la respuesta del servidor llega después.
+    store.getState().createHabit({ title: 'Agua', courseId: null, frequency: { type: 'daily' }, measure: 'times', target: 2, reminder: null, steps: [] } as never);
+    await flush();
+    const habitId = store.getState().habits[0].id;
+    const cached = snapshotOf();
+    const slowLogs: Repository['habitLogs'] = {
+      ...repo.habitLogs,
+      list: async () => {
+        const rows = await repo.habitLogs.list();
+        await new Promise((r) => setTimeout(r, 15));
+        return rows;
+      },
+    };
+    const s = createDataStore({ ...repo, habitLogs: slowLogs });
+    const loading = s.getState().load('u1', cached);
+    expect(s.getState().status).toBe('ready');
+    await new Promise((r) => setTimeout(r, 5));
+    s.getState().setHabitValue(habitId, 1);
+    s.getState().setHabitValue(habitId, 2); // las dos veces, antes de que llegue la respuesta
+    await loading;
+    await flush();
+    expect(s.getState().habitLogs.find((l) => l.habitId === habitId)?.value).toBe(2);
+    expect(s.getState().xpEvents.some((e) => e.source === 'habit' && e.sourceId === habitId)).toBe(true);
+    // Y quedó guardado: al recargar sigue hecho.
+    expect((await repo.habitLogs.list()).find((l) => l.habitId === habitId)?.value).toBe(2);
+  });
+
   it('refrescar no pisa lo que marcas mientras llega la respuesta', async () => {
     store.getState().createTask(draft({ title: 'Informe' }));
     await flush();

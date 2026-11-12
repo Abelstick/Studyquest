@@ -359,12 +359,17 @@ function Hud() {
           <Icon name="sync" size={12} /> {pending} {pending === 1 ? 'pendiente' : 'pendientes'}
         </button>
       )}
-      <button type="button" className="icon-btn hud__pref" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'} title="Día / noche">
-        <Sprite name={theme === 'dark' ? 'star' : 'ghost'} size={18} />
-      </button>
-      <button type="button" className="icon-btn hud__pref" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Silenciar efectos' : 'Activar efectos de sonido'} title="Sonido">
-        <Icon name={sound ? 'sound' : 'mute'} />
-      </button>
+      {/* Con el menú lateral a la vista, día/noche y sonido ya están en su fila de «Ajustes»: aquí solo quitaban sitio al título. */}
+      {sideHidden && (
+        <>
+          <button type="button" className="icon-btn hud__pref" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Cambiar a modo día' : 'Cambiar a modo noche'} title="Día / noche">
+            <Sprite name={theme === 'dark' ? 'star' : 'ghost'} size={18} />
+          </button>
+          <button type="button" className="icon-btn hud__pref" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Silenciar efectos' : 'Activar efectos de sonido'} title="Sonido">
+            <Icon name={sound ? 'sound' : 'mute'} />
+          </button>
+        </>
+      )}
       <button type="button" className="icon-btn hud__bell" onClick={() => setNotifOpen(true)} aria-label={`Notificaciones${unread ? `, ${unread} sin leer` : ''}`}>
         <Sprite name="heart" size={18} />
         {unread > 0 && <span className="badge">{unread}</span>}

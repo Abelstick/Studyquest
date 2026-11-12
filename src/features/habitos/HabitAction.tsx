@@ -94,13 +94,13 @@ export function HabitAction({ habit, log }: { habit: Habit; log?: HabitLog }) {
     main = (
       <div className="counter">
         <Button small aria-label="Restar" onClick={() => setHabitValue(habit.id, value - step)} disabled={value <= 0}>
-          −
+          <Icon name="minus" size={10} />
         </Button>
         <span className="counter__value" aria-live="polite">
           {value} / {habit.target} {unit}
         </span>
         <Button small aria-label="Sumar" onClick={() => setHabitValue(habit.id, value + step)}>
-          +
+          <Icon name="plus" size={10} />
         </Button>
       </div>
     );

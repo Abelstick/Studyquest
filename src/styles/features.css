@@ -3720,6 +3720,9 @@ select.input {
   font-family: var(--font-body);
   font-weight: 700;
   line-height: 1;
+  /* «20/20» no se parte en dos líneas tras la barra. */
+  white-space: nowrap;
+  letter-spacing: 0;
 }
 button.week__day--rich {
   font-family: inherit;

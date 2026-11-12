@@ -90,13 +90,13 @@ export function HabitWeek({ habit, logs, now }: { habit: Habit; logs: HabitLog[]
           ) : (
             <div className="counter">
               <Button small aria-label="Restar" onClick={() => setValueOn(habit.id, editing, Math.max(0, value - step))} disabled={value <= 0}>
-                −
+                <Icon name="minus" size={10} />
               </Button>
               <span className="counter__value" aria-live="polite">
                 {fmt(value)} / {fmt(target)} {unit}
               </span>
               <Button small aria-label="Sumar" onClick={() => setValueOn(habit.id, editing, value + step)}>
-                +
+                <Icon name="plus" size={10} />
               </Button>
               {!editDay.done && (
                 <Button small onClick={() => setValueOn(habit.id, editing, target)}>

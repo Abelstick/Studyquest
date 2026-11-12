@@ -31,9 +31,11 @@ describe('Evaluaciones del curso', () => {
   it('muestra el promedio, lo que falta para aprobar y la próxima evaluación', () => {
     const evaluations = [{ id: 'p1', title: 'Parcial', weight: 60, score: 9 }, { id: 'f', title: 'Final', weight: 40, date: '2026-11-15' }];
     render(<CourseGrades course={course({ evaluations })} />);
-    expect(screen.getByText('9 de 20 · 60 % evaluado')).toBeTruthy();
+    const text = document.body.textContent ?? '';
+    expect(text).toContain('Promedio actual9 / 20');
     expect(screen.getByRole('status').textContent).toBe('Necesitas 14 de 20 de promedio en lo que falta para aprobar.');
-    expect(screen.getByText('Final · en 3 días (15 nov)')).toBeTruthy();
+    expect(text).toContain('60 % de la nota ya evaluado · Próxima: Final, en 3 días (15 nov)');
+    expect(screen.getByRole('progressbar', { name: 'Parte de la nota ya evaluada' })).toBeTruthy();
   });
 
   it('poner una nota la guarda al salir de la casilla, y vaciarla la quita', () => {

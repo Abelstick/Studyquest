@@ -88,13 +88,13 @@ export function DayHabitRow({ hd, date, now }: { hd: HabitDay; date: ISODate; no
     control = (
       <div className="counter">
         <Button small aria-label={`Restar a ${h.title}`} onClick={() => setValueOn(h.id, date, Math.max(0, hd.value - step))} disabled={hd.value <= 0}>
-          −
+          <Icon name="minus" size={10} />
         </Button>
         <span className="counter__value">
           {fmt(hd.value)}/{fmt(h.target)}
         </span>
         <Button small aria-label={`Sumar a ${h.title}`} onClick={() => setValueOn(h.id, date, hd.value + step)}>
-          +
+          <Icon name="plus" size={10} />
         </Button>
       </div>
     );

@@ -1967,15 +1967,52 @@
 .cgrades__open:hover .cgrades__title {
   text-decoration: underline;
 }
-.cgrades__verdict {
-  margin: 0;
-  font-weight: 700;
-  font-size: var(--fs-sm);
+/* Resumen: el promedio en grande y, al lado, lo que hace falta para aprobar. */
+.cgrades__sum {
+  --tone: var(--yellow);
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  background: var(--panel-2);
+  color: var(--text);
+  border: var(--bw) solid var(--line-soft);
+  border-left: 4px solid var(--tone);
 }
-.cgrades__verdict.is-good {
+.cgrades__sum.is-good {
+  --tone: var(--green);
+}
+.cgrades__sum.is-bad {
+  --tone: var(--alert);
+}
+.cgrades__sum > p {
+  margin: 0;
+}
+.cgrades__avg {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.cgrades__num {
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  line-height: 1;
+  white-space: nowrap;
+}
+.cgrades__num small {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--muted);
+}
+.cgrades__verdict {
+  font-weight: 700;
+}
+.cgrades__sum.is-good .cgrades__verdict {
   color: var(--green-text);
 }
-.cgrades__verdict.is-bad {
+.cgrades__sum.is-bad .cgrades__verdict {
   color: var(--late);
 }
 .cgrades__form,

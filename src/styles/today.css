@@ -232,7 +232,7 @@
   box-shadow: var(--panel-shadow);
 }
 .daysum__tile--main {
-  grid-column: span 5;
+  grid-column: span 4;
 }
 .daysum__tile--habit {
   --tone: var(--habit);
@@ -241,8 +241,13 @@
   --tone: var(--task);
   grid-column: span 3;
 }
+/* La racha lleva cifra, récord, tira y congeladores: en dos columnas se partía todo. */
 .daysum__tile--streak {
   --tone: var(--orange);
+  grid-column: span 3;
+}
+.daysum__tile--streak .daysum__v {
+  white-space: nowrap;
 }
 .daysum__tile.is-alert.daysum__tile--task {
   --tone: var(--red);
@@ -857,8 +862,13 @@
   .nextstep__actions > * {
     flex: 1 1 auto;
   }
+  /* En el teléfono manda «qué hago ahora»: el siguiente paso va primero y la ficha de nivel, debajo. */
   .levelcard {
+    order: 0;
     padding: var(--sp-4);
+  }
+  .levelcard__level {
+    margin-top: 0;
   }
   .daysum__tile {
     min-height: 0;

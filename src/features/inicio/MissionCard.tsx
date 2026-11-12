@@ -45,7 +45,8 @@ function ChainLine({ habitId }: { habitId: string }) {
   const link = now.links.find((l) => l.habit.id === habitId);
   return (
     <p className="mission__chain">
-      Rutina {chain.name} · {now.doneCount}/{now.dueCount}
+      {/* Muchas cadenas ya se llaman «Rutina de…»: no se repite la palabra. */}
+      {/^rutina\b/i.test(chain.name.trim()) ? chain.name : `Rutina ${chain.name}`} · {now.doneCount}/{now.dueCount}
       {link?.after && <> · sigue a {link.after.title}</>}
     </p>
   );

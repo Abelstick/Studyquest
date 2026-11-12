@@ -5,12 +5,12 @@ import type { Course, Evaluation } from '@/core/domain';
 import {
   EVALUATION_TITLE_MAX, FULL_WEIGHT, GRADE_SCALES, MAX_EVALUATIONS, evaluationWhen, fmtGrade, fmtWeight, gradeScaleOf, gradeSummary, gradeVerdict, nextEvaluation, sortEvaluations,
 } from '@/core/grades';
-import { Button, NumberInput, Panel, TextInput, cx } from '@/ui/kit';
+import { Bar, Button, NumberInput, Panel, TextInput, cx } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
 
 /** Casilla de la nota: se puede dejar vacía (aún sin nota) y se guarda al salir de ella o con Enter. */
 function ScoreInput({ evaluation, max, onSave }: Readonly<{ evaluation: Evaluation; max: number; onSave: (score: number | undefined) => void }>) {
-  const shown = evaluation.score === undefined ? '' : String(evaluation.score);
+  const shown = evaluation.score === undefined ? '' : String(evaluation.score).replace('.', ',');
   const [text, setText] = useState(shown);
   useEffect(() => setText(shown), [shown]);
 
@@ -77,6 +77,8 @@ export function CourseGrades({ course }: Readonly<{ course: Course }>) {
   const current = editing ? list.find((e) => e.id === editing) : undefined;
   const full = !current && list.length >= MAX_EVALUATIONS;
   const tone = summary.state === 'failed' || summary.state === 'unreachable' ? 'is-bad' : summary.state === 'passed' || summary.state === 'secured' ? 'is-good' : '';
+  // Sobre el total de pesos, no sobre 100: así la barra y la cifra dicen lo mismo aunque los pesos no cuadren.
+  const gradedPct = summary.weightTotal > 0 ? Math.round((summary.weightGraded / summary.weightTotal) * 100) : 0;
   const isCustomScale = !GRADE_SCALES.some((g) => g.max === scale.max);
 
   return (
@@ -85,26 +87,30 @@ export function CourseGrades({ course }: Readonly<{ course: Course }>) {
         <p className="muted small">Anota tus exámenes y trabajos con lo que pesa cada uno. Verás tu promedio y cuánto necesitas sacar en lo que falta para aprobar.</p>
       ) : (
         <>
-          <dl className="kv">
-            <div>
-              <dt>Promedio actual</dt>
-              <dd>{summary.average === null ? 'Sin notas todavía' : `${fmtGrade(summary.average)} de ${scale.max} · ${fmtWeight(summary.weightGraded)} evaluado`}</dd>
-            </div>
-            {upcoming?.date && (
-              <div>
-                <dt>Próxima</dt>
-                <dd>
-                  {upcoming.title} · {evaluationWhen(upcoming.date, now)}
-                </dd>
-              </div>
-            )}
-          </dl>
-          {verdict && (
-            <p className={cx('cgrades__verdict', tone)} role="status">
-              {verdict}
+          <div className={cx('cgrades__sum', tone)}>
+            <p className="cgrades__avg">
+              <span className="kicker">Promedio actual</span>
+              <span className="cgrades__num">
+                {summary.average === null ? '—' : fmtGrade(summary.average)}
+                <small> / {scale.max}</small>
+              </span>
             </p>
-          )}
-          {summary.weightsOff && <p className="muted small">Los pesos suman {fmtWeight(summary.weightTotal)}, no 100 %: el cálculo se hace en proporción a lo que hay.</p>}
+            {verdict && (
+              <p className="cgrades__verdict" role="status">
+                {verdict}
+              </p>
+            )}
+            <Bar pct={gradedPct} tone={tone === 'is-bad' ? 'red' : tone === 'is-good' ? 'green' : 'yellow'} label="Parte de la nota ya evaluada" />
+            <p className="muted small">
+              {summary.graded === 0 ? 'Sin notas todavía' : `${fmtWeight(gradedPct)} de la nota ya evaluado`}
+              {upcoming?.date && (
+                <>
+                  {' · '}Próxima: <b>{upcoming.title}</b>, {evaluationWhen(upcoming.date, now)}
+                </>
+              )}
+            </p>
+          </div>
+          {summary.weightsOff &&<p className="muted small">Los pesos suman {fmtWeight(summary.weightTotal)}, no 100 %: el cálculo se hace en proporción a lo que hay.</p>}
           <ul className="cgrades">
             {list.map((e) => (
               <li key={e.id} className={cx('cgrades__item', e.id === editing && 'is-editing')}>

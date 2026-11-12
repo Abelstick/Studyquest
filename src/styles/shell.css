@@ -111,8 +111,10 @@
   color: var(--hud-text);
   border-bottom: var(--bw) solid var(--hud-edge);
 }
+/* El título ocupa lo que mide: antes de cortarlo se encoge el buscador (ver `.search`), y solo cuando este llega
+   a su mínimo empieza a recortarse el título. */
 .hud__title {
-  flex: 1 1 200px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 .hud__h {

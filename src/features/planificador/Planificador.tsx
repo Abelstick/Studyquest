@@ -54,11 +54,11 @@ function Stepper({ value, onChange, label }: { value: number; onChange: (v: numb
   return (
     <div className="tstep" role="group" aria-label={label}>
       <button type="button" className="tstep__btn" onClick={() => onChange(Math.max(0, value - 15))} aria-label={`Menos tiempo el ${label}`} disabled={value <= 0}>
-        −
+        <Icon name="minus" size={10} />
       </button>
       <output className={cx('tstep__val', value === 0 && 'is-off')}>{value === 0 ? 'libre' : hm(value)}</output>
       <button type="button" className="tstep__btn" onClick={() => onChange(Math.min(720, value + 15))} aria-label={`Más tiempo el ${label}`}>
-        +
+        <Icon name="plus" size={10} />
       </button>
     </div>
   );

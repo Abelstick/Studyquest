@@ -37,8 +37,10 @@ export function CourseRhythm({ course }: Readonly<{ course: Course }>) {
             </div>
           ))}
         </div>
-        {/* Los lectores de pantalla no ven las barras: reciben los mismos datos en una tabla. */}
-        <table className="sr-only">
+        {/* Los lectores de pantalla no ven las barras: reciben los mismos datos en una tabla. La envuelve un div porque
+            una tabla ignora el ancho de `sr-only` y ensanchaba la página (scroll horizontal). */}
+        <div className="sr-only">
+        <table>
           <caption>Horas de estudio por semana en las últimas {stats.weeks.length} semanas</caption>
           <thead>
             <tr>
@@ -57,6 +59,7 @@ export function CourseRhythm({ course }: Readonly<{ course: Course }>) {
             ))}
           </tbody>
         </table>
+        </div>
         </>
       )}
       <dl className="kv">

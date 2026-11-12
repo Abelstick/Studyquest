@@ -16,6 +16,9 @@ import { WorldStage } from '@/ui/WorldStage';
 import { SectionTabs, sectionTabId } from '@/ui/SectionTabs';
 import { SECTIONS, navFor, newKindFor, rememberTab, sectionHref, tabsOf, type SectionId } from './nav';
 import { useShortcuts } from './useShortcuts';
+import { useBackClose } from './useBackClose';
+import { PullToRefresh } from './PullToRefresh';
+import { useNotificationActions } from '@/pwa/useNotificationActions';
 import { useTour } from '@/features/modals/TourModal';
 import { Overlays } from './Overlays';
 import { SearchBox } from './SearchBox';
@@ -421,6 +424,8 @@ export function AppShell() {
   useHabitReminders();
   usePomodoroEngine();
   useAppBadge();
+  useBackClose();
+  useNotificationActions();
   const refresh = useData((s) => s.refresh);
   useResumeRefresh(useCallback(() => void refresh(), [refresh]));
   useAiAccountSync();
@@ -438,6 +443,7 @@ export function AppShell() {
   }, [pathname]);
   return (
     <div className={cx('shell', sideHidden && 'shell--no-side')}>
+      <PullToRefresh onRefresh={refresh} />
       <Sidebar />
       <div className="shell__main">
         <Hud />

@@ -13,6 +13,7 @@ import { HabitAction, HabitMinimumButton, HabitRecovery } from '@/features/habit
 import { Tag, cx } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { Icon } from '@/ui/Icon';
+import { useSwipe } from '@/ui/useSwipe';
 
 /** Lista vacía estable: un `?? []` dentro del selector crea un array nuevo en cada render y provoca un bucle. */
 const NO_CHAINS: HabitChain[] = [];
@@ -86,6 +87,9 @@ export function MissionCard({ m, times }: { m: Mission; times?: string[] }) {
     else if (counts && !m.done) setHabitValue(m.habit.id, Math.min(m.habit.target, (logFor(logs, m.habit.id, today())?.value ?? 0) + stepForCounter(m.habit)));
     else setHabitValue(m.habit.id, m.done ? 0 : m.habit.target);
   };
+  // En el celular, deslizar la tarjeta a la derecha hace lo mismo que su casilla. Ya hecha no: deshacer es a propósito.
+  const cardRef = useRef<HTMLLIElement>(null);
+  useSwipe(cardRef, toggle, !m.done);
   const openDetail = () => openModal(m.kind === 'task' ? { type: 'task-detail', id: m.task.id } : { type: 'habit-detail', id: m.habit.id });
 
   // Desglose de la misión: las subtareas de la tarea o los pasos de hoy del hábito.
@@ -110,7 +114,7 @@ export function MissionCard({ m, times }: { m: Mission; times?: string[] }) {
   const dueTone = m.kind === 'task' && m.task.dueDate === today() ? 'dark' : 'plain';
 
   return (
-    <li className={cx('mission', `mission--${m.kind}`, m.done && 'is-done', late && 'is-late', ready && 'is-ready', fx && 'is-fx')} data-flip-id={m.id}>
+    <li ref={cardRef} className={cx('mission', `mission--${m.kind}`, m.done && 'is-done', late && 'is-late', ready && 'is-ready', fx && 'is-fx')} data-flip-id={m.id}>
       <button
         type="button"
         className="mission__check"

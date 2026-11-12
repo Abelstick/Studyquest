@@ -152,6 +152,8 @@ export function TextInput({ className, onKeyDown, onPaste, onInput, value, ...re
     <textarea
       ref={ref}
       rows={1}
+      // Intro envía el formulario: el teclado del celular lo dice con «Listo» en vez de un salto de línea.
+      enterKeyHint="done"
       className={cx(className, 'input--wrap')}
       value={value}
       onInput={(e) => {
@@ -213,6 +215,7 @@ export function NumberInput({ value, onValue, min, max, onFocus, onBlur, ...rest
     <input
       type="number"
       inputMode="decimal"
+      enterKeyHint="done"
       min={min}
       max={max}
       value={editing ? text : String(value)}

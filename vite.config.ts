@@ -33,6 +33,8 @@ export default defineConfig({
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        // Menú «Compartir» de Android: un enlace o texto de otra app llega a Tareas como tarea nueva.
+        share_target: { action: '/tareas', method: 'GET', params: { title: 'titulo', text: 'texto', url: 'enlace' } },
         // Al mantener pulsado el icono (Android, Windows, macOS). Android enseña como mucho 4.
         shortcuts: [
           { name: 'Nueva tarea', url: '/tareas?nuevo=1', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
@@ -44,12 +46,17 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,woff}'],
         // El SDK de Gemini solo se descarga cuando se usa la IA (que necesita conexión): no se precachea.
-        globIgnores: ['**/genai-*.js'],
+        // El motor 3D del héroe (medio MB) tampoco: solo lo descarga quien abre esa pantalla.
+        globIgnores: ['**/genai-*.js', '**/three-*.js'],
         navigateFallback: '/index.html',
         // Manejo de notificaciones push (public/push-sw.js) dentro del mismo service worker.
         importScripts: ['push-sw.js'],
         // Las llamadas a Supabase nunca se cachean: los datos siempre vienen frescos.
-        runtimeCaching: [{ urlPattern: ({ url }) => url.hostname.endsWith('.supabase.co'), handler: 'NetworkOnly' }],
+        runtimeCaching: [
+          { urlPattern: ({ url }) => url.hostname.endsWith('.supabase.co'), handler: 'NetworkOnly' },
+          // Tras abrir el héroe una vez, su motor 3D queda guardado y funciona sin conexión.
+          { urlPattern: ({ url }) => /\/assets\/three-[^/]+\.js$/.test(url.pathname), handler: 'CacheFirst', options: { cacheName: 'hero-3d', expiration: { maxEntries: 2 } } },
+        ],
       },
     }),
   ],

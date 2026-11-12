@@ -60,6 +60,7 @@ export function SearchBox({ inline, onNavigate, autoFocus, id }: Props) {
         id={id}
         className="search__input"
         type="search"
+        enterKeyHint="search"
         placeholder="Buscar tareas, cursos…"
         aria-label="Buscar"
         autoFocus={autoFocus}

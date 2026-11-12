@@ -166,8 +166,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: max(40px, var(--tap));
+  height: max(40px, var(--tap));
   padding: 0;
   background: transparent;
   color: var(--hud-text);
@@ -698,4 +698,46 @@
   .brand__coin {
     animation: none;
   }
+}
+
+/* ===== Tirar para actualizar (táctil) ===== */
+.ptr {
+  --ptr-y: 0px;
+  position: fixed;
+  z-index: 120;
+  top: env(safe-area-inset-top);
+  left: 50%;
+  display: none;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--hud);
+  color: var(--hud-text);
+  border: var(--bw) solid var(--hud-edge);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  pointer-events: none;
+  /* Baja con el dedo desde fuera de la pantalla. */
+  transform: translate(-50%, calc(var(--ptr-y) - 100%));
+}
+.ptr.is-on {
+  display: inline-flex;
+}
+.ptr__icon {
+  transform: rotate(90deg);
+}
+.ptr.is-ready .ptr__icon {
+  transform: rotate(-90deg);
+}
+.ptr__pull,
+.ptr__busy {
+  display: none;
+}
+.ptr.is-ready:not(.is-busy) .ptr__pull,
+.ptr.is-busy .ptr__busy {
+  display: inline;
+}
+.ptr.is-busy .ptr__icon {
+  display: none;
 }

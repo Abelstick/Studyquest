@@ -11,7 +11,8 @@ import type { EditScope } from '@/core/agenda';
 export type ModalState =
   | null
   /** `goalId` propone la meta a la que aportará una tarea u hábito nuevo (desde la ficha de la meta). */
-  | { type: 'task'; id?: string; dueDate?: string; goalId?: string; courseId?: string }
+  /** `title` propone el título de una tarea nueva (lo compartido desde otra app). */
+  | { type: 'task'; id?: string; dueDate?: string; goalId?: string; courseId?: string; title?: string }
   | { type: 'habit'; id?: string; goalId?: string; courseId?: string }
   /** Ficha de solo lectura (con acciones) de un hábito o una tarea, abierta desde Hoy. */
   | { type: 'habit-detail'; id: string }

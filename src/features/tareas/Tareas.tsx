@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { sharedTaskTitle } from '@/core/share';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { diffDays, dueLabel, today } from '@/core/dates';
@@ -143,6 +144,9 @@ function TaskCard({ task, courseName, highlighted }: { task: Task; courseName: s
   );
 }
 
+/** Nombres con los que llega lo compartido desde otra app (`share_target` del manifiesto). */
+const SHARE_PARAMS = ['titulo', 'texto', 'enlace'];
+
 export default function Tareas() {
   const tasks = useData((s) => s.tasks);
   const courses = useData((s) => s.courses);
@@ -153,6 +157,23 @@ export default function Tareas() {
     const wanted = params.get('curso');
     return wanted && courses.some((c) => c.id === wanted) ? wanted : 'all';
   });
+  // /tareas?nuevo=1 (atajo del icono) o ?titulo=&texto=&enlace= (menú «Compartir» de Android): abre ya el formulario.
+  const wantsNew = params.has('nuevo') || SHARE_PARAMS.some((k) => params.has(k));
+  useEffect(() => {
+    if (!wantsNew) return;
+    const title = sharedTaskTitle({ title: params.get('titulo'), text: params.get('texto'), url: params.get('enlace') });
+    openModal(title ? { type: 'task', title } : { type: 'task' });
+    // Fuera de la URL: recargar o volver atrás no debe abrirlo otra vez.
+    setParams(
+      (p) => {
+        const next = new URLSearchParams(p);
+        for (const k of ['nuevo', ...SHARE_PARAMS]) next.delete(k);
+        return next;
+      },
+      { replace: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsNew]);
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
   const [query, setQuery] = useState('');
   const [allDone, setAllDone] = useState(false);

@@ -571,8 +571,18 @@
   border: var(--bw) solid var(--line-soft);
   border-left: 4px solid var(--tone);
   cursor: pointer;
+  /* El scroll vertical es del navegador; el arrastre lateral es nuestro (deslizar para completar). */
+  touch-action: pan-y;
   transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out);
   border-radius: var(--r-sm);
+}
+/* Deslizar para completar: la tarjeta sigue al dedo y, pasado el umbral, avisa en verde de que al soltar se marca. */
+.mission.is-swiping {
+  transition: none;
+}
+.mission.is-swipe-ready {
+  border-color: var(--green);
+  border-left-color: var(--green);
 }
 .mission--task {
   --tone: var(--task);
@@ -908,7 +918,7 @@
     margin-left: 0;
   }
   .mission__subs label {
-    min-height: 36px;
+    min-height: max(36px, var(--tap));
   }
   .mission__ready {
     grid-column: 1 / -1;

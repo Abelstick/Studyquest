@@ -78,6 +78,7 @@
   --lh-body: 1.5;
 
   /* Constantes: no cambian con el tema ni con el mundo. */
+  --tap: 0px; /* alto mínimo de lo que se toca; con dedo sube a 44 px (ver abajo) y con ratón no estorba */
   --yellow: #f2c230; /* la ficha: XP y monedas se ven doradas en todos los mundos */
   --orange: #d9822b;
   --partial: #d9822b;
@@ -124,6 +125,13 @@
   --dur-enter: 1s;
   --dur-theme: 0.55s; /* cambio de mundo */
 
+}
+
+/* Con el dedo, todo lo que se pulsa mide al menos 44 px: los componentes usan max(su alto, var(--tap)). */
+@media (pointer: coarse) {
+  :root {
+    --tap: 44px;
+  }
 }
 
 /*

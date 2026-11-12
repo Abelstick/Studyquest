@@ -59,6 +59,7 @@ export function ListSearch({ value, onChange, what, className }: Readonly<Props>
         ref={inputRef}
         className="lsearch__input"
         type="search"
+        enterKeyHint="search"
         autoFocus
         placeholder={`Buscar ${what}…`}
         aria-label={`Buscar ${what}`}

@@ -168,7 +168,7 @@ El `.env.example` viene con `VITE_DATA_PROVIDER=local`, así que la app funciona
 | `npm run preview` | Sirve el build para probar la PWA de verdad |
 | `npm test` | Pruebas unitarias (Vitest) |
 | `npm run typecheck` | Solo comprobación de tipos |
-| `npm run icons` | Regenera los iconos PNG de la PWA desde el sprite del bloque `?` |
+| `npm run icons` | Regenera los iconos PNG de la PWA desde el sprite del bloque `?` (y la silueta de las notificaciones, desde la estrella) |
 | `npm run worlds` | Regenera el decorado de los mundos (`src/styles/worlds.css`). |
 | `npm run vapid` | Genera un par de claves VAPID para los [recordatorios push](#recordatorios-con-repetición-y-sonido) |
 
@@ -240,7 +240,13 @@ La app es una **SPA estática**: Render solo sirve archivos y el backend es Supa
 - **Datos al día al volver:** si la app estuvo más de 2 minutos en segundo plano, al regresar vuelve a leer tus datos (sin pantalla de carga y sin pisar lo que aún se está guardando), así ves lo que hiciste en otro dispositivo.
 - **Pantalla encendida en Pomodoro:** con el temporizador en marcha el celular no se bloquea (Android/Chrome; con ahorro de batería el sistema puede negarlo).
 - **Vibración (Android):** un toque al ganar XP, subir de nivel o completar un combo, aunque el sonido esté apagado. Se desactiva en Perfil → Experiencia.
-- **Pendientes en el icono:** la app instalada muestra cuántos hábitos y tareas de hoy te faltan. Se actualiza con la app abierta; según el lanzador de Android se ve como número o como punto.
+- **Pendientes en el icono:** la app instalada muestra cuántos hábitos y tareas de hoy te faltan, en **escritorio (Windows/macOS) e iPhone**. Se actualiza con la app abierta. Chrome para Android no admite esta función: ahí el icono solo lleva un punto cuando hay una notificación sin leer.
+- **Botón atrás (Android):** con un formulario, el menú o los avisos abiertos, «atrás» los cierra en vez de cambiar de pantalla o salir de la app.
+- **Gestos táctiles:** en Hoy, desliza una misión hacia la derecha para completarla (lo mismo que su casilla); tira hacia abajo desde lo alto de la página para actualizar los datos.
+- **«Hecho» desde la notificación:** el aviso de un hábito trae un botón *Hecho*. Con la app a la vista lo marca sin moverte; si no, abre la app y lo marca al cargar (el service worker no puede guardar por su cuenta).
+- **Compartir hacia la app (Android):** con la app instalada, StudyQuest aparece en el menú *Compartir*; el enlace o texto llega como una tarea nueva lista para guardar.
+- **Controles a medida del dedo:** en pantallas táctiles todo lo que se pulsa mide al menos 44 px (token `--tap`).
+- **Instalación ligera:** el motor 3D del héroe no se descarga al instalar, solo al abrir esa pantalla por primera vez (después queda guardado y funciona sin conexión).
 - Las peticiones a `*.supabase.co` **nunca** se cachean: los datos siempre son los reales.
 
 Para probar la PWA en local usa `npm run build && npm run preview` (el service worker no está activo en `npm run dev`).

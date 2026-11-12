@@ -662,6 +662,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  min-height: var(--tap);
   cursor: pointer;
 }
 .subtasks input,

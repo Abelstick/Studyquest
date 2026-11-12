@@ -49,7 +49,7 @@ function ModalHost() {
   if (!modal) return null;
   switch (modal.type) {
     case 'task':
-      return <TaskModal key={`${modal.id ?? 'new'}${modal.dueDate ?? ''}${modal.goalId ?? ''}${modal.courseId ?? ''}`} id={modal.id} dueDate={modal.dueDate} goalId={modal.goalId} courseId={modal.courseId} />;
+      return <TaskModal key={`${modal.id ?? 'new'}${modal.dueDate ?? ''}${modal.goalId ?? ''}${modal.courseId ?? ''}${modal.title ?? ''}`} id={modal.id} dueDate={modal.dueDate} goalId={modal.goalId} courseId={modal.courseId} title={modal.title} />;
     case 'pace':
       return <PaceModal courseId={modal.courseId} />;
     case 'pack':

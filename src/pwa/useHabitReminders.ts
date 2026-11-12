@@ -3,17 +3,25 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { sfx } from '@/audio/sfx';
 import { localParts } from '../../supabase/functions/_shared/due';
-import type { PlannedReminder } from '../../supabase/functions/_shared/reminders';
-import { acceptPushMessage, loadReminderState, saveReminderState, tickReminders, type Effect, type PushMessage } from './reminders';
+import { acceptPushMessage, loadReminderState, saveReminderState, tickReminders, type Effect, type Notice, type PushMessage } from './reminders';
 import { getPushState } from './push';
 
 const TICK_MS = 15_000;
 
-function deliver(r: Pick<PlannedReminder, 'title' | 'body' | 'url' | 'tag'>, effect: Effect) {
+function deliver(r: Notice, effect: Effect) {
   if (effect === 'silent') return;
   if (effect === 'system') {
     void navigator.serviceWorker?.getRegistration().then((reg) =>
-      reg?.showNotification(r.title, { body: r.body, tag: r.tag, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', data: { url: r.url }, renotify: true } as NotificationOptions),
+      reg?.showNotification(r.title, {
+        body: r.body,
+        tag: r.tag,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/badge-96.png',
+        data: { url: r.url, habitId: r.habitId ?? null },
+        renotify: true,
+        actions: r.habitId ? [{ action: 'done', title: 'Hecho' }] : [],
+        // `renotify` y `actions` existen en los navegadores pero aún no en los tipos del DOM.
+      } as NotificationOptions),
     );
   } else {
     useUi.getState().toast({ kind: 'reminder', title: r.title, body: r.body, to: r.url });

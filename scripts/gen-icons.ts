@@ -26,6 +26,18 @@ function iconSvg(size: number, scale: number, background: string | null, corner 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges">${bg}${rects}</svg>`;
 }
 
+/** Silueta blanca sobre transparente: Android solo usa la forma para el icono pequeño de las notificaciones. */
+function silhouetteSvg(size: number, scale: number, sprite: Parameters<typeof spriteRects>[0]) {
+  const { w, h } = spriteSize(sprite);
+  const px = Math.floor((size * scale) / Math.max(w, h));
+  const ox = Math.round((size - px * w) / 2);
+  const oy = Math.round((size - px * h) / 2);
+  const rects = spriteRects(sprite)
+    .map((r) => `<rect x="${ox + r.x * px}" y="${oy + r.y * px}" width="${r.w * px}" height="${px}" fill="#fff"/>`)
+    .join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges">${rects}</svg>`;
+}
+
 async function png(name: string, size: number, scale: number, background: string | null, corner = 0) {
   await sharp(Buffer.from(iconSvg(size, scale, background, corner))).png().toFile(new URL(`icons/${name}`, out).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
   console.log('✔', name);
@@ -38,3 +50,6 @@ await png('icon-512.png', 512, 0.72, SKY, 76);
 // "maskable": el sprite debe caber en el 60 % central para que el sistema pueda recortar.
 await png('icon-maskable-512.png', 512, 0.5, SKY);
 await png('apple-touch-icon.png', 180, 0.72, SKY);
+// La estrella y no el bloque «?»: en silueta, un bloque es solo un cuadrado.
+await sharp(Buffer.from(silhouetteSvg(96, 0.9, 'star'))).png().toFile(new URL('icons/badge-96.png', out).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
+console.log('✔ badge-96.png');

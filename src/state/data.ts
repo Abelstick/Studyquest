@@ -176,6 +176,51 @@ const pickData = (s: DataState): Data => ({
 
 const upsertBy = <T extends { id: ID }>(list: T[], item: T): T[] => (list.some((x) => x.id === item.id) ? list.map((x) => (x.id === item.id ? item : x)) : [...list, item]);
 
+type WithId = { id: ID };
+const isIdList = (v: unknown): v is WithId[] => Array.isArray(v) && v.every((x) => typeof x === 'object' && x !== null && typeof (x as WithId).id === 'string');
+
+/**
+ * Deshace en `cur` solo lo que una acción cambió (de `before` a `after`), y solo donde nadie lo tocó después.
+ * Las escrituras van en cola: cuando un guardado falla, quizá ya marcaste otras cosas. Volver a la foto entera
+ * de antes las borraría de la pantalla (la tarea hecha «reaparece» aunque su guardado sí llegó).
+ */
+function revertList(cur: WithId[], before: WithId[], after: WithId[]): WithId[] {
+  const was = new Map(before.map((x) => [x.id, x]));
+  const set = new Map(after.map((x) => [x.id, x]));
+  const out: WithId[] = [];
+  for (const x of cur) {
+    const mine = set.get(x.id) === x && was.get(x.id) !== x; // lo dejó así esta acción y sigue igual
+    if (!mine) out.push(x);
+    else if (was.has(x.id)) out.push(was.get(x.id) as WithId); // lo modificó: vuelve a como estaba
+    // si lo creó esta acción, se quita
+  }
+  // Lo que esta acción borró vuelve, salvo que ya exista otra vez.
+  const present = new Set(out.map((x) => x.id));
+  for (const x of before) if (!set.has(x.id) && !present.has(x.id)) out.push(x);
+  return out;
+}
+
+function revertChange(cur: Data, before: Data, after: Partial<Data>): Partial<Data> {
+  const patch: Record<string, unknown> = {};
+  for (const key of Object.keys(after) as (keyof Data)[]) {
+    const b: unknown = before[key];
+    const a: unknown = after[key];
+    const c: unknown = cur[key];
+    if (a === b || c === b) continue;
+    if (c === a) patch[key] = b;
+    else if (isIdList(c) && isIdList(b) && isIdList(a)) patch[key] = revertList(c, b, a);
+    else if (key === 'profile') {
+      // Campo a campo: solo los que cambió esta acción y siguen con su valor.
+      const pa = a as Profile;
+      const pb = b as Profile;
+      const pc = { ...(c as Profile) } as Record<string, unknown>;
+      for (const f of Object.keys({ ...pa, ...pb }) as (keyof Profile)[]) if (pa[f] !== pb[f] && pc[f] === pa[f]) pc[f] = pb[f];
+      patch[key] = pc;
+    }
+  }
+  return patch as Partial<Data>;
+}
+
 export function createDataStore(repo: Repository) {
   /** Cola de escritura: garantiza que los cambios llegan a la base de datos en el orden en que ocurrieron. */
   let queue: Promise<unknown> = Promise.resolve();
@@ -184,10 +229,11 @@ export function createDataStore(repo: Repository) {
     /** Aplica el cambio en pantalla al instante y lo persiste; si falla, revierte y avisa. */
     const run = (apply: (s: DataState) => Partial<Data>, persist: () => Promise<unknown>) => {
       const prev = pickData(get());
-      set(apply(get()));
+      const next = apply(get());
+      set(next);
       queue = queue.then(persist).catch((e: unknown) => {
         console.error(e);
-        set(prev);
+        set(revertChange(pickData(get()), prev, next));
         notifyError('No se pudo guardar', e instanceof Error ? e.message : 'Revisa tu conexión e inténtalo otra vez.');
       });
     };

@@ -248,6 +248,44 @@ describe('store de datos', () => {
     expect(useUi.getState().toasts.at(-1)?.kind).toBe('error');
   });
 
+  it('si falla un guardado anterior, solo se revierte ese cambio y no lo que hiciste después', async () => {
+    // Las escrituras van en cola: el fallo de un paso llega cuando ya marcaste el hábito o la tarea como hechos.
+    let failNext = false;
+    const failing: Repository = {
+      ...repo,
+      habitLogs: {
+        ...repo.habitLogs,
+        upsert: async (log) => {
+          await new Promise((r) => setTimeout(r, 5));
+          if (failNext) {
+            failNext = false;
+            throw new Error('rechazado');
+          }
+          return repo.habitLogs.upsert(log);
+        },
+      },
+    };
+    const s = createDataStore(failing);
+    await s.getState().load('u1');
+    s.getState().createHabit({ title: 'Rutina', courseId: null, frequency: { type: 'daily' }, measure: 'boolean', target: 1, reminder: null, steps: [{ id: 'a', title: 'A' }] } as never);
+    s.getState().createTask(draft({ title: 'Informe', subtasks: [{ id: 's1', title: 'Sub', done: false }] }));
+    await flush();
+    const habitId = s.getState().habits[0].id;
+    const taskId = s.getState().tasks[0].id;
+
+    failNext = true;
+    s.getState().toggleHabitStep(habitId, 'a'); // este guardado fallará
+    s.getState().setTaskStatus(taskId, 'done'); // y esto se hizo después, y sí se guarda
+    await flush();
+
+    const task = s.getState().tasks.find((t) => t.id === taskId);
+    expect(task?.status).toBe('done');
+    expect(s.getState().xpEvents.some((e) => e.source === 'task' && e.sourceId === taskId)).toBe(true);
+    // Lo que falló sí se deshace: el paso del hábito no quedó marcado.
+    expect(s.getState().habitLogs.find((l) => l.habitId === habitId)).toBeUndefined();
+    expect(useUi.getState().toasts.at(-1)?.kind).toBe('error');
+  });
+
   it('cargar el mundo de ejemplo deja un personaje con nivel y una racha de 18 días', async () => {
     await store.getState().finishOnboarding(true);
     const { profile, tasks, courses, habits, xpEvents } = store.getState();

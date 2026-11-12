@@ -4,6 +4,7 @@ import { useJukebox } from '@/state/jukebox';
 import { usePomodoro } from '@/state/pomodoro';
 import { useUi } from '@/state/ui';
 import { PHASE_LABEL, formatClock } from '@/core/pomodoro';
+import { useWakeLock } from '@/pwa/wakeLock';
 
 /**
  * Motor del Pomodoro: cierra las fases, pone la música de fondo y muestra la cuenta atrás en el título de la pestaña.
@@ -15,6 +16,9 @@ export function usePomodoroEngine() {
   const tick = usePomodoro((s) => s.tick);
   const music = useUi((s) => s.music);
   const sound = useUi((s) => s.sound);
+
+  // Con el temporizador en marcha la pantalla no se apaga: en el celular se bloquearía a mitad de la sesión.
+  useWakeLock(status === 'running');
 
   useEffect(() => {
     if (status !== 'running') return;

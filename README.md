@@ -237,6 +237,10 @@ La app es una **SPA estática**: Render solo sirve archivos y el backend es Supa
 - **Sin conexión:** todo el código se precachea, así que la app abre sin red, y con Supabase **también puedes guardar cambios sin conexión** (ver [Trabajar sin conexión](#trabajar-sin-conexión)).
 - **Actualizaciones:** cuando hay versión nueva aparece un aviso «Actualizar».
 - **Accesos directos:** mantén pulsado el icono para *Nueva tarea*, *Hábitos de hoy*, *Pomodoro* o *Repasar flashcards* (Android, Windows y macOS; iOS no los admite).
+- **Datos al día al volver:** si la app estuvo más de 2 minutos en segundo plano, al regresar vuelve a leer tus datos (sin pantalla de carga y sin pisar lo que aún se está guardando), así ves lo que hiciste en otro dispositivo.
+- **Pantalla encendida en Pomodoro:** con el temporizador en marcha el celular no se bloquea (Android/Chrome; con ahorro de batería el sistema puede negarlo).
+- **Vibración (Android):** un toque al ganar XP, subir de nivel o completar un combo, aunque el sonido esté apagado. Se desactiva en Perfil → Experiencia.
+- **Pendientes en el icono:** la app instalada muestra cuántos hábitos y tareas de hoy te faltan. Se actualiza con la app abierta; según el lanzador de Android se ve como número o como punto.
 - Las peticiones a `*.supabase.co` **nunca** se cachean: los datos siempre son los reales.
 
 Para probar la PWA en local usa `npm run build && npm run preview` (el service worker no está activo en `npm run dev`).

@@ -19,6 +19,8 @@ export default defineConfig({
         short_name: 'StudyQuest',
         description: 'Estudia, crea hábitos y sube de nivel como en tus juegos favoritos.',
         lang: 'es',
+        // Identidad fija de la app instalada: si algún día cambia `start_url`, Android no la trata como otra app.
+        id: '/',
         start_url: '/',
         scope: '/',
         display: 'standalone',

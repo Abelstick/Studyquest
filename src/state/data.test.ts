@@ -286,6 +286,44 @@ describe('store de datos', () => {
     expect(useUi.getState().toasts.at(-1)?.kind).toBe('error');
   });
 
+  it('al volver a la app, refrescar trae lo hecho en otro dispositivo sin pantalla de carga', async () => {
+    store.getState().createTask(draft({ title: 'Informe' }));
+    await flush();
+    const id = store.getState().tasks[0].id;
+    // Otro dispositivo la completa: cambia en la base de datos, no en esta pantalla.
+    await repo.tasks.update(id, { status: 'done', completedAt: today() });
+    expect(store.getState().tasks[0].status).toBe('todo');
+
+    const pending = store.getState().refresh();
+    expect(store.getState().status).toBe('ready');
+    await pending;
+    expect(store.getState().tasks[0].status).toBe('done');
+  });
+
+  it('refrescar no pisa lo que marcas mientras llega la respuesta', async () => {
+    store.getState().createTask(draft({ title: 'Informe' }));
+    await flush();
+    const id = store.getState().tasks[0].id;
+    // La lectura tarda; entretanto se completa la tarea en pantalla.
+    // `Object.create`: la colección es una clase y sus métodos viven en el prototipo (un `...spread` los perdería).
+    const slowTasks: Repository['tasks'] = Object.assign(Object.create(repo.tasks) as Repository['tasks'], {
+      list: async () => {
+        const rows = await repo.tasks.list();
+        await new Promise((r) => setTimeout(r, 15));
+        return rows;
+      },
+    });
+    const slow: Repository = { ...repo, tasks: slowTasks };
+    const s = createDataStore(slow);
+    await s.getState().load('u1');
+    const pending = s.getState().refresh();
+    await new Promise((r) => setTimeout(r, 5));
+    s.getState().setTaskStatus(id, 'done');
+    await pending;
+    expect(s.getState().tasks.find((t) => t.id === id)?.status).toBe('done');
+    expect(s.getState().xpEvents.some((e) => e.source === 'task' && e.sourceId === id)).toBe(true);
+  });
+
   it('cargar el mundo de ejemplo deja un personaje con nivel y una racha de 18 días', async () => {
     await store.getState().finishOnboarding(true);
     const { profile, tasks, courses, habits, xpEvents } = store.getState();

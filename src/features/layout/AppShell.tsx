@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { sfx } from '@/audio/sfx';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { dataLayer, useData, useTotalXp } from '@/state';
@@ -19,7 +19,8 @@ import { useShortcuts } from './useShortcuts';
 import { useTour } from '@/features/modals/TourModal';
 import { Overlays } from './Overlays';
 import { SearchBox } from './SearchBox';
-import { useOnline, useSyncPending } from '@/pwa/hooks';
+import { useOnline, useResumeRefresh, useSyncPending } from '@/pwa/hooks';
+import { useAppBadge } from '@/pwa/useAppBadge';
 import { useHabitReminders } from '@/pwa/useHabitReminders';
 import { usePomodoro } from '@/state/pomodoro';
 import { useAiAccountSync } from '@/ai/useAiAccountSync';
@@ -419,6 +420,9 @@ function useSectionTabs() {
 export function AppShell() {
   useHabitReminders();
   usePomodoroEngine();
+  useAppBadge();
+  const refresh = useData((s) => s.refresh);
+  useResumeRefresh(useCallback(() => void refresh(), [refresh]));
   useAiAccountSync();
   useShortcuts();
   useTour();

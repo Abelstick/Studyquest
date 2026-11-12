@@ -9,6 +9,7 @@
  */
 import type { SoundVoice } from '@/core/themes';
 import { VOICES, type Voice } from './voices';
+import { SFX_HAPTIC, haptic } from './haptics';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -104,6 +105,9 @@ function gate<T extends Record<string, () => void>>(effects: T): T {
       const now = typeof performance === 'undefined' ? Date.now() : performance.now();
       if (now - (lastAt[name] ?? -Infinity) < REPEAT_MS) return;
       lastAt[name] = now;
+      // La vibración no depende del sonido: con los efectos apagados se sigue notando al tacto.
+      const feel = SFX_HAPTIC[name];
+      if (feel) haptic(feel);
       run();
     };
   }

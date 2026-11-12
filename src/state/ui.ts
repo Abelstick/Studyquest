@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { newId } from '@/core/dates';
 import type { AttributeId } from '@/core/domain';
 import { setSoundEnabled, setSoundVoice, setSoundVolume, sfx } from '@/audio/sfx';
+import { haptic, setHapticsEnabled } from '@/audio/haptics';
 import { worldTheme } from '@/core/themes';
 
 import type { ConfirmExtra } from '@/ui/kit';
@@ -82,6 +83,8 @@ export interface VictoryInfo {
 interface Prefs {
   theme: 'light' | 'dark';
   sound: boolean;
+  /** Vibración al completar cosas (solo donde el dispositivo la tiene). */
+  vibration: boolean;
   music: boolean;
   world: string | null;
   /** Volumen general de efectos y música, de 0 a 1. */
@@ -98,6 +101,7 @@ function readPrefs(): Prefs {
   const fallback: Prefs = {
     theme: typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
     sound: true,
+    vibration: true,
     music: true,
     world: null,
     volume: 0.8,
@@ -107,7 +111,7 @@ function readPrefs(): Prefs {
   try {
     const p: Prefs = { ...fallback, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') };
     const volume = typeof p.volume === 'number' && Number.isFinite(p.volume) ? Math.min(1, Math.max(0, p.volume)) : fallback.volume;
-    return { ...p, volume, motion: p.motion === 'reduce' ? 'reduce' : 'system' };
+    return { ...p, volume, vibration: p.vibration !== false, motion: p.motion === 'reduce' ? 'reduce' : 'system' };
   } catch {
     return fallback;
   }
@@ -144,6 +148,7 @@ interface UiState extends Prefs {
   /** Sale de la prueba y vuelve al mundo equipado. */
   endPreview: () => void;
   setVolume: (volume: number) => void;
+  toggleVibration: () => void;
   setMotion: (motion: Prefs['motion']) => void;
   /** Barra lateral oculta en pantallas anchas, para ganar espacio. Se recuerda en el dispositivo. */
   sideHidden: boolean;
@@ -173,8 +178,9 @@ interface UiState extends Prefs {
 
 const initial = readPrefs();
 // La vista previa no está aquí a propósito: nunca se guarda.
-const prefsOf = (s: Prefs): Prefs => ({ theme: s.theme, sound: s.sound, music: s.music, world: s.world, volume: s.volume, motion: s.motion, folds: s.folds });
+const prefsOf = (s: Prefs): Prefs => ({ theme: s.theme, sound: s.sound, vibration: s.vibration, music: s.music, world: s.world, volume: s.volume, motion: s.motion, folds: s.folds });
 setSoundEnabled(initial.sound);
+setHapticsEnabled(initial.vibration);
 setSoundVolume(initial.volume);
 setSoundVoice(worldTheme(initial.world).voice);
 
@@ -257,6 +263,13 @@ export const useUi = create<UiState>((set, get) => ({
     setSoundEnabled(sound);
     writePrefs(prefsOf(get()));
     if (sound) sfx.coin();
+  },
+  toggleVibration: () => {
+    const vibration = !get().vibration;
+    set({ vibration });
+    setHapticsEnabled(vibration);
+    writePrefs(prefsOf(get()));
+    if (vibration) haptic('success');
   },
   setWorld: (world, opts) => {
     set({ world, preview: null });

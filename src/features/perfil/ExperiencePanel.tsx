@@ -3,11 +3,12 @@ import { useData } from '@/state';
 import { useUi } from '@/state/ui';
 import { worldIdOf, worldTheme, worldTitle } from '@/core/themes';
 import { sfx } from '@/audio/sfx';
+import { hapticsSupported } from '@/audio/haptics';
 import { Button, Segmented } from '@/ui/kit';
 
 /** Apariencia, sonido y movimiento: todo lo que cambia cómo se siente la app, en un solo sitio. */
 export function ExperiencePanel() {
-  const { theme, sound, volume, motion, toggleTheme, toggleSound, setVolume, setMotion } = useUi();
+  const { theme, sound, vibration, volume, motion, toggleTheme, toggleSound, toggleVibration, setVolume, setMotion } = useUi();
   const equipped = useData((s) => s.profile.equipped.world);
   const world = worldTheme(worldIdOf(equipped));
   const pct = Math.round(volume * 100);
@@ -58,6 +59,18 @@ export function ExperiencePanel() {
         <span className="experience__pct">{pct} %</span>
       </label>
       <p className="muted small">El sonido de cada efecto cambia con el mundo equipado. Nunca suena nada al abrir la app.</p>
+
+      {hapticsSupported() && (
+        <div className="experience__row">
+          <div>
+            <p className="experience__label">Vibración</p>
+            <p className="muted small">Un toque al completar algo, aunque el sonido esté apagado.</p>
+          </div>
+          <Button small onClick={toggleVibration} aria-label={`Vibración: ${vibration ? 'activada' : 'apagada'}. Pulsa para ${vibration ? 'apagarla' : 'activarla'}`}>
+            {vibration ? 'Activada' : 'Apagada'}
+          </Button>
+        </div>
+      )}
 
       <div className="experience__row experience__row--stack">
         <p className="experience__label">Animaciones</p>

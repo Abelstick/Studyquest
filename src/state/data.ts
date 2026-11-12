@@ -45,6 +45,8 @@ export interface DataState extends Data {
   error: string | null;
   /** Cargar todo desde el repositorio (con el id del usuario autenticado). */
   load: (userId: string, hydrate?: Data | null) => Promise<void>;
+  /** Vuelve a leer los datos sin pantalla de carga (al volver a la app tras un rato). No pisa cambios aún sin guardar. */
+  refresh: () => Promise<void>;
   clear: () => void;
 
   updateProfile: (patch: Partial<Omit<Profile, 'id'>>) => void;
@@ -224,6 +226,8 @@ function revertChange(cur: Data, before: Data, after: Partial<Data>): Partial<Da
 export function createDataStore(repo: Repository) {
   /** Cola de escritura: garantiza que los cambios llegan a la base de datos en el orden en que ocurrieron. */
   let queue: Promise<unknown> = Promise.resolve();
+  /** Cuántas escrituras se han lanzado: si cambia mientras se lee del servidor, esa lectura ya es vieja. */
+  let writes = 0;
 
   return create<DataState>((set, get) => {
     /** Aplica el cambio en pantalla al instante y lo persiste; si falla, revierte y avisa. */
@@ -231,6 +235,7 @@ export function createDataStore(repo: Repository) {
       const prev = pickData(get());
       const next = apply(get());
       set(next);
+      writes++;
       queue = queue.then(persist).catch((e: unknown) => {
         console.error(e);
         set(revertChange(pickData(get()), prev, next));
@@ -547,6 +552,31 @@ export function createDataStore(repo: Repository) {
           (hydrate ? console.warn : console.error)('[load]', e);
           if (hydrate) useUi.getState().toast({ kind: 'info', title: 'Sin conexión', body: 'Mostrando los últimos datos guardados.' });
           else set({ status: 'error', error: e instanceof Error ? e.message : 'Error desconocido' });
+        }
+      },
+      async refresh() {
+        if (get().status !== 'ready') return;
+        try {
+          // Primero se deja terminar lo que estaba guardándose: leer antes devolvería datos sin esos cambios.
+          let seen: number;
+          do {
+            seen = writes;
+            await queue;
+          } while (seen !== writes);
+          const [profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events] = await Promise.all([
+            repo.profile.get(), repo.tasks.list(), repo.habits.list(), repo.habitLogs.list(), repo.courses.list(), repo.goals.list(),
+            repo.projects.list(), repo.notes.list(), repo.certifications.list(), repo.personalRewards.list(), repo.sessions.list(), repo.xpEvents.list(), repo.notifications.list(), repo.events.list(),
+          ]);
+          // Si marcaste algo mientras llegaba la respuesta, lo de pantalla es más nuevo: se descarta la lectura.
+          if (seen !== writes || get().status !== 'ready' || !profile) return;
+          set({ profile, tasks, habits, habitLogs, courses, goals, projects, notes, certifications, personalRewards, sessions, xpEvents, notifications, events });
+          claimUnlocks(xpEvents, false);
+          syncClass(xpEvents, false);
+          // Si al volver ya es otro día, los congeladores cubren los días sin XP igual que al abrir la app.
+          syncFreezers(true);
+        } catch (e) {
+          // Sin red o con cambios pendientes de enviar: lo de pantalla ya es lo más reciente que hay.
+          console.warn('[refresh]', e);
         }
       },
       clear: () => set({ ...EMPTY, status: 'idle', error: null }),

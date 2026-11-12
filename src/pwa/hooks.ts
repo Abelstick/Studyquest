@@ -63,3 +63,26 @@ export function useSyncPending(sync: SyncPort | undefined): number {
     () => 0,
   );
 }
+
+/** Tiempo mínimo fuera de la app para volver a leer los datos al regresar. */
+export const RESUME_REFRESH_MS = 2 * 60_000;
+
+/**
+ * Al volver a la app tras un rato en segundo plano, pide los datos otra vez. En el celular la app instalada
+ * sigue viva durante días: sin esto, al volver se vería lo de la última vez y no lo hecho en otro dispositivo.
+ */
+export function useResumeRefresh(refresh: () => void, minHiddenMs: number = RESUME_REFRESH_MS): void {
+  useEffect(() => {
+    let hiddenAt: number | null = document.hidden ? Date.now() : null;
+    const onChange = () => {
+      if (document.hidden) {
+        hiddenAt = Date.now();
+        return;
+      }
+      if (hiddenAt !== null && Date.now() - hiddenAt >= minHiddenMs) refresh();
+      hiddenAt = null;
+    };
+    document.addEventListener('visibilitychange', onChange);
+    return () => document.removeEventListener('visibilitychange', onChange);
+  }, [refresh, minHiddenMs]);
+}

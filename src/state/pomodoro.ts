@@ -69,7 +69,7 @@ async function systemNotice(title: string, body: string) {
   if (typeof document === 'undefined' || !document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
-    await reg?.showNotification(title, { body, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', tag: 'studyquest-pomodoro', renotify: true } as NotificationOptions);
+    await reg?.showNotification(title, { body, icon: '/icons/icon-192.png', badge: '/icons/badge-96.png', tag: 'studyquest-pomodoro', renotify: true } as NotificationOptions);
   } catch {
     /* sin service worker: nada */
   }

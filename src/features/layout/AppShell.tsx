@@ -22,7 +22,8 @@ import { useNotificationActions } from '@/pwa/useNotificationActions';
 import { useTour } from '@/features/modals/TourModal';
 import { Overlays } from './Overlays';
 import { SearchBox } from './SearchBox';
-import { useOnline, useResumeRefresh, useSyncPending } from '@/pwa/hooks';
+import { useOnline, usePersistentStorage, useResumeRefresh, useSyncPending } from '@/pwa/hooks';
+import { useInstallNudge } from '@/pwa/useInstallNudge';
 import { useAppBadge } from '@/pwa/useAppBadge';
 import { useHabitReminders } from '@/pwa/useHabitReminders';
 import { usePomodoro } from '@/state/pomodoro';
@@ -425,6 +426,8 @@ export function AppShell() {
   usePomodoroEngine();
   useAppBadge();
   useBackClose();
+  usePersistentStorage();
+  useInstallNudge();
   useNotificationActions();
   const refresh = useData((s) => s.refresh);
   useResumeRefresh(useCallback(() => void refresh(), [refresh]));

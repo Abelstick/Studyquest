@@ -72,8 +72,8 @@ export const taskRows = (tasks: Task[]): TaskRow[] =>
   tasks.filter((t) => t.dueDate && t.dueTime).map((t) => ({ id: t.id, data: { title: t.title, status: t.status, dueDate: t.dueDate, dueTime: t.dueTime } }));
 
 /** Lo que se le enseña al usuario, venga de un hábito o de una tarea. */
-/** `habitId` solo viene en los avisos de hábitos: son los que se pueden dar por hechos desde la notificación. */
-export type Notice = Pick<PlannedReminder, 'title' | 'body' | 'url' | 'tag'> & { habitId?: string };
+/** `habitId` (hábitos) y `key` = `task:<id>` (tareas) dicen qué se puede dar por hecho desde la notificación. */
+export type Notice = Pick<PlannedReminder, 'title' | 'body' | 'url' | 'tag'> & { habitId?: string; key?: string };
 
 export function tickReminders(i: TickInput): { effects: { reminder: Notice; effect: Effect }[]; state: ReminderFile } {
   const day = localParts(i.now, i.timeZone).date;

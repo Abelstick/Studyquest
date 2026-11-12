@@ -28,6 +28,8 @@ body {
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
+  /* Android pinta un resaltado azul sobre lo que se toca; cada control ya tiene su propio estado pulsado. */
+  -webkit-tap-highlight-color: transparent;
 }
 b,
 strong {

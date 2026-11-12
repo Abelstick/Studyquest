@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/state';
 import { useUi } from '@/state/ui';
@@ -10,30 +10,39 @@ import { useLevelUpIntro } from '@/ui/motion';
 import { AttrBadge, Gains, attrStyle } from '@/ui/Attribute';
 import { Icon } from '@/ui/Icon';
 import type { SpriteName } from '@/ui/sprites';
-import { TaskModal } from '../modals/TaskModal';
-import { TopicAdvanceModal } from '../modals/TopicAdvanceModal';
-import { HabitModal } from '../modals/HabitModal';
-import { HabitDetailModal } from '../modals/HabitDetailModal';
-import { TaskDetailModal } from '../modals/TaskDetailModal';
-import { CourseModal, GoalModal, ProjectModal, RewardModal } from '../modals/EntityModals';
-import { SessionModal } from '../modals/SessionModal';
 import { QuickSheet, WelcomeModal } from '../modals/QuickAndWelcome';
-import { CardsModal } from '../modals/CardsModal';
-import { CertificationModal } from '../modals/CertificationModal';
-import { ChainModal } from '../modals/ChainModal';
-import { AiKeyModal } from '../modals/AiKeyModal';
-import { PackModal } from '../modals/PackModal';
-import { PaceModal } from '../modals/PaceModal';
-import { RoutineModal } from '../modals/RoutineModal';
-import { ConflictsModal } from '../calendario/ConflictsModal';
 import { ConceptGuide } from '../help/ConceptGuide';
 import { HowToGuide } from '../help/HowToGuide';
-import { EventModal } from '../calendario/EventModal';
 import { ThemePreviewBar } from './ThemePreviewBar';
-import { ExportModal } from '../calendario/ExportModal';
-import { ScopeModal } from '../calendario/ScopeChoice';
-import { ShortcutsModal } from '../modals/ShortcutsModal';
 import { TourModal } from '../modals/TourModal';
+
+/*
+ * Los formularios y fichas se descargan la primera vez que se abren, no con la pantalla de inicio: son muchos
+ * y casi nunca hace falta más de uno. Quedan en la caché de la app, así que también abren sin conexión.
+ * La bienvenida, el recorrido y las guías van en el paquete principal porque se enseñan nada más entrar.
+ */
+const TaskModal = lazy(() => import('../modals/TaskModal').then((m) => ({ default: m.TaskModal })));
+const TopicAdvanceModal = lazy(() => import('../modals/TopicAdvanceModal').then((m) => ({ default: m.TopicAdvanceModal })));
+const HabitModal = lazy(() => import('../modals/HabitModal').then((m) => ({ default: m.HabitModal })));
+const HabitDetailModal = lazy(() => import('../modals/HabitDetailModal').then((m) => ({ default: m.HabitDetailModal })));
+const TaskDetailModal = lazy(() => import('../modals/TaskDetailModal').then((m) => ({ default: m.TaskDetailModal })));
+const CourseModal = lazy(() => import('../modals/EntityModals').then((m) => ({ default: m.CourseModal })));
+const GoalModal = lazy(() => import('../modals/EntityModals').then((m) => ({ default: m.GoalModal })));
+const ProjectModal = lazy(() => import('../modals/EntityModals').then((m) => ({ default: m.ProjectModal })));
+const RewardModal = lazy(() => import('../modals/EntityModals').then((m) => ({ default: m.RewardModal })));
+const SessionModal = lazy(() => import('../modals/SessionModal').then((m) => ({ default: m.SessionModal })));
+const CardsModal = lazy(() => import('../modals/CardsModal').then((m) => ({ default: m.CardsModal })));
+const CertificationModal = lazy(() => import('../modals/CertificationModal').then((m) => ({ default: m.CertificationModal })));
+const ChainModal = lazy(() => import('../modals/ChainModal').then((m) => ({ default: m.ChainModal })));
+const AiKeyModal = lazy(() => import('../modals/AiKeyModal').then((m) => ({ default: m.AiKeyModal })));
+const PackModal = lazy(() => import('../modals/PackModal').then((m) => ({ default: m.PackModal })));
+const PaceModal = lazy(() => import('../modals/PaceModal').then((m) => ({ default: m.PaceModal })));
+const RoutineModal = lazy(() => import('../modals/RoutineModal').then((m) => ({ default: m.RoutineModal })));
+const ConflictsModal = lazy(() => import('../calendario/ConflictsModal').then((m) => ({ default: m.ConflictsModal })));
+const EventModal = lazy(() => import('../calendario/EventModal').then((m) => ({ default: m.EventModal })));
+const ExportModal = lazy(() => import('../calendario/ExportModal').then((m) => ({ default: m.ExportModal })));
+const ScopeModal = lazy(() => import('../calendario/ScopeChoice').then((m) => ({ default: m.ScopeModal })));
+const ShortcutsModal = lazy(() => import('../modals/ShortcutsModal').then((m) => ({ default: m.ShortcutsModal })));
 
 const CATEGORY: Record<AppNotification['category'], { sprite: SpriteName; label: string }> = {
   mentor: { sprite: 'cap', label: 'Mentor' },
@@ -45,6 +54,14 @@ const CATEGORY: Record<AppNotification['category'], { sprite: SpriteName; label:
 };
 
 function ModalHost() {
+  return (
+    <Suspense fallback={null}>
+      <ModalBody />
+    </Suspense>
+  );
+}
+
+function ModalBody() {
   const modal = useUi((s) => s.modal);
   if (!modal) return null;
   switch (modal.type) {

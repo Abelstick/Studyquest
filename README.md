@@ -243,10 +243,13 @@ La app es una **SPA estática**: Render solo sirve archivos y el backend es Supa
 - **Pendientes en el icono:** la app instalada muestra cuántos hábitos y tareas de hoy te faltan, en **escritorio (Windows/macOS) e iPhone**. Se actualiza con la app abierta. Chrome para Android no admite esta función: ahí el icono solo lleva un punto cuando hay una notificación sin leer.
 - **Botón atrás (Android):** con un formulario, el menú o los avisos abiertos, «atrás» los cierra en vez de cambiar de pantalla o salir de la app.
 - **Gestos táctiles:** en Hoy, desliza una misión hacia la derecha para completarla (lo mismo que su casilla); tira hacia abajo desde lo alto de la página para actualizar los datos.
-- **«Hecho» desde la notificación:** el aviso de un hábito trae un botón *Hecho*. Con la app a la vista lo marca sin moverte; si no, abre la app y lo marca al cargar (el service worker no puede guardar por su cuenta).
+- **«Hecho» desde la notificación:** el aviso de un hábito trae un botón *Hecho* y el de una tarea a punto de vencer, *Completar*. Con la app a la vista lo marca sin moverte; si no, abre la app y lo marca al cargar (el service worker no puede guardar por su cuenta).
 - **Compartir hacia la app (Android):** con la app instalada, StudyQuest aparece en el menú *Compartir*; el enlace o texto llega como una tarea nueva lista para guardar.
 - **Controles a medida del dedo:** en pantallas táctiles todo lo que se pulsa mide al menos 44 px (token `--tap`).
-- **Instalación ligera:** el motor 3D del héroe no se descarga al instalar, solo al abrir esa pantalla por primera vez (después queda guardado y funciona sin conexión).
+- **Te ofrece instalarla una vez:** tras ganar XP por primera vez aparece un aviso con el botón *Instalar* (una sola vez por dispositivo; después sigue en Perfil).
+- **Datos protegidos:** pide al navegador almacenamiento persistente, para que no borre la app sin conexión ni los cambios pendientes de enviar si falta espacio.
+- **El teclado no tapa los formularios:** al abrirse, la página se encoge y el botón de guardar sigue a la vista.
+- **Instalación ligera:** los formularios van aparte del paquete inicial (la primera pantalla carga antes) y el motor 3D del héroe no se descarga al instalar, solo al abrir esa pantalla por primera vez (después queda guardado y funciona sin conexión).
 - Las peticiones a `*.supabase.co` **nunca** se cachean: los datos siempre son los reales.
 
 Para probar la PWA en local usa `npm run build && npm run preview` (el service worker no está activo en `npm run dev`).

@@ -25,7 +25,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait-primary',
-        background_color: '#5c94fc',
+        // Fondo de la pantalla de arranque: el carbón de la máquina, que no deslumbra de noche (el manifiesto solo admite uno).
+        background_color: '#0e0e24',
         theme_color: '#5c94fc',
         categories: ['education', 'productivity'],
         icons: [
@@ -37,10 +38,10 @@ export default defineConfig({
         share_target: { action: '/tareas', method: 'GET', params: { title: 'titulo', text: 'texto', url: 'enlace' } },
         // Al mantener pulsado el icono (Android, Windows, macOS). Android enseña como mucho 4.
         shortcuts: [
-          { name: 'Nueva tarea', url: '/tareas?nuevo=1', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
-          { name: 'Hábitos de hoy', url: '/habitos', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
-          { name: 'Pomodoro', short_name: 'Pomodoro', description: 'Abre el temporizador Pomodoro', url: '/pomodoro', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
-          { name: 'Repasar flashcards', short_name: 'Repasar', description: 'Repaso espaciado de hoy', url: '/repaso', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Nueva tarea', url: '/tareas?nuevo=1', icons: [{ src: '/icons/shortcut-task.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Hábitos de hoy', url: '/habitos', icons: [{ src: '/icons/shortcut-habit.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Pomodoro', short_name: 'Pomodoro', description: 'Abre el temporizador Pomodoro', url: '/pomodoro', icons: [{ src: '/icons/shortcut-pomodoro.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Repasar flashcards', short_name: 'Repasar', description: 'Repaso espaciado de hoy', url: '/repaso', icons: [{ src: '/icons/shortcut-review.png', sizes: '96x96', type: 'image/png' }] },
         ],
       },
       workbox: {

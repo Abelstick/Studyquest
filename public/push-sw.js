@@ -12,6 +12,8 @@ self.addEventListener('push', (event) => {
     data = { body: event.data ? event.data.text() : '' };
   }
   const title = data.title || 'StudyQuest';
+  // Los avisos de tareas se identifican con la clave `task:<id>` (taskReminderKey en supabase/functions/_shared).
+  const taskId = typeof data.key === 'string' && data.key.indexOf('task:') === 0 ? data.key.slice(5) : null;
 
   event.waitUntil(
     (async () => {
@@ -33,9 +35,9 @@ self.addEventListener('push', (event) => {
         tag: data.tag || 'studyquest',
         // Los avisos repetidos de un mismo hábito reutilizan la etiqueta: sin esto se reemplazarían en silencio.
         renotify: true,
-        data: { url: data.url || '/', habitId: data.habitId || null },
-        // Solo los hábitos se pueden dar por hechos desde el aviso.
-        actions: data.habitId ? [{ action: 'done', title: 'Hecho' }] : [],
+        data: { url: data.url || '/', habitId: data.habitId || null, taskId: taskId || null },
+        // Hábitos y tareas se pueden dar por hechos desde el aviso; el resto (agenda, resumen) solo se abre.
+        actions: data.habitId ? [{ action: 'done', title: 'Hecho' }] : taskId ? [{ action: 'done', title: 'Completar' }] : [],
       });
     })(),
   );
@@ -44,10 +46,11 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const info = event.notification.data || {};
-  const done = event.action === 'done' && info.habitId;
+  const done = event.action === 'done' && (info.habitId || info.taskId);
   // «Hecho»: el service worker no tiene la sesión para guardar, así que lo hace la app.
-  // A la vista, se le avisa sin moverla de pantalla; si no, se abre en /?hecho=<id> y lo marca al cargar.
-  const path = done ? '/?hecho=' + encodeURIComponent(info.habitId) : info.url || '/';
+  // A la vista, se le avisa sin moverla de pantalla; si no, se abre en /?hecho=<id> (o ?tarea_hecha=<id>) y lo marca al cargar.
+  const param = info.habitId ? 'hecho=' + encodeURIComponent(info.habitId) : 'tarea_hecha=' + encodeURIComponent(info.taskId);
+  const path = done ? '/?' + param : info.url || '/';
   const url = new URL(path, self.location.origin).href;
   event.waitUntil(
     (async () => {
@@ -56,7 +59,7 @@ self.addEventListener('notificationclick', (event) => {
       if (done) {
         const visible = own.find((w) => w.visibilityState === 'visible');
         if (visible) {
-          visible.postMessage({ type: 'habit-done', habitId: info.habitId });
+          visible.postMessage(info.habitId ? { type: 'habit-done', habitId: info.habitId } : { type: 'task-done', taskId: info.taskId });
           return;
         }
       }

@@ -5,21 +5,23 @@ import { sfx } from '@/audio/sfx';
 import { localParts } from '../../supabase/functions/_shared/due';
 import { acceptPushMessage, loadReminderState, saveReminderState, tickReminders, type Effect, type Notice, type PushMessage } from './reminders';
 import { getPushState } from './push';
+import { taskIdOfKey } from './useNotificationActions';
 
 const TICK_MS = 15_000;
 
 function deliver(r: Notice, effect: Effect) {
   if (effect === 'silent') return;
   if (effect === 'system') {
+    const taskId = taskIdOfKey(r.key);
     void navigator.serviceWorker?.getRegistration().then((reg) =>
       reg?.showNotification(r.title, {
         body: r.body,
         tag: r.tag,
         icon: '/icons/icon-192.png',
         badge: '/icons/badge-96.png',
-        data: { url: r.url, habitId: r.habitId ?? null },
+        data: { url: r.url, habitId: r.habitId ?? null, taskId },
         renotify: true,
-        actions: r.habitId ? [{ action: 'done', title: 'Hecho' }] : [],
+        actions: r.habitId ? [{ action: 'done', title: 'Hecho' }] : taskId ? [{ action: 'done', title: 'Completar' }] : [],
         // `renotify` y `actions` existen en los navegadores pero aún no en los tipos del DOM.
       } as NotificationOptions),
     );

@@ -312,6 +312,24 @@ export interface Mentor {
   feedbackAt: ISODate | null;
 }
 
+/** Evaluación con nota de un curso: examen, práctica, trabajo… */
+export interface Evaluation {
+  id: ID;
+  title: string;
+  /** Cuánto pesa en la nota final, en porcentaje (0-100). */
+  weight: number;
+  /** Día (local) en que se rinde o se entrega. */
+  date?: ISODate;
+  /** Nota obtenida, en la escala del curso. Sin definir = aún sin nota. */
+  score?: number;
+}
+
+/** Escala de notas de un curso: la nota máxima y con cuánto se aprueba. */
+export interface GradeScale {
+  max: number;
+  pass: number;
+}
+
 export interface Course extends Progressable {
   id: ID;
   title: string;
@@ -325,6 +343,10 @@ export interface Course extends Progressable {
   studyDaysPerWeek?: number;
   /** Hasta cuándo quieres terminarlo (día local). Sin definir, el plazo sale de la última tarea abierta del curso, si la hay. */
   dueDate?: ISODate;
+  /** Evaluaciones con nota (exámenes, trabajos). Solo informan: no dan XP. */
+  evaluations?: Evaluation[];
+  /** Escala de notas; sin definir, la de por defecto (`core/grades.ts`). */
+  gradeScale?: GradeScale;
   createdAt: ISODateTime;
   /** Plan del que salió, si lo creó el planificador. Sirve para deshacerlo entero. */
   planId?: ID;

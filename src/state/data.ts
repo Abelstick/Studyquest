@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type {
-  AgendaEvent, AppNotification, Certification, Course, Flashcard, Equipped, Goal, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, MonthChallenge, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, WeekReview, XpEvent,
+  AgendaEvent, AppNotification, Certification, Course, Evaluation, Flashcard, Equipped, Goal, GradeScale, Habit, HabitChain, HabitLog, HeroRace, HeroSlot, ID, ISODate, Module, MonthChallenge, Note, PersonalReward, Profile, Project, Snapshot, StudySession, Task, TaskStatus, Topic, TopicStatus, WeekReview, XpEvent,
 } from '@/core/domain';
 import { isoNow, newId, today, weekStart } from '@/core/dates';
 import {
@@ -31,6 +31,7 @@ import { worldIdOf } from '@/core/themes';
 import { canEvolve, cleanHeroName, heroItem, newHero, raceOf, stageForLevel, stageName } from '@/core/hero';
 import { buildDemo } from '@/core/seed';
 import { courseAlerts, newAlerts } from '@/core/courseAlerts';
+import { MAX_EVALUATIONS, cleanGradeScale, gradeScaleOf, normalizeEvaluation } from '@/core/grades';
 import { challengeProgress } from '@/core/challenge';
 import { computeStats } from '@/core/stats';
 import { changeOccurrence, removeOccurrence, replaceFrom, setOccurrenceStatus, unlinkEvents, type EditScope, type EventDraft, type OccurrenceChange, type SeriesResult } from '@/core/agenda';
@@ -90,6 +91,10 @@ export interface DataState extends Data {
   setTopicStatus: (courseId: ID, topicId: ID, status: TopicStatus) => void;
   toggleTopicReview: (courseId: ID, topicId: ID) => void;
   setTopicCards: (courseId: ID, topicId: ID, cards: Flashcard[]) => void;
+  /** Crea la evaluación (sin id) o la actualiza (con id). Las notas solo informan: no dan XP. */
+  saveEvaluation: (courseId: ID, evaluation: Omit<Evaluation, 'id'> & { id?: ID }) => void;
+  removeEvaluation: (courseId: ID, evaluationId: ID) => void;
+  setGradeScale: (courseId: ID, scale: GradeScale) => void;
   /** Aplica el resultado de un repaso: sube o reinicia la agenda de 1-3-7-14 días y da XP. */
   reviewTopic: (courseId: ID, topicId: ID, rating: Rating) => void;
 
@@ -937,6 +942,25 @@ export function createDataStore(repo: Repository) {
       },
       setTopicCards(courseId, topicId, cards) {
         mutateCourse(courseId, (c) => mapTopic(c, topicId, (t) => ({ ...t, cards })));
+      },
+      saveEvaluation(courseId, evaluation) {
+        mutateCourse(courseId, (c) => {
+          const list = c.evaluations ?? [];
+          const next = normalizeEvaluation({ ...evaluation, id: evaluation.id ?? newId() }, gradeScaleOf(c));
+          if (!next.title) return c;
+          const exists = list.some((e) => e.id === next.id);
+          if (!exists && list.length >= MAX_EVALUATIONS) return c;
+          return { ...c, evaluations: exists ? list.map((e) => (e.id === next.id ? next : e)) : [...list, next] };
+        });
+      },
+      removeEvaluation(courseId, evaluationId) {
+        mutateCourse(courseId, (c) => ({ ...c, evaluations: (c.evaluations ?? []).filter((e) => e.id !== evaluationId) }));
+      },
+      setGradeScale(courseId, scale) {
+        const clean = cleanGradeScale(scale);
+        if (!clean) return;
+        // Las notas ya puestas se quedan como están, recortadas al nuevo máximo si lo superan.
+        mutateCourse(courseId, (c) => ({ ...c, gradeScale: clean, evaluations: (c.evaluations ?? []).map((e) => normalizeEvaluation(e, clean)) }));
       },
       reviewTopic(courseId, topicId, rating) {
         const course = get().courses.find((c) => c.id === courseId);

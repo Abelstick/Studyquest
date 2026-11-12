@@ -1928,6 +1928,74 @@
 .ctasks__open:hover .ctasks__title {
   text-decoration: underline;
 }
+/* Notas de un curso: evaluaciones con peso y nota, y lo que hace falta para aprobar. */
+.cgrades {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cgrades__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--field);
+  border: var(--bw) solid var(--line-soft);
+}
+.cgrades__item.is-editing {
+  border-color: var(--primary);
+}
+.cgrades__open {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+  padding: 0;
+  background: none;
+  color: var(--text);
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.cgrades__title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.cgrades__open:hover .cgrades__title {
+  text-decoration: underline;
+}
+.cgrades__verdict {
+  margin: 0;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+.cgrades__verdict.is-good {
+  color: var(--green-text);
+}
+.cgrades__verdict.is-bad {
+  color: var(--late);
+}
+.cgrades__form,
+.cgrades__scale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-2);
+}
+.cgrades__name {
+  flex: 1 1 100%;
+}
+.cgrades__field {
+  display: grid;
+  gap: 2px;
+}
+.cgrades__scale {
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line-soft);
+}
 .tasklate {
   color: var(--alert);
   font-weight: 700;

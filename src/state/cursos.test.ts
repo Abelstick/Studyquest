@@ -108,6 +108,44 @@ describe('reto del mes en el store', () => {
   });
 });
 
+describe('notas del curso', () => {
+  it('crea, puntúa y quita evaluaciones, las guarda y no toca el XP', async () => {
+    store.getState().createCourse(course());
+    const cid = store.getState().courses[0].id;
+    store.getState().saveEvaluation(cid, { title: ' Parcial ', weight: 40, date: '2026-10-01' });
+    store.getState().saveEvaluation(cid, { title: 'Final', weight: 60 });
+    store.getState().saveEvaluation(cid, { title: '   ', weight: 10 });
+    const [parcial, final] = store.getState().courses[0].evaluations ?? [];
+    expect(store.getState().courses[0].evaluations).toHaveLength(2);
+    expect(parcial).toMatchObject({ title: 'Parcial', weight: 40, date: '2026-10-01' });
+
+    // La nota se recorta a la escala (0-20 por defecto) y vaciarla la deja otra vez sin nota.
+    store.getState().saveEvaluation(cid, { ...parcial, score: 35 });
+    expect(store.getState().courses[0].evaluations?.[0].score).toBe(20);
+    store.getState().saveEvaluation(cid, { ...parcial, score: undefined });
+    expect(store.getState().courses[0].evaluations?.[0].score).toBeUndefined();
+    store.getState().saveEvaluation(cid, { ...parcial, score: 14 });
+
+    store.getState().removeEvaluation(cid, final.id);
+    await flush();
+    expect((await repo.courses.list())[0].evaluations).toEqual([{ id: parcial.id, title: 'Parcial', weight: 40, date: '2026-10-01', score: 14 }]);
+    expect(store.getState().xpEvents).toHaveLength(0);
+  });
+
+  it('cambiar la escala recorta las notas que la superan y rechaza una escala imposible', async () => {
+    store.getState().createCourse(course());
+    const cid = store.getState().courses[0].id;
+    store.getState().saveEvaluation(cid, { title: 'Parcial', weight: 50, score: 14 });
+    store.getState().setGradeScale(cid, { max: 10, pass: 12 });
+    expect(store.getState().courses[0].gradeScale).toBeUndefined();
+    store.getState().setGradeScale(cid, { max: 10, pass: 5 });
+    await flush();
+    const saved = (await repo.courses.list())[0];
+    expect(saved.gradeScale).toEqual({ max: 10, pass: 5 });
+    expect(saved.evaluations?.[0].score).toBe(10);
+  });
+});
+
 describe('avisos de cursos', () => {
   it('avisa del plazo cercano y no repite el mismo aviso hoy', () => {
     store.getState().createCourse(course({ dueDate: addDays(today(), 2) }));

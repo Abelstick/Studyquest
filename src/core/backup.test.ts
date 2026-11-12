@@ -173,6 +173,21 @@ describe('copia de seguridad', () => {
     expect(res.snapshot.courses[1].studyDaysPerWeek).toBeUndefined();
   });
 
+  it('conserva las evaluaciones y la escala de un curso, con ids válidos y notas dentro de la escala', () => {
+    const file = buildBackup(demo());
+    file.data.courses[0].gradeScale = { max: 10, pass: 5 };
+    file.data.courses[0].evaluations = [{ id: 'parcial', title: 'Parcial', weight: 40, score: 14, date: '2026-10-01' }, { id: 'final', title: 'Final', weight: 60 }];
+    file.data.courses[1].gradeScale = { max: 10, pass: 50 };
+    const res = parseBackup(JSON.stringify(file));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    const c = res.snapshot.courses[0];
+    expect(c.gradeScale).toEqual({ max: 10, pass: 5 });
+    expect(c.evaluations).toMatchObject([{ title: 'Parcial', weight: 40, score: 10, date: '2026-10-01' }, { title: 'Final', weight: 60 }]);
+    expect(c.evaluations?.every((e) => /^[0-9a-f-]{36}$/.test(e.id))).toBe(true);
+    expect(res.snapshot.courses[1].gradeScale).toBeUndefined();
+  });
+
   it('conserva el plazo del curso, el día de cada tema, los vínculos a cursos y el reto del mes', () => {
     const file = buildBackup(demo());
     const courseId = file.data.courses[0].id;

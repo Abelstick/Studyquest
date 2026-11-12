@@ -14,6 +14,7 @@ import { DeadlineLine } from './DeadlineLine';
 import { CourseRhythm } from './CourseRhythm';
 import { CourseRecovery } from './CourseRecovery';
 import { CourseRoutine } from './CourseRoutine';
+import { CourseGrades } from './CourseGrades';
 import { deadlineText } from '@/core/missions';
 import { blankNote, notesOfTopic, sortNotes } from '@/core/notes';
 import type { Snapshot, TopicStatus } from '@/core/domain';
@@ -271,6 +272,7 @@ export default function CursoDetalle() {
               </Link>
             )}
           </Panel>
+          <CourseGrades course={course} />
           <CourseRoutine course={course} />
           <CourseRhythm course={course} />
           {mentor && (
